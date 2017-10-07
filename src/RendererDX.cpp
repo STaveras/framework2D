@@ -1,0 +1,233 @@
+// File: RendererDX.cpp
+// Author: Stanley Taveras
+// Created: 2/24/2010
+// Modified: 1/13/2013
+
+#include "RendererDX.h"
+#include "Animation.h"
+#include "Appearance.h"
+#include "Camera.h"
+#include "Frame.h"
+#include "Renderable.h"
+#include "Image.h"
+#include "TextureD3D.h"
+#pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "d3dx9d.lib")
+#pragma comment(lib, "dinput8.lib")
+#pragma comment(lib, "dxguid.lib")
+
+RendererDX::RendererDX(void):
+	IRenderer(),
+	m_bFullscreen(true),
+	m_bVsync(true),
+	m_hWnd(NULL),
+	m_pD3D(NULL),
+	m_pD3DDevice(NULL),
+	m_pD3DSprite(NULL)
+{}
+
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync):
+	IRenderer(nWidth, nHeight),
+	m_bFullscreen(bFullscreen),
+	m_bVsync(bVsync),
+	m_hWnd(hWnd),
+	m_pD3D(NULL),
+	m_pD3DDevice(NULL),
+	m_pD3DSprite(NULL)
+{}
+
+RendererDX::~RendererDX(void)
+{
+	Shutdown();
+}
+
+//void RendererDX::_DrawAppearance(Appearance* pAppearance)
+//{
+//	// Calculate the tint and 
+//	color tint = ((int)(pAppearance->GetAlpha() * 255) << 24) | (pAppearance->GetTint() & 0x00FFFFFF);
+//
+//	std::list<Image*>::const_iterator itr = pAppearance->GetSprites().begin();
+//
+//	for(; itr != pAppearance->GetSprites().end(); itr++)
+//	{
+//		_DrawImage((*itr), tint);
+//	}
+//
+//	if(pAppearance->GetAnimation())
+//		_DrawImage(pAppearance->GetAnimation()->GetCurrentFrame()->GetSprite(), tint, pAppearance->GetAnimation()->GetCurrentFrame()->GetAnchor());
+//}
+
+void RendererDX::_DrawImage(Image* pSprite, color tint, D3DXVECTOR2 offset)
+{
+	D3DXMATRIX transform;
+	D3DXMatrixTransformation2D(&transform, &pSprite->GetRectCenter(), 0.0f, &pSprite->GetScale(), &pSprite->GetCenter(), pSprite->GetRotation(), NULL);
+
+	D3DXVECTOR3 position;
+	position.x = pSprite->GetPosition().x + offset.x;
+	position.y = pSprite->GetPosition().y + offset.y;
+	position.z = 0.0f;
+
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+	m_pD3DSprite->SetTransform(&transform);
+	m_pD3DSprite->Draw(((TextureD3D*)pSprite->GetTexture())->GetTexture(), &pSprite->GetSourceRect(), &D3DXVECTOR3(pSprite->GetCenter().x, pSprite->GetCenter().y, 0.0f), &position, tint._color);
+}
+
+//void RendererDX::_DrawFont(Font* pFont)
+//{
+
+//}
+
+ITexture* RendererDX::CreateTexture(const char* szFilename, color colorKey)
+{
+	ITexture* pTexture = _TextureExists(szFilename);
+
+	if(!pTexture)
+	{
+		pTexture = (ITexture*)new TextureD3D(szFilename);
+		pTexture->SetKeyColor(colorKey);
+
+		m_Textures.Store(pTexture);
+
+		D3DXCreateTextureFromFileEx(
+			m_pD3DDevice,
+			szFilename,
+			D3DX_DEFAULT_NONPOW2, 
+			D3DX_DEFAULT_NONPOW2, 
+			D3DX_DEFAULT, 
+			0, 
+			D3DFMT_UNKNOWN,
+			D3DPOOL_MANAGED,
+			D3DX_FILTER_POINT,
+			D3DX_DEFAULT,
+			(DWORD)colorKey._color,
+			&((TextureD3D*)pTexture)->m_tImageInfo,
+			NULL, 
+			&((TextureD3D*)pTexture)->m_pTexture);
+	}
+
+	return pTexture;
+}
+
+void RendererDX::Initialize(void)
+{
+	m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+
+	D3DPRESENT_PARAMETERS D3DPP;
+	ZeroMemory(&D3DPP, sizeof(D3DPP));
+
+	D3DPP.Windowed = (!m_bFullscreen) ? TRUE : FALSE;
+	D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
+	D3DPP.BackBufferWidth = m_nWidth;
+	D3DPP.BackBufferHeight = m_nHeight;
+	D3DPP.PresentationInterval = (m_bVsync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+
+	m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
+	if (m_pD3DDevice)
+	{
+		D3DXCreateSprite(m_pD3DDevice, &m_pD3DSprite);
+
+		D3DXMATRIX ortho2D;
+		D3DXMatrixOrthoLH(&ortho2D, (float)m_nWidth, (float)m_nHeight, 0.0f, 1.0f);
+		m_pD3DDevice->SetTransform(D3DTS_PROJECTION, &ortho2D);
+	}
+}
+
+void RendererDX::Shutdown(void)
+{
+	if(m_pD3DSprite)
+	{
+		m_pD3DSprite->Release();
+		m_pD3DSprite = NULL;
+	}
+
+	if(m_pD3DDevice)
+	{
+		m_pD3DDevice->Release();
+		m_pD3DDevice = NULL;
+	}
+
+	if(m_pD3D)
+	{
+		m_pD3D->Release();
+		m_pD3D = NULL;
+	}
+}
+
+void RendererDX::Render(void)
+{
+	if(!m_pD3DDevice)
+		return;
+
+	_BackgroundColorShift();
+
+	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
+
+	// Begin drawing the scene
+	if(SUCCEEDED(m_pD3DDevice->BeginScene()))
+	{
+		// TODO : (Optional) 3D Rendering here
+
+		// Draw sprites 
+		if(SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
+		{
+			if(m_pCamera)
+			{
+				D3DXMATRIX viewMat;
+				D3DXMatrixIdentity(&viewMat);
+
+				D3DXMATRIX scaleMat;
+				D3DXMatrixScaling(&scaleMat, m_pCamera->GetZoom(), m_pCamera->GetZoom(), 1.0f);
+
+				D3DXMATRIX rotationMat;
+				D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
+
+				D3DXVECTOR2 position = m_pCamera->GetPosition() - m_pCamera->GetCenter();
+
+				viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1,0), &position);
+				viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0,1), &position);
+
+				viewMat = scaleMat * rotationMat * viewMat;
+
+				m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
+			}
+
+			if (!_RenderLists.Empty())
+			{
+				for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+				{
+                    for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+					{
+						if ((*o)->IsVisible())
+						{
+							switch((*o)->GetRenderableType())
+							{
+							case RENDERABLE_TYPE_IMAGE:
+								_DrawImage((Image*)(*o));
+								break;
+							case RENDERABLE_TYPE_ANIMATION:
+								{
+									Animation* pAnimation = (Animation*)(*o);
+									Frame* frame = pAnimation->GetCurrentFrame();
+
+									if (frame)
+										_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			m_pD3DSprite->End();
+		}
+
+		// TODO : Font rendering here
+
+		m_pD3DDevice->EndScene();
+	}
+
+	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+	InvalidateRect(m_hWnd, NULL, true);
+}

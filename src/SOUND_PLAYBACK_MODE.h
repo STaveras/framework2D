@@ -1,0 +1,16 @@
+// File: SOUND_PLAYBACK_MODE.h
+// Author: Stanley Taveras
+// Created: 2/20/2010
+// Modified: 2/20/2010
+
+#if !defined(_SOUND_PLAYBACK_MODE_H)
+#define _SOUND_PLAYBACK_MODE_H
+
+
+enum SOUND_PLAYBACK_MODE
+{
+	SOUND_PLAYBACK_LOOP,
+	SOUND_PLAYBACK_ONCE
+};
+
+#endif  //_SOUND_PLAYBACK_MODE_H

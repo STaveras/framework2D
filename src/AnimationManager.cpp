@@ -1,0 +1,188 @@
+// File: AnimationManager.cpp
+// Author: Stanley Taveras
+// Created: 3/1/2010
+// Modified: 3/1/2010
+
+#include "AnimationManager.h"
+#include "SDSParser.h"
+#include "StrUtil.h"
+
+Animation* AnimationManager::GetAnimation(const char* szName)
+{
+	return this->Find(szName);
+}
+
+//Animation* AnimationManager::LoadAnimationFromFile(const char* szFilename)
+//{
+//	Animation* pAnimation = NULL;
+//
+//	SDSParser parser;
+//
+//	if(!parser.open(szFilename))
+//	{
+//		if(parser.setScope("Animation"))
+//		{
+//			SDSNodeData* pData = parser.getProperty("Name");
+//
+//			if(pData)
+//			{				
+//				pAnimation = _AnimationExists(pData->GetValue()); 
+//
+//				if(!pAnimation)
+//				{
+//					pAnimation = m_Animations.Create();
+//					pAnimation->SetName(pData->GetValue());
+//				}
+//
+//				pData = parser.getProperty("Mode");
+//
+//				if(pData)
+//				{
+//					if(streqls(pData->GetValue(), "Loop"))
+//						pAnimation->SetMode(ANIMATION_MODE_LOOP);
+//					else if(streqls(pData->GetValue(), "Once") || pData->GetValueAsInt() == 1)
+//						pAnimation->SetMode(ANIMATION_MODE_ONCE);
+//					else if(streqls(pData->GetValue(), "Oscillate") || pData->GetValueAsInt() >= 2)
+//						pAnimation->SetMode(ANIMATION_MODE_OSCILLATE);
+//				}
+//
+//				pData = parser.getProperty("Forward");
+//
+//				if(pData)
+//				{
+//					if(streqls(pData->GetValue(), "false"))
+//						pAnimation->SetIsForward(false);
+//					else
+//						pAnimation->SetIsForward(true);
+//				}
+//
+//				pData = parser.getProperty("Speed");
+//
+//				if(pData)
+//					pAnimation->SetSpeed((float)pData->GetValueAsDouble());
+//
+//				if(parser.setScope("Animation:Frames"))
+//				{
+//					char buffer[256];
+//
+//					int frames = (int)parser.getNumSubScopes();
+//
+//					for(int i = 0; i < frames; i++)
+//					{
+//						sprintf_s(buffer, 256, "Animation:Frames:%d", i);
+//
+//						if(parser.setScope(buffer))
+//						{
+//							Frame newFrame;
+//
+//							pData = parser.getProperty("Duration");
+//
+//							if(pData)
+//								newFrame.SetDuration((float)pData->GetValueAsDouble());
+//
+//							pData = parser.getProperty("Image");
+//
+//							if(pData)
+//								newFrame.SetSprite(_pSpriteManager->LoadSpriteFromFile(pData->GetValue()));
+//
+//							sprintf_s(buffer, 256, "Animation:Frames:%d:Anchor", i);
+//
+//							if(parser.setScope(buffer))
+//							{
+//								vector2 anchor;
+//
+//								pData = parser.getProperty("X");
+//
+//								if(pData)
+//									anchor.x = (float)pData->GetValueAsDouble();
+//
+//								pData = parser.getProperty("Y");
+//
+//								if(pData)
+//									anchor.y = (float)pData->GetValueAsDouble();
+//							}
+//
+//							sprintf_s(buffer, 256, "Animation:Frames:%d:Triggers", i); // Ok. We need a "setSubScope" function in the SDS parser
+//
+//							if(parser.setScope(buffer))
+//							{
+//								int triggers = (int)parser.getNumPropertiesInScope();
+//
+//								for(int t = 0; t < triggers; t++)
+//								{
+//									_itoa_s(t, buffer, 256, 10);
+//									pData = parser.getProperty(buffer);
+//
+//									if(pData)
+//									{
+//										Trigger newTrigger;
+//										newTrigger.LoadFromFile(pData->GetValue());
+//
+//										newFrame.AddTrigger(newTrigger);
+//									}
+//								}
+//							} // Trigger
+//
+//							pAnimation->AddFrame(newFrame);
+//						} // Frame
+//					} // for
+//				} // Frames
+//			}
+//		} // ::Animation
+//
+//		parser.close();
+//	}
+//
+//	return pAnimation;
+//}
+
+Animation* AnimationManager::CreateAnimation(const char* szName)
+{
+	Animation* pAnimation = this->Find(szName);
+
+	if(!pAnimation)
+	{
+		pAnimation = this->Create();
+		pAnimation->SetName(szName);
+		_pRenderList->push_back(pAnimation);
+	}
+
+	return pAnimation;
+}
+
+Animation* AnimationManager::CreateAnimation(const char* szName, const std::vector<Sprite*>& vSprites, int nTargetFPS)
+{
+	Animation* pAnimation = CreateAnimation(szName);
+	
+	std::vector<Sprite*>::const_iterator itr = vSprites.begin();
+		for(; itr != vSprites.end(); itr++)
+			pAnimation->AddFrame((*itr), (float)(nTargetFPS/vSprites.size()));														
+
+	return pAnimation;
+}
+
+void AnimationManager::DestroyAnimation(Animation* pAnimation)
+{
+	for (IRenderer::RenderList::iterator i = _pRenderList->begin(); i != _pRenderList->end(); i++)
+		if ((*i) == pAnimation)
+			_pRenderList->erase(i);
+
+	this->Destroy(pAnimation);
+}
+
+void AnimationManager::DestroyAnimation(const char* szName)
+{
+	for(Factory<Animation>::const_factory_iterator itr = this->Begin(); itr != this->End(); itr++)
+		if(!strcmp((*itr)->GetName(), szName))
+			return DestroyAnimation(*itr);
+}
+
+void AnimationManager::Update(float fTime)
+{
+	Factory<Animation>::const_factory_iterator itr = this->Begin();
+
+	for(; itr != this->End(); itr++)
+	{
+		(*itr)->Update(fTime);
+	}
+}

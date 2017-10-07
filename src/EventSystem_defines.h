@@ -1,0 +1,4 @@
+
+#pragma once
+
+#define DEFAULT_EVENT_FLOOD_LIMIT 0xFFFFFFFF
