@@ -18,6 +18,7 @@ GameObject::GameObjectState* GameObject::AddState(const char* szName)
 
 void GameObject::SetAnimation(Animation* ani)
 {
+	// TODO: Should set the CURRENT state's animation
 	if (m_States.Size())
 		((GameObjectState*)m_States[m_States.Size()-1])->SetRenderable(ani);
 	else
@@ -72,7 +73,7 @@ void GameObject::GameObjectState::OnExit(void)
 	_Renderable->SetVisibility(false);
 }
 
-void GameObject::Setup(void)
+void GameObject::Setup(void) 
 {
 	Engine2D::GetInstance()->GetEventSystem()->RegisterCallback<GameObject>("ANIMATION_STOPPED",this,&GameObject::_OnAnimationStopped);
 }

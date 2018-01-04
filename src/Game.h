@@ -4,7 +4,7 @@
 #include "ProgramStack.h"
 #include "Player.h"
 class Timer;
-class Game : public ISingleton<Game>, public ProgramStack
+class Game : public ISingleton<Game>, public ProgramStack // Does this really need to be a singleton?
 {
 	friend ISingleton<Game>;
 
