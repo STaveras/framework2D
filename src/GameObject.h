@@ -19,6 +19,7 @@ public:
         vector2 _Direction;
         double _Force;
 		double _ExecuteTime;
+		double _RunTime;
 
 	public:
 		Renderable* GetRenderable(void) { return _Renderable; }

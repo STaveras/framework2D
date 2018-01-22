@@ -33,6 +33,7 @@ void GameObject::SetStateAnimation(const char* stateName, Animation* ani)
 
 void GameObject::GameObjectState::OnEnter(State* prev)
 {
+	_RunTime = 0;
 	_Renderable->SetVisibility(true);
 
 	switch(_Renderable->GetRenderableType())
@@ -45,7 +46,7 @@ void GameObject::GameObjectState::OnEnter(State* prev)
 
 bool GameObject::GameObjectState::OnExecute(float time)
 {
-	static double runTime = 0; runTime += time;
+	_RunTime += time;
 
 	switch(_Renderable->GetRenderableType())
 	{
@@ -57,15 +58,11 @@ bool GameObject::GameObjectState::OnExecute(float time)
 				return true;
 			else
 				return false;
-			//else
-			//	Engine2D::GetInstance()->GetEventSystem()->SendEvent("ANIMATION_STOPPED", this);
 		}
 		break;
 	}
 
-	if (_ExecuteTime > 0 && runTime >= _ExecuteTime)
-	{
-		runTime = 0;
+	if (_ExecuteTime > 0 && _RunTime >= _ExecuteTime) {
 		return false;
 	}
 
