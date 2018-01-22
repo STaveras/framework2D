@@ -1,13 +1,10 @@
 #pragma once
-#include "ISingleton.h"
 #include "ObjectManager.h"
 #include "ProgramStack.h"
 #include "Player.h"
 class Timer;
-class Game : public ISingleton<Game>, public ProgramStack // Does this really need to be a singleton?
+class Game : public ProgramStack // Does this really need to be a singleton?
 {
-	friend ISingleton<Game>;
-
 protected:
 	Player* _Players;
 

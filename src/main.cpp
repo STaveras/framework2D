@@ -11,7 +11,6 @@
 #include "SDSParser.h"
 class FlappyTurd : public Game
 {
-   Engine2D* _engine;
    IRenderer::RenderList* _sprites;
 
    class PlayState : public GameState
@@ -66,6 +65,8 @@ class FlappyTurd : public Game
          std::string stateMachineInput = inputEvent->GetButtonID() + "_RELEASED";
          _Player.GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
       }
+
+	  // TODO: Move the above two functions to Turd
 
       void OnEnter(void)
       {
@@ -132,17 +133,15 @@ public:
 
    void Begin(void)
    {
-      _engine = Engine2D::GetInstance();
       _sprites = Renderer::Get()->CreateRenderList();
+
       this->push(&_PlayState);
    }
-   void Update(Timer* timer)
-   {
-      Game::Update(timer);
-   }
+   
    void End(void)
    {
       this->pop();
+
       Renderer::Get()->DestroyRenderList(_sprites);
    }
 }game;

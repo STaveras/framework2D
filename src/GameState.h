@@ -11,7 +11,7 @@ protected:
    Factory<Sprite>   _Sprites;
    AnimationManager	_AnimationManager;
    InputManager		_InputManager;
-   ObjectManager     _ObjectManager;
+   ObjectManager    _ObjectManager;
 
 public:
    GameState(void);
