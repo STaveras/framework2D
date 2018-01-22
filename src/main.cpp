@@ -22,18 +22,20 @@ class FlappyTurd : public Game
       {
          friend PlayState;
 
-         class TurdState : public GameObjectState
-         {
-         public:
-            void OnEnter()
-            {
-            }
+		 // Currently unused
+    //     class TurdState : public GameObjectState
+    //     {
+    //     public:
+    //        void OnEnter()
+    //        {
+				//GameObjectState::OnEnter();
+    //        }
 
-            void OnExit()
-            {
+    //        void OnExit()
+    //        {
 
-            }
-         };
+    //        }
+    //     };
 
       public:
          Turd(void)
@@ -43,6 +45,7 @@ class FlappyTurd : public Game
             Falling->setForce(3);
 
             GameObjectState* Rising = this->AddState("Rising");
+			Rising->setExecuteTime(0.5); // 1 second
             Rising->setDirection(vector2(1,1));
             Rising->setForce(3);
 
@@ -100,6 +103,8 @@ class FlappyTurd : public Game
 
          _game->PushSprite(Falling->GetRenderable());
          _game->PushSprite(Rising->GetRenderable());
+
+		 _Player.Initialize();
 
          //SDSParser *scriptParser = 
          // camera follows turd + bg

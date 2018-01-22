@@ -3,7 +3,7 @@
 #include "ProgramStack.h"
 #include "Player.h"
 class Timer;
-class Game : public ProgramStack // Does this really need to be a singleton?
+class Game : public ProgramStack
 {
 protected:
 	Player* _Players;

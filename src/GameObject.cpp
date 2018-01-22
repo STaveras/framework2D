@@ -45,6 +45,8 @@ void GameObject::GameObjectState::OnEnter(State* prev)
 
 bool GameObject::GameObjectState::OnExecute(float time)
 {
+	static double runTime = 0; runTime += time;
+
 	switch(_Renderable->GetRenderableType())
 	{
 	case RENDERABLE_TYPE_ANIMATION:
@@ -54,11 +56,20 @@ bool GameObject::GameObjectState::OnExecute(float time)
 			if (animation->Update(time))
 				return true;
 			else
-				Engine2D::GetInstance()->GetEventSystem()->SendEvent("ANIMATION_STOPPED", this);
+				return false;
+			//else
+			//	Engine2D::GetInstance()->GetEventSystem()->SendEvent("ANIMATION_STOPPED", this);
 		}
 		break;
 	}
-	return false;
+
+	if (_ExecuteTime > 0 && runTime >= _ExecuteTime)
+	{
+		runTime = 0;
+		return false;
+	}
+
+	return true;
 }
 
 void GameObject::GameObjectState::OnExit(void)
