@@ -12,6 +12,7 @@ void ProgramStack::pop(void)
 	if (!this->empty())
 	{
 		this->top()->OnExit();
+
 		std::stack<IProgramState*>::pop();
 	}
 }

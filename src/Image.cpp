@@ -8,7 +8,6 @@ Image::Image(void):
 	m_pTexture(NULL), 
 	m_fRotation(0.0f),
 	m_Center(vector2(0,0)),
-	m_Position(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
 
@@ -17,7 +16,6 @@ Image::Image(ITexture* pImage):
 	m_pTexture(pImage),
 	m_fRotation(0.0f),
 	m_Center(vector2(0,0)),
-	m_Position(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
 
@@ -26,7 +24,6 @@ Image::Image(const char* filePath, color clearColor, const rect* srcRect):
 	m_pTexture(NULL), 
 	m_fRotation(0.0f),
 	m_Center(vector2(0,0)),
-	m_Position(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {
 	this->Load(filePath,clearColor,srcRect);

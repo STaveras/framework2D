@@ -7,14 +7,26 @@
 #include "Player.h"
 class GameState : public IProgramState
 {
+   Factory<Sprite> _sprites; // Should we just have this in the CPP?
+
+   void _OnObjectStateEnter(const Event& e);
+   void _OnObjectStateExit(const Event& e);
+
 protected:
-   Factory<Sprite>   _Sprites;
-   AnimationManager	_AnimationManager;
-   InputManager		_InputManager;
+   IRenderer::RenderList* _renderList;
+
+   AnimationManager _AnimationManager;
+   InputManager     _InputManager;
    ObjectManager    _ObjectManager;
 
 public:
-   GameState(void);
+   GameState(void) : IProgramState() {}
+
+   Sprite* AddSprite(const char* filename);
+   void RemoveSprite(Sprite* sprite);
+
+   //void AddObject(GameObject* object);
+   //void RemoveObject(GameObject* object);
 
    virtual void OnEnter(void);
    virtual void OnExecute(float fTime);

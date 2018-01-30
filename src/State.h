@@ -10,20 +10,20 @@
 
 class State
 {
-	char* m_szName;
+   char* m_szName;
 
 public:
-	State(void):m_szName(NULL){}
-	State(const char* szName):m_szName(_strdup(szName)){}
-	State(const State& rhs): m_szName(_strdup(rhs.m_szName)) {}
-	virtual ~State(void) { if(m_szName) free(m_szName); }
+   State(void) :m_szName(NULL) {}
+   State(const char* szName) :m_szName(_strdup(szName)) {}
+   State(const State& rhs) : m_szName(_strdup(rhs.m_szName)) {}
+   virtual ~State(void) { if (m_szName) free(m_szName); }
 
-	const char* GetName(void) const { return m_szName; }
-	void SetName(const char* szName) { if(m_szName) free(m_szName); m_szName = _strdup(szName); }
+   const char* GetName(void) const { return m_szName; }
+   void SetName(const char* szName) { if (m_szName) free(m_szName); m_szName = _strdup(szName); }
 
-	virtual void OnEnter(State* prevState){}
-	virtual bool OnExecute(float fTime){ return false; }
-	virtual void OnExit(){}
+   virtual void OnEnter(State* prevState) {} // EVT_PREV_TRANSITION FROM
+   virtual bool OnExecute(float fTime) { return false; }
+   virtual void OnExit(State* nextState) {}  // EVT_WILL_TRANSITION TO
 };
 
 #endif  //_STATE_H

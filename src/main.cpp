@@ -9,145 +9,124 @@
 #include "Window.h"
 
 #include "SDSParser.h"
+
+//Game *game = NULL;
+
 class FlappyTurd : public Game
 {
-   IRenderer::RenderList* _sprites;
-
    class PlayState : public GameState
    {
-      FlappyTurd* _game;
-      Sprite* _bg;
+      Player* _Player; // Probably should just go in GameState...?
+      Sprite* _Background;
 
-      class Turd : public Player, GameObject
+      class Turd : public GameObject
       {
-         friend PlayState;
+         // Currently unused
+         //class TurdState : public GameObjectState
+         //{
+         //public:
+           // void OnEnter()
+           // {
+           //	 //GameObjectState::OnEnter();
+           // }
 
-		 // Currently unused
-    //     class TurdState : public GameObjectState
-    //     {
-    //     public:
-    //        void OnEnter()
-    //        {
-				//GameObjectState::OnEnter();
-    //        }
+           // void OnExit()
+           // {
 
-    //        void OnExit()
-    //        {
-
-    //        }
-    //     };
+           // }
+         //};
 
       public:
          Turd(void)
          {
             GameObjectState* Falling = this->AddState("Falling");
-            Falling->setDirection(vector2(1,-1));
-            Falling->setForce(3);
+            Falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
+            Falling->setDirection(vector2(0.1, 1));
+            Falling->setForce(10);
 
             GameObjectState* Rising = this->AddState("Rising");
-			Rising->setExecuteTime(0.5); // 1 second
-            Rising->setDirection(vector2(1,1));
-            Rising->setForce(3);
-
-            this->RegisterTransition("Falling","BUTTON_PRESSED","Rising");
-            this->RegisterTransition("Rising","TIME_PASSED","Falling");
+            Rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
+            Rising->setExecuteTime(0.27);
+            Rising->setDirection(vector2(0, -1));
+            Rising->setForce(100);
          }
-      }_Player;
+
+         ~Turd(void) {
+
+            for (unsigned int i = 0; i < m_States.Size(); i++)
+               delete ((GameObjectState*)m_States.At(i))->GetRenderable();
+
+         }
+
+         // The setup should be where we load scripts
+         void Setup() {
+
+            GameObject::Setup();
+
+            this->RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
+            this->RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
+
+         }
+
+         void Shutdown() {
+
+            GameObject::Shutdown();
+         }
+      };
 
    public:
-      void OnKeyPressed(const Event& e)
-      {
-         InputEvent* inputEvent = (InputEvent*)&e;
-         std::string stateMachineInput = inputEvent->GetButtonID() + "_PRESSED";
-         _Player.GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
-      }
-
-      void OnKeyReleased(const Event& e)
-      {
-         InputEvent* inputEvent = (InputEvent*)&e;
-         std::string stateMachineInput = inputEvent->GetButtonID() + "_RELEASED";
-         _Player.GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
-      }
-
-	  // TODO: Move the above two functions to Turd
 
       void OnEnter(void)
       {
          GameState::OnEnter();
 
-         Engine2D* engine = Engine2D::GetInstance();
-         engine->GetEventSystem()->RegisterCallback<PlayState>("EVT_KEYPRESSED", this, &PlayState::OnKeyPressed);
-         engine->GetEventSystem()->RegisterCallback<PlayState>("EVT_KEYRELEASED", this, &PlayState::OnKeyReleased);
+         _Background = AddSprite("./data/images/bg.png");
 
-         _InputManager.Initialize(engine->GetEventSystem(), engine->GetInput());
+         _ObjectManager.AddObject("Turd", new Turd);
 
-         _game = (FlappyTurd*)engine->GetGame();
+         _Player = new Player;
+         _Player->SetGamePad(_InputManager.CreateGamePad());
+         _Player->GetGamePad()->AddButton(VirtualButton("BUTTON", KBK_SPACE));
+         _Player->SetGameObject(_ObjectManager.GetGameObject("Turd"));
+         _Player->Setup();
 
-         _bg = this->_Sprites.Create(Sprite("./data/images/bg.png"));
-
-         _game->PushSprite(_bg);
-
-         _ObjectManager.AddObject("Player",&_Player);
-         _Player.SetGameObject(&_Player);
-         _Player.SetGamePad(_InputManager.CreateGamePad());
-         _Player.GetGamePad()->AddButton(VirtualButton("BUTTON",KBK_SPACE));
-
-         GameObject::GameObjectState* Falling = (GameObject::GameObjectState*)_Player.GetState("Falling");
-         Falling->SetRenderable(_Sprites.Create(Sprite("./data/images/turd0.png",0xFFFF00FF)));
-
-         GameObject::GameObjectState* Rising = (GameObject::GameObjectState*)_Player.GetState("Rising");
-         Rising->SetRenderable(_Sprites.Create(Sprite("./data/images/turd1.png",0xFFFF00FF)));
-         Rising->GetRenderable()->SetVisibility(false);
-
-		 // TODO: Where are these events registered?
-
-         _game->PushSprite(Falling->GetRenderable());
-         _game->PushSprite(Rising->GetRenderable());
-
-		 _Player.Initialize();
-
-         //SDSParser *scriptParser = 
-         // camera follows turd + bg
+         _ObjectManager.GetGameObject("Turd")->Initialize();
       }
 
-      void OnExecute(float time)
-      {
-         GameState::OnExecute(time);
-      }
+      //void OnExecute(float time)
+      //{
+      //   GameState::OnExecute(time);
+      //}
 
       void OnExit(void)
-      {
-         _game->PopSprite();
-         _ObjectManager.RemoveObject("Player");
+      {  
+         // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
+         _ObjectManager.GetGameObject("Turd")->Terminate();
 
-         this->_Sprites.Destroy(_bg);
+         _Player->Shutdown();
+
+         _ObjectManager.RemoveObject("Turd");
+
+         delete _Player->GetGameObject();
+         delete _Player;
+
+         RemoveSprite(_Background);
+
          GameState::OnExit();
       }
-   }_PlayState;
+   };
+
+   friend PlayState;
 
 public:
-   void PushSprite(Renderable* bg)
-   {
-      _sprites->push_back(bg);
-   }
-
-   void PopSprite()
-   {
-      _sprites->pop_back();
-   }
-
    void Begin(void)
    {
-      _sprites = Renderer::Get()->CreateRenderList();
-
-      this->push(&_PlayState);
+      this->push(new PlayState);
    }
-   
+
    void End(void)
    {
-      this->pop();
-
-      Renderer::Get()->DestroyRenderList(_sprites);
+      void* playState = this->top(); this->pop(); delete playState;
    }
 }game;
 
@@ -165,7 +144,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    engine->SetGame(&game);
    engine->Initialize();
 
-   while(!rndrWind.HasQuit() && !engine->HasQuit())
+   while (!rndrWind.HasQuit() && !engine->HasQuit())
    {
       rndrWind.Update();
       engine->Update();
@@ -174,7 +153,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    engine->Shutdown();
 
    Input::DestroyInputInterface(pInput);
-   Renderer::DestroyRenderer(pRenderer); 
+   Renderer::DestroyRenderer(pRenderer);
 
    rndrWind.Shutdown();
 }

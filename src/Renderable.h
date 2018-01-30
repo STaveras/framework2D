@@ -7,12 +7,13 @@
 #define _IRENDERABLE_H
 
 #include "color.h"
+#include "positionable.h"
 #include <list>
 #include <math.h>
 
 enum RENDERABLE_TYPE { RENDERABLE_TYPE_NULL, RENDERABLE_TYPE_ANIMATION, RENDERABLE_TYPE_IMAGE, RENDERABLE_TYPE_FONT };
 
-class Renderable
+class Renderable : public positionable
 {
 	RENDERABLE_TYPE m_eType;
 	struct

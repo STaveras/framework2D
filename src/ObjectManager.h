@@ -17,7 +17,7 @@ class ObjectManager
 	std::list<ObjectOperator*> m_lsObjOperators;
 
 public:
-	GameObject* GetObject(const char* name) { return m_mObjects[name]; }
+	GameObject* GetGameObject(const char* name) { return m_mObjects[name]; }
 
 	void Update(float fTime);
 

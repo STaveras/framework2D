@@ -196,33 +196,33 @@ void RendererDX::Render(void)
 				m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 			}
 
-			if (!_RenderLists.Empty())
-			{
-				for (unsigned int i = 0; i < _RenderLists.Size(); i++)
-				{
-                    for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
-					{
-						if ((*o)->IsVisible())
-						{
-							switch((*o)->GetRenderableType())
-							{
-							case RENDERABLE_TYPE_IMAGE:
-								_DrawImage((Image*)(*o));
-								break;
-							case RENDERABLE_TYPE_ANIMATION:
-								{
-									Animation* pAnimation = (Animation*)(*o);
-									Frame* frame = pAnimation->GetCurrentFrame();
+      if (!_RenderLists.Empty())
+      {
+         for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+         {
+            for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+            {
+               if ((*o)->IsVisible())
+               {
+                  switch ((*o)->GetRenderableType())
+                  {
+                  case RENDERABLE_TYPE_IMAGE:
+                     _DrawImage((Image*)(*o));
+                     break;
+                  case RENDERABLE_TYPE_ANIMATION:
+                  {
+                     Animation* pAnimation = (Animation*)(*o);
+                     Frame* frame = pAnimation->GetCurrentFrame();
 
-									if (frame)
-										_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
+                     if (frame)
+                        _DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
+                  }
+                  break;
+                  }
+               }
+            }
+         }
+      }
 
 			m_pD3DSprite->End();
 		}

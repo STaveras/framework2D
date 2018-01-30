@@ -3,8 +3,9 @@
 #include "ProgramStack.h"
 #include "Player.h"
 class Timer;
-class Game : public ProgramStack
+class Game : public ProgramStack 
 {
+   // A game should probably CONTAIN a program stack and not BE one (?)
 protected:
 	Player* _Players;
 

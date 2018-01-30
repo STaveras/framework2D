@@ -164,4 +164,10 @@
       <UniqueIdentifier>{80b93f5b-06f2-4067-b310-a318c75f8d98}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Engine2D.h">
+      <Filter>cpp\engine2Dbase</Filter>
+    </ClInclude>
+    <ClInclude Include="src\positionable.h" />
+  </ItemGroup>
 </Project>

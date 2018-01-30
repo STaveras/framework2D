@@ -9,3 +9,11 @@
    - Varying heights
    - Varying distances from each other
  - Count the flaps
+
+~~~
+
+Dev Notes: 
+
+- Make a new class called 'positionable' (posable?)
+- Make 'renderable' derive from 'positionable'
+- 'Collidable' should derive from 'positionable'

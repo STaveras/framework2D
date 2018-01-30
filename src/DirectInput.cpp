@@ -1,6 +1,8 @@
 
 #include "DirectInput.h"
 
+// TODO: Add support for mouse and gamepads
+
 DirectInput::DirectInput(void):
 IInput(),
 m_hWnd(NULL),
