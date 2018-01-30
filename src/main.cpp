@@ -41,36 +41,23 @@ class FlappyTurd : public Game
          {
             GameObjectState* Falling = this->AddState("Falling");
             Falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
-            Falling->setDirection(vector2(0.1, 1));
+            Falling->setDirection(vector2(0.01f, 1.0f));
             Falling->setForce(10);
 
             GameObjectState* Rising = this->AddState("Rising");
             Rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
             Rising->setExecuteTime(0.27);
-            Rising->setDirection(vector2(0, -1));
+            Rising->setDirection(vector2(0.0f, -1.0f));
             Rising->setForce(100);
+
+            RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
+            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
          }
 
-         ~Turd(void) {
-
+         ~Turd(void) 
+         {
             for (unsigned int i = 0; i < m_States.Size(); i++)
                delete ((GameObjectState*)m_States.At(i))->GetRenderable();
-
-         }
-
-         // The setup should be where we load scripts
-         void Setup() {
-
-            GameObject::Setup();
-
-            this->RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
-            this->RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
-
-         }
-
-         void Shutdown() {
-
-            GameObject::Shutdown();
          }
       };
 
@@ -82,15 +69,14 @@ class FlappyTurd : public Game
 
          _Background = AddSprite("./data/images/bg.png");
 
-         _ObjectManager.AddObject("Turd", new Turd);
+         _objectManager.AddObject("Turd", new Turd);
+         _objectManager.GetGameObject("Turd")->Initialize();
 
          _Player = new Player;
-         _Player->SetGamePad(_InputManager.CreateGamePad());
+         _Player->SetGamePad(_inputManager.CreateGamePad());
          _Player->GetGamePad()->AddButton(VirtualButton("BUTTON", KBK_SPACE));
-         _Player->SetGameObject(_ObjectManager.GetGameObject("Turd"));
+         _Player->SetGameObject(_objectManager.GetGameObject("Turd"));
          _Player->Setup();
-
-         _ObjectManager.GetGameObject("Turd")->Initialize();
       }
 
       //void OnExecute(float time)
@@ -101,11 +87,9 @@ class FlappyTurd : public Game
       void OnExit(void)
       {  
          // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         _ObjectManager.GetGameObject("Turd")->Terminate();
-
          _Player->Shutdown();
 
-         _ObjectManager.RemoveObject("Turd");
+         _objectManager.RemoveObject("Turd");
 
          delete _Player->GetGameObject();
          delete _Player;

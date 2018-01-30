@@ -16,10 +16,16 @@ StateMachine::StateMachine(void) :
    m_pState(NULL)
 {}
 
+StateMachine::~StateMachine(void) {
+   // Innecessary but for completeness' sake
+   m_mTransitionTable.clear();
+   m_States.Clear();
+}
+
 State* StateMachine::_GetNextState(const StateMachineEvent& evt)
 {
    std::pair<std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator,
-      std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(m_pState);
+             std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(m_pState);
 
    std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator itr = range.first;
 
@@ -109,12 +115,6 @@ void StateMachine::Reset(void)
    
    while (!m_qEvents.empty())
       m_qEvents.pop();
-}
-
-void StateMachine::Terminate(void)
-{
-   m_mTransitionTable.clear();
-   m_States.Clear();
 }
 
 void StateMachine::OnEvent(const StateMachineEvent& evt)

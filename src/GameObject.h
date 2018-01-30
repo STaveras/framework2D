@@ -27,6 +27,15 @@ public:
       double _RunTime;
 
    public:
+      GameObjectState(void) : State(),
+         _Renderable(NULL),
+         _Collidable(NULL),
+         _Direction(vector2(0, 0)),
+         _Force(0.0),
+         _ExecuteTime(0.0),
+         _RunTime(0.0) {
+      }
+
       Renderable * GetRenderable(void) { return _Renderable; }
       void setRenderable(Renderable* renderable) { _Renderable = renderable; }
 

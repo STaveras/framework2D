@@ -11,8 +11,8 @@ void PlayState::OnEnter(void)
 
     _RenderList = engine->GetRenderer()->CreateRenderList();
 
-	//_AnimationManager.Initialize();
-	//_InputManager.Initialize(engine->GetEventSystem(), engine->GetInput());
+	//_animationManager.Initialize();
+	//_inputManager.Initialize(engine->GetEventSystem(), engine->GetInput());
 
 	_backgroundNoise = new Animation();
 	_backgroundNoise->SetMode(ANIMATION_MODE_OSCILLATE);
@@ -30,25 +30,25 @@ void PlayState::OnEnter(void)
 
     _RenderList->push_back(_backgroundNoise);
 
-	//_player = engine->GetGame()->GetPlayer(0);
+	//_player = Engine2D::GetGame()->GetPlayer(0);
 
 	// Setting up its controller
-	//_player->SetGamePad(_InputManager.CreateGamePad());
+	//_player->SetGamePad(_inputManager.CreateGamePad());
 	_player->GetGamePad()->AddButton(VirtualButton("ATK",KBK_A));
 
 	// Setting up its controllable object
 	_player->SetGameObject(new GameObject());
-	//_ObjectManager.AddObject("Person",_player->GetGameObject());
+	//_objectManager.AddObject("Person",_player->GetGameObject());
 
 	// Adding states to define that object's behavior...
 	_player->GetGameObject()->AddState("IDLING");
-	//Animation* theGuyIdling = _AnimationManager.CreateAnimation("{ERSON_IDLING");
+	//Animation* theGuyIdling = _animationManager.CreateAnimation("{ERSON_IDLING");
 	//theGuyIdling->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/idling/0.bmp",0xFFFF00FF)),0.333f);
 	//theGuyIdling->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/idling/1.bmp",0xFFFF00FF)),0.333f);
 	//_player->GetGameObject()->SetAnimation(theGuyIdling);
 
 	_player->GetGameObject()->AddState("ATTACKING");
-	//Animation* theGuyAttacking = _AnimationManager.CreateAnimation("PERSON_ATTACKING");
+	//Animation* theGuyAttacking = _animationManager.CreateAnimation("PERSON_ATTACKING");
 	//theGuyAttacking->SetMode(ANIMATION_MODE_ONCE);
 	//theGuyAttacking->SetVisibility(false);
 	//theGuyAttacking->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/attacking/0.bmp",0xFFFF00FF)),0.0167f);
@@ -84,20 +84,20 @@ void PlayState::OnExecute(float time)
 
 void PlayState::OnExit(void)
 {
-	//_ObjectManager.RemoveObject("Person");
+	//_objectManager.RemoveObject("Person");
 
 	delete _player->GetGameObject();
 	_player->SetGameObject(NULL);
 
-	//_InputManager.DestroyGamePad(_player->GetGamePad());
+	//_inputManager.DestroyGamePad(_player->GetGamePad());
 	_player->SetGamePad(NULL);
 
     delete _backgroundNoise;
     
     Engine2D::GetInstance()->GetRenderer()->DestroyRenderList(_RenderList);
 
-	//_InputManager.Shutdown();
-	//_AnimationManager.Shutdown();
+	//_inputManager.Shutdown();
+	//_animationManager.Shutdown();
 	//_Sprites.Clear();
 
 	//GameState::OnExit();

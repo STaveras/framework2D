@@ -32,7 +32,7 @@ protected:
 
 public:
 	StateMachine(void);
-	//~StateMachine(void){}
+	~StateMachine(void);
 
 	void SetIsBuffered(bool bBuffered) { m_bBuffered = bBuffered; }
 	void SetTransitionFrequency(float fFreq) { m_fTransitionFrequency = fFreq; }
@@ -53,7 +53,7 @@ public:
 
 	void Initialize(void);
 	void Reset(void);
-	void Terminate(void);
+
 	void SendInput(const char* szCondition, void* pSender = NULL);
 
 	virtual void Update(float fTime);

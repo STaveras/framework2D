@@ -12,17 +12,19 @@ class GameState : public IProgramState
    void _OnObjectStateEnter(const Event& e);
    void _OnObjectStateExit(const Event& e);
 
+   friend Game;
+
 protected:
    IRenderer::RenderList* _renderList;
 
-   AnimationManager _AnimationManager;
-   InputManager     _InputManager;
-   ObjectManager    _ObjectManager;
+   AnimationManager _animationManager;
+   InputManager     _inputManager;
+   ObjectManager    _objectManager;
 
 public:
    GameState(void) : IProgramState() {}
 
-   Sprite* AddSprite(const char* filename);
+   Sprite* AddSprite(const char* filename, color clearColor = 0, rect* srcRect = NULL);
    void RemoveSprite(Sprite* sprite);
 
    //void AddObject(GameObject* object);

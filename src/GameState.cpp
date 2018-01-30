@@ -5,9 +5,9 @@
 
 Engine2D* engine = Engine2D::GetInstance();
 
-Sprite * GameState::AddSprite(const char * filename)
+Sprite* GameState::AddSprite(const char * filename, color clearColor, rect* srcRect)
 {
-   Sprite *sprite = _sprites.Create(Sprite(filename));
+   Sprite* sprite = _sprites.Create(Sprite(filename, clearColor, srcRect));
    _renderList->push_back(sprite);
    return sprite;
 }
@@ -34,23 +34,22 @@ void GameState::OnEnter(void)
    engine->GetEventSystem()->RegisterCallback<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
    engine->GetEventSystem()->RegisterCallback<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
 
-   _AnimationManager.Initialize(_renderList);
-   _InputManager.Initialize(engine->GetEventSystem(),
+   _animationManager.Initialize(_renderList);
+   _inputManager.Initialize(engine->GetEventSystem(),
                             engine->GetInput());
 }
 
 void GameState::OnExecute(float fTime)
 {
-   _AnimationManager.Update(fTime);
-   _InputManager.Update(fTime);
-   _ObjectManager.Update(fTime); // TODO: Build an object cache 
+   _animationManager.Update(fTime);
+   _inputManager.Update(fTime);
+   _objectManager.Update(fTime); // TODO: Build an object cache 
 }
 
 void GameState::OnExit(void)
 {
-   _sprites.Clear();
-   _InputManager.Shutdown();
-   _AnimationManager.Shutdown();
+   _inputManager.Shutdown();
+   _animationManager.Shutdown();
 
    engine->GetEventSystem()->Unregister<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
    engine->GetEventSystem()->Unregister<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
@@ -65,7 +64,7 @@ void GameState::OnExit(void)
 ///
 
 void GameState::_OnObjectStateEnter(const Event& e) {
-   
+
    if (e.GetSender()) {
 
       GameObject::GameObjectState *objectState = (GameObject::GameObjectState*)e.GetSender();

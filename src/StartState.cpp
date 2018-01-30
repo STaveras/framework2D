@@ -4,7 +4,7 @@ void StartState::OnEnter(void)
 {
 	GameState::OnEnter();
 
-	//Animation* animation = _AnimationManager.CreateAnimation("BackgroundNoise");
+	//Animation* animation = _animationManager.CreateAnimation("BackgroundNoise");
 	//animation->SetMode(ANIMATION_MODE_OSCILLATE);
 	//animation->AddFrame(_Sprites.Create(Sprite("./data/images/noise/0.png")));
 	//animation->AddFrame(_Sprites.Create(Sprite("./data/images/noise/1.png")));
