@@ -137,7 +137,7 @@
   <ItemGroup>
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
-    <ClInclude Include="src\positionable.h" />
+    <ClInclude Include="src\Positionable.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

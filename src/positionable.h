@@ -5,11 +5,9 @@
 class Positionable {
 
 protected:
-
    vector2 _position;
 
 public:
-
    Positionable(void) :
       _position(vector2(0, 0)) {}
 

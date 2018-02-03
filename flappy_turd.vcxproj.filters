@@ -177,7 +177,7 @@
     <ClInclude Include="src\Engine2D.h">
       <Filter>h</Filter>
     </ClInclude>
-    <ClInclude Include="src\positionable.h">
+    <ClInclude Include="src\Positionable.h">
       <Filter>h</Filter>
     </ClInclude>
   </ItemGroup>

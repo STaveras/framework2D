@@ -36,4 +36,3 @@ bool Square::WithSquare(const Square* square)
 	else
 		return true;
 }
-
