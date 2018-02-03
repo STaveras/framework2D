@@ -16,17 +16,17 @@ m_fZoom(1.0f)
 
 void Camera::MoveHorizontally(float amount)
 {
-	m_Position.x += amount;
+	_position.x += amount;
 }
 
 void Camera::MoveVertically(float amount)
 {
-	m_Position.y += amount;
+	_position.y += amount;
 }
 
 void Camera::Pan(vector2 direction, float amount)
 {
-	m_Position += direction * amount;
+	_position += direction * amount;
 }
 
 void Camera::Zoom(float amount)

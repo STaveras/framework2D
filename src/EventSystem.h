@@ -47,8 +47,8 @@ public:
 	void UnregisterAll(void (*fn)(const Event&));
 
 	template<class T>
-	void SendEvent(const T& evt);
-	void SendEvent(Event::event_key evtKey, void* pSender, Event::event_priority_level ePriority = Event::event_priority_normal);
+	void sendEvent(const T& evt);
+	void sendEvent(Event::event_key evtKey, void* pSender, Event::event_priority_level ePriority = Event::event_priority_normal);
 
 	void FlushEvents(void);
 	void ProcessEvents(void);

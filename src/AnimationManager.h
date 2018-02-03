@@ -18,8 +18,8 @@ public:
 	void DestroyAnimation(Animation* pAnimation);
 	void DestroyAnimation(const char* szName);	
 
-	void Initialize(IRenderer::RenderList* renderList) { _pRenderList = renderList; /*_pRenderList = Engine2D::GetInstance()->GetRenderer()->CreateRenderList();*/ }
+	void Initialize(IRenderer::RenderList* renderList) { _pRenderList = renderList; /*_pRenderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();*/ }
 	void Update(float fTime);
-	void Shutdown(void) { /*Engine2D::GetInstance()->GetRenderer()->DestroyRenderList(_pRenderList);*/ this->Clear(); }
+	void Shutdown(void) { /*Engine2D::getInstance()->GetRenderer()->DestroyRenderList(_pRenderList);*/ this->Clear(); }
 };
 // Author: Stanley Taveras

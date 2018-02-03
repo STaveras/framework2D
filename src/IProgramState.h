@@ -12,9 +12,9 @@ public:
 	IProgramState(void){}
 	virtual ~IProgramState(void) = 0{}
 
-	virtual void OnEnter(void) = 0{}
-	virtual void OnExecute(float fTime) = 0{}
-	virtual void OnExit(void) = 0{}
+	virtual void onEnter(void) = 0{}
+	virtual void onExecute(float fTime) = 0{}
+	virtual void onExit(void) = 0{}
 };
 
 #endif

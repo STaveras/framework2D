@@ -3,7 +3,7 @@
 #include "GameState.h"
 #include "Engine2D.h"
 
-Engine2D* engine = Engine2D::GetInstance();
+Engine2D* engine = Engine2D::getInstance();
 
 Sprite* GameState::AddSprite(const char * filename, color clearColor, rect* srcRect)
 {
@@ -12,47 +12,47 @@ Sprite* GameState::AddSprite(const char * filename, color clearColor, rect* srcR
    return sprite;
 }
 
-void GameState::RemoveSprite(Sprite * sprite)
+void GameState::removeSprite(Sprite * sprite)
 {
    _renderList->remove(sprite);
    _sprites.Destroy(sprite);
 }
 
-//void GameState::AddObject(GameObject * object)
+//void GameState::addObject(GameObject * object)
 //{
 //
 //}
 //
-//void GameState::RemoveObject(GameObject * object)
+//void GameState::removeObject(GameObject * object)
 //{
 //}
 
-void GameState::OnEnter(void)
+void GameState::onEnter(void)
 {
    _renderList = engine->GetRenderer()->CreateRenderList();
 
-   engine->GetEventSystem()->RegisterCallback<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
-   engine->GetEventSystem()->RegisterCallback<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
+   engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
+   engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
 
    _animationManager.Initialize(_renderList);
-   _inputManager.Initialize(engine->GetEventSystem(),
+   _inputManager.Initialize(engine->getEventSystem(),
                             engine->GetInput());
 }
 
-void GameState::OnExecute(float fTime)
+void GameState::onExecute(float fTime)
 {
    _animationManager.Update(fTime);
    _inputManager.Update(fTime);
    _objectManager.Update(fTime); // TODO: Build an object cache 
 }
 
-void GameState::OnExit(void)
+void GameState::onExit(void)
 {
    _inputManager.Shutdown();
    _animationManager.Shutdown();
 
-   engine->GetEventSystem()->Unregister<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
-   engine->GetEventSystem()->Unregister<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
+   engine->getEventSystem()->Unregister<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
+   engine->getEventSystem()->Unregister<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
 
    engine->GetRenderer()->DestroyRenderList(_renderList);
 }
@@ -69,7 +69,7 @@ void GameState::_OnObjectStateEnter(const Event& e) {
 
       GameObject::GameObjectState *objectState = (GameObject::GameObjectState*)e.GetSender();
 
-      _renderList->push_back(objectState->GetRenderable());
+      _renderList->push_back(objectState->getRenderable());
 
    }
 }
@@ -80,7 +80,7 @@ void GameState::_OnObjectStateExit(const Event& e) {
 
       GameObject::GameObjectState *objectState = (GameObject::GameObjectState*)e.GetSender();
 
-      _renderList->remove(objectState->GetRenderable());
+      _renderList->remove(objectState->getRenderable());
 
    }
 }

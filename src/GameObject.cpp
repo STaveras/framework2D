@@ -14,64 +14,63 @@
 
 //void GameObject::_OnAnimationStopped(const Event& e)
 //{
-//	for (unsigned int i = 0; i < m_States.Size(); i++)
-//		if (m_States.At(i) == (GameObjectState*)e.GetSender())
+//	for (unsigned int i = 0; i < _states.Size(); i++)
+//		if (_states.At(i) == (GameObjectState*)e.GetSender())
 //			return this->SendInput("ANIMATION_STOPPED");
 //}
 
-GameObject::GameObjectState* GameObject::AddState(const char* szName)
+GameObject::GameObjectState* GameObject::addState(const char* szName)
 {
-   GameObjectState* state = m_States.CreateDerived<GameObjectState>(); // TODO: Some way for the factory to take constructor arguments
+   GameObjectState* state = _states.CreateDerived<GameObjectState>(); // TODO: Some way for the factory to take constructor arguments
    state->SetName(szName);
 
    return state;
 }
 
-void GameObject::SetAnimation(Animation* ani)
+void GameObject::setAnimation(Animation* ani)
 {
    // TODO: Should set the CURRENT state's animation
-   if (m_States.Size())
-      ((GameObjectState*)m_States[m_States.Size() - 1])->setRenderable(ani);
+   if (_states.Size())
+      ((GameObjectState*)_states[_states.Size() - 1])->setRenderable(ani);
    else
       throw "GameObject: Does not have any states.";
 }
 
-void GameObject::SetStateAnimation(const char* stateName, Animation* ani)
+void GameObject::setStateAnimation(const char* stateName, Animation* ani)
 {
-   GameObjectState* state = (GameObjectState*)GetState(stateName);
-   state->_Renderable = ani;
+   ((GameObjectState*)GetState(stateName))->_renderable = ani;
 }
 
-void GameObject::GameObjectState::OnEnter(State* prev)
+void GameObject::GameObjectState::onEnter(State* prev)
 {
-   _RunTime = 0;
+   _runTime = 0;
 
-   if (_Renderable) {
-      _Renderable->SetVisibility(true);
+   if (_renderable) {
+      _renderable->setVisibility(true);
 
-      switch (_Renderable->GetRenderableType())
+      switch (_renderable->getRenderableType())
       {
       case RENDERABLE_TYPE_ANIMATION:
-         ((Animation*)_Renderable)->Play();
+         ((Animation*)_renderable)->Play();
          break;
       }
    }
 
-   Engine2D::GetInstance()->GetEventSystem()->SendEvent("EVT_STATE_ENTER", this);
+   Engine2D::getInstance()->getEventSystem()->sendEvent("EVT_STATE_ENTER", this);
 }
 
-bool GameObject::GameObjectState::OnExecute(float time)
+bool GameObject::GameObjectState::onExecute(float time)
 {
-   _RunTime += time;
+   _runTime += time;
 
-   if (_Renderable) {
-      switch (_Renderable->GetRenderableType())
+   if (_renderable) {
+      switch (_renderable->getRenderableType())
       {
       case RENDERABLE_TYPE_ANIMATION:
       {
-         Animation* animation = (Animation*)_Renderable;
+         Animation* animation = (Animation*)_renderable;
 
-         if (animation->Update(time))
+         if (animation->update(time))
             return true;
          else
             return false;
@@ -80,40 +79,40 @@ bool GameObject::GameObjectState::OnExecute(float time)
       }
    }
 
-   if (_ExecuteTime > 0 && _RunTime >= _ExecuteTime) {
+   if (_executeTime > 0 && _runTime >= _executeTime) {
       return false;
    }
 
    return true;
 }
 
-void GameObject::GameObjectState::OnExit(State* next)
+void GameObject::GameObjectState::onExit(State* next)
 {
-   Engine2D::GetInstance()->GetEventSystem()->SendEvent("EVT_STATE_EXIT", this);
+   Engine2D::getInstance()->getEventSystem()->sendEvent("EVT_STATE_EXIT", this);
 
-   if (_Renderable) {
-      switch (_Renderable->GetRenderableType())
+   if (_renderable) {
+      switch (_renderable->getRenderableType())
       {
       case RENDERABLE_TYPE_ANIMATION:
-         ((Animation*)_Renderable)->Stop();
+         ((Animation*)_renderable)->Stop();
          break;
       }
 
-      _Renderable->SetVisibility(false);
+      _renderable->setVisibility(false);
    }
 }
 
-//void GameObject::Setup(void)
+//void GameObject::setup(void)
 //{
 //   // Collision events
-//   //Engine2D::GetInstance()->GetEventSystem()->RegisterCallback<GameObject>("EVT_KEYPRESSED", this, &GameObject::_OnKeyPressed);
-//   //Engine2D::GetInstance()->GetEventSystem()->RegisterCallback<GameObject>("EVT_KEYRELEASED", this, &GameObject::_OnKeyReleased);
+//   //Engine2D::getInstance()->getEventSystem()->RegisterCallback<GameObject>("EVT_KEYPRESSED", this, &GameObject::_OnKeyPressed);
+//   //Engine2D::getInstance()->getEventSystem()->RegisterCallback<GameObject>("EVT_KEYRELEASED", this, &GameObject::_OnKeyReleased);
 //}
 //
-//void GameObject::Shutdown(void)
+//void GameObject::shutdown(void)
 //{
-//   //Engine2D::GetInstance()->GetEventSystem()->UnregisterAll<GameObject>(this, &GameObject::_OnKeyReleased);
-//   //Engine2D::GetInstance()->GetEventSystem()->UnregisterAll<GameObject>(this, &GameObject::_OnKeyPressed);
+//   //Engine2D::getInstance()->getEventSystem()->UnregisterAll<GameObject>(this, &GameObject::_OnKeyReleased);
+//   //Engine2D::getInstance()->getEventSystem()->UnregisterAll<GameObject>(this, &GameObject::_OnKeyPressed);
 //}
 
 //void GameObject::Initialize()
@@ -121,14 +120,7 @@ void GameObject::GameObjectState::OnExit(State* next)
 //   StateMachine::Initialize();
 //}
 
-void GameObject::Update(float fTime)
+void GameObject::update(float time) // lawl time as a float xfd
 {
-   StateMachine::Update(fTime);
-   
-   m_Position += m_Velocity * fTime; 
-
-   GameObjectState* currentState = (GameObjectState*)this->GetCurrentState();
-   
-   currentState->GetRenderable()->SetPosition(m_Position);
-   //currentState->GetRenderable()->Set
+   StateMachine::update(time); _position += _velocity * time;
 }

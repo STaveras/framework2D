@@ -204,7 +204,7 @@ void RendererDX::Render(void)
             {
                if ((*o)->IsVisible())
                {
-                  switch ((*o)->GetRenderableType())
+                  switch ((*o)->getRenderableType())
                   {
                   case RENDERABLE_TYPE_IMAGE:
                      _DrawImage((Image*)(*o));

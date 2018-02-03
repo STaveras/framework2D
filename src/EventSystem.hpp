@@ -83,7 +83,7 @@ void EventSystem::UnregisterAll(T* p, void (T::*fn)(const Event&))
 //}
 
 template<class T>
-void EventSystem::SendEvent(const T& e)
+void EventSystem::sendEvent(const T& e)
 {
 	if(m_EventQueue.size() >= m_uiFloodLimit)
 		return;

@@ -20,14 +20,14 @@ void Player::_OnKeyRelease(const Event& e)
    }
 }
 
-void Player::Setup(void)
+void Player::setup(void)
 {
-   Engine2D::GetInstance()->GetEventSystem()->RegisterCallback<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
-   Engine2D::GetInstance()->GetEventSystem()->RegisterCallback<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
+   Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
+   Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
 }
 
-void Player::Shutdown(void)
+void Player::shutdown(void)
 {
-   Engine2D::GetInstance()->GetEventSystem()->Unregister<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
-   Engine2D::GetInstance()->GetEventSystem()->Unregister<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
+   Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
+   Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
 }

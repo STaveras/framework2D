@@ -47,6 +47,6 @@ void Appearance::Mirror(bool bHorizontal, bool bVertical)
 
 void Appearance::Update(float fTime)
 {
-	//m_pAnimation->Update(fTime);
+	//m_pAnimation->update(fTime);
 	// TODO : Implement the flashing functionality
 }

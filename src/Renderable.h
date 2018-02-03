@@ -13,7 +13,7 @@
 
 enum RENDERABLE_TYPE { RENDERABLE_TYPE_NULL, RENDERABLE_TYPE_ANIMATION, RENDERABLE_TYPE_IMAGE, RENDERABLE_TYPE_FONT };
 
-class Renderable : public positionable
+class Renderable : public Positionable
 {
 	RENDERABLE_TYPE m_eType;
 	struct
@@ -35,9 +35,9 @@ public:
 	virtual ~Renderable(void)= 0{}
 
 	bool IsVisible(void) const { return _appearance._isVisible; }
-	RENDERABLE_TYPE GetRenderableType(void) const { return m_eType; }
+	RENDERABLE_TYPE getRenderableType(void) const { return m_eType; }
 
-	void SetVisibility(bool bVisible) { _appearance._isVisible = bVisible; }
+	void setVisibility(bool bVisible) { _appearance._isVisible = bVisible; }
 	//void SetRenderableType(RENDERABLE_TYPE eType) { m_eType = eType; }
 
 	// Appearance properties

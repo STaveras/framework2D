@@ -59,7 +59,7 @@ void Image::Mirror(bool bHorizontal, bool bVertical)
 
 Image* Image::Load(const char* filePath, color clearColor, const rect* srcRect)
 {
-	IRenderer* renderer = Engine2D::GetInstance()->GetRenderer();
+	IRenderer* renderer = Engine2D::getInstance()->GetRenderer();
 	if (renderer)
 	{
 		m_pTexture = renderer->CreateTexture(filePath, clearColor);
@@ -88,7 +88,7 @@ Image* Image::Load(const char* filePath, color clearColor, const rect* srcRect)
 void Image::Unload(void)
 {
 	if (m_pTexture)
-		Engine2D::GetInstance()->GetRenderer()->DestroyTexture(m_pTexture);
+		Engine2D::getInstance()->GetRenderer()->DestroyTexture(m_pTexture);
 }
 
 // Author: Stanley Taveras

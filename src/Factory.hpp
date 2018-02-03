@@ -105,7 +105,7 @@ template<class Derived>
 Derived* Factory<Type>::CreateDerived(void)
 {
 	Derived* item = new Derived();
-	m_lsItems.push_back((Type*)item);
+	m_lsItems.push_back((Type*)item); // Would using dynamic cast here be safer...?
 
 	return item;
 }

@@ -6,14 +6,14 @@
 
 namespace Debug
 {
-    static class debugLogger : public ISingleton<debugLogger>, public logger
+    static class DebugLogger : public ISingleton<DebugLogger>, public Logger
     {
-        friend ISingleton<debugLogger>;
+        friend ISingleton<DebugLogger>;
 
     public:
-        debugLogger(void):logger("./debug.log"){}
-        ~debugLogger(void){}
+        DebugLogger(void):Logger("./debug.log"){}
+        ~DebugLogger(void){}
 
         void Shutdown(void){}
-    }*Log = Log->GetInstance();
+    }*Log = Log->getInstance();
 }

@@ -19,7 +19,7 @@ StateMachine::StateMachine(void) :
 StateMachine::~StateMachine(void) {
    // Innecessary but for completeness' sake
    m_mTransitionTable.clear();
-   m_States.Clear();
+   _states.Clear();
 }
 
 State* StateMachine::_GetNextState(const StateMachineEvent& evt)
@@ -42,9 +42,9 @@ void StateMachine::_Transition(State* pNextState)
    if (pNextState) {
 
       if (m_pState)
-         m_pState->OnExit(pNextState);
+         m_pState->onExit(pNextState);
 
-      pNextState->OnEnter(m_pState);
+      pNextState->onEnter(m_pState);
 
       m_pState = pNextState;
    }
@@ -52,9 +52,9 @@ void StateMachine::_Transition(State* pNextState)
 
 State* StateMachine::GetState(const char* szName)
 {
-   Factory<State>::const_factory_iterator itr = m_States.Begin();
+   Factory<State>::const_factory_iterator itr = _states.Begin();
 
-   for (; itr != m_States.End(); itr++) {
+   for (; itr != _states.End(); itr++) {
       if (!strcmp(szName, (*itr)->GetName()))
          return (*itr);
    }
@@ -64,7 +64,7 @@ State* StateMachine::GetState(const char* szName)
 
 State* StateMachine::AddState(const char* name)
 {
-   State* state = m_States.Create();
+   State* state = _states.Create();
    state->SetName(name);
 
    return state;
@@ -72,7 +72,7 @@ State* StateMachine::AddState(const char* name)
 
 void StateMachine::AddTransition(const char* condition, const char* nextState)
 {
-   RegisterTransition(m_States.At(m_States.Size() - 1)->GetName(), condition, nextState);
+   RegisterTransition(_states.At(_states.Size() - 1)->GetName(), condition, nextState);
 }
 
 void StateMachine::RegisterTransition(State* pState, const StateMachineEvent& evt, State* pStateResult)
@@ -94,23 +94,23 @@ void StateMachine::RegisterTransition(const char* szStateName, const char* szCon
 
 void StateMachine::Initialize(void)
 {
-   if (!m_pStartState && m_States.Size() > 0)
-      m_pStartState = m_States.At(0);
+   if (!m_pStartState && _states.Size() > 0)
+      m_pStartState = _states.At(0);
 
    if (m_pStartState) {
       m_pState = m_pStartState;
-      m_pState->OnEnter(NULL); // Should this even really be done...?
+      m_pState->onEnter(NULL); // Should this even really be done...?
    }
 }
 
 void StateMachine::Reset(void)
 {
    if (m_pState)
-      m_pState->OnExit(m_pStartState);
+      m_pState->onExit(m_pStartState);
 
    if (m_pStartState) {
       m_pState = m_pStartState;
-      //m_pState->OnEnter(NULL);
+      //m_pState->onEnter(NULL);
    }
    
    while (!m_qEvents.empty())
@@ -130,9 +130,9 @@ void StateMachine::SendInput(const char* szCondition, void* pSender)
    this->OnEvent(StateMachineEvent(szCondition, pSender));
 }
 
-void StateMachine::Update(float fTime)
+void StateMachine::update(float fTime)
 {
-   if (m_pState && !m_pState->OnExecute(fTime) && m_pStartState)
+   if (m_pState && !m_pState->onExecute(fTime) && m_pStartState)
       SetState(m_pStartState);
 
    if (m_bBuffered && !m_qEvents.empty())
@@ -186,7 +186,7 @@ bool StateMachine::LoadTransitionTableFromFile(const char* szFilename)
                   strsubst(szStateName, '\0', ",");
 
                   if (!GetState(szStateName) && !STR_EQUALS(szStateName, ""))
-                     m_States.Create(State(szStateName));
+                     _states.Create(State(szStateName));
 
                   if (!m_pStartState && GetState(szStateName))
                      m_pStartState = GetState(szStateName);

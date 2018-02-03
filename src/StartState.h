@@ -4,7 +4,7 @@ class StartState : public GameState
 {
 	IRenderer::RenderList* _RenderList;
 public:
-	void OnEnter(void);
-	void OnExecute(float time);
-	void OnExit(void);
+	void onEnter(void);
+	void onExecute(float time);
+	void onExit(void);
 };

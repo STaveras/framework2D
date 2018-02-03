@@ -4,14 +4,14 @@
 void ProgramStack::push(IProgramState* state)
 {
 	std::stack<IProgramState*>::push(state);
-	this->top()->OnEnter();
+	this->top()->onEnter();
 }
 
 void ProgramStack::pop(void)
 {
 	if (!this->empty())
 	{
-		this->top()->OnExit();
+		this->top()->onExit();
 
 		std::stack<IProgramState*>::pop();
 	}
@@ -20,14 +20,14 @@ void ProgramStack::pop(void)
 void ProgramStack::update(float fTime)
 {
 	if(!this->empty())
-		this->top()->OnExecute(fTime);
+		this->top()->onExecute(fTime);
 }
 
 void ProgramStack::clear(void)
 {
 	while(!this->empty())
 	{
-		this->top()->OnExit();
+		this->top()->onExit();
 		this->pop();
 	}
 }

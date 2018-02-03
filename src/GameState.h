@@ -7,10 +7,12 @@
 #include "Player.h"
 class GameState : public IProgramState
 {
-   Factory<Sprite> _sprites; // Should we just have this in the CPP?
+   Factory<Sprite> _sprites;
 
    void _OnObjectStateEnter(const Event& e);
    void _OnObjectStateExit(const Event& e);
+   void _OnObjectAdded(const Event& e);
+   void _OnObjectRemoved(const Event& e);
 
    friend Game;
 
@@ -22,16 +24,17 @@ protected:
    ObjectManager    _objectManager;
 
 public:
-   GameState(void) : IProgramState() {}
+   GameState(void) : IProgramState() { }
+   ~GameState(void) { }
 
    Sprite* AddSprite(const char* filename, color clearColor = 0, rect* srcRect = NULL);
-   void RemoveSprite(Sprite* sprite);
+   void removeSprite(Sprite* sprite);
 
-   //void AddObject(GameObject* object);
-   //void RemoveObject(GameObject* object);
+   //void addObject(GameObject* object);
+   //void removeObject(GameObject* object);
 
-   virtual void OnEnter(void);
-   virtual void OnExecute(float fTime);
-   virtual void OnExit(void);
+   virtual void onEnter(void);
+   virtual void onExecute(float fTime);
+   virtual void onExit(void);
 };
 // - Stan

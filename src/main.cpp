@@ -10,14 +10,24 @@
 
 #include "SDSParser.h"
 
+#include "MaxVelocityOperator.h"
+#include "ApplyVelocityOperator.h"
+#include "UpdateRenderableOperator.h"
+
 //Game *game = NULL;
 
 class FlappyTurd : public Game
 {
    class PlayState : public GameState
    {
-      Player* _Player; // Probably should just go in GameState...?
-      Sprite* _Background;
+      Player* _player; // Probably should just go in GameState...?
+      Sprite* _background;
+      Camera* _camera;
+
+      // World limits on objects:
+      //MaxVelocityOperator _maxVelocity;
+      ApplyVelocityOperator _applyVelocity;
+      UpdateRenderableOperator _updateRenderable;
 
       class Turd : public GameObject
       {
@@ -25,12 +35,12 @@ class FlappyTurd : public Game
          //class TurdState : public GameObjectState
          //{
          //public:
-           // void OnEnter()
+           // void onEnter()
            // {
-           //	 //GameObjectState::OnEnter();
+           //	 //GameObjectState::onEnter();
            // }
 
-           // void OnExit()
+           // void onExit()
            // {
 
            // }
@@ -39,64 +49,72 @@ class FlappyTurd : public Game
       public:
          Turd(void)
          {
-            GameObjectState* Falling = this->AddState("Falling");
-            Falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
-            Falling->setDirection(vector2(0.01f, 1.0f));
-            Falling->setForce(10);
+            // NOTE: All of this should ideally be in a script
+            GameObjectState* falling = this->addState("Falling");
+            falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
+            falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
+            falling->setForce(500);
 
-            GameObjectState* Rising = this->AddState("Rising");
-            Rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
-            Rising->setExecuteTime(0.27);
-            Rising->setDirection(vector2(0.0f, -1.0f));
-            Rising->setForce(100);
+            GameObjectState* rising = this->addState("Rising");
+            rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
+            rising->setExecuteTime(0.27);
+            rising->setDirection(vector2(0.1f, -1.0f));
+            rising->setForce(1000);
 
             RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
             RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
+            RegisterTransition("Rising", "BUTTON_RELEASED", "Falling"); // stop rising when you let go of the button
          }
 
          ~Turd(void) 
          {
-            for (unsigned int i = 0; i < m_States.Size(); i++)
-               delete ((GameObjectState*)m_States.At(i))->GetRenderable();
+            for (unsigned int i = 0; i < _states.Size(); i++)
+               delete ((GameObjectState*)_states.At(i))->getRenderable();
          }
       };
 
    public:
 
-      void OnEnter(void)
+      void onEnter(void)
       {
-         GameState::OnEnter();
+         GameState::onEnter();
 
-         _Background = AddSprite("./data/images/bg.png");
+         _background = AddSprite("./data/images/bg.png");
 
-         _objectManager.AddObject("Turd", new Turd);
-         _objectManager.GetGameObject("Turd")->Initialize();
+         //_maxVelocity.setMaxSpeed(33);
 
-         _Player = new Player;
-         _Player->SetGamePad(_inputManager.CreateGamePad());
-         _Player->GetGamePad()->AddButton(VirtualButton("BUTTON", KBK_SPACE));
-         _Player->SetGameObject(_objectManager.GetGameObject("Turd"));
-         _Player->Setup();
+         _objectManager.addObject("Turd", new Turd);
+         _objectManager.pushOperator(&_applyVelocity);
+         //_objectManager.pushOperator(&_maxVelocity);
+         _objectManager.pushOperator(&_updateRenderable);
+         _objectManager.getGameObject("Turd")->Initialize();
+
+         _player = new Player;
+         _player->setGamePad(_inputManager.CreateGamePad());
+         _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
+         _player->setGameObject(_objectManager.getGameObject("Turd"));
+         _player->setup();
       }
 
-      //void OnExecute(float time)
+      //void onExecute(float time)
       //{
-      //   GameState::OnExecute(time);
+      //   GameState::onExecute(time);
       //}
 
-      void OnExit(void)
+      void onExit(void)
       {  
          // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         _Player->Shutdown();
+         _player->shutdown();
 
-         _objectManager.RemoveObject("Turd");
+         _objectManager.clearOperators();
+         _objectManager.removeObject("Turd");
 
-         delete _Player->GetGameObject();
-         delete _Player;
+         delete _player->getGameObject();
+         delete _player;
 
-         RemoveSprite(_Background);
+         removeSprite(_background);
 
-         GameState::OnExit();
+         GameState::onExit();
       }
    };
 
@@ -122,7 +140,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
    RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 320, 480, false, false);
 
-   Engine2D* engine = Engine2D::GetInstance();
+   Engine2D* engine = Engine2D::getInstance();
    engine->SetInputInterface(pInput);
    engine->SetRenderer(pRenderer);
    engine->SetGame(&game);

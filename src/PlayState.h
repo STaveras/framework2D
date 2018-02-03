@@ -22,9 +22,9 @@ class PlayState : public GameState
     GameObject _Blocks[NUM_BLOCKS];
 
 public:
-	void OnEnter(void);
-	void OnExecute(float time);
-	void OnExit(void);
+	void onEnter(void);
+	void onExecute(float time);
+	void onExit(void);
 
 	virtual void OnKeyPressed(const Event& e);
 	virtual void OnKeyReleased(const Event& e);

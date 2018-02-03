@@ -2,18 +2,18 @@
 
 #include "Types.h"
 
-class positionable {
+class Positionable {
 
 protected:
 
-   vector2 m_Position;
+   vector2 _position;
 
 public:
 
-   positionable(void) :
-      m_Position(vector2(0, 0)) {}
+   Positionable(void) :
+      _position(vector2(0, 0)) {}
 
-   vector2 GetPosition(void) const { return m_Position; }
-   void SetPosition(vector2 position) { m_Position = position; }
-
+   vector2 GetPosition(void) const { return _position; }
+   void SetPosition(float x, float y) { _position = vector2(x, y); }
+   void SetPosition(vector2 position) { _position = position; }
 };

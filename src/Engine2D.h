@@ -23,17 +23,17 @@ public:
 
    bool HasQuit(void) const { return _hasQuit; }
 
-   Game* GetGame(void) const { return _pGame; }
-   void SetGame(Game* game) { _pGame = game; }
+   static Game* GetGame(void) { return Engine2D::getInstance()->_pGame; }
+   static void SetGame(Game* game) { Engine2D::getInstance()->_pGame = game; }
 
-   EventSystem* GetEventSystem(void) { return &_EventSystem; }
-   Timer* GetTimer(void) { return &_Timer; }
+   static EventSystem* getEventSystem(void) { return &(Engine2D::getInstance()->_EventSystem); }
+   static Timer* GetTimer(void) { return &(Engine2D::getInstance()->_Timer); }
 
-   IRenderer* GetRenderer(void) { return _pRenderer; }
-   void SetRenderer(IRenderer* renderer) { _pRenderer = renderer; }
+   static IRenderer* GetRenderer(void) { return Engine2D::getInstance()->_pRenderer; }
+   static void SetRenderer(IRenderer* renderer) { Engine2D::getInstance()->_pRenderer = renderer; }
 
-   IInput* GetInput(void) { return _pInput; } // Add support for multiple devices...?
-   void SetInputInterface(IInput* pInput) { _pInput = pInput; }
+   static IInput* GetInput(void) { return Engine2D::getInstance()->_pInput; } // Add support for multiple devices...?
+   static void SetInputInterface(IInput* pInput) { Engine2D::getInstance()->_pInput = pInput; }
 
    void Initialize(void);
    void Update(void);

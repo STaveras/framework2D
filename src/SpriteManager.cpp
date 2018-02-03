@@ -8,7 +8,7 @@
 void SpriteManager::SetVisibility(bool isVisible)
 {
 	for (Factory<Sprite>::factory_iterator i = this->Begin(); i != this->End(); i++)
-		(*i)->SetVisibility(isVisible);
+		(*i)->setVisibility(isVisible);
 }
 
 //Sprite* SpriteManager::CreateSprite(const char* szFilename, color clearColor, const rect* srcRect)

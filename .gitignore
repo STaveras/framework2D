@@ -4,3 +4,7 @@ enc_temp_folder/
 Release/
 *.iobj
 *.ipdb
+*.vcxproj.user
+*.pdb
+*.ilk
+bin/flappy_turd_d.exe

@@ -111,7 +111,7 @@ void Animation::RemoveFrame(Frame* frame)
 	}
 }
 
-bool Animation::Update(float fTime)
+bool Animation::update(float fTime)
 {
 	if (!m_bPlaying)
 		return false;

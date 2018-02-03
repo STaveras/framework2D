@@ -15,13 +15,13 @@ class Player
   void _OnKeyRelease(const Event & evt);
 
 public:
-	GameObject* GetGameObject(void) const { return _object; }
-  void SetGameObject(GameObject* object) { _object = object; }
+	GameObject* getGameObject(void) const { return _object; }
+  void setGameObject(GameObject* object) { _object = object; }
 
-	VirtualGamePad* GetGamePad(void) const { return _pad; }
-	void SetGamePad(VirtualGamePad* pad) { _pad = pad; }
+	VirtualGamePad* getGamePad(void) const { return _pad; }
+	void setGamePad(VirtualGamePad* pad) { _pad = pad; }
 
-	void Setup(void);
-	//void Update(float time);
-	void Shutdown(void);
+	void setup(void);
+	//void update(float time);
+	void shutdown(void);
 };

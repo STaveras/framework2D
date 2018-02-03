@@ -13,11 +13,11 @@ bool Square::WithCircle(const Circle* circle)
 
 bool Square::WithPlane(const Plane* plane)
 {
-	//vector2 position = ((m_Position + m_Max) / 2);
+	//vector2 position = ((_position + m_Max) / 2);
 
 	//vector2 toSquare = position - plane->GetPosition();
 
-	//vector2 width = (m_Max - m_Position);
+	//vector2 width = (m_Max - _position);
 
 	//// TODO : Remove DirectX-specific code
 	//float fRadius = D3DXVec2Length(&width) / 2;

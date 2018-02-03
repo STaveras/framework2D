@@ -55,7 +55,7 @@ public:
     void Resume(void) { m_bPlaying = true; }
     void Stop(void) { _Reset(); m_bPlaying = false; }
 
-    bool Update(float time); // Should we always force the user to use animation managers and not be able to call this?
+    bool update(float time); // Should we always force the user to use animation managers and not be able to call this?
 	bool operator==(const Animation& a)const;
 };
 // Author: Stanley Taveras

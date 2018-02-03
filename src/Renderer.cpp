@@ -2,7 +2,7 @@
 #include "Renderer.h"
 #include "Engine2D.h"
 
-IRenderer* Renderer::Get(void) { return Engine2D::GetInstance()->GetRenderer(); }
+IRenderer* Renderer::Get(void) { return Engine2D::getInstance()->GetRenderer(); }
 
 // This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
 IRenderer* Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
@@ -23,9 +23,9 @@ void Renderer::DestroyRenderer(IRenderer* pRenderer)
 void Render(Renderable* r)
 {
     // TODO: Improve this massively.
-    IRenderer::RenderList* renderList = Engine2D::GetInstance()->GetRenderer()->CreateRenderList();
+    IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
     renderList->push_back(r);
-    Engine2D::GetInstance()->GetRenderer()->DestroyRenderList(renderList);
+    Engine2D::getInstance()->GetRenderer()->DestroyRenderList(renderList);
 }
 //
 //void Renderer::AddToRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable) { pRenderList->push_back(pRenderable); }
