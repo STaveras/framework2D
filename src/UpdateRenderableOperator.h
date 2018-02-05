@@ -3,12 +3,21 @@
 #include "ObjectOperator.h"
 #include "GameObject.h"
 
-typedef GameObject::GameObjectState ObjectState;
+// TODO: Should also update the collidable info
 
 class UpdateRenderableOperator: public ObjectOperator
 {
    bool operator()(GameObject* object) {
 
-      ((ObjectState*)object->GetCurrentState())->getRenderable()->SetPosition(object->GetPosition()); return true;
+      ObjectState* objectState = (ObjectState*)object->GetCurrentState();
+
+      if (objectState)
+         objectState->getRenderable()->SetPosition(object->getPosition());
+      
+      return true;
    }
+};
+
+class UpdateCollidableOperator: public ObjectOperator
+{
 };

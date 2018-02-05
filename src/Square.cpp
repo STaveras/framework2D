@@ -15,7 +15,7 @@ bool Square::WithPlane(const Plane* plane)
 {
 	//vector2 position = ((_position + m_Max) / 2);
 
-	//vector2 toSquare = position - plane->GetPosition();
+	//vector2 toSquare = position - plane->getPosition();
 
 	//vector2 width = (m_Max - _position);
 
@@ -31,8 +31,19 @@ bool Square::WithPlane(const Plane* plane)
 
 bool Square::WithSquare(const Square* square)
 {
-	if(m_Position > square->m_Max || m_Max < square->m_Position)
+	if(_position > square->m_Max || m_Max < square->_position)
 		return false;
 	else
 		return true;
+}
+
+// This function is likely to look the same for all of these objects...
+bool Square::Check(Collidable* collidable)
+{
+   switch (collidable->getType()) {
+   case COL_OBJ_SQUARE:
+      return this->WithSquare((Square*)collidable);
+   default:
+      return false;
+   }
 }

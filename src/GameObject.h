@@ -1,10 +1,14 @@
 // File: GameObject.h
 #pragma once
+#ifndef _GAMEOBJECT_H_
+#define _GAMEOBJECT_H_
 #include "GAME_OBJ_TYPE.h"
-#include "Appearance.h"
-#include "CollidableGroup.h"
+#include "Renderable.h"
 #include "StateMachine.h"
 #include "Types.h"
+
+class Collidable;
+
 class GameObject : public StateMachine, public Positionable
 {
    GAME_OBJ_TYPE m_eType;
@@ -72,8 +76,8 @@ public:
    void SetVelocity(vector2 velocity) { _velocity = velocity; }
 
    GameObjectState* addState(const char* szName);
-   void setAnimation(Animation* ani);
-   void setStateAnimation(const char* stateName, Animation* ani);
+   //void setAnimation(Animation* ani);
+   //void setStateAnimation(const char* stateName, Animation* ani);
 
    virtual void Setup(void) {}
    virtual void update(float fTime);
@@ -84,4 +88,5 @@ public:
    }
 };
 typedef GameObject::GameObjectState ObjectState;
+#endif
 // Author: Stanley Taveras

@@ -67,8 +67,8 @@ void RendererDX::_DrawImage(Image* pSprite, color tint, D3DXVECTOR2 offset)
 	D3DXMatrixTransformation2D(&transform, &pSprite->GetRectCenter(), 0.0f, &pSprite->GetScale(), &pSprite->GetCenter(), pSprite->GetRotation(), NULL);
 
 	D3DXVECTOR3 position;
-	position.x = pSprite->GetPosition().x + offset.x;
-	position.y = pSprite->GetPosition().y + offset.y;
+	position.x = pSprite->getPosition().x + offset.x;
+	position.y = pSprite->getPosition().y + offset.y;
 	position.z = 0.0f;
 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER,D3DTEXF_POINT);
@@ -186,7 +186,7 @@ void RendererDX::Render(void)
 				D3DXMATRIX rotationMat;
 				D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
 
-				D3DXVECTOR2 position = m_pCamera->GetPosition() - m_pCamera->GetCenter();
+				D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->GetCenter();
 
 				viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1,0), &position);
 				viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0,1), &position);

@@ -3,7 +3,8 @@
 // Created: 2/20/2010
 // Modified: 2/20/2010
 #include "CollidableGroup.h"
-bool CollidableGroup::CheckCollision(const Collidable* colObj)
+
+bool CollidableGroup::Check(const Collidable* colObj)
 {
 	return false;
 }

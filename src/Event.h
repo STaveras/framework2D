@@ -6,6 +6,8 @@
 #include <delegate/FastDelegate.h>
 #include <functional>
 
+// NOTE: For the 'sender' object, we really should throw around structs with additional event information (like windows messages)
+
 class Event
 {
    friend class EventSystem;

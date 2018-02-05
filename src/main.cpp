@@ -1,5 +1,6 @@
 // main.cpp
 #include "Engine2D.h"
+#include "Camera.h"
 #include "Input.h"
 #include "InputEvent.h"
 #include "Game.h"
@@ -10,11 +11,13 @@
 
 #include "SDSParser.h"
 
+#include "FollowObjectOperator.h"
 #include "MaxVelocityOperator.h"
 #include "ApplyVelocityOperator.h"
 #include "UpdateRenderableOperator.h"
 
-//Game *game = NULL;
+#define FALL_FORCE 100
+#define FLAP_MULTIPLIER 3.33
 
 class FlappyTurd : public Game
 {
@@ -24,10 +27,12 @@ class FlappyTurd : public Game
       Sprite* _background;
       Camera* _camera;
 
-      // World limits on objects:
+      // Game rules
+      FollowObject _attachCamera;
       //MaxVelocityOperator _maxVelocity;
       ApplyVelocityOperator _applyVelocity;
       UpdateRenderableOperator _updateRenderable;
+      //TODO: UpdateCollidable _updateCollidable;
 
       class Turd : public GameObject
       {
@@ -52,14 +57,16 @@ class FlappyTurd : public Game
             // NOTE: All of this should ideally be in a script
             GameObjectState* falling = this->addState("Falling");
             falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
-            falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
-            falling->setForce(500);
+            //falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
+            falling->setDirection(vector2(0.0f, 1.0f));
+            falling->setForce(FALL_FORCE);
 
             GameObjectState* rising = this->addState("Rising");
             rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
+            //rising->setDirection(vector2(0.1f, -1.0f));
+            rising->setDirection(vector2(0.0f, -1.0f));
             rising->setExecuteTime(0.27);
-            rising->setDirection(vector2(0.1f, -1.0f));
-            rising->setForce(1000);
+            rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
 
             RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
             RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
@@ -81,12 +88,11 @@ class FlappyTurd : public Game
 
          _background = AddSprite("./data/images/bg.png");
 
-         //_maxVelocity.setMaxSpeed(33);
-
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_applyVelocity);
          //_objectManager.pushOperator(&_maxVelocity);
          _objectManager.pushOperator(&_updateRenderable);
+         _objectManager.pushOperator(&_attachCamera);
          _objectManager.getGameObject("Turd")->Initialize();
 
          _player = new Player;
@@ -94,6 +100,14 @@ class FlappyTurd : public Game
          _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
+
+         _camera = new Camera;
+         _objectManager.addObject("Camera", _camera);
+
+         _attachCamera.setSource(_camera);
+         _attachCamera.follow(_objectManager.getGameObject("Turd"), true, true);
+         
+         Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
       //void onExecute(float time)
@@ -102,8 +116,10 @@ class FlappyTurd : public Game
       //}
 
       void onExit(void)
-      {  
+      {
          // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
+         delete _camera;
+
          _player->shutdown();
 
          _objectManager.clearOperators();

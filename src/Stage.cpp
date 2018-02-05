@@ -54,7 +54,7 @@ void Stage::Move(vector2 amount)
 
 	//for(; itr != m_lsBackgroundLayers.end(); itr++)
 	//{
-	//	itr->m_pImage->SetPosition(itr->m_pImage->GetPosition() + amount);
+	//	itr->m_pImage->SetPosition(itr->m_pImage->getPosition() + amount);
 	//	amount = amount / 2;
 	//}
 }

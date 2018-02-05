@@ -1,7 +1,7 @@
 #pragma once
 #include "Image.h"
 #include "Collidable.h"
-class Sprite : public Image
+class Sprite : public Image // Should probably just contain an image
 {
   Collidable* _CollideInfo;
 

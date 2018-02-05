@@ -2,6 +2,7 @@
 // Author: Stanley Taveras
 // Created: 2/20/2010
 // Modified: 2/20/2010
+#pragma once
 #if !defined(_COLLISIONGROUP_H)
 #define _COLLISIONGROUP_H
 #include "Collidable.h"
@@ -13,7 +14,7 @@ class CollidableGroup : public Collidable
 public:
 	CollidableGroup(void):Collidable(COL_OBJ_GROUP){}
 
-	bool CheckCollision(const Collidable* colObj);
+	bool Check(const Collidable* colObj);
 	void Push(const Collidable* colObject);
 	void Pop();
 	void Clear();

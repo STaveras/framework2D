@@ -36,9 +36,3 @@ void Camera::Zoom(float amount)
 	if(m_fZoom <= 0.0f)
 		m_fZoom = 0.0f;
 }
-
-void Camera::Update(float fTime)
-{
-	// ???
-}
-

@@ -6,8 +6,8 @@
 #include "ObjectManager.h"
 #include "GameObject.h"
 #include "ObjectOperator.h"
-
-typedef GameObject::GameObjectState ObjectState;
+#include "Engine2D.h"
+#include "Collidable.h"
 
 void ObjectManager::Update(float fTime)
 {
@@ -25,6 +25,33 @@ void ObjectManager::Update(float fTime)
             continue;
          else {
             // Remove the operator
+         }
+      }
+
+      // Now lets check for collisions
+      std::map<std::string, GameObject*>::iterator itr_two = m_mObjects.begin();
+      for (; itr_two != m_mObjects.end(); itr_two++) {
+         if (itr->second == object)
+            continue;
+
+         ObjectState *objectState = (ObjectState*)object->GetCurrentState();
+
+         if (objectState) {
+
+            Collidable *collisionObject = objectState->GetCollidable();
+
+            if (collisionObject) {
+
+               ObjectState *secondState = (ObjectState*)itr->second->GetCurrentState();
+
+               if (secondState) {
+
+                  Collidable *secondColObj = secondState->GetCollidable();
+
+                  if (secondColObj && collisionObject->Check(secondColObj))
+                     Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, itr->second));
+               }
+            }
          }
       }
 

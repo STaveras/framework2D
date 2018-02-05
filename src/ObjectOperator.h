@@ -12,7 +12,7 @@ class GameObject;
 class ObjectOperator
 {
 public:
-	virtual bool operator()(GameObject* object) = 0;
+	virtual bool operator()(GameObject* object) = 0; // TODO: Make it return a status code?
 };
 
 #endif  //_OBJECTOPERATION_H

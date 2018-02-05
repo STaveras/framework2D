@@ -6,12 +6,13 @@
 class ApplyVelocityOperator: public ObjectOperator
 {
 public:
-   bool operator()(GameObject* object) {
-
+   bool operator()(GameObject* object)
+   {
       ObjectState* objectState = (ObjectState*)object->GetCurrentState();
 
-      object->SetVelocity(objectState->getDirection() * (float)objectState->getForce());
-
+      if (objectState) {
+         object->SetVelocity(objectState->getDirection() * (float)objectState->getForce());
+      }
       return true;
    }
 };

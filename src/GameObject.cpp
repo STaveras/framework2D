@@ -27,19 +27,19 @@ GameObject::GameObjectState* GameObject::addState(const char* szName)
    return state;
 }
 
-void GameObject::setAnimation(Animation* ani)
-{
-   // TODO: Should set the CURRENT state's animation
-   if (_states.Size())
-      ((GameObjectState*)_states[_states.Size() - 1])->setRenderable(ani);
-   else
-      throw "GameObject: Does not have any states.";
-}
-
-void GameObject::setStateAnimation(const char* stateName, Animation* ani)
-{
-   ((GameObjectState*)GetState(stateName))->_renderable = ani;
-}
+//void GameObject::setAnimation(Animation* ani)
+//{
+//   // TODO: Should set the CURRENT state's animation
+//   if (_states.Size())
+//      ((GameObjectState*)_states[_states.Size() - 1])->setRenderable(ani);
+//   else
+//      throw "GameObject: Does not have any states.";
+//}
+//
+//void GameObject::setStateAnimation(const char* stateName, Animation* ani)
+//{
+//   ((GameObjectState*)GetState(stateName))->_renderable = ani;
+//}
 
 void GameObject::GameObjectState::onEnter(State* prev)
 {
