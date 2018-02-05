@@ -6,21 +6,15 @@
 
 bool CollidableGroup::Check(const Collidable* colObj)
 {
-	return false;
+   std::list<Collidable*>::iterator itr = this->begin();
+
+   while (itr != this->end()) {
+
+      if ((*itr)->Check(colObj))
+         return true;
+
+      itr++;
+   }
+
+   return false;
 }
-
-void CollidableGroup::Push(const Collidable* colObject)
-{
-
-}
-
-void CollidableGroup::Pop()
-{
-
-}
-
-void CollidableGroup::Clear()
-{
-
-}
-

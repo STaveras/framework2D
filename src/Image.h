@@ -9,7 +9,7 @@ class Image : public Renderable
 {
 protected:
 	ITexture* m_pTexture;
-	float m_fRotation;
+	float _rotation;
 	vector2 m_Center;
 	vector2 m_Scale;
 	rect m_SrcRect;
@@ -21,19 +21,21 @@ public:
 	~Image(void);
 
 	const ITexture* GetTexture(void) const { return m_pTexture; }
-	float GetRotation(void) const { return m_fRotation; }
+	float GetRotation(void) const { return _rotation; }
 	vector2 GetCenter(void) const { return m_Center; }
 	vector2 GetScale(void) const { return m_Scale; }
 	const rect& GetSourceRect(void) const { return m_SrcRect; }
 	vector2 GetRectCenter(void) const;
 
 	void SetTexture(ITexture* pTexture) { m_pTexture = pTexture; }
-	void SetRotation(float fRotation) { m_fRotation = fRotation; }
+	void SetRotation(float fRotation) { _rotation = fRotation; }
 	void SetCenter(vector2 center) { m_Center = center; }
 	void SetScale(vector2 scale) { m_Scale = scale; }
 	void SetSourceRect(const rect& srcRect) { m_SrcRect = srcRect; }
 
 	void Mirror(bool bHorizontal, bool bVertical);
+
+  void center(void);
 
 	virtual Image* Load(const char* filePath, color clearColor = 0, const rect* srcRect = NULL);
 	virtual void Unload(void);

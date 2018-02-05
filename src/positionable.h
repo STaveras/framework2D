@@ -12,6 +12,6 @@ public:
       _position(vector2(0, 0)) {}
 
    vector2 getPosition(void) const { return _position; }
-   void SetPosition(float x, float y) { _position = vector2(x, y); }
-   void SetPosition(vector2 position) { _position = position; }
+   void setPosition(float x, float y) { _position.x = x; _position.y = y; }
+   void setPosition(vector2 position) { _position = position; }
 };

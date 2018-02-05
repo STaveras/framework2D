@@ -53,6 +53,8 @@ void ObjectManager::Update(float fTime)
                }
             }
          }
+
+         // TODO: Rewrite to broad / narrow phases
       }
 
       object->update(fTime);

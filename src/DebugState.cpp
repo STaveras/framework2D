@@ -69,7 +69,7 @@ void DebugState::onEnter(void)
 	//_pAnimationManager->AddFrame(animation, "./data/characters/the guy/sprites/idling/0.bmp", 0.033f, 0xFFFF00FF);7
 
 	//m_Camera.SetZoom(2.0);
-	//m_Camera.SetPosition(0, -112);
+	//m_Camera.setPosition(0, -112);
 	// Load assets
 	/////////////////////////////////////
 	//Engine2D::getInstance()->GetRenderer()->SetClearColor(0xFFFFFFFF);
@@ -84,7 +84,7 @@ void DebugState::onEnter(void)
 	//pAnimation->AddFrame(Frame(m_SpriteManager.CreateSprite("./data/sprites/noise/7.png", NULL), 0.073f));
 	//pAnimation->AddFrame(Frame(m_SpriteManager.CreateSprite("./data/sprites/noise/8.png", NULL), 0.073f));
 	//pAnimation->AddFrame(Frame(m_SpriteManager.CreateSprite("./data/sprites/noise/9.png", NULL), 0.073f));
-	//pAnimation->SetPosition(-192,-112);
+	//pAnimation->setPosition(-192,-112);
 
 	//pAnimation->Play();
 
@@ -147,7 +147,7 @@ void DebugState::onExecute(float fTime)
 			m_Camera.MoveVertically(fMoveSpeed);
 
 		if (pKeyboard->KeyPressed(KBK_NUMPAD5))
-			m_Camera.SetPosition(vector2(0,0));
+			m_Camera.setPosition(vector2(0,0));
 
 		if(pKeyboard->KeyDown(KBK_ADD))
 			m_Camera.Zoom(fZoomSpeed);

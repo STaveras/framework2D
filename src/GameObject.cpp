@@ -46,6 +46,7 @@ void GameObject::GameObjectState::onEnter(State* prev)
    _runTime = 0;
 
    if (_renderable) {
+
       _renderable->setVisibility(true);
 
       switch (_renderable->getRenderableType())

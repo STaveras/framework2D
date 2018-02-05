@@ -6,7 +6,7 @@
 Image::Image(void):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(NULL), 
-	m_fRotation(0.0f),
+	_rotation(0.0f),
 	m_Center(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
@@ -14,7 +14,7 @@ Image::Image(void):
 Image::Image(ITexture* pImage): 
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(pImage),
-	m_fRotation(0.0f),
+	_rotation(0.0f),
 	m_Center(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
@@ -22,7 +22,7 @@ Image::Image(ITexture* pImage):
 Image::Image(const char* filePath, color clearColor, const rect* srcRect):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(NULL), 
-	m_fRotation(0.0f),
+	_rotation(0.0f),
 	m_Center(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {
@@ -55,6 +55,11 @@ void Image::Mirror(bool bHorizontal, bool bVertical)
 		m_Scale.y = -m_Scale.y;
 		m_Center.y = -m_Center.y;
 	}
+}
+
+void Image::center(void)
+{
+   SetCenter(GetRectCenter());
 }
 
 Image* Image::Load(const char* filePath, color clearColor, const rect* srcRect)

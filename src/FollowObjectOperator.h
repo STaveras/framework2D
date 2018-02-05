@@ -9,13 +9,13 @@ class FollowObject: public ObjectOperator
       GameObject* _object; // the object followed
 
       vector2 _offset; // TODO
-      bool _vertically, _horizontally;
+      bool _horizontally, _vertically;
 
    public:
 
       void setSource(GameObject *source) { _source = source; }
 
-      void follow(GameObject *object, bool vertically, bool horizontally) { _object = object; _vertically = vertically; _horizontally = horizontally; }
+      void follow(GameObject *object, bool horizontally, bool vertically) { _object = object; _vertically = vertically; _horizontally = horizontally; }
 
       bool operator()(GameObject *object) {
 
@@ -24,13 +24,13 @@ class FollowObject: public ObjectOperator
 
          vector2 position = _source->getPosition();
 
-         if (_vertically)
-            position.y = object->getPosition().y;
-
          if (_horizontally)
             position.x = object->getPosition().x;
 
-         _source->SetPosition(position);
+         if (_vertically)
+            position.y = object->getPosition().y;
+
+         _source->setPosition(position);
 
          return true;
       }

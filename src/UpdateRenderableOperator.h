@@ -12,7 +12,7 @@ class UpdateRenderableOperator: public ObjectOperator
       ObjectState* objectState = (ObjectState*)object->GetCurrentState();
 
       if (objectState)
-         objectState->getRenderable()->SetPosition(object->getPosition());
+         objectState->getRenderable()->setPosition(object->getPosition());
       
       return true;
    }

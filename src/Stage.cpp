@@ -32,7 +32,7 @@ void Stage::setVisibility(bool bVisible)
 
 void Stage::AddLayer(Image* layer, vector2 position)
 { 
-	layer->SetPosition(position); m_lsBackgroundLayers.push_back(Layer(layer, position));
+	layer->setPosition(position); m_lsBackgroundLayers.push_back(Layer(layer, position));
 
 	//if (_bVisible)
 	//	for(; itr != m_lsBackgroundLayers.end(); itr++)
@@ -54,7 +54,7 @@ void Stage::Move(vector2 amount)
 
 	//for(; itr != m_lsBackgroundLayers.end(); itr++)
 	//{
-	//	itr->m_pImage->SetPosition(itr->m_pImage->getPosition() + amount);
+	//	itr->m_pImage->setPosition(itr->m_pImage->getPosition() + amount);
 	//	amount = amount / 2;
 	//}
 }
@@ -74,5 +74,5 @@ void Stage::Reset()
 	std::list<Layer>::iterator itr = m_lsBackgroundLayers.begin();
 
 	for(; itr != m_lsBackgroundLayers.end(); itr++)
-		itr->m_pImage->SetPosition(itr->m_Position);
+		itr->m_pImage->setPosition(itr->m_Position);
 }

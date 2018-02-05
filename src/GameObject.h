@@ -24,18 +24,18 @@ public:
    {
       friend GameObject;
       Renderable* _renderable;
-      Collidable* _Collidable;
-      vector2 _Direction;
-      double _Force;
+      Collidable* _collidable;
+      vector2 _direction;
+      double _force;
       double _executeTime;
       double _runTime;
 
    public:
       GameObjectState(void) : State(),
          _renderable(NULL),
-         _Collidable(NULL),
-         _Direction(vector2(0, 0)),
-         _Force(0.0),
+         _collidable(NULL),
+         _direction(vector2(0, 0)),
+         _force(0.0),
          _executeTime(0.0),
          _runTime(0.0) {
       }
@@ -43,14 +43,14 @@ public:
       Renderable * getRenderable(void) { return _renderable; }
       void setRenderable(Renderable* renderable) { _renderable = renderable; }
 
-      Collidable* GetCollidable(void) { return _Collidable; }
-      void SetCollidable(Collidable* collidable) { _Collidable = collidable; }
+      Collidable* GetCollidable(void) { return _collidable; }
+      void SetCollidable(Collidable* collidable) { _collidable = collidable; }
 
-      vector2 getDirection(void) const { return _Direction; }
-      void setDirection(vector2 direction) { /*D3DXNormalize*/ _Direction = direction; }
+      vector2 getDirection(void) const { return _direction; }
+      void setDirection(vector2 direction) { /*D3DXNormalize*/ _direction = direction; }
 
-      double getForce(void) const { return _Force; }
-      void setForce(double force) { _Force = force; }
+      double getForce(void) const { return _force; }
+      void setForce(double force) { _force = force; }
 
       double getExecuteTime(void) const { return _executeTime; }
       void setExecuteTime(double runTime) { _executeTime = runTime; }
@@ -61,18 +61,19 @@ public:
    };
 
 protected:
-   float m_fRotation;
+   float _mass;
+   float _rotation;
    vector2 _velocity;
 
 public:
-   GameObject(void) :m_eType(GAME_OBJ_NULL), m_fRotation(0.0f) {}
-   GameObject(GAME_OBJ_TYPE eType) :m_eType(eType), m_fRotation(0.0f) {}
+   GameObject(void) :m_eType(GAME_OBJ_NULL), _rotation(0.0f) {}
+   GameObject(GAME_OBJ_TYPE eType) :m_eType(eType), _rotation(0.0f) {}
    ~GameObject(void) {}
 
    GAME_OBJ_TYPE GetType(void) const { return m_eType; }
-   float GetRotation(void) const { return m_fRotation; }
+   float GetRotation(void) const { return _rotation; }
    vector2 GetVelocity(void) const { return _velocity; }
-   void SetRotation(float fRotation) { m_fRotation = fRotation; } // UNDONE: PLEASE DON'T USE THIS ON ANYTHING OTHER THAN A CAMERA (cus collision objects don't rotate yet... :/)
+   void SetRotation(float rotation) { _rotation = rotation; } // UNDONE: PLEASE DON'T USE THIS ON ANYTHING OTHER THAN A CAMERA (cus collision objects don't rotate yet... :/)
    void SetVelocity(vector2 velocity) { _velocity = velocity; }
 
    GameObjectState* addState(const char* szName);

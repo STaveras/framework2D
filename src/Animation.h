@@ -40,8 +40,8 @@ public:
     void SetMode(ANIMATION_MODE eMode) { m_eMode = eMode; }
     void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
     void SetName(const char* szName) { m_szName = szName; }
-	void SetPosition(float x,float y) { SetPosition(vector2(x,y)); }
-    void SetPosition(vector2 position);
+	void setPosition(float x,float y) { setPosition(vector2(x,y)); }
+    void setPosition(vector2 position);
 
     void Mirror(bool bHorizontal, bool bVertical);
 

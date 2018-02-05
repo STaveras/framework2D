@@ -19,16 +19,16 @@ m_pAnimation(NULL)
 Appearance::~Appearance(void)
 {}
 
-void Appearance::SetPosition(vector2 position)
+void Appearance::setPosition(vector2 position)
 {
 	if(m_pAnimation)
-		m_pAnimation->SetPosition(position);
+		m_pAnimation->setPosition(position);
 
 	std::list<Image*>::iterator itr = m_lsSprites.begin();
 
 	for(; itr != m_lsSprites.end(); itr++)
 	{
-		(*itr)->SetPosition(position);
+		(*itr)->setPosition(position);
 	}
 }
 

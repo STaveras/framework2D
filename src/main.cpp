@@ -55,18 +55,24 @@ class FlappyTurd : public Game
          Turd(void)
          {
             // NOTE: All of this should ideally be in a script
+            Sprite *fallingTurd = new Sprite("./data/images/turd0.png", 0xFFFF00FF);
+            fallingTurd->center();
+
             GameObjectState* falling = this->addState("Falling");
-            falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
             //falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
-            falling->setDirection(vector2(0.0f, 1.0f));
+            falling->setDirection(vector2(0.1f, 1.0f));
             falling->setForce(FALL_FORCE);
+            falling->setRenderable(fallingTurd);
+
+            Sprite *risingTurd = new Sprite("./data/images/turd1.png", 0xFFFF00FF);
+            risingTurd->center();
 
             GameObjectState* rising = this->addState("Rising");
-            rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
             //rising->setDirection(vector2(0.1f, -1.0f));
-            rising->setDirection(vector2(0.0f, -1.0f));
             rising->setExecuteTime(0.27);
-            rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
+            rising->setDirection(vector2(0.1f, -1.0f * FLAP_MULTIPLIER));
+            rising->setForce(FALL_FORCE);
+            rising->setRenderable(risingTurd);
 
             RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
             RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
@@ -87,6 +93,7 @@ class FlappyTurd : public Game
          GameState::onEnter();
 
          _background = AddSprite("./data/images/bg.png");
+         _background->center();
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_applyVelocity);
@@ -105,7 +112,7 @@ class FlappyTurd : public Game
          _objectManager.addObject("Camera", _camera);
 
          _attachCamera.setSource(_camera);
-         _attachCamera.follow(_objectManager.getGameObject("Turd"), true, true);
+         _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
          
          Engine2D::GetRenderer()->SetCamera(_camera);
       }

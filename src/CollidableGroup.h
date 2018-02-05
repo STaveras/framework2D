@@ -7,17 +7,12 @@
 #define _COLLISIONGROUP_H
 #include "Collidable.h"
 #include <list>
-class CollidableGroup : public Collidable
+class CollidableGroup : public Collidable, public std::list<Collidable*>
 {
-	std::list<Collidable*> m_lsCollisionObjects;
-
 public:
 	CollidableGroup(void):Collidable(COL_OBJ_GROUP){}
 
 	bool Check(const Collidable* colObj);
-	void Push(const Collidable* colObject);
-	void Pop();
-	void Clear();
 };
 
 #endif  //_COLLISIONGROUP_H

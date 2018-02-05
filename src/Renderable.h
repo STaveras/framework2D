@@ -30,15 +30,13 @@ protected:
     Renderable(void):m_eType(RENDERABLE_TYPE_NULL){memset(&_appearance,0,(sizeof(bool)*2+sizeof(float)*2+sizeof(color)*2));}
 
 public:
-	//Renderable(void):m_eType(RENDERABLE_TYPE_NULL){_appearance._isVisible = true;}
 	explicit Renderable(RENDERABLE_TYPE eType):m_eType(eType){_appearance._isVisible = true;}
-	virtual ~Renderable(void)= 0{}
+  virtual ~Renderable(void) = 0 {}
 
 	bool IsVisible(void) const { return _appearance._isVisible; }
 	RENDERABLE_TYPE getRenderableType(void) const { return m_eType; }
 
 	void setVisibility(bool bVisible) { _appearance._isVisible = bVisible; }
-	//void SetRenderableType(RENDERABLE_TYPE eType) { m_eType = eType; }
 
 	// Appearance properties
 	/////////////////////////

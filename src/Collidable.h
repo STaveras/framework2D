@@ -26,6 +26,6 @@ class CollisionEvent: public Event
    GameObject* involvedObject;
 
 public:
-   CollisionEvent(void *object, GameObject *collidedWith) :Event("EVT_COLLISION", object), involvedObject(collidedWith) {}
+   CollisionEvent(GameObject *object, GameObject *collidedWith) :Event("EVT_COLLISION", object), involvedObject(collidedWith) {}
 };
 // Author: Stanley Taveras
