@@ -37,8 +37,16 @@ bool Square::WithSquare(const Square* square)
 		return true;
 }
 
+bool Square::Check(vector2 point)
+{
+   if (point > _position && point < m_Max)
+      return true;
+
+   return false;
+}
+
 // This function is likely to look the same for all of these objects...
-bool Square::Check(Collidable* collidable)
+bool Square::Check(const Collidable* collidable)
 {
    switch (collidable->getType()) {
    case COL_OBJ_SQUARE:

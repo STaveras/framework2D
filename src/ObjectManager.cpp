@@ -38,7 +38,7 @@ void ObjectManager::Update(float fTime)
 
          if (objectState) {
 
-            Collidable *collisionObject = objectState->GetCollidable();
+            Collidable *collisionObject = objectState->getCollidable();
 
             if (collisionObject) {
 
@@ -46,7 +46,7 @@ void ObjectManager::Update(float fTime)
 
                if (secondState) {
 
-                  Collidable *secondColObj = secondState->GetCollidable();
+                  Collidable *secondColObj = secondState->getCollidable();
 
                   if (secondColObj && collisionObject->Check(secondColObj))
                      Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, itr->second));

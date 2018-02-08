@@ -11,6 +11,8 @@
 class Camera;
 class GameObject;
 
+// I don't even... Why does this exist as an operator? Put it in the renderer? I don't want collision code in there but...
+
 class CullObjectOperator : public ObjectOperator
 {
 	Camera* m_pCamera;

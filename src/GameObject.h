@@ -40,11 +40,11 @@ public:
          _runTime(0.0) {
       }
 
-      Renderable * getRenderable(void) { return _renderable; }
+      Renderable* getRenderable(void) { return _renderable; }
       void setRenderable(Renderable* renderable) { _renderable = renderable; }
 
-      Collidable* GetCollidable(void) { return _collidable; }
-      void SetCollidable(Collidable* collidable) { _collidable = collidable; }
+      Collidable* getCollidable(void) { return _collidable; }
+      void setCollidable(Collidable* collidable) { _collidable = collidable; }
 
       vector2 getDirection(void) const { return _direction; }
       void setDirection(vector2 direction) { /*D3DXNormalize*/ _direction = direction; }
@@ -79,6 +79,8 @@ public:
    GameObjectState* addState(const char* szName);
    //void setAnimation(Animation* ani);
    //void setStateAnimation(const char* stateName, Animation* ani);
+
+   GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
    virtual void Setup(void) {}
    virtual void update(float fTime);

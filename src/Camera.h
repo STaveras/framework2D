@@ -30,6 +30,8 @@ public:
 	void MoveVertically(float amount);
 	void Pan(vector2 direction, float amount);
 	void Zoom(float amount);
+
+  bool OnScreen(GameObject *object);
 };
 
 #endif  //_CAMERA_H

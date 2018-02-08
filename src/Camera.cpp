@@ -7,6 +7,8 @@
 
 #include "Camera.h"
 
+#include "Square.h"
+
 Camera::Camera(void):
 GameObject(GAME_OBJ_CAMERA),
 m_nScreenWidth(0),
@@ -35,4 +37,20 @@ void Camera::Zoom(float amount)
 	
 	if(m_fZoom <= 0.0f)
 		m_fZoom = 0.0f;
+}
+
+// Trying to make this as simple as possible...
+bool Camera::OnScreen(GameObject *object)
+{
+   Square square(vector2(_position.x - (m_nScreenWidth * 0.5f), 
+                         _position.y - (m_nScreenHeight * 0.5f)),
+                         m_nScreenWidth, m_nScreenHeight);
+
+   ObjectState *objectState = object->getState();
+
+   if (objectState->getCollidable()) {
+      return objectState->getCollidable()->Check(&square);
+   }
+
+   return square.Check(object->getPosition());
 }

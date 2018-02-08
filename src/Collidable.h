@@ -12,11 +12,15 @@ class Collidable: public Positionable
    COL_OBJ_TYPE m_eType;
 
 protected:
-   Collidable(COL_OBJ_TYPE type) :m_eType(type) {}
+
+   using Positionable::Positionable;
+
+   Collidable(COL_OBJ_TYPE type) :Positionable(), m_eType(type) {}
 
 public:
    COL_OBJ_TYPE getType(void) const { return m_eType; } 
 
+   virtual bool Check(vector2 point) { return _position == point; } // issa joke
    virtual bool Check(const Collidable* colObject) = 0;
 };
 
