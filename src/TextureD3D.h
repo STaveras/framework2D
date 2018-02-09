@@ -20,7 +20,7 @@ public:
 			m_pTexture->Release();
 	}
 
-	IDirect3DTexture9* GetTexture(void) { return m_pTexture; }
+	IDirect3DTexture9* getTexture(void) { return m_pTexture; }
 	unsigned int GetWidth(void) const { return m_tImageInfo.Width; }
 	unsigned int GetHeight(void) const { return m_tImageInfo.Height; }
 };

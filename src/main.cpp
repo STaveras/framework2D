@@ -15,9 +15,10 @@
 #include "MaxVelocityOperator.h"
 #include "ApplyVelocityOperator.h"
 #include "UpdateRenderableOperator.h"
+#include "UpdateBackgroundOperator.h"
 
-#define FALL_FORCE 100
-#define FLAP_MULTIPLIER 3.33
+#define FALL_FORCE 100.0f
+#define FLAP_MULTIPLIER 3.33f
 
 class FlappyTurd : public Game
 {  
@@ -32,7 +33,7 @@ class FlappyTurd : public Game
       FollowObject _attachCamera;
       //MaxVelocityOperator _maxVelocity;
       ApplyVelocityOperator _applyVelocity;
-      //UpdateBackgroundOperator _updateBackground;
+      UpdateBackgroundOperator _updateBackground;
       UpdateRenderableOperator _updateRenderable;
       //TODO: UpdateCollidable _updateCollidable;
 
@@ -95,7 +96,12 @@ class FlappyTurd : public Game
 
          _renderList->push_back(_background);
 
+         _updateBackground.useRenderList(_renderList);
+         _updateBackground.setBackground(_background);
+         _updateBackground.setMode(Background::Mode_Mirror);
+
          _objectManager.addObject("Turd", new Turd);
+         _objectManager.pushOperator(&_updateBackground);
          _objectManager.pushOperator(&_applyVelocity);
          //_objectManager.pushOperator(&_maxVelocity);
          _objectManager.pushOperator(&_updateRenderable);
@@ -110,6 +116,7 @@ class FlappyTurd : public Game
 
          _camera = new Camera;
          _objectManager.addObject("Camera", _camera);
+         _updateBackground.setCamera(_camera);
 
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);

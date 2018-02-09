@@ -20,13 +20,13 @@ void Renderer::DestroyRenderer(IRenderer* pRenderer)
 	} 
 }
 
-void Render(Renderable* r)
-{
-    // TODO: Improve this massively.
-    IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
-    renderList->push_back(r);
-    Engine2D::getInstance()->GetRenderer()->DestroyRenderList(renderList);
-}
+//void Renderer::Render(Renderable* r)
+//{
+//    // TODO: Improve this massively.
+//    IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
+//    renderList->push_back(r);
+//    Engine2D::getInstance()->GetRenderer()->DestroyRenderList(renderList);
+//}
 //
 //void Renderer::AddToRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable) { pRenderList->push_back(pRenderable); }
 //bool Renderer::RemoveFromRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable)

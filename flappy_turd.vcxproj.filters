@@ -180,5 +180,8 @@
     <ClInclude Include="src\Positionable.h">
       <Filter>h</Filter>
     </ClInclude>
+    <ClInclude Include="src\Square.h">
+      <Filter>h</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

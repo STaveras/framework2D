@@ -8,7 +8,7 @@ class ITexture;
 class Image : public Renderable
 {
 protected:
-	ITexture* m_pTexture;
+	const ITexture* m_pTexture;
 	float _rotation;
 	vector2 m_Center;
 	vector2 m_Scale;
@@ -17,15 +17,19 @@ protected:
 public:
 	Image(void);
 	Image(ITexture* pImage);
+  Image(const Image& image);
 	Image(const char* filePath,color clearColor = 0, const rect* srcRect = NULL);
 	~Image(void);
 
-	const ITexture* GetTexture(void) const { return m_pTexture; }
+	const ITexture* getTexture(void) const { return m_pTexture; }
 	float GetRotation(void) const { return _rotation; }
 	vector2 GetCenter(void) const { return m_Center; }
 	vector2 GetScale(void) const { return m_Scale; }
 	const rect& GetSourceRect(void) const { return m_SrcRect; }
 	vector2 GetRectCenter(void) const;
+
+  float getWidth(void) const;
+  float getHeight(void) const;
 
 	void SetTexture(ITexture* pTexture) { m_pTexture = pTexture; }
 	void SetRotation(float fRotation) { _rotation = fRotation; }

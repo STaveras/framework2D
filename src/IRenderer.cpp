@@ -84,7 +84,7 @@ void IRenderer::SetCamera(Camera* pCamera)
 	m_pCamera->SetScreenHeight(m_nHeight);
 }
 
-bool IRenderer::DestroyTexture(ITexture* pTexture)
+bool IRenderer::DestroyTexture(const ITexture* pTexture)
 {
 	if(pTexture)
 	{

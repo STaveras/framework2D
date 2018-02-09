@@ -11,13 +11,25 @@ Image::Image(void):
 	m_Scale(vector2(1.0f,1.0f))
 {}
 
-Image::Image(ITexture* pImage): 
+Image::Image(ITexture* pImage):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(pImage),
 	_rotation(0.0f),
 	m_Center(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
+
+// TODO
+Image::Image(const Image& image):
+   Renderable(RENDERABLE_TYPE_IMAGE),
+   m_pTexture(image.getTexture()),
+   _rotation(0.0f),
+   m_Center(vector2(0, 0)),
+   m_Scale(vector2(1.0f, 1.0f)),
+   m_SrcRect(image.m_SrcRect)
+{
+
+}
 
 Image::Image(const char* filePath, color clearColor, const rect* srcRect):
 	Renderable(RENDERABLE_TYPE_IMAGE),
@@ -41,6 +53,18 @@ vector2 Image::GetRectCenter(void) const
 	rectCenter.y = (m_SrcRect.top + m_SrcRect.bottom/2.0f);
 
 	return rectCenter;
+}
+
+// TODO: should probably check if the rect is non-zero and return those values instead
+
+float Image::getWidth(void) const
+{
+   return (float)getTexture()->GetWidth();
+}
+
+float Image::getHeight(void) const
+{
+   return (float)getTexture()->GetHeight();
 }
 
 void Image::Mirror(bool bHorizontal, bool bVertical)
