@@ -68,7 +68,7 @@ void DebugState::onEnter(void)
 	//animation->Play();
 	//_pAnimationManager->AddFrame(animation, "./data/characters/the guy/sprites/idling/0.bmp", 0.033f, 0xFFFF00FF);7
 
-	//m_Camera.SetZoom(2.0);
+	//m_Camera.setZoom(2.0);
 	//m_Camera.setPosition(0, -112);
 	// Load assets
 	/////////////////////////////////////
@@ -154,7 +154,7 @@ void DebugState::onExecute(float fTime)
 		else if(pKeyboard->KeyDown(KBK_SUBTRACT))
 			m_Camera.Zoom(-fZoomSpeed);
 		else if(pKeyboard->KeyDown(KBK_NUMPADENTER))
-			m_Camera.SetZoom(1.0);
+			m_Camera.setZoom(1.0);
 
 		if(pKeyboard->KeyDown(KBK_PGUP))
 			m_Camera.SetRotation(m_Camera.GetRotation()-0.05f);

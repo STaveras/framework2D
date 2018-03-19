@@ -98,7 +98,7 @@ class FlappyTurd : public Game
 
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setBackground(_background);
-         _updateBackground.setMode(Background::Mode_Mirror);
+         //_updateBackground.setMode(Background::Mode_Mirror);
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
@@ -115,6 +115,7 @@ class FlappyTurd : public Game
          _player->setup();
 
          _camera = new Camera;
+         _camera->setZoom(0.33);
          _objectManager.addObject("Camera", _camera);
          _updateBackground.setCamera(_camera);
 

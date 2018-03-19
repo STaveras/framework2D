@@ -24,7 +24,7 @@ public:
 
 	void SetScreenWidth(unsigned int uiWidth) { m_nScreenWidth = uiWidth; }
 	void SetScreenHeight(unsigned int uiHeight) { m_nScreenHeight = uiHeight; }
-	void SetZoom(float fZoom) { m_fZoom = fZoom; }
+	void setZoom(float fZoom) { m_fZoom = fZoom; }
 
 	void MoveHorizontally(float amount);
 	void MoveVertically(float amount);

@@ -24,7 +24,7 @@ public:
 	const ITexture* getTexture(void) const { return m_pTexture; }
 	float GetRotation(void) const { return _rotation; }
 	vector2 GetCenter(void) const { return m_Center; }
-	vector2 GetScale(void) const { return m_Scale; }
+	vector2 getScale(void) const { return m_Scale; }
 	const rect& GetSourceRect(void) const { return m_SrcRect; }
 	vector2 GetRectCenter(void) const;
 
@@ -34,7 +34,7 @@ public:
 	void SetTexture(ITexture* pTexture) { m_pTexture = pTexture; }
 	void SetRotation(float fRotation) { _rotation = fRotation; }
 	void SetCenter(vector2 center) { m_Center = center; }
-	void SetScale(vector2 scale) { m_Scale = scale; }
+	void setScale(vector2 scale) { m_Scale = scale; }
 	void SetSourceRect(const rect& srcRect) { m_SrcRect = srcRect; }
 
 	void Mirror(bool bHorizontal, bool bVertical);

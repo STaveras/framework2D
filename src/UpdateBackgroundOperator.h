@@ -31,6 +31,7 @@ class UpdateBackgroundOperator: public ObjectOperator
          short axis = 0;
          short count = 0;
 
+         vector2 lastScale = _background->getScale();
          vector2 lastPos = _background->getPosition();
 
          // We need a better way to make a spiral
@@ -42,8 +43,6 @@ class UpdateBackgroundOperator: public ObjectOperator
 
                if (_renderList)
                   _renderList->push_front(_cache.back());
-
-               _cache.back()->center();
             }
 
             // Ugh I hate the below so bad but my brain isn't working as good as it used to... D:
@@ -69,6 +68,15 @@ class UpdateBackgroundOperator: public ObjectOperator
             }
 
             _cache.back()->setPosition(lastPos);
+
+            if (_mode == Background::Mode_Mirror) {
+               lastScale.x = (axis == 1) ? -lastScale.x : lastScale.x;
+               lastScale.y = (axis == 0) ? -lastScale.y : lastScale.y;
+            }
+            
+            _cache.back()->setScale(lastScale);
+
+            //_cache.back()->center();
          }
 
          _firstRun = false;
