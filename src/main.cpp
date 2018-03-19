@@ -85,6 +85,40 @@ class FlappyTurd : public Game
          }
       };
 
+      class Derpy_Cloud: public GameObject
+      {
+      public:
+         Derpy_Cloud()
+         {
+            GameObjectState *state = this->addState("Derpi");
+
+            Animation *derpAnimation = new Animation("DerpAnimation");
+            derpAnimation->AddFrame(new Sprite("./data/characters/derp_cloud/1.png"), 5.0 / 30.0);
+            derpAnimation->AddFrame(new Sprite("./data/characters/derp_cloud/2.png"), 5.0 / 30.0);
+            //derpAnimation->AddFrame(new Sprite("./data/characters/derp_cloud/2.png"));
+
+            for (unsigned int i = 0; i < derpAnimation->GetFrameCount(); i++) {
+               (*derpAnimation)[i]->GetSprite()->center();
+            }
+
+            state->setRenderable(derpAnimation);
+         }
+
+         ~Derpy_Cloud()
+         {
+            for (unsigned int i = 0; i < _states.Size(); i++)
+            {
+               Animation *animation = (Animation*)((GameObjectState*)_states.At(i))->getRenderable();
+
+               for (unsigned int j = 0; j < animation->GetFrameCount(); j++) {
+                  delete (*animation)[j];
+               }
+
+               delete animation;
+            }   
+         }
+      };
+
    public:
 
       void onEnter(void)
@@ -93,11 +127,12 @@ class FlappyTurd : public Game
 
          _background = new Image("./data/images/bg.png");
          _background->center();
+         _background->setVisibility(false);
 
          _renderList->push_back(_background);
 
-         _updateBackground.useRenderList(_renderList);
-         _updateBackground.setBackground(_background);
+         //_updateBackground.useRenderList(_renderList);
+         //_updateBackground.setBackground(_background);
          //_updateBackground.setMode(Background::Mode_Mirror);
 
          _objectManager.addObject("Turd", new Turd);
@@ -108,6 +143,9 @@ class FlappyTurd : public Game
          _objectManager.pushOperator(&_attachCamera);
          _objectManager.getGameObject("Turd")->Initialize();
 
+         _objectManager.addObject("Derpy_Cloud", new Derpy_Cloud);
+         _objectManager.getGameObject("Derpy_Cloud")->Initialize();
+
          _player = new Player;
          _player->setGamePad(_inputManager.CreateGamePad());
          _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
@@ -115,12 +153,12 @@ class FlappyTurd : public Game
          _player->setup();
 
          _camera = new Camera;
-         _camera->setZoom(0.33);
+         //_camera->setZoom(0.33);
          _objectManager.addObject("Camera", _camera);
-         _updateBackground.setCamera(_camera);
+         //_updateBackground.setCamera(_camera);
 
          _attachCamera.setSource(_camera);
-         _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
+         //_attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
          
          Engine2D::GetRenderer()->SetCamera(_camera);
       }

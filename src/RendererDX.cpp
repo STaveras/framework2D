@@ -65,7 +65,7 @@ RendererDX::~RendererDX(void)
 void RendererDX::_DrawImage(Image* image, color tint, D3DXVECTOR2 offset)
 {
 	D3DXMATRIX transform;
-	D3DXMatrixTransformation2D(&transform, &image->GetRectCenter(), 0.0f, &image->GetScale(), &image->GetCenter(), image->GetRotation(), NULL);
+	D3DXMatrixTransformation2D(&transform, &image->GetRectCenter(), 0.0f, &image->getScale(), &image->GetCenter(), image->GetRotation(), NULL);
 
 	D3DXVECTOR3 position;
 	position.x = image->getPosition().x + offset.x;
