@@ -37,14 +37,14 @@ void InputManager::Update(float fTime)
 				if(m_pInput->GetKeyboard()->KeyPressed((*citr)))
 				{
 					if(m_pEventSystem)
-						m_pEventSystem->SendEvent<InputEvent>(InputEvent("EVT_KEYPRESSED", this, (*vpad_itr), m_fElapsed, itr->GetButtonID()));
+						m_pEventSystem->sendEvent<InputEvent>(InputEvent("EVT_KEYPRESSED", this, (*vpad_itr), m_fElapsed, itr->GetButtonID()));
 
 					break;
 				}
 				else if(m_pInput->GetKeyboard()->KeyReleased((*citr)))
 				{
 					if(m_pEventSystem)
-						m_pEventSystem->SendEvent<InputEvent>(InputEvent("EVT_KEYRELEASED", this, (*vpad_itr), m_fElapsed, itr->GetButtonID()));
+						m_pEventSystem->sendEvent<InputEvent>(InputEvent("EVT_KEYRELEASED", this, (*vpad_itr), m_fElapsed, itr->GetButtonID()));
 
 					break;
 				}

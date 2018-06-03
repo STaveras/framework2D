@@ -7,6 +7,8 @@
 
 #include "Camera.h"
 
+#include "Square.h"
+
 Camera::Camera(void):
 GameObject(GAME_OBJ_CAMERA),
 m_nScreenWidth(0),
@@ -16,17 +18,17 @@ m_fZoom(1.0f)
 
 void Camera::MoveHorizontally(float amount)
 {
-	m_Position.x += amount;
+	_position.x += amount;
 }
 
 void Camera::MoveVertically(float amount)
 {
-	m_Position.y += amount;
+	_position.y += amount;
 }
 
 void Camera::Pan(vector2 direction, float amount)
 {
-	m_Position += direction * amount;
+	_position += direction * amount;
 }
 
 void Camera::Zoom(float amount)
@@ -37,8 +39,18 @@ void Camera::Zoom(float amount)
 		m_fZoom = 0.0f;
 }
 
-void Camera::Update(float fTime)
+// Trying to make this as simple as possible...
+bool Camera::OnScreen(GameObject *object)
 {
-	// ???
-}
+   Square square(vector2(_position.x - (m_nScreenWidth * 0.5f), 
+                         _position.y - (m_nScreenHeight * 0.5f)),
+                         m_nScreenWidth, m_nScreenHeight);
 
+   ObjectState *objectState = object->getState();
+
+   if (objectState->getCollidable()) {
+      return objectState->getCollidable()->Check(&square);
+   }
+
+   return square.Check(object->getPosition());
+}

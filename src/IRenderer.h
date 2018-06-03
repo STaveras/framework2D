@@ -40,7 +40,7 @@ public:
 	int GetHeight(void) const { return m_nHeight; }
 	color GetClearColor(void) const { return m_ClearColor; }
 	Camera* GetCamera(void) { return m_pCamera; }
-	ITexture* GetTexture(const char* szFilename) { return _TextureExists(szFilename); }
+	ITexture* getTexture(const char* szFilename) { return _TextureExists(szFilename); }
 	
 	void isBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
 	void SetWidth(int nWidth) { m_nWidth = nWidth; }
@@ -49,7 +49,7 @@ public:
 	void SetCamera(Camera* pCamera);
 
 	virtual ITexture* CreateTexture(const char* szFilename, color colorKey = 0) = 0;
-	virtual bool DestroyTexture(ITexture* pTexture);
+	virtual bool DestroyTexture(const ITexture* pTexture);
 
 	void PushRenderList(RenderList* pRenderList) { _RenderLists.Store(pRenderList); }
 	void PopRenderList(void) { _RenderLists.Erase(_RenderLists.End()); }

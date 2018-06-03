@@ -1,19 +1,35 @@
 // File: Collidable.h
 #pragma once
 #include "COL_OBJ_TYPE.h"
+#include "Positionable.h"
 #include "Types.h"
-class Collidable
+#include "Event.h"
+
+class GameObject;
+
+class Collidable: public Positionable
 {
-	COL_OBJ_TYPE m_eType;
+   COL_OBJ_TYPE m_eType;
 
 protected:
-	vector2 m_Position;
-	Collidable(COL_OBJ_TYPE type):m_eType(type){}
+
+   using Positionable::Positionable;
+
+   Collidable(COL_OBJ_TYPE type) :Positionable(), m_eType(type) {}
 
 public:
-	vector2 GetPosition(void) const { return m_Position; }
-	void SetPosition(const vector2& position) { m_Position = position; }
+   COL_OBJ_TYPE getType(void) const { return m_eType; } 
 
-	virtual bool Check(const Collidable* colObject) = 0;
+   virtual bool Check(vector2 point) { return _position == point; } // issa joke
+   virtual bool Check(const Collidable* colObject) = 0;
+};
+
+// NOTE: Would be nice to have a 'batched' version of this
+class CollisionEvent: public Event
+{
+   GameObject* involvedObject;
+
+public:
+   CollisionEvent(GameObject *object, GameObject *collidedWith) :Event("EVT_COLLISION", object), involvedObject(collidedWith) {}
 };
 // Author: Stanley Taveras

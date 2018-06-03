@@ -1,68 +1,33 @@
 #include "Player.h"
-#include "GameObject.h"
-
-void Player::Setup(void)
-{
-	//if (_object)
-	//	_object->Initialize();
-}
-
-void Player::Update(float time)
-{
-	//if (_object)
-	//	_object->Update(time);
-}
-
-void Player::Shutdown(void)
-{
-	//if (_object)
-	//	_object->Reset();
-}
-
-#include "EventSystem.h"
+#include "Engine2D.h"
 #include "InputEvent.h"
 
-void Player::_OnKeyPress(const Event& evt)
+void Player::_OnKeyPress(const Event& e)
 {
-	InputEvent* pEvent = (InputEvent*)&evt;
+   InputEvent* inputEvent = (InputEvent*)&e;
 
-	if(pEvent->GetGamePad() == this->_pad)
-	{
-		// This is my gamepad.
-
-
-		// Where the rules for the player are to interface with the game.
-
-		//Console.
-		//this->_guts->
-	}
+   if (inputEvent->GetGamePad() == this->_pad) {
+      this->_object->SendInput(((std::string)((InputEvent*)&e)->GetButtonID() + "_PRESSED").c_str(), e.GetSender());
+   }
 }
-//
-//void Player::_OnKeyRelease(const Event& evt)
-//{
-//	InputEvent* pEvent = (InputEvent*)&evt;
-//
-//	if(pEvent->GetGamePad() == m_pGamePad)
-//	{
-//
-//	}
-//}
-//
-//void Player::Initialize(EventSystem* pEventSystem)
-//{
-//	m_pEventSystem = pEventSystem;
-//
-//	m_pEventSystem->RegisterCallback<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
-//	m_pEventSystem->RegisterCallback<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
-//}
-//
-//void Player::Update(float fTime)
-//{
-//
-//}
-//
-//void Player::Shutdown(void)
-//{
-//	m_pEventSystem->UnregisterAll<Player>(this, &Player::_OnKeyRelease);
-//	m_pEventSystem->UnregisterAll<Player>(this, &Player::_OnKeyPress);
-//}
+
+void Player::_OnKeyRelease(const Event& e)
+{
+   InputEvent* inputEvent = (InputEvent*)&e;
+
+   if (inputEvent->GetGamePad() == this->_pad) {
+      this->_object->SendInput(((std::string)((InputEvent*)&e)->GetButtonID() + "_RELEASED").c_str(), e.GetSender());
+   }
+}
+
+void Player::setup(void)
+{
+   Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
+   Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
+}
+
+void Player::shutdown(void)
+{
+   Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
+   Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
+}

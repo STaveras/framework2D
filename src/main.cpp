@@ -1,5 +1,6 @@
 // main.cpp
 #include "Engine2D.h"
+#include "Camera.h"
 #include "Input.h"
 #include "InputEvent.h"
 #include "Game.h"
@@ -9,145 +10,157 @@
 #include "Window.h"
 
 #include "SDSParser.h"
-class FlappyTurd : public Game
-{
-   IRenderer::RenderList* _sprites;
 
+#include "FollowObjectOperator.h"
+#include "MaxVelocityOperator.h"
+#include "ApplyVelocityOperator.h"
+#include "UpdateRenderableOperator.h"
+#include "UpdateBackgroundOperator.h"
+
+#define FALL_FORCE 100.0f
+#define FLAP_MULTIPLIER 3.33f
+
+class FlappyTurd : public Game
+{  
    class PlayState : public GameState
    {
-      FlappyTurd* _game;
-      Sprite* _bg;
+      // (Probably should just go in GameState...?)
+      Image* _background; // Lights; the set
+      Camera* _camera; // Camera
+      Player* _player; // Action; the actors
 
-      class Turd : public Player, GameObject
+      // Game rules
+      FollowObject _attachCamera;
+      //MaxVelocityOperator _maxVelocity;
+      ApplyVelocityOperator _applyVelocity;
+      UpdateBackgroundOperator _updateBackground;
+      UpdateRenderableOperator _updateRenderable;
+      //TODO: UpdateCollidable _updateCollidable;
+
+      class Turd : public GameObject
       {
-         friend PlayState;
+         // Currently unused
+         //class TurdState : public GameObjectState
+         //{
+         //public:
+           // void onEnter()
+           // {
+           //	 //GameObjectState::onEnter();
+           // }
 
-		 // Currently unused
-    //     class TurdState : public GameObjectState
-    //     {
-    //     public:
-    //        void OnEnter()
-    //        {
-				//GameObjectState::OnEnter();
-    //        }
+           // void onExit()
+           // {
 
-    //        void OnExit()
-    //        {
-
-    //        }
-    //     };
+           // }
+         //};
 
       public:
          Turd(void)
          {
-            GameObjectState* Falling = this->AddState("Falling");
-            Falling->setDirection(vector2(1,-1));
-            Falling->setForce(3);
+            // NOTE: All of this should ideally be in a script
+            GameObjectState* falling = this->addState("Falling");
+            //falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
+            falling->setDirection(vector2(0.1f, 1.0f)); 
+            falling->setForce(FALL_FORCE);
+            falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
+            ((Image*)falling->getRenderable())->center();
 
-            GameObjectState* Rising = this->AddState("Rising");
-			Rising->setExecuteTime(0.5); // 1 second
-            Rising->setDirection(vector2(1,1));
-            Rising->setForce(3);
+            GameObjectState* rising = this->addState("Rising");
+            //rising->setDirection(vector2(0.1f, -1.0f));
+            rising->setExecuteTime(0.27);
+            rising->setDirection(vector2(0.1f, -1.0f * FLAP_MULTIPLIER));
+            rising->setForce(FALL_FORCE);
+            rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
+            ((Image*)rising->getRenderable())->center();
 
-            this->RegisterTransition("Falling","BUTTON_PRESSED","Rising");
-            this->RegisterTransition("Rising","TIME_PASSED","Falling");
+            RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
+            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
+            RegisterTransition("Rising", "BUTTON_RELEASED", "Falling"); // stop rising when you let go of the button
          }
-      }_Player;
+
+         ~Turd(void) 
+         {
+            for (unsigned int i = 0; i < _states.Size(); i++)
+               delete ((GameObjectState*)_states.At(i))->getRenderable();
+         }
+      };
 
    public:
-      void OnKeyPressed(const Event& e)
+
+      void onEnter(void)
       {
-         InputEvent* inputEvent = (InputEvent*)&e;
-         std::string stateMachineInput = inputEvent->GetButtonID() + "_PRESSED";
-         _Player.GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
+         GameState::onEnter();
+
+         _background = new Image("./data/images/bg.png");
+         _background->center();
+
+         _renderList->push_back(_background);
+
+         _updateBackground.useRenderList(_renderList);
+         _updateBackground.setBackground(_background);
+         _updateBackground.setMode(Background::Mode_Mirror);
+
+         _objectManager.addObject("Turd", new Turd);
+         _objectManager.pushOperator(&_updateBackground);
+         _objectManager.pushOperator(&_applyVelocity);
+         //_objectManager.pushOperator(&_maxVelocity);
+         _objectManager.pushOperator(&_updateRenderable);
+         _objectManager.pushOperator(&_attachCamera);
+         _objectManager.getGameObject("Turd")->Initialize();
+
+         _player = new Player;
+         _player->setGamePad(_inputManager.CreateGamePad());
+         _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
+         _player->setGameObject(_objectManager.getGameObject("Turd"));
+         _player->setup();
+
+         _camera = new Camera;
+         _objectManager.addObject("Camera", _camera);
+         _updateBackground.setCamera(_camera);
+
+         _attachCamera.setSource(_camera);
+         _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
+         
+         Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
-      void OnKeyReleased(const Event& e)
+      //void onExecute(float time)
+      //{
+      //   GameState::onExecute(time);
+      //}
+
+      void onExit(void)
       {
-         InputEvent* inputEvent = (InputEvent*)&e;
-         std::string stateMachineInput = inputEvent->GetButtonID() + "_RELEASED";
-         _Player.GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
+         // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
+         delete _camera;
+
+         _player->shutdown();
+
+         _objectManager.clearOperators();
+         _objectManager.removeObject("Turd");
+
+         delete _player->getGameObject();
+         delete _player;
+
+         _renderList->remove(_background);
+
+         delete _background;
+
+         GameState::onExit();
       }
+   };
 
-	  // TODO: Move the above two functions to Turd
-
-      void OnEnter(void)
-      {
-         GameState::OnEnter();
-
-         Engine2D* engine = Engine2D::GetInstance();
-         engine->GetEventSystem()->RegisterCallback<PlayState>("EVT_KEYPRESSED", this, &PlayState::OnKeyPressed);
-         engine->GetEventSystem()->RegisterCallback<PlayState>("EVT_KEYRELEASED", this, &PlayState::OnKeyReleased);
-
-         _InputManager.Initialize(engine->GetEventSystem(), engine->GetInput());
-
-         _game = (FlappyTurd*)engine->GetGame();
-
-         _bg = this->_Sprites.Create(Sprite("./data/images/bg.png"));
-
-         _game->PushSprite(_bg);
-
-         _ObjectManager.AddObject("Player",&_Player);
-         _Player.SetGameObject(&_Player);
-         _Player.SetGamePad(_InputManager.CreateGamePad());
-         _Player.GetGamePad()->AddButton(VirtualButton("BUTTON",KBK_SPACE));
-
-         GameObject::GameObjectState* Falling = (GameObject::GameObjectState*)_Player.GetState("Falling");
-         Falling->SetRenderable(_Sprites.Create(Sprite("./data/images/turd0.png",0xFFFF00FF)));
-
-         GameObject::GameObjectState* Rising = (GameObject::GameObjectState*)_Player.GetState("Rising");
-         Rising->SetRenderable(_Sprites.Create(Sprite("./data/images/turd1.png",0xFFFF00FF)));
-         Rising->GetRenderable()->SetVisibility(false);
-
-		 // TODO: Where are these events registered?
-
-         _game->PushSprite(Falling->GetRenderable());
-         _game->PushSprite(Rising->GetRenderable());
-
-		 _Player.Initialize();
-
-         //SDSParser *scriptParser = 
-         // camera follows turd + bg
-      }
-
-      void OnExecute(float time)
-      {
-         GameState::OnExecute(time);
-      }
-
-      void OnExit(void)
-      {
-         _game->PopSprite();
-         _ObjectManager.RemoveObject("Player");
-
-         this->_Sprites.Destroy(_bg);
-         GameState::OnExit();
-      }
-   }_PlayState;
+   friend PlayState;
 
 public:
-   void PushSprite(Renderable* bg)
-   {
-      _sprites->push_back(bg);
-   }
-
-   void PopSprite()
-   {
-      _sprites->pop_back();
-   }
-
    void Begin(void)
    {
-      _sprites = Renderer::Get()->CreateRenderList();
-
-      this->push(&_PlayState);
+      this->push(new PlayState);
    }
-   
+
    void End(void)
    {
-      this->pop();
-
-      Renderer::Get()->DestroyRenderList(_sprites);
+      void* playState = this->top(); this->pop(); delete playState;
    }
 }game;
 
@@ -159,13 +172,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
    RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 320, 480, false, false);
 
-   Engine2D* engine = Engine2D::GetInstance();
+   Engine2D* engine = Engine2D::getInstance();
    engine->SetInputInterface(pInput);
    engine->SetRenderer(pRenderer);
    engine->SetGame(&game);
    engine->Initialize();
 
-   while(!rndrWind.HasQuit() && !engine->HasQuit())
+   while (!rndrWind.HasQuit() && !engine->HasQuit())
    {
       rndrWind.Update();
       engine->Update();
@@ -174,7 +187,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    engine->Shutdown();
 
    Input::DestroyInputInterface(pInput);
-   Renderer::DestroyRenderer(pRenderer); 
+   Renderer::DestroyRenderer(pRenderer);
 
    rndrWind.Shutdown();
 }

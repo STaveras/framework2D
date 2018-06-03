@@ -183,6 +183,6 @@ void AnimationManager::Update(float fTime)
 
 	for(; itr != this->End(); itr++)
 	{
-		(*itr)->Update(fTime);
+		(*itr)->update(fTime);
 	}
 }

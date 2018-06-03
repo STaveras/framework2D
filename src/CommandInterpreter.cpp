@@ -283,7 +283,7 @@ void CommandInterpreter::Update(float fTime)
 		if(_ProcessCommand((*command_iter)->GetCommandString()))
 		{
 			(*command_iter)->SetTimeStamp(m_vButtons[m_vButtons.size()-1].GetTimeStamp());
-			m_pEventSystem->SendEvent<CommandEvent>(CommandEvent((*command_iter), this));
+			m_pEventSystem->sendEvent<CommandEvent>(CommandEvent((*command_iter), this));
 		}
 	}
 

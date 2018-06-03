@@ -37,7 +37,7 @@ public:
 	void SetFlashColor(color color) { m_Flash = color; }
 	void SetTint(color color) { m_Tint = color; }
 	void SetAnimation(Animation* pAnimation) { m_pAnimation = pAnimation; }
-	void SetPosition(vector2 position);
+	void setPosition(vector2 position);
 
 	void PushSprite(Image* sprite) { m_lsSprites.push_back(sprite); }
 	void PopSprite(void) { m_lsSprites.pop_back(); }

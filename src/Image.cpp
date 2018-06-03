@@ -6,27 +6,36 @@
 Image::Image(void):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(NULL), 
-	m_fRotation(0.0f),
+	_rotation(0.0f),
 	m_Center(vector2(0,0)),
-	m_Position(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
 
-Image::Image(ITexture* pImage): 
+Image::Image(ITexture* pImage):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(pImage),
-	m_fRotation(0.0f),
+	_rotation(0.0f),
 	m_Center(vector2(0,0)),
-	m_Position(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {}
+
+// TODO
+Image::Image(const Image& image):
+   Renderable(RENDERABLE_TYPE_IMAGE),
+   m_pTexture(image.getTexture()),
+   _rotation(0.0f),
+   m_Center(vector2(0, 0)),
+   m_Scale(vector2(1.0f, 1.0f)),
+   m_SrcRect(image.m_SrcRect)
+{
+
+}
 
 Image::Image(const char* filePath, color clearColor, const rect* srcRect):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(NULL), 
-	m_fRotation(0.0f),
+	_rotation(0.0f),
 	m_Center(vector2(0,0)),
-	m_Position(vector2(0,0)),
 	m_Scale(vector2(1.0f,1.0f))
 {
 	this->Load(filePath,clearColor,srcRect);
@@ -46,6 +55,18 @@ vector2 Image::GetRectCenter(void) const
 	return rectCenter;
 }
 
+// TODO: should probably check if the rect is non-zero and return those values instead
+
+float Image::getWidth(void) const
+{
+   return (float)getTexture()->GetWidth();
+}
+
+float Image::getHeight(void) const
+{
+   return (float)getTexture()->GetHeight();
+}
+
 void Image::Mirror(bool bHorizontal, bool bVertical)
 {
 	if(bHorizontal)
@@ -60,9 +81,14 @@ void Image::Mirror(bool bHorizontal, bool bVertical)
 	}
 }
 
+void Image::center(void)
+{
+   SetCenter(GetRectCenter());
+}
+
 Image* Image::Load(const char* filePath, color clearColor, const rect* srcRect)
 {
-	IRenderer* renderer = Engine2D::GetInstance()->GetRenderer();
+	IRenderer* renderer = Engine2D::getInstance()->GetRenderer();
 	if (renderer)
 	{
 		m_pTexture = renderer->CreateTexture(filePath, clearColor);
@@ -91,7 +117,7 @@ Image* Image::Load(const char* filePath, color clearColor, const rect* srcRect)
 void Image::Unload(void)
 {
 	if (m_pTexture)
-		Engine2D::GetInstance()->GetRenderer()->DestroyTexture(m_pTexture);
+		Engine2D::getInstance()->GetRenderer()->DestroyTexture(m_pTexture);
 }
 
 // Author: Stanley Taveras

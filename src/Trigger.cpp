@@ -26,7 +26,7 @@ void Trigger::_Trigger(void)
 	switch(Type)
 	{
 	case EVENT:
-		Engine2D::GetInstance()->GetEventSystem()->SendEvent(Value.c_str(),this);
+		Engine2D::getInstance()->getEventSystem()->sendEvent(Value.c_str(),this);
 		break;
 	case ANIMATION:
 		break;

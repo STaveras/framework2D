@@ -69,11 +69,11 @@ void ::Animation::_Reset(void)
 		_frameIndex = m_Frames.Size() - 1;
 }
 
-void Animation::SetPosition(vector2 position)
+void Animation::setPosition(vector2 position)
 {
 	Factory<Frame>::factory_iterator i = m_Frames.Begin();
 	for (; i != m_Frames.End(); i++)
-		(*i)->GetSprite()->SetPosition(position);
+		(*i)->GetSprite()->setPosition(position);
 }
 
 void Animation::Mirror(bool bHorizontal, bool bVertical)
@@ -111,7 +111,7 @@ void Animation::RemoveFrame(Frame* frame)
 	}
 }
 
-bool Animation::Update(float fTime)
+bool Animation::update(float fTime)
 {
 	if (!m_bPlaying)
 		return false;

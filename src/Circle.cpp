@@ -7,7 +7,7 @@
 
 bool Circle::WithCircle(const Circle* circle)
 {
-	//vector2 toCircle = circle->GetPosition() - GetPosition();
+	//vector2 toCircle = circle->getPosition() - getPosition();
 
 	return false;
 }

@@ -1,15 +1,19 @@
 #pragma once
 #include "Image.h"
 #include "Collidable.h"
-class Sprite : public Image
+class Sprite : public Image // Should probably just contain an image
 {
-    Collidable* _CollideInfo;
+  Collidable* _CollideInfo;
 
 public:
-	Sprite(void):Image(),_CollideInfo(NULL){}
-	Sprite(const char* filename, color clearKeyColor = 0, rect* srcRect = NULL);
+  Sprite(void) :Image(), _CollideInfo(NULL) {}
+  Sprite(const char* filename, color clearKeyColor = 0, rect* srcRect = NULL) :Image(filename, clearKeyColor, srcRect) {}
 
-	using Image::Load;
-	Sprite* Load(const char* filePath);
-	void Save(const char* filePath);
+  Collidable* getCollisionInfo(void) const { return _CollideInfo; }
+  void setCollisionInfo(Collidable* collisionObject) { _CollideInfo = collisionObject; }
+
+  //using Image::Load;
+
+  Sprite* Load(const char* filePath);
+  void Save(const char* filePath);
 };

@@ -96,7 +96,7 @@ void EventSystem::UnregisterAll(void (*fn)(const Event&))
 	}
 }
 
-void EventSystem::SendEvent(Event::event_key evtKey, void* pSender, Event::event_priority_level ePriority)
+void EventSystem::sendEvent(Event::event_key evtKey, void* pSender, Event::event_priority_level ePriority)
 {
 	if(m_EventQueue.size() >= m_uiFloodLimit)
 		return;

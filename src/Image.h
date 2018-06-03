@@ -8,35 +8,38 @@ class ITexture;
 class Image : public Renderable
 {
 protected:
-	ITexture* m_pTexture;
-	float m_fRotation;
+	const ITexture* m_pTexture;
+	float _rotation;
 	vector2 m_Center;
-	vector2 m_Position;
 	vector2 m_Scale;
 	rect m_SrcRect;
 
 public:
 	Image(void);
 	Image(ITexture* pImage);
+  Image(const Image& image);
 	Image(const char* filePath,color clearColor = 0, const rect* srcRect = NULL);
 	~Image(void);
 
-	const ITexture* GetTexture(void) const { return m_pTexture; }
-	float GetRotation(void) const { return m_fRotation; }
+	const ITexture* getTexture(void) const { return m_pTexture; }
+	float GetRotation(void) const { return _rotation; }
 	vector2 GetCenter(void) const { return m_Center; }
-	vector2 GetPosition(void) const { return m_Position; }
 	vector2 GetScale(void) const { return m_Scale; }
 	const rect& GetSourceRect(void) const { return m_SrcRect; }
 	vector2 GetRectCenter(void) const;
 
+  float getWidth(void) const;
+  float getHeight(void) const;
+
 	void SetTexture(ITexture* pTexture) { m_pTexture = pTexture; }
-	void SetRotation(float fRotation) { m_fRotation = fRotation; }
+	void SetRotation(float fRotation) { _rotation = fRotation; }
 	void SetCenter(vector2 center) { m_Center = center; }
-	void SetPosition(vector2 position) { m_Position = position; }
 	void SetScale(vector2 scale) { m_Scale = scale; }
 	void SetSourceRect(const rect& srcRect) { m_SrcRect = srcRect; }
 
 	void Mirror(bool bHorizontal, bool bVertical);
+
+  void center(void);
 
 	virtual Image* Load(const char* filePath, color clearColor = 0, const rect* srcRect = NULL);
 	virtual void Unload(void);

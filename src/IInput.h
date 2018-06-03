@@ -16,6 +16,8 @@ protected:
 	IKeyboard* m_pKeyboard;
 	IMouse* m_pMouse;
 
+	// TODO: Add physical gamepad support
+
 public:
 	IInput(void):m_pKeyboard(NULL){}
 	virtual ~IInput(void) = 0{ if(m_pKeyboard) delete m_pKeyboard; }

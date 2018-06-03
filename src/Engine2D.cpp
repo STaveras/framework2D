@@ -4,7 +4,8 @@
 #include "Game.h"
 #include "IInput.h"
 #include "IRenderer.h"
-Engine2D::Engine2D(void):
+
+Engine2D::Engine2D(void) :
 	_hasQuit(false),
 	_pInput(NULL),
 	_pRenderer(NULL)
@@ -12,46 +13,47 @@ Engine2D::Engine2D(void):
 
 void Engine2D::Initialize(void)
 {
-    _Timer.ResetElapsed();
+	_Timer.ResetElapsed();
 	_EventSystem.Initialize(INFINITE);
 
-	if(_pInput)
+	if (_pInput)
 		_pInput->Initialize();
 
-	if(_pRenderer)
+	if (_pRenderer)
 	{
 		_pRenderer->Initialize();
 		_pRenderer->SetClearColor(NULL);
 	}
 
-    if (_pGame)
-        _pGame->Begin();
+	if (_pGame)
+		_pGame->Begin();
 }
 
 void Engine2D::Update(void)
 {
-    _Timer.Update();
 	_EventSystem.ProcessEvents();
 
-	if(_pInput)
+	if (_pInput)
 		_pInput->Update();
 
-	if(_pRenderer)
+	if (_pRenderer)
 		_pRenderer->Render();
 
-    if (_pGame)
-        _pGame->Update(&_Timer);
+	if (_pGame)
+		_pGame->Update(&_Timer);
+
+	_Timer.Update();
 }
 
 void Engine2D::Shutdown(void)
 {
-    if (_pGame)
-        _pGame->End();
+	if (_pGame)
+		_pGame->End();
 
-	if(_pRenderer)
+	if (_pRenderer)
 		_pRenderer->Shutdown();
 
-	if(_pInput)
+	if (_pInput)
 		_pInput->Shutdown();
 
 	_EventSystem.Shutdown();

@@ -1,10 +1,10 @@
 #include "StartState.h"
 
-void StartState::OnEnter(void)
+void StartState::onEnter(void)
 {
-	GameState::OnEnter();
+	GameState::onEnter();
 
-	//Animation* animation = _AnimationManager.CreateAnimation("BackgroundNoise");
+	//Animation* animation = _animationManager.CreateAnimation("BackgroundNoise");
 	//animation->SetMode(ANIMATION_MODE_OSCILLATE);
 	//animation->AddFrame(_Sprites.Create(Sprite("./data/images/noise/0.png")));
 	//animation->AddFrame(_Sprites.Create(Sprite("./data/images/noise/1.png")));
@@ -19,13 +19,13 @@ void StartState::OnEnter(void)
 	//animation->Play();
 }
 
-void StartState::OnExecute(float time)
+void StartState::onExecute(float time)
 {
-	GameState::OnExecute(time);
-	Engine2D::GetInstance()->GetTimer()->LimitFrameRate(60);
+	GameState::onExecute(time);
+	Engine2D::getInstance()->GetTimer()->LimitFrameRate(60);
 }
 
-void StartState::OnExit(void)
+void StartState::onExit(void)
 {
-	GameState::OnExit();
+	GameState::onExit();
 }

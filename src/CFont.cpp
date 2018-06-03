@@ -64,7 +64,7 @@
 //
 //		//RECT r = CalcRect(index);
 //
-//		//CSGD_TextureManager::GetInstance()->Draw( m_nImageID, nOffsetX, nOffsetY, fScaleX, fScaleY, &r , 0, 0, 0.0f, dwColor);
+//		//CSGD_TextureManager::getInstance()->Draw( m_nImageID, nOffsetX, nOffsetY, fScaleX, fScaleY, &r , 0, 0, 0.0f, dwColor);
 //		//nOffsetX += (int)(m_nCharWidth * fScaleX) + nSpacing;
 //	}
 //}

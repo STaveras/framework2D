@@ -2,17 +2,17 @@
 #include "GameObject.h"
 #include "Game.h"
 #include "InputEvent.h"
-void PlayState::OnEnter(void)
+void PlayState::onEnter(void)
 {
-	//GameState::OnEnter();
-	Engine2D* engine = Engine2D::GetInstance();
-	engine->GetEventSystem()->RegisterCallback<PlayState>("EVT_KEYPRESSED", this, &PlayState::OnKeyPressed);
-	engine->GetEventSystem()->RegisterCallback<PlayState>("EVT_KEYRELEASED", this, &PlayState::OnKeyReleased);
+	//GameState::onEnter();
+	Engine2D* engine = Engine2D::getInstance();
+	engine->getEventSystem()->RegisterCallback<PlayState>("EVT_KEYPRESSED", this, &PlayState::OnKeyPressed);
+	engine->getEventSystem()->RegisterCallback<PlayState>("EVT_KEYRELEASED", this, &PlayState::OnKeyReleased);
 
     _RenderList = engine->GetRenderer()->CreateRenderList();
 
-	//_AnimationManager.Initialize();
-	//_InputManager.Initialize(engine->GetEventSystem(), engine->GetInput());
+	//_animationManager.Initialize();
+	//_inputManager.Initialize(engine->getEventSystem(), engine->GetInput());
 
 	_backgroundNoise = new Animation();
 	_backgroundNoise->SetMode(ANIMATION_MODE_OSCILLATE);
@@ -30,41 +30,41 @@ void PlayState::OnEnter(void)
 
     _RenderList->push_back(_backgroundNoise);
 
-	//_player = engine->GetGame()->GetPlayer(0);
+	//_player = Engine2D::GetGame()->GetPlayer(0);
 
 	// Setting up its controller
-	//_player->SetGamePad(_InputManager.CreateGamePad());
-	_player->GetGamePad()->AddButton(VirtualButton("ATK",KBK_A));
+	//_player->setGamePad(_inputManager.CreateGamePad());
+	_player->getGamePad()->addButton(VirtualButton("ATK",KBK_A));
 
 	// Setting up its controllable object
-	_player->SetGameObject(new GameObject());
-	//_ObjectManager.AddObject("Person",_player->GetGameObject());
+	_player->setGameObject(new GameObject());
+	//_objectManager.addObject("Person",_player->getGameObject());
 
 	// Adding states to define that object's behavior...
-	_player->GetGameObject()->AddState("IDLING");
-	//Animation* theGuyIdling = _AnimationManager.CreateAnimation("{ERSON_IDLING");
+	_player->getGameObject()->addState("IDLING");
+	//Animation* theGuyIdling = _animationManager.CreateAnimation("{ERSON_IDLING");
 	//theGuyIdling->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/idling/0.bmp",0xFFFF00FF)),0.333f);
 	//theGuyIdling->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/idling/1.bmp",0xFFFF00FF)),0.333f);
-	//_player->GetGameObject()->SetAnimation(theGuyIdling);
+	//_player->getGameObject()->setAnimation(theGuyIdling);
 
-	_player->GetGameObject()->AddState("ATTACKING");
-	//Animation* theGuyAttacking = _AnimationManager.CreateAnimation("PERSON_ATTACKING");
+	_player->getGameObject()->addState("ATTACKING");
+	//Animation* theGuyAttacking = _animationManager.CreateAnimation("PERSON_ATTACKING");
 	//theGuyAttacking->SetMode(ANIMATION_MODE_ONCE);
-	//theGuyAttacking->SetVisibility(false);
+	//theGuyAttacking->setVisibility(false);
 	//theGuyAttacking->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/attacking/0.bmp",0xFFFF00FF)),0.0167f);
 	//theGuyAttacking->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/attacking/1.bmp",0xFFFF00FF)),0.0167f);
-	//_player->GetGameObject()->SetAnimation(theGuyAttacking);
+	//_player->getGameObject()->setAnimation(theGuyAttacking);
 
-	_player->GetGameObject()->RegisterTransition("IDLING","ATK_PRESSED","ATTACKING");
-	_player->GetGameObject()->RegisterTransition("ATTACKING","ATK_PRESSED","ATTACKING");
-	_player->GetGameObject()->RegisterTransition("ATTACKING","ANIMATION_STOPPED","IDLING");
+	_player->getGameObject()->RegisterTransition("IDLING","ATK_PRESSED","ATTACKING");
+	_player->getGameObject()->RegisterTransition("ATTACKING","ATK_PRESSED","ATTACKING");
+	_player->getGameObject()->RegisterTransition("ATTACKING","ANIMATION_STOPPED","IDLING");
 
-	_player->GetGameObject()->Initialize();   
+	_player->getGameObject()->Initialize();   
 
     for (int i = 0; i < NUM_BLOCKS; i++)
     {
         RECT blockRect = {i*16,0,(i+1)*16,16};        
-        //_Blocks[i].AddState("BEING")->SetRenderable(_Sprites.Create(Sprite("./data/images/blocks.png", 0xFFFF00FF, &blockRect)));
+        //_Blocks[i].addState("BEING")->SetRenderable(_Sprites.Create(Sprite("./data/images/blocks.png", 0xFFFF00FF, &blockRect)));
     }
     
     // Add 24 mono(grey) blocks to the bottom of the 
@@ -75,44 +75,44 @@ void PlayState::OnEnter(void)
     }
 }
 
-void PlayState::OnExecute(float time)
+void PlayState::onExecute(float time)
 {
-	GameState::OnExecute(time);	
-	Engine2D::GetInstance()->GetTimer()->LimitFrameRate(60);
-    _backgroundNoise->Update(time);
+	GameState::onExecute(time);	
+	Engine2D::getInstance()->GetTimer()->LimitFrameRate(60);
+    _backgroundNoise->update(time);
 }
 
-void PlayState::OnExit(void)
+void PlayState::onExit(void)
 {
-	//_ObjectManager.RemoveObject("Person");
+	//_objectManager.removeObject("Person");
 
-	delete _player->GetGameObject();
-	_player->SetGameObject(NULL);
+	delete _player->getGameObject();
+	_player->setGameObject(NULL);
 
-	//_InputManager.DestroyGamePad(_player->GetGamePad());
-	_player->SetGamePad(NULL);
+	//_inputManager.DestroyGamePad(_player->getGamePad());
+	_player->setGamePad(NULL);
 
     delete _backgroundNoise;
     
-    Engine2D::GetInstance()->GetRenderer()->DestroyRenderList(_RenderList);
+    Engine2D::getInstance()->GetRenderer()->DestroyRenderList(_RenderList);
 
-	//_InputManager.Shutdown();
-	//_AnimationManager.Shutdown();
+	//_inputManager.shutdown();
+	//_animationManager.shutdown();
 	//_Sprites.Clear();
 
-	//GameState::OnExit();
+	//GameState::onExit();
 }
 
 void PlayState::OnKeyPressed(const Event& e)
 {
 	InputEvent* inputEvent = (InputEvent*)&e;
 	std::string stateMachineInput = inputEvent->GetButtonID() + "_PRESSED";
-	_player->GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
+	_player->getGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
 }
 
 void PlayState::OnKeyReleased(const Event& e)
 {
 	InputEvent* inputEvent = (InputEvent*)&e;
 	std::string stateMachineInput = inputEvent->GetButtonID() + "_RELEASED";
-	_player->GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
+	_player->getGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
 }

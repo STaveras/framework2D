@@ -3,6 +3,8 @@
 // Created: 2/20/2010
 // Modified: 3/29/2010
 
+// TODO: Really need a way to pass constructor arguments to the factory...
+
 #if !defined(_FACTORY_H)
 #define _FACTORY_H
 

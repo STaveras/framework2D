@@ -26,7 +26,7 @@ public:
 	void SetPadNumber(int nPadNumber) { m_nPadNumber = nPadNumber; }
 	void SetInputInterface(IInput* pInput) { m_pInput = pInput; }
 
-	void AddButton(VirtualButton btn) { m_lsButtons.push_back(btn); }
+	void addButton(VirtualButton btn) { m_lsButtons.push_back(btn); }
 	void RemoveButton(VirtualButton btn);
 
 	bool ButtonPressed(ButtonID btnID);

@@ -57,9 +57,9 @@ class DebugState: public IProgramState
 public:
 	DebugState(void):m_bStaticBG(false),_pSpriteManager(NULL),_pAnimationManager(NULL),m_pStage(NULL){}
 
-	void OnEnter(void);
-	void OnExecute(float fTime);
-	void OnExit(void);
+	void onEnter(void);
+	void onExecute(float fTime);
+	void onExit(void);
 
 	// For testing the input manager
 	void OnKeyPress(const Event& evt);

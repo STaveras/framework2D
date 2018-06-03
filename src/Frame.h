@@ -27,7 +27,7 @@ public:
 
 	void SetDuration(float fDuration) { m_fDuration = fDuration; }
 	void SetSprite(Sprite* pSprite) { m_pSprite = pSprite; }
-	void SetPosition(vector2 position) { if(m_pSprite) m_pSprite->SetPosition(position); }
+	void setPosition(vector2 position) { if(m_pSprite) m_pSprite->setPosition(position); }
 
 	void AddTrigger(Trigger::TYPE type, std::string value, Trigger::MODE mode = Trigger::ONCE){ m_lsTriggers.push_back(Trigger(type,value,mode)); }
 	void AddTrigger(const Trigger& trigger) { m_lsTriggers.push_back(trigger); }

@@ -61,19 +61,20 @@ RendererDX::~RendererDX(void)
 //		_DrawImage(pAppearance->GetAnimation()->GetCurrentFrame()->GetSprite(), tint, pAppearance->GetAnimation()->GetCurrentFrame()->GetAnchor());
 //}
 
-void RendererDX::_DrawImage(Image* pSprite, color tint, D3DXVECTOR2 offset)
+// Why do we have offset? Center is already an offset...
+void RendererDX::_DrawImage(Image* image, color tint, D3DXVECTOR2 offset)
 {
 	D3DXMATRIX transform;
-	D3DXMatrixTransformation2D(&transform, &pSprite->GetRectCenter(), 0.0f, &pSprite->GetScale(), &pSprite->GetCenter(), pSprite->GetRotation(), NULL);
+	D3DXMatrixTransformation2D(&transform, &image->GetRectCenter(), 0.0f, &image->GetScale(), &image->GetCenter(), image->GetRotation(), NULL);
 
 	D3DXVECTOR3 position;
-	position.x = pSprite->GetPosition().x + offset.x;
-	position.y = pSprite->GetPosition().y + offset.y;
+	position.x = image->getPosition().x + offset.x;
+	position.y = image->getPosition().y + offset.y;
 	position.z = 0.0f;
 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER,D3DTEXF_POINT);
 	m_pD3DSprite->SetTransform(&transform);
-	m_pD3DSprite->Draw(((TextureD3D*)pSprite->GetTexture())->GetTexture(), &pSprite->GetSourceRect(), &D3DXVECTOR3(pSprite->GetCenter().x, pSprite->GetCenter().y, 0.0f), &position, tint._color);
+	m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), &image->GetSourceRect(), &D3DXVECTOR3(image->GetCenter().x, image->GetCenter().y, 0.0f), &position, tint._color);
 }
 
 //void RendererDX::_DrawFont(Font* pFont)
@@ -186,7 +187,7 @@ void RendererDX::Render(void)
 				D3DXMATRIX rotationMat;
 				D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
 
-				D3DXVECTOR2 position = m_pCamera->GetPosition() - m_pCamera->GetCenter();
+				D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->GetCenter();
 
 				viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1,0), &position);
 				viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0,1), &position);
@@ -196,33 +197,33 @@ void RendererDX::Render(void)
 				m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 			}
 
-			if (!_RenderLists.Empty())
-			{
-				for (unsigned int i = 0; i < _RenderLists.Size(); i++)
-				{
-                    for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
-					{
-						if ((*o)->IsVisible())
-						{
-							switch((*o)->GetRenderableType())
-							{
-							case RENDERABLE_TYPE_IMAGE:
-								_DrawImage((Image*)(*o));
-								break;
-							case RENDERABLE_TYPE_ANIMATION:
-								{
-									Animation* pAnimation = (Animation*)(*o);
-									Frame* frame = pAnimation->GetCurrentFrame();
+      if (!_RenderLists.Empty())
+      {
+         for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+         {
+            for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+            {
+               if ((*o)->IsVisible())
+               {
+                  switch ((*o)->getRenderableType())
+                  {
+                  case RENDERABLE_TYPE_IMAGE:
+                     _DrawImage((Image*)(*o));
+                     break;
+                  case RENDERABLE_TYPE_ANIMATION:
+                  {
+                     Animation* pAnimation = (Animation*)(*o);
+                     Frame* frame = pAnimation->GetCurrentFrame();
 
-									if (frame)
-										_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
+                     if (frame)
+                        _DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
+                  }
+                  break;
+                  }
+               }
+            }
+         }
+      }
 
 			m_pD3DSprite->End();
 		}

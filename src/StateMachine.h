@@ -20,8 +20,10 @@ class StateMachine
 	State* m_pStartState;
 	State* m_pState;
 
+	void OnEvent(const StateMachineEvent& evt);
+
 protected:
-	Factory<State> m_States;
+	Factory<State> _states;
 	std::queue<StateMachineEvent> m_qEvents;
 	std::multimap<State*, std::pair<StateMachineEvent, State*>> m_mTransitionTable;
 
@@ -30,19 +32,19 @@ protected:
 
 public:
 	StateMachine(void);
-	//~StateMachine(void){}
+	~StateMachine(void);
 
 	void SetIsBuffered(bool bBuffered) { m_bBuffered = bBuffered; }
 	void SetTransitionFrequency(float fFreq) { m_fTransitionFrequency = fFreq; }
 	void SetStartState(State* pState) { m_pStartState = pState; }
-	void SetState(State* pState) { if(m_pState) m_pState->OnExit(); pState->OnEnter(m_pState); m_pState = pState; } // Should I even allow this?
+	void SetState(State* pState) { if(m_pState) m_pState->onExit(pState); pState->onEnter(m_pState); m_pState = pState; } // Should I even allow this?
 
 	bool IsBuffered(void) const { return m_bBuffered; }
 	float GetTransitionFrequency(void) const { return m_fTransitionFrequency; }
 	State* GetCurrentState(void) const { return m_pState; }
 	State* GetStartState(void) const { return m_pStartState; }
 	State* GetState(const char* szName);
-	Factory<State>* GetStateFactory(void) { return &m_States; }
+	Factory<State>* GetStateFactory(void) { return &_states; }
 
 	State* AddState(const char* name);
 	void AddTransition(const char* condition, const char* nextState);
@@ -51,12 +53,10 @@ public:
 
 	void Initialize(void);
 	void Reset(void);
-	void Terminate(void);
 
-	void OnEvent(const StateMachineEvent& evt);
 	void SendInput(const char* szCondition, void* pSender = NULL);
 
-	void Update(float fTime);
+	virtual void update(float fTime);
 
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class

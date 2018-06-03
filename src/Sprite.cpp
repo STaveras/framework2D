@@ -2,7 +2,6 @@
 #include "ITexture.h"
 #include "fileUtil.h"
 #include <fstream>
-Sprite::Sprite(const char* filename, color clearKeyColor, rect* srcRect):Image(filename,clearKeyColor,srcRect){}
 
 void Sprite::Save(const char* filePath)
 {

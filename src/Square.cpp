@@ -13,11 +13,11 @@ bool Square::WithCircle(const Circle* circle)
 
 bool Square::WithPlane(const Plane* plane)
 {
-	//vector2 position = ((m_Position + m_Max) / 2);
+	//vector2 position = ((_position + m_Max) / 2);
 
-	//vector2 toSquare = position - plane->GetPosition();
+	//vector2 toSquare = position - plane->getPosition();
 
-	//vector2 width = (m_Max - m_Position);
+	//vector2 width = (m_Max - _position);
 
 	//// TODO : Remove DirectX-specific code
 	//float fRadius = D3DXVec2Length(&width) / 2;
@@ -31,9 +31,27 @@ bool Square::WithPlane(const Plane* plane)
 
 bool Square::WithSquare(const Square* square)
 {
-	if(m_Position > square->m_Max || m_Max < square->m_Position)
+	if(_position > square->m_Max || m_Max < square->_position)
 		return false;
 	else
 		return true;
 }
 
+bool Square::Check(vector2 point)
+{
+   if (point > _position && point < m_Max)
+      return true;
+
+   return false;
+}
+
+// This function is likely to look the same for all of these objects...
+bool Square::Check(const Collidable* collidable)
+{
+   switch (collidable->getType()) {
+   case COL_OBJ_SQUARE:
+      return this->WithSquare((Square*)collidable);
+   default:
+      return false;
+   }
+}
