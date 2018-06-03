@@ -18,6 +18,8 @@ public:
 		Collidable* _Collidable;
         vector2 _Direction;
         double _Force;
+		double _ExecuteTime;
+		double _RunTime;
 
 	public:
 		Renderable* GetRenderable(void) { return _Renderable; }
@@ -31,6 +33,9 @@ public:
 
         double getForce(void) const { return _Force; }
         void setForce(double force) { _Force = force; }
+
+		double getExecuteTime(void) const { return _ExecuteTime; }
+		void setExecuteTime(double runTime) { _ExecuteTime = runTime; }
 
 		void OnEnter(State* prev);
 		bool OnExecute(float time);

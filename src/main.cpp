@@ -11,7 +11,6 @@
 #include "SDSParser.h"
 class FlappyTurd : public Game
 {
-   Engine2D* _engine;
    IRenderer::RenderList* _sprites;
 
    class PlayState : public GameState
@@ -23,18 +22,20 @@ class FlappyTurd : public Game
       {
          friend PlayState;
 
-         class TurdState : public GameObjectState
-         {
-         public:
-            void OnEnter()
-            {
-            }
+		 // Currently unused
+    //     class TurdState : public GameObjectState
+    //     {
+    //     public:
+    //        void OnEnter()
+    //        {
+				//GameObjectState::OnEnter();
+    //        }
 
-            void OnExit()
-            {
+    //        void OnExit()
+    //        {
 
-            }
-         };
+    //        }
+    //     };
 
       public:
          Turd(void)
@@ -44,6 +45,7 @@ class FlappyTurd : public Game
             Falling->setForce(3);
 
             GameObjectState* Rising = this->AddState("Rising");
+			Rising->setExecuteTime(0.5); // 1 second
             Rising->setDirection(vector2(1,1));
             Rising->setForce(3);
 
@@ -66,6 +68,8 @@ class FlappyTurd : public Game
          std::string stateMachineInput = inputEvent->GetButtonID() + "_RELEASED";
          _Player.GetGameObject()->SendInput(stateMachineInput.c_str(),e.GetSender());
       }
+
+	  // TODO: Move the above two functions to Turd
 
       void OnEnter(void)
       {
@@ -95,8 +99,12 @@ class FlappyTurd : public Game
          Rising->SetRenderable(_Sprites.Create(Sprite("./data/images/turd1.png",0xFFFF00FF)));
          Rising->GetRenderable()->SetVisibility(false);
 
+		 // TODO: Where are these events registered?
+
          _game->PushSprite(Falling->GetRenderable());
          _game->PushSprite(Rising->GetRenderable());
+
+		 _Player.Initialize();
 
          //SDSParser *scriptParser = 
          // camera follows turd + bg
@@ -130,28 +138,26 @@ public:
 
    void Begin(void)
    {
-      _engine = Engine2D::GetInstance();
       _sprites = Renderer::Get()->CreateRenderList();
+
       this->push(&_PlayState);
    }
-   void Update(Timer* timer)
-   {
-      Game::Update(timer);
-   }
+   
    void End(void)
    {
       this->pop();
+
       Renderer::Get()->DestroyRenderList(_sprites);
    }
 }game;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-   Window rndrWind = Window(310, 460, "Flap a Turd", "· · · ·");
+   Window rndrWind = Window(320, 460, "Flap a Turd", "· · · ·");
    rndrWind.Initialize(hInstance, lpCmdLine);
 
    DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-   RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 310, 460, false, false);
+   RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 320, 480, false, false);
 
    Engine2D* engine = Engine2D::GetInstance();
    engine->SetInputInterface(pInput);
@@ -168,7 +174,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
    engine->Shutdown();
 
    Input::DestroyInputInterface(pInput);
-   Renderer::DestroyRenderer(pRenderer);
+   Renderer::DestroyRenderer(pRenderer); 
 
    rndrWind.Shutdown();
 }

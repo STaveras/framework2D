@@ -8,7 +8,7 @@ void EventSystem::RegisterCallback(Event::event_key evtKey, T* p, void (T::*fn)(
 	{
 		Event::event_delegate evtDel;
 		evtDel.bind(p, fn);
-		m_CallbackDatabase.insert(std::make_pair(evtKey, evtDel));
+		m_CallbackMap.insert(std::make_pair(evtKey, evtDel));
 	}
 }
 
@@ -19,7 +19,7 @@ bool EventSystem::IsRegistered(Event::event_key evtKey, T* p, void (T::*fn)(cons
 	evtDel.bind(p, fn);
 
 	std::pair<std::multimap<Event::event_key, Event::event_delegate>::const_iterator,
-		std::multimap<Event::event_key, Event::event_delegate>::const_iterator> range = m_CallbackDatabase.equal_range(evtKey);
+		std::multimap<Event::event_key, Event::event_delegate>::const_iterator> range = m_CallbackMap.equal_range(evtKey);
 
 	std::multimap<Event::event_key, Event::event_delegate>::const_iterator itr = range.first;
 
@@ -39,7 +39,7 @@ void EventSystem::Unregister(Event::event_key evtKey, T* p, void (T::*fn)(const 
 	evtDel.bind(p, fn);
 
 	std::pair<std::multimap<Event::event_key, Event::event_delegate>::iterator,
-		std::multimap<Event::event_key, Event::event_delegate>::iterator> range = m_CallbackDatabase.equal_range(evtKey);
+		std::multimap<Event::event_key, Event::event_delegate>::iterator> range = m_CallbackMap.equal_range(evtKey);
 
 	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = range.first;
 
@@ -47,7 +47,7 @@ void EventSystem::Unregister(Event::event_key evtKey, T* p, void (T::*fn)(const 
 	{
 		if((*itr).second == evtDel)
 		{
-			m_CallbackDatabase.erase(itr);
+			m_CallbackMap.erase(itr);
 			break;
 		}
 	}
@@ -59,12 +59,12 @@ void EventSystem::UnregisterAll(T* p, void (T::*fn)(const Event&))
 	Event::event_delegate evtDel;
 	evtDel.bind(p, fn);
 
-	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = m_CallbackDatabase.begin();
+	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = m_CallbackMap.begin();
 
-	while(itr != m_CallbackDatabase.end())
+	while(itr != m_CallbackMap.end())
 	{
 		if((*itr).second == evtDel)
-			itr = m_CallbackDatabase.erase(itr);
+			itr = m_CallbackMap.erase(itr);
 		else
 			itr++;
 	}

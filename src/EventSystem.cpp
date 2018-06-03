@@ -17,13 +17,13 @@ void EventSystem::Initialize(size_t uiFloodLimit)
 void EventSystem::Shutdown(void)
 {
 	FlushEvents();
-	m_CallbackDatabase.clear();
+	m_CallbackMap.clear();
 }
 
 void EventSystem::QuerySubscribers(const Event& e)
 {	
-	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = m_CallbackDatabase.begin();
-	for (; itr != m_CallbackDatabase.end(); itr++)
+	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = m_CallbackMap.begin();
+	for (; itr != m_CallbackMap.end(); itr++)
 	{
 		if (!strcmp(e.GetEventID(),itr->first))
 			itr->second(e);
@@ -37,7 +37,7 @@ void EventSystem::RegisterCallback(Event::event_key evtKey, void (*fn)(const Eve
 		Event::event_delegate evtDel;
 		evtDel = fn;
 
-		m_CallbackDatabase.insert(std::make_pair(evtKey, evtDel));
+		m_CallbackMap.insert(std::make_pair(evtKey, evtDel));
 	}
 }
 
@@ -47,7 +47,7 @@ bool EventSystem::IsRegistered(Event::event_key evtKey,void (*fn)(const Event&))
 	evtDel = fn;
 
 	std::pair<std::multimap<Event::event_key, Event::event_delegate>::const_iterator,
-			  std::multimap<Event::event_key, Event::event_delegate>::const_iterator> range = m_CallbackDatabase.equal_range(evtKey);
+			  std::multimap<Event::event_key, Event::event_delegate>::const_iterator> range = m_CallbackMap.equal_range(evtKey);
 
 	std::multimap<Event::event_key, Event::event_delegate>::const_iterator itr = range.first;
 
@@ -66,7 +66,7 @@ void EventSystem::Unregister(Event::event_key evtKey, void (*fn)(const Event&))
 	evtDel = fn;
 
 	std::pair<std::multimap<Event::event_key, Event::event_delegate>::iterator,
-			  std::multimap<Event::event_key, Event::event_delegate>::iterator> range = m_CallbackDatabase.equal_range(evtKey);
+			  std::multimap<Event::event_key, Event::event_delegate>::iterator> range = m_CallbackMap.equal_range(evtKey);
 
 	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = range.first;
 
@@ -74,7 +74,7 @@ void EventSystem::Unregister(Event::event_key evtKey, void (*fn)(const Event&))
 	{
 		if((*itr).second == evtDel)
 		{
-			m_CallbackDatabase.erase(itr);
+			m_CallbackMap.erase(itr);
 			break;
 		}
 	}
@@ -85,12 +85,12 @@ void EventSystem::UnregisterAll(void (*fn)(const Event&))
 	Event::event_delegate evtDel;
 	evtDel = fn;
 
-	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = m_CallbackDatabase.begin();
+	std::multimap<Event::event_key, Event::event_delegate>::iterator itr = m_CallbackMap.begin();
 
-	while(itr != m_CallbackDatabase.end())
+	while(itr != m_CallbackMap.end())
 	{
 		if((*itr).second == evtDel)
-			itr = m_CallbackDatabase.erase(itr);
+			itr = m_CallbackMap.erase(itr);
 		else
 			itr++;
 	}

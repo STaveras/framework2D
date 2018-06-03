@@ -1,5 +1,7 @@
 #pragma once
-// todo: below
+
+#include "Event.h"
+
 class GameObject;
 class VirtualGamePad;
 class Player
@@ -9,6 +11,8 @@ class Player
 	VirtualGamePad* _pad;
 	GameObject* _object;
 
+	void _OnKeyPress(const Event& evt);
+
 public:
 	GameObject* GetGameObject(void) const { return _object; }
 	void SetGameObject(GameObject* object) { _object = object; }
@@ -16,7 +20,7 @@ public:
 	VirtualGamePad* GetGamePad(void) const { return _pad; }
 	void SetGamePad(VirtualGamePad* pad) { _pad = pad; }
 
-	//void Setup(void);
-	//void Update(float time);
-	//void Shutdown(void);
+	void Setup(void);
+	void Update(float time);
+	void Shutdown(void);
 };

@@ -18,7 +18,7 @@ m_pState(NULL)
 State* StateMachine::_GetNextState(const StateMachineEvent& evt)
 {
 	std::pair<std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator,
-		std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(m_pState);
+			  std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(m_pState);
 
 	std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator itr = range.first;
 
@@ -88,15 +88,12 @@ void StateMachine::RegisterTransition(const char* szStateName, const char* szCon
 
 void StateMachine::Initialize(void)
 {
-	if(m_pStartState)
-	{
+	if (!m_pStartState && m_States.Size() > 0)
+		m_pStartState = m_States.At(0);
+	
+	if (m_pStartState) {
 		m_pState = m_pStartState;
 		m_pState->OnEnter(NULL);
-	}
-	else if (m_States.Size() > 0)
-	{
-		m_pStartState = m_States.At(0);
-		this->Initialize(); // Let's go again!
 	}
 }
 
@@ -128,8 +125,7 @@ void StateMachine::OnEvent(const StateMachineEvent& evt)
 
 void StateMachine::SendInput(const char* szCondition, void* pSender)
 {
-	StateMachineEvent evt(szCondition, pSender);
-	this->OnEvent(evt);
+	this->OnEvent(StateMachineEvent(szCondition, pSender));
 }
 
 void StateMachine::Update(float fTime)

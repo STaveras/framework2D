@@ -13,7 +13,7 @@ class EventSystem
 
 	Factory<Event> m_EventFactory;
 
-	std::multimap<Event::event_key, Event::event_delegate> m_CallbackDatabase;
+	std::multimap<Event::event_key, Event::event_delegate> m_CallbackMap;
 	std::priority_queue<Event*, std::deque<Event*>, Event::event_compare> m_EventQueue;
 
 	void QuerySubscribers(const Event& e);

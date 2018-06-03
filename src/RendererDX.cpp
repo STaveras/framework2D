@@ -12,7 +12,11 @@
 #include "Image.h"
 #include "TextureD3D.h"
 #pragma comment(lib, "d3d9.lib")
+#ifdef _DEBUG
 #pragma comment(lib, "d3dx9d.lib")
+#else
+#pragma comment(lib, "d3dx9.lib")
+#endif
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 

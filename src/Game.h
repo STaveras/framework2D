@@ -1,13 +1,10 @@
 #pragma once
-#include "ISingleton.h"
 #include "ObjectManager.h"
 #include "ProgramStack.h"
 #include "Player.h"
 class Timer;
-class Game : public ISingleton<Game>, public ProgramStack
+class Game : public ProgramStack
 {
-	friend ISingleton<Game>;
-
 protected:
 	Player* _Players;
 

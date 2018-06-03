@@ -1,41 +1,42 @@
 #include "Player.h"
 #include "GameObject.h"
 
-//void Player::Setup(void)
-//{
-//	if (_object)
-//		_object->Initialize();
-//}
-//
-//void Player::Update(float time)
-//{
-//	if (_object)
-//		_object->Update(time);
-//}
-//
-//void Player::Shutdown(void)
-//{
-//	if (_object)
-//		_object->Reset();
-//}
-//#include "EventSystem.h"
-//#include "InputEvent.h"
-//
-//void Player::_OnKeyPress(const Event& evt)
-//{
-//	InputEvent* pEvent = (InputEvent*)&evt;
-//
-//	if(pEvent->GetGamePad() == m_pGamePad)
-//	{
-//		// This is my gamepad.
-//
-//
-//		// Where the rules for the player are to interface with the game.
-//
-//		//Console.
-//		//this->_guts->
-//	}
-//}
+void Player::Setup(void)
+{
+	//if (_object)
+	//	_object->Initialize();
+}
+
+void Player::Update(float time)
+{
+	//if (_object)
+	//	_object->Update(time);
+}
+
+void Player::Shutdown(void)
+{
+	//if (_object)
+	//	_object->Reset();
+}
+
+#include "EventSystem.h"
+#include "InputEvent.h"
+
+void Player::_OnKeyPress(const Event& evt)
+{
+	InputEvent* pEvent = (InputEvent*)&evt;
+
+	if(pEvent->GetGamePad() == this->_pad)
+	{
+		// This is my gamepad.
+
+
+		// Where the rules for the player are to interface with the game.
+
+		//Console.
+		//this->_guts->
+	}
+}
 //
 //void Player::_OnKeyRelease(const Event& evt)
 //{
