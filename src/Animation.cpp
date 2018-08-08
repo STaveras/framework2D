@@ -135,4 +135,11 @@ bool Animation::operator==(const Animation& a) const
 {
 	return (m_eMode == a.m_eMode && m_bForward == a.m_bForward && m_fSpeed == a.m_fSpeed && m_szName == a.m_szName && m_Frames == a.m_Frames);
 }
+
+Animation* Animation::loadAnimationsFrom(const char* szFilename)
+{
+	
+	return NULL;
+}
+
 // Author: Stanley Taveras

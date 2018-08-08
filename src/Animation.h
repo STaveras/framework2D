@@ -57,5 +57,7 @@ public:
 
     bool update(float time); // Should we always force the user to use animation managers and not be able to call this?
 	bool operator==(const Animation& a)const;
+
+	static Animation* loadAnimationsFrom(const char* szFilename);
 };
 // Author: Stanley Taveras
