@@ -20,7 +20,7 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
-RendererDX::RendererDX(void):
+RendererDX::RendererDX(void) :
 	IRenderer(),
 	m_bFullscreen(true),
 	m_bVsync(true),
@@ -30,7 +30,7 @@ RendererDX::RendererDX(void):
 	m_pD3DSprite(NULL)
 {}
 
-RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync):
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) :
 	IRenderer(nWidth, nHeight),
 	m_bFullscreen(bFullscreen),
 	m_bVsync(bVsync),
@@ -72,9 +72,9 @@ void RendererDX::_DrawImage(Image* image, color tint, D3DXVECTOR2 offset)
 	position.y = image->getPosition().y + offset.y;
 	position.z = 0.0f;
 
-	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 	m_pD3DSprite->SetTransform(&transform);
-	m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), &image->GetSourceRect(), &D3DXVECTOR3(image->GetCenter().x, image->GetCenter().y, 0.0f), &position, tint._color);
+	m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), &image->GetSourceRect(), &D3DXVECTOR3(image->GetCenter().x * image->GetScale().x, image->GetCenter().y * image->GetScale().y, 0.0f), &position, tint._color);
 }
 
 //void RendererDX::_DrawFont(Font* pFont)
@@ -86,7 +86,7 @@ ITexture* RendererDX::CreateTexture(const char* szFilename, color colorKey)
 {
 	ITexture* pTexture = _TextureExists(szFilename);
 
-	if(!pTexture)
+	if (!pTexture)
 	{
 		pTexture = (ITexture*)new TextureD3D(szFilename);
 		pTexture->SetKeyColor(colorKey);
@@ -96,17 +96,17 @@ ITexture* RendererDX::CreateTexture(const char* szFilename, color colorKey)
 		D3DXCreateTextureFromFileEx(
 			m_pD3DDevice,
 			szFilename,
-			D3DX_DEFAULT_NONPOW2, 
-			D3DX_DEFAULT_NONPOW2, 
-			D3DX_DEFAULT, 
-			0, 
+			D3DX_DEFAULT_NONPOW2,
+			D3DX_DEFAULT_NONPOW2,
+			D3DX_DEFAULT,
+			0,
 			D3DFMT_UNKNOWN,
 			D3DPOOL_MANAGED,
 			D3DX_FILTER_POINT,
 			D3DX_DEFAULT,
 			(DWORD)colorKey._color,
 			&((TextureD3D*)pTexture)->m_tImageInfo,
-			NULL, 
+			NULL,
 			&((TextureD3D*)pTexture)->m_pTexture);
 	}
 
@@ -140,19 +140,19 @@ void RendererDX::Initialize(void)
 
 void RendererDX::Shutdown(void)
 {
-	if(m_pD3DSprite)
+	if (m_pD3DSprite)
 	{
 		m_pD3DSprite->Release();
 		m_pD3DSprite = NULL;
 	}
 
-	if(m_pD3DDevice)
+	if (m_pD3DDevice)
 	{
 		m_pD3DDevice->Release();
 		m_pD3DDevice = NULL;
 	}
 
-	if(m_pD3D)
+	if (m_pD3D)
 	{
 		m_pD3D->Release();
 		m_pD3D = NULL;
@@ -161,7 +161,7 @@ void RendererDX::Shutdown(void)
 
 void RendererDX::Render(void)
 {
-	if(!m_pD3DDevice)
+	if (!m_pD3DDevice)
 		return;
 
 	_BackgroundColorShift();
@@ -169,14 +169,14 @@ void RendererDX::Render(void)
 	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 
 	// Begin drawing the scene
-	if(SUCCEEDED(m_pD3DDevice->BeginScene()))
+	if (SUCCEEDED(m_pD3DDevice->BeginScene()))
 	{
 		// TODO : (Optional) 3D Rendering here
 
 		// Draw sprites 
-		if(SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
+		if (SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
 		{
-			if(m_pCamera)
+			if (m_pCamera)
 			{
 				D3DXMATRIX viewMat;
 				D3DXMatrixIdentity(&viewMat);
@@ -189,41 +189,42 @@ void RendererDX::Render(void)
 
 				D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->GetCenter();
 
-				viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1,0), &position);
-				viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0,1), &position);
+				viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1, 0), &position);
+				viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0, 1), &position);
 
 				viewMat = scaleMat * rotationMat * viewMat;
 
 				m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 			}
 
-      if (!_RenderLists.Empty())
-      {
-         for (unsigned int i = 0; i < _RenderLists.Size(); i++)
-         {
-            for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
-            {
-               if ((*o)->IsVisible())
-               {
-                  switch ((*o)->getRenderableType())
-                  {
-                  case RENDERABLE_TYPE_IMAGE:
-                     _DrawImage((Image*)(*o));
-                     break;
-                  case RENDERABLE_TYPE_ANIMATION:
-                  {
-                     Animation* pAnimation = (Animation*)(*o);
-                     Frame* frame = pAnimation->GetCurrentFrame();
+			if (!_RenderLists.Empty())
+			{
+				for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+				{
+					for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+					{
+						if ((*o)->IsVisible())
+						{
+							switch ((*o)->getRenderableType())
+							{
+							case RENDERABLE_TYPE_IMAGE:
+								_DrawImage((Image*)(*o));
+								break;
 
-                     if (frame)
-                        _DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
-                  }
-                  break;
-                  }
-               }
-            }
-         }
-      }
+							case RENDERABLE_TYPE_ANIMATION:
+							{
+								Animation* pAnimation = (Animation*)(*o);
+								Frame* frame = pAnimation->GetCurrentFrame();
+
+								if (frame)
+									_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
+							}
+							break;
+							}
+						}
+					}
+				}
+			}
 
 			m_pD3DSprite->End();
 		}

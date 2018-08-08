@@ -17,8 +17,8 @@ protected:
 public:
 	Image(void);
 	Image(ITexture* pImage);
-  Image(const Image& image);
-	Image(const char* filePath,color clearColor = 0, const rect* srcRect = NULL);
+	Image(const Image& image);
+	Image(const char* filePath, color clearColor = 0, const rect* srcRect = NULL);
 	~Image(void);
 
 	const ITexture* getTexture(void) const { return m_pTexture; }
@@ -28,8 +28,8 @@ public:
 	const rect& GetSourceRect(void) const { return m_SrcRect; }
 	vector2 GetRectCenter(void) const;
 
-  float getWidth(void) const;
-  float getHeight(void) const;
+	float getWidth(void) const;
+	float getHeight(void) const;
 
 	void SetTexture(ITexture* pTexture) { m_pTexture = pTexture; }
 	void SetRotation(float fRotation) { _rotation = fRotation; }
@@ -39,7 +39,7 @@ public:
 
 	void Mirror(bool bHorizontal, bool bVertical);
 
-  void center(void);
+	void center(void);
 
 	virtual Image* Load(const char* filePath, color clearColor = 0, const rect* srcRect = NULL);
 	virtual void Unload(void);
