@@ -82,6 +82,9 @@ public:
 
    GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
+   Renderable* getRenderable(void) const { return this->getState()->getRenderable(); }
+   Collidable* getCollisionInfo(void) const { return this->getState()->getCollidable(); }
+
    virtual void Setup(void) {}
    virtual void update(float fTime);
    virtual void Shutdown(void) {}
