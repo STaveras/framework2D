@@ -82,6 +82,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Animation.cpp" />
+    <ClCompile Include="src\AnimationLoader.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\Appearance.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -135,6 +136,7 @@
     <ClCompile Include="src\XAudioFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AnimationLoader.h" />
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Positionable.h" />

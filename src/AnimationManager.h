@@ -4,8 +4,13 @@
 #include "Factory.h"
 #include "SpriteManager.h"
 #include <vector>
+
+class AnimationLoader;
+
 class AnimationManager : public Factory<Animation>
 {
+   friend AnimationLoader;
+
 	IRenderer::RenderList* _pRenderList;
 
 public:

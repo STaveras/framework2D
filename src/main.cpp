@@ -17,6 +17,8 @@
 #include "UpdateRenderableOperator.h"
 #include "UpdateBackgroundOperator.h"
 
+#include "AnimationLoader.h"
+
 #define FALL_FORCE 100.0f
 #define FLAP_MULTIPLIER 3.33f
 
@@ -99,6 +101,8 @@ class FlappyTurd : public Game
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setBackground(_background);
          _updateBackground.setMode(Background::Mode_Mirror);
+
+         std::map<std::string, Animation*> exampleAnimation = AnimationLoader::loadAnimationsFromXML("./data/example.ani");
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
