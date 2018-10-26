@@ -155,7 +155,7 @@
     <ClCompile Include="src\XAudioFile.cpp">
       <Filter>cpp\engine2Dbase</Filter>
     </ClCompile>
-    <ClCompile Include="src\AnimationLoader.cpp">
+    <ClCompile Include="src\AnimationUtils.cpp">
       <Filter>cpp\engine2Dbase</Filter>
     </ClCompile>
   </ItemGroup>
@@ -186,7 +186,7 @@
     <ClInclude Include="src\Square.h">
       <Filter>h</Filter>
     </ClInclude>
-    <ClInclude Include="src\AnimationLoader.h">
+    <ClInclude Include="src\AnimationUtils.h">
       <Filter>h</Filter>
     </ClInclude>
   </ItemGroup>

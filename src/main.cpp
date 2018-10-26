@@ -17,13 +17,15 @@
 #include "UpdateRenderableOperator.h"
 #include "UpdateBackgroundOperator.h"
 
-#include "AnimationLoader.h"
+#include "AnimationUtils.h"
 
 #define FALL_FORCE 100.0f
 #define FLAP_MULTIPLIER 3.33f
 
 class FlappyTurd : public Game
 {  
+   std::vector<Animation*> _animations;
+
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
@@ -102,7 +104,7 @@ class FlappyTurd : public Game
          _updateBackground.setBackground(_background);
          _updateBackground.setMode(Background::Mode_Mirror);
 
-         std::map<std::string, Animation*> exampleAnimation = AnimationLoader::loadAnimationsFromXML("./data/example.ani");
+         AnimationUtils::loadAnimationsFromXML("./data/example.ani");
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
