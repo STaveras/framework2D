@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.h"
+#include "IRenderer.h"
 
 #include <vector>
 
@@ -9,12 +10,11 @@ class AnimationManager;
 
 #include "ANIMATION_MODE.h"
 
-namespace AnimationUtils
+namespace Animations
 {
-   // NOTE: Maybe move this elsewhere...?
-   RECT rectFromString(const char *rectDescription);
-   ANIMATION_MODE animationModeFromString(const char *mode);
-
    // If not using an AnimationManager, caller must manually delete memory (Sprites, Frames, and Animations themselves)
-   std::vector<Animation*> loadAnimationsFromXML(const char *filename, AnimationManager *manager = NULL);
- }
+   std::vector<Animation*> fromXML(const char *filename, AnimationManager *manager = NULL);
+   
+   void addToRenderList(std::vector<Animation*>& animations, IRenderer::RenderList *renderList);
+   void destroyAnimation(Animation *animation);
+}

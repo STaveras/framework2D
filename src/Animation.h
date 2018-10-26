@@ -45,8 +45,9 @@ public:
 
    void Mirror(bool bHorizontal, bool bVertical);
 
-   Frame* AddFrame(Sprite* sprite);
-   Frame* AddFrame(Sprite* sprite, float duration);
+   // TODO: Rewrite to instead take a filename for the sprite
+   //Frame* AddFrame(Sprite* sprite);
+   Frame* AddFrame(Sprite* sprite, float duration = 0.0f);
    void AddFrame(Frame* frame) { m_Frames.Store(frame); }
    void RemoveFrame(Frame* frame);
 
@@ -58,6 +59,7 @@ public:
    bool update(float time); // Should we always force the user to use animation managers and not be able to call this?
    bool operator==(const Animation& a)const;
 
+   // Single animation binary...?
    static Animation* loadAnimationsFrom(const char* szFilename);
 };
 // Author: Stanley Taveras

@@ -14,7 +14,7 @@
 
 using namespace tinyxml2;
 
-namespace AnimationUtils {
+namespace Animations {
 
    RECT rectFromString(const char *rectDescription)
    {
@@ -57,7 +57,36 @@ namespace AnimationUtils {
       return ANIMATION_MODE_ONCE;
    }
 
-   std::vector<Animation*> loadAnimationsFromXML(const char *filename, AnimationManager *manager)
+   void addToRenderList(std::vector<Animation*>& animations, IRenderer::RenderList *renderList)
+   {
+      std::vector<Animation *>::iterator itr = animations.begin();
+
+      while (itr != animations.end()) {
+         renderList->push_back((*itr)); itr++;
+      }
+   }
+
+   void destroyAnimation(Animation *animation) {
+      for (unsigned int i = 0; i < animation->GetFrameCount(); i++) {
+         Frame *frame = (*animation)[i];
+         delete frame->GetSprite();
+         animation->RemoveFrame(frame);
+         delete frame;
+      }
+      delete animation;
+   }
+
+   Animation* fromXMLElement(XMLElement *element, Animation *animation = NULL) {
+
+      animation->SetName(element->Attribute("Name"));
+      animation->SetMode(animationModeFromString(element->Attribute("PlayMode")));
+      animation->SetIsForward(strcmp("False", element->Attribute("Forward")));
+      animation->SetSpeed(element->FloatAttribute("Speed"));
+
+      return animation;
+   }
+
+   std::vector<Animation*> fromXML(const char *filename, AnimationManager *manager)
    {
       std::vector<Animation*> animations;
 
@@ -72,32 +101,22 @@ namespace AnimationUtils {
             element = element->FirstChildElement("Animation");
 
             do {
-
-               Animation *animation = new Animation();
-
-               animation->SetName(element->Attribute("Name"));
-               animation->SetMode(animationModeFromString(element->Attribute("PlayMode")));
-               animation->SetIsForward(strcmp("False", element->Attribute("Forward")));
-               animation->SetSpeed(element->FloatAttribute("Speed"));
+               
+               Animation *animation = Animations::fromXMLElement(element, (!manager) ? new Animation() : manager->CreateAnimation(""));
 
                tinyxml2::XMLElement *frameElement = element->FirstChildElement("Frame");
 
                do {
 
-                  float duration = frameElement->FloatAttribute("Duration");
-
                   RECT srcRect = rectFromString(frameElement->FirstChildElement("DisplayRect")->GetText());
 
                   // TODO: Make key color configurable via the tool
-                  Frame *frame = new Frame(new Sprite(frameElement->FirstChildElement("Filename")->GetText(),
-                                                      0xFFFF00FF,
-                                                      &srcRect),
-                                           duration);
-
                   // TODO: Collision information
                   // TODO: Add support for triggers (sound, effects, scripts, etc.)
 
-                  animation->AddFrame(frame);
+                  animation->AddFrame(new Frame(new Sprite(frameElement->FirstChildElement("Filename")->GetText(),
+                                                0xFFFF00FF,
+                                                &srcRect), frameElement->FloatAttribute("Duration")));
 
                } while (frameElement = frameElement->NextSiblingElement("Frame"));
 
@@ -105,7 +124,7 @@ namespace AnimationUtils {
 
             } while (element = element->NextSiblingElement("Animation"));
          }
-      }
+      } 
 
       return animations;
    }

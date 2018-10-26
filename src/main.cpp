@@ -23,9 +23,7 @@
 #define FLAP_MULTIPLIER 3.33f
 
 class FlappyTurd : public Game
-{  
-   std::vector<Animation*> _animations;
-
+{
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
@@ -104,7 +102,7 @@ class FlappyTurd : public Game
          _updateBackground.setBackground(_background);
          _updateBackground.setMode(Background::Mode_Mirror);
 
-         AnimationUtils::loadAnimationsFromXML("./data/example.ani");
+         Animations::addToRenderList(Animations::fromXML("./data/example.ani"), _renderList);
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
@@ -144,6 +142,13 @@ class FlappyTurd : public Game
 
          _objectManager.clearOperators();
          _objectManager.removeObject("Turd");
+
+         // The below isn't really that safe, but since we know we're allocating our animations here manually... 
+         IRenderer::RenderList::iterator i = _renderList->begin();
+         for (; i != _renderList->end(); i++) {
+            if ((*i)->getRenderableType() == RENDERABLE_TYPE_ANIMATION)
+               Animations::destroyAnimation((Animation*)(*i));
+         }
 
          delete _player->getGameObject();
          delete _player;

@@ -1,12 +1,15 @@
 // File: SpriteManager.h
 #pragma once
+
 #include "Sprite.h"
 #include "Engine2D.h"
 #include "Factory.h"
 #include "IRenderer.h"
-class SpriteManager : public Factory<Sprite>
+
+class SpriteManager : public Factory<Sprite> // Renderable, instead of containing a renderlist...?
 {
 	friend class AnimationManager;
+
 	IRenderer::RenderList* _RenderList;
 
 public:
