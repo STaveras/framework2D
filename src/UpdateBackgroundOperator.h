@@ -87,6 +87,8 @@ public:
       clearCache();
    }
 
+   Image* getBackground(void) const { return _background; }
+
    void setMode(Background::Mode mode) { _mode = mode; }
    void setBackground(Image *image) { _background = image; _firstRun = true; }
    void setCamera(Camera *camera) { _camera = camera; }
