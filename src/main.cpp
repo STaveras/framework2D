@@ -1,4 +1,6 @@
 // main.cpp
+#include <Windows.h>
+
 #include "Engine2D.h"
 #include "Camera.h"
 #include "Input.h"
@@ -124,16 +126,19 @@ class FlappyTurd : public Game
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
-      //void onExecute(float time)
-      //{
-      //   GameState::onExecute(time);
-      //}
+#if _DEBUG
+      void onExecute(float time)
+      {
+         GameState::onExecute(time);
+
+         //if (Engine2D::GetInput())
+
+      }
+#endif
 
       void onExit(void)
       {
          // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         delete _camera;
-
          _player->shutdown();
 
          _objectManager.clearOperators();
@@ -142,9 +147,9 @@ class FlappyTurd : public Game
          delete _player->getGameObject();
          delete _player;
 
-         _renderList->remove(_background);
+         delete _updateBackground.getBackground();
 
-         delete _background;
+         delete _camera;
 
          GameState::onExit();
       }

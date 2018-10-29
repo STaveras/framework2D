@@ -183,5 +183,8 @@
     <ClInclude Include="src\Square.h">
       <Filter>h</Filter>
     </ClInclude>
+    <ClInclude Include="src\UpdateBackgroundOperator.h">
+      <Filter>h</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -11,6 +11,7 @@
 #include "Renderable.h"
 #include "Image.h"
 #include "TextureD3D.h"
+
 #pragma comment(lib, "d3d9.lib")
 #ifdef _DEBUG
 #pragma comment(lib, "d3dx9d.lib")
@@ -182,7 +183,7 @@ void RendererDX::Render(void)
 				D3DXMatrixIdentity(&viewMat);
 
 				D3DXMATRIX scaleMat;
-				D3DXMatrixScaling(&scaleMat, m_pCamera->GetZoom(), m_pCamera->GetZoom(), 1.0f);
+				D3DXMatrixScaling(&scaleMat, m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
 
 				D3DXMATRIX rotationMat;
 				D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
