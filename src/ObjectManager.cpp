@@ -17,6 +17,8 @@ void ObjectManager::Update(float fTime)
    {
       GameObject *object = itr->second;
 
+      object->update(fTime);
+
       // This is to apply operators on an object
       std::list<ObjectOperator*>::iterator itr2 = m_lsObjOperators.begin();
     
@@ -56,8 +58,6 @@ void ObjectManager::Update(float fTime)
 
          // TODO: Rewrite to broad / narrow phases
       }
-
-      object->update(fTime);
    }
 }
 
