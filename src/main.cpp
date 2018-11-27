@@ -122,12 +122,16 @@ class FlappyTurd : public Game
          
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
-
-#if _DEBUG
       void onExecute(float time)
       {
-         GameState::onExecute(time);
+         if (_objectManager.getGameObject("Turd")->getPosition().y < _camera->GetScreenHeight()) {
+            GameState::onExecute(time);
+         }
+         else {// Push on 'GameOverState'
+            ((FlappyTurd*)Engine2D::GetGame())->GameOver();
+         }
 
+#if _DEBUG
          static float timer = 0.0f;
          timer += time;
 
@@ -135,7 +139,6 @@ class FlappyTurd : public Game
             GameObject *debugObject = _camera;
 
             char debugBuffer[255];
-
 
             sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
             OutputDebugString(debugBuffer);
@@ -147,10 +150,10 @@ class FlappyTurd : public Game
             }
             timer = 0.0f;
          }
+#endif
          //if (Engine2D::GetInput())
 
       }
-#endif
 
       void onExit(void)
       {
@@ -171,6 +174,36 @@ class FlappyTurd : public Game
       }
    };
 
+   class GameOverState : public GameState
+   {
+      Image *_gameOver = NULL;
+
+   public:
+      void onEnter(void) {
+         GameState::onEnter();
+
+         _gameOver = new Image("./data/images/game_over.png");
+         _gameOver->center();
+
+         _renderList->push_back(_gameOver);
+      }
+
+      /*void onExecute(float time) {
+         
+      }*/
+
+      void onExit(void) {
+         _renderList->pop_back();
+         delete _gameOver;
+
+         GameState::onExit();
+      }
+   };
+
+   void GameOver(void) {
+      this->push(new GameOverState);
+   }
+
    friend PlayState;
 
 public:
@@ -181,17 +214,22 @@ public:
 
    void End(void)
    {
-      void* playState = this->top(); this->pop(); delete playState;
+      while (!this->empty()) {
+         void* gameState = this->top(); this->pop(); delete gameState;
+      }
    }
 }game;
 
+#define GLOBAL_WIDTH (640 / 2) /*320*/
+#define GLOBAL_HEIGHT 480
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-   Window rndrWind = Window(320, 460, "Flap a Turd", "· · · ·");
+   Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd", "• • • •");
    rndrWind.Initialize(hInstance, lpCmdLine);
 
    DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-   RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 320, 480, false, false);
+   RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
 
    Engine2D* engine = Engine2D::getInstance();
    engine->SetInputInterface(pInput);
