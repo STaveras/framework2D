@@ -124,7 +124,7 @@ class FlappyTurd : public Game
       }
       void onExecute(float time)
       {
-         if (_objectManager.getGameObject("Turd")->getPosition().y < _camera->GetScreenHeight()) {
+         if (_objectManager.getGameObject("Turd")->getPosition().y < (_camera->GetScreenHeight() / 2)) {
             GameState::onExecute(time);
          }
          else {// Push on 'GameOverState'
@@ -184,6 +184,7 @@ class FlappyTurd : public Game
 
          _gameOver = new Image("./data/images/game_over.png");
          _gameOver->center();
+         _gameOver->setPosition(Engine2D::GetRenderer()->GetCamera()->getPosition());
 
          _renderList->push_back(_gameOver);
       }
