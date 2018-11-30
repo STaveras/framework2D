@@ -115,7 +115,7 @@ class FlappyTurd : public Game
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
 
-         _camera->SetZoom(0.5);
+         //_camera->SetZoom(0.5);
 
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
@@ -143,7 +143,7 @@ class FlappyTurd : public Game
             sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
             OutputDebugString(debugBuffer);
 
-            for (int i = 0; i < _objectManager.numObjects(); i++) {
+            for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
                debugObject = _objectManager[i];
                sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
                OutputDebugString(debugBuffer);
@@ -151,8 +151,9 @@ class FlappyTurd : public Game
             timer = 0.0f;
          }
 #endif
-         //if (Engine2D::GetInput())
-
+         if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {
+            Engine2D::Quit();
+         }
       }
 
       void onExit(void)
@@ -172,7 +173,7 @@ class FlappyTurd : public Game
 
          GameState::onExit();
       }
-   };
+   }*_playState;
 
    class GameOverState : public GameState
    {
@@ -189,9 +190,11 @@ class FlappyTurd : public Game
          _renderList->push_back(_gameOver);
       }
 
-      /*void onExecute(float time) {
-         
-      }*/
+      void onExecute(float time) {
+         if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_SPACE)) {
+            ((FlappyTurd*)Engine2D::GetGame())->Reset();
+         }
+      }
 
       void onExit(void) {
          _renderList->pop_back();
@@ -205,12 +208,35 @@ class FlappyTurd : public Game
       this->push(new GameOverState);
    }
 
+   void StartGame(void) {
+      if (!_playState) {
+         this->push(new PlayState);
+         _playState = (PlayState*)this->top();
+      }
+   }
+
+   void EndGame(void) {
+      if (_playState) {
+         while (!this->empty()) {
+            this->pop();
+         }
+         delete _playState;
+         _playState = NULL;
+      }
+   }
+
    friend PlayState;
 
 public:
+
+   void Reset(void) {
+      EndGame();
+      StartGame();
+   }
+
    void Begin(void)
    {
-      this->push(new PlayState);
+      StartGame();
    }
 
    void End(void)
