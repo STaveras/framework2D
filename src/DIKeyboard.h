@@ -2,23 +2,18 @@
 #pragma once
 
 #include "IKeyboard.h"
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
+#include "DirectInput.h"
 
-class DIKeyboard : public IKeyboard
+class DIKeyboard : public IKeyboard, IDIDeviceComm
 {
 	friend class DirectInput;
 
-	bool m_bDeviceLost;
-	LPDIRECTINPUTDEVICE8 m_lpDevice;
+   // This two buffers should probably just be in IKeyboard
 	char m_cKeyBuffer[256];
 	char m_cBackBuffer[256];
 
 public:
 	DIKeyboard(void);
-	~DIKeyboard(void);
-
-	void Release(void);
 
 	bool KeyDown(int nKey) { return (m_lpDevice && m_cKeyBuffer[nKey] & 0x80); }
 	bool KeyUp(int nKey) { return (m_lpDevice && !(m_cKeyBuffer[nKey] & 0x80)); }

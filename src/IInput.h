@@ -6,9 +6,9 @@
 #pragma once
 
 #include "Types.h"
-#include "IKeyboard.h"
 
-class IMouse;
+#include "IKeyboard.h"
+#include "IMouse.h"
 
 class IInput
 {
@@ -19,8 +19,8 @@ protected:
 	// TODO: Add physical gamepad support
 
 public:
-	IInput(void):m_pKeyboard(NULL){}
-	virtual ~IInput(void) = 0{ if(m_pKeyboard) delete m_pKeyboard; }
+	IInput(void):m_pKeyboard(NULL),m_pMouse(NULL){}
+   virtual ~IInput(void) = 0 {}
 
 	virtual IKeyboard* GetKeyboard(void) { return m_pKeyboard; }
 	virtual IMouse* GetMouse(void) { return m_pMouse; }

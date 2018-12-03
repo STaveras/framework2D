@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimationUtils.h" />
+    <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Positionable.h" />

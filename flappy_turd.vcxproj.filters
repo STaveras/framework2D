@@ -189,5 +189,8 @@
     <ClInclude Include="src\AnimationUtils.h">
       <Filter>h</Filter>
     </ClInclude>
+    <ClInclude Include="src\DIMouse.h">
+      <Filter>h</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
