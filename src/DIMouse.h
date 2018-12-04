@@ -1,14 +1,21 @@
 #pragma once
 
 #include "IMouse.h"
+#include "DirectInput.h"
 
-#include "MOUSE_BUTTONS.h"
 
 class DIMouse : public IMouse, IDIDeviceComm
 {
    friend class DirectInput;
 
+   DIMOUSESTATE2 _mouseStateOld;
+   DIMOUSESTATE2 _mouseState;
+
 public:
+   DIMouse(void) {
+      ZeroMemory(&_mouseState, sizeof(_mouseState));
+   }
+
    bool ButtonPressed(MOUSE_BUTTONS eBtn) {
       throw "DIMouse::ButtonPressed unimplemented";
    }
@@ -23,6 +30,23 @@ public:
 
    bool ButtonUp(MOUSE_BUTTONS eBtn) {
       throw "DIMouse::ButtonUp unimplemented";
+   }
+
+   void Update(void) {
+
+      IDIDeviceComm::Update();
+
+      memcpy_s(&_mouseStateOld, sizeof(DIMOUSESTATE2), &_mouseState, sizeof(DIMOUSESTATE2));
+
+      if (SUCCEEDED(m_lpDevice->Poll())) {
+         if (m_lpDevice->GetDeviceState(sizeof(DIMOUSESTATE2), &_mouseState) == DIERR_INPUTLOST) {
+            m_bDeviceLost = true;
+         }
+         else {
+            this->SetPosition(vector2(_mouseState.lX, _mouseState.lY));
+         }
+      }
+
    }
 };
 
