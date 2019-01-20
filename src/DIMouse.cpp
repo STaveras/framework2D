@@ -3,6 +3,7 @@
 
 #ifdef _DEBUG
 
+#include "Debug.h"
 #include "Timer.h"
 #include <stdio.h>
 
@@ -46,14 +47,16 @@ void DIMouse::Update(void) {
    }
 
 #ifdef _DEBUG
-   static Timer timer;
-   timer.Update();
+   if (Debug::dbgMouse) {
+      static Timer timer;
+      timer.Update();
 
-   if (timer.GetElapsedTime() > 1) {
-      char buffer[128];
-      sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
-      OutputDebugString(buffer);
-      timer.ResetElapsed();
+      if (timer.GetElapsedTime() > 1) {
+         char buffer[128];
+         sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
+         OutputDebugString(buffer);
+         timer.ResetElapsed();
+      }
    }
 #endif
 }
