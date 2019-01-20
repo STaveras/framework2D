@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8F705A33-1FC7-484E-8A0E-BC4CC88A5B57}</ProjectGuid>
     <RootNamespace>fighter</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -95,6 +95,7 @@
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\DebugState.cpp" />
     <ClCompile Include="src\DIKeyboard.cpp" />
+    <ClCompile Include="src\DIMouse.cpp" />
     <ClCompile Include="src\DirectInput.cpp" />
     <ClCompile Include="src\Engine2D.cpp" />
     <ClCompile Include="src\EventSystem.cpp" />

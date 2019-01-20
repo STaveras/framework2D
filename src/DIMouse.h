@@ -3,7 +3,6 @@
 #include "IMouse.h"
 #include "DirectInput.h"
 
-
 class DIMouse : public IMouse, IDIDeviceComm
 {
    friend class DirectInput;
@@ -17,37 +16,23 @@ public:
    }
 
    bool ButtonPressed(MOUSE_BUTTONS eBtn) {
-      throw "DIMouse::ButtonPressed unimplemented";
+      return false;
    }
 
    bool ButtonReleased(MOUSE_BUTTONS eBtn) {
-      throw "DIMouse::ButtonReleased unimplemented";
+      return false;
    }
 
    bool ButtonDown(MOUSE_BUTTONS eBtn) {
-      throw "DIMouse::ButtonDown unimplemented";
+      return false;
    }
 
    bool ButtonUp(MOUSE_BUTTONS eBtn) {
-      throw "DIMouse::ButtonUp unimplemented";
+      return false;
    }
 
-   void Update(void) {
-
-      IDIDeviceComm::Update();
-
-      memcpy_s(&_mouseStateOld, sizeof(DIMOUSESTATE2), &_mouseState, sizeof(DIMOUSESTATE2));
-
-      if (SUCCEEDED(m_lpDevice->Poll())) {
-         if (m_lpDevice->GetDeviceState(sizeof(DIMOUSESTATE2), &_mouseState) == DIERR_INPUTLOST) {
-            m_bDeviceLost = true;
-         }
-         else {
-            this->SetPosition(vector2(_mouseState.lX, _mouseState.lY));
-         }
-      }
-
-   }
+   bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);
+   void Update(void);
 };
 
-// NOTE: I'm mimicking how I wrote the DIKeyboard class circa 2010 but this is not the best way to wrap either
+// NOTE: I'm mimicking how I wrote the DIKeyboard class circa 2010 but this is not the best way to wrap neither

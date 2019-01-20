@@ -6,6 +6,18 @@ DIKeyboard::DIKeyboard(void)
    memset(m_cKeyBuffer, 0, _countof(m_cKeyBuffer));
 }
 
+bool DIKeyboard::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
+{
+   if (!FAILED(pDI->CreateDevice(GUID_SysKeyboard, &m_lpDevice, NULL))) {
+
+      m_lpDevice->SetDataFormat(&c_dfDIKeyboard);
+      m_lpDevice->SetCooperativeLevel(hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+
+      return true;
+   }
+   return false;
+}
+
 void DIKeyboard::Update(void)
 {
    IDIDeviceComm::Update();

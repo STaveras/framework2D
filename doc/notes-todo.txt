@@ -1,11 +1,13 @@
-Dendencies:
+Dependencies:
 ==========
 libexpat
 FastDelegate
 
 
-Dev Notes: 
+TODO(s): 
 =========
 - Make a new class called 'positionable' (posable?)
 - Make 'renderable' derive from 'positionable'
 - 'Collidable' should derive from 'positionable'
+- Add key-mapping support... Xml file <key map="space" code="32">Action</key>
+ - text

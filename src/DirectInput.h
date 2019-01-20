@@ -10,6 +10,8 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
+#include "Timer.h"
+
 // Interface to handle common direct input device tasks
 class IDIDeviceComm
 {
@@ -18,6 +20,9 @@ protected:
    LPDIRECTINPUTDEVICE8 m_lpDevice;
 
 public:
+
+   virtual bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL) = 0;
+
    virtual void Release(void)
    {
       if (m_lpDevice)
@@ -35,8 +40,9 @@ public:
    {
       if (m_bDeviceLost) {
          if (m_lpDevice) {
-            if (!FAILED(m_lpDevice->Acquire()))
+            if (!FAILED(m_lpDevice->Acquire())) {
                m_bDeviceLost = false;
+            }
          }
       }
    }

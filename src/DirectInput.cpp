@@ -26,31 +26,10 @@ void DirectInput::Initialize(void)
 {
    if (m_lpDirectInput)
    {
-      // This stuff should be in DIKeyboard itself
-      if (!FAILED(m_lpDirectInput->CreateDevice(GUID_SysKeyboard, &((DIKeyboard*)(m_pKeyboard))->m_lpDevice, NULL))) {
-
-         ((DIKeyboard*)m_pKeyboard)->m_lpDevice->SetDataFormat(&c_dfDIKeyboard);
-         ((DIKeyboard*)m_pKeyboard)->m_lpDevice->SetCooperativeLevel(m_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
-      }
-      else
+	   if (m_pKeyboard && !((DIKeyboard*)m_pKeyboard)->Acquire(m_lpDirectInput, m_hWnd))
          throw "Failed to create the keyboard";
 
-      // ...Same as this, but again, keeping it "simple"
-      if (!FAILED(m_lpDirectInput->CreateDevice(GUID_SysMouse, &((DIMouse*)m_pMouse)->m_lpDevice, NULL)))
-      {
-         ((DIMouse*)m_pMouse)->m_lpDevice->SetDataFormat(&c_dfDIMouse);
-         ((DIMouse*)m_pMouse)->m_lpDevice->SetCooperativeLevel(m_hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE); //DISCL_EXCLUSIVE
-
-         DIPROPDWORD dipdw;
-         dipdw.diph.dwSize = sizeof(DIPROPDWORD);
-         dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-         dipdw.diph.dwObj = 0;
-         dipdw.diph.dwHow = DIPH_DEVICE;
-         dipdw.dwData = 16; // Arbitrary buffer size
-
-         ((DIMouse*)m_pMouse)->m_lpDevice->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
-      }
-      else
+      if (m_pMouse && !((DIMouse*)m_pMouse)->Acquire(m_lpDirectInput, m_hWnd))
          throw "Failed to create the mouse";
    }
 }
