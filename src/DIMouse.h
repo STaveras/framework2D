@@ -16,19 +16,19 @@ public:
    }
 
    bool ButtonPressed(MOUSE_BUTTONS eBtn) {
-      return false;
+      return ((bool)_mouseState.rgbButtons[eBtn] && !(bool)_mouseStateOld.rgbButtons[eBtn]);
    }
 
    bool ButtonReleased(MOUSE_BUTTONS eBtn) {
-      return false;
+      return (!(bool)_mouseState.rgbButtons[eBtn] && (bool)_mouseStateOld.rgbButtons[eBtn]);
    }
 
    bool ButtonDown(MOUSE_BUTTONS eBtn) {
-      return false;
+      return (bool)_mouseState.rgbButtons[eBtn];
    }
 
    bool ButtonUp(MOUSE_BUTTONS eBtn) {
-      return false;
+      return !(bool)_mouseState.rgbButtons[eBtn];
    }
 
    bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);

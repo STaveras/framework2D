@@ -15,14 +15,14 @@ bool DIMouse::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
       m_lpDevice->SetDataFormat(&c_dfDIMouse2);
       m_lpDevice->SetCooperativeLevel(hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE); //DISCL_EXCLUSIVE
 
-      //DIPROPDWORD dipdw;
-      //dipdw.diph.dwSize = sizeof(DIPROPDWORD);
-      //dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-      //dipdw.diph.dwObj = 0;
-      //dipdw.diph.dwHow = DIPH_DEVICE;
-      //dipdw.dwData = 20;
+      DIPROPDWORD dipdw;
+      dipdw.diph.dwSize = sizeof(DIPROPDWORD);
+      dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER);
+      dipdw.diph.dwObj = 0;
+      dipdw.diph.dwHow = DIPH_DEVICE;
+      dipdw.dwData = 20;
 
-      //m_lpDevice->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
+      m_lpDevice->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
 
       return true;
    }
@@ -51,7 +51,7 @@ void DIMouse::Update(void) {
 
    if (timer.GetElapsedTime() > 1) {
       char buffer[128];
-      sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %i\n\n", _mouseState.lX, _mouseState.lY, _mouseState.rgbButtons[0]);
+      sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
       OutputDebugString(buffer);
       timer.ResetElapsed();
    }
