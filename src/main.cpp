@@ -136,23 +136,25 @@ class FlappyTurd : public Game
          }
 
 #if _DEBUG
-         static float timer = 0.0f;
-         timer += time;
+         if (Debug::dbgObjects) {
+            static float timer = 0.0f;
+            timer += time;
 
-         if (timer >= 1.0f) {
-            GameObject *debugObject = _camera;
+            if (timer >= 1.0f) {
+               GameObject *debugObject = _camera;
 
-            char debugBuffer[255];
+               char debugBuffer[255];
 
-            sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
-            OutputDebugString(debugBuffer);
-
-            for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
-               debugObject = _objectManager[i];
-               sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
+               sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
                OutputDebugString(debugBuffer);
+
+               for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
+                  debugObject = _objectManager[i];
+                  sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
+                  OutputDebugString(debugBuffer);
+               }
+               timer = 0.0f;
             }
-            timer = 0.0f;
          }
 #endif
          if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {

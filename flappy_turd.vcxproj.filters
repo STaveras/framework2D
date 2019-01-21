@@ -189,14 +189,14 @@
     <ClInclude Include="src\Square.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
-	<ClInclude Include="src\DIMouse.h">
+    <ClInclude Include="src\DIMouse.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
     <ClInclude Include="src\AnimationUtils.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
     <ClInclude Include="src\UpdateBackgroundOperator.h">
-      <Filter>h</Filter>
+      <Filter>engine2Dbase\h</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@ namespace Debug
     }Mode;
 
     static bool dbgMouse = false;
+    static bool dbgObjects = false;
 }
 
 #define DEBUGGING (Debug::Mode.isEnabled())
