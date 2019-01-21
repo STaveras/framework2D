@@ -21,4 +21,7 @@
 #define matrix4x4 D3DXMATRIX
 #define rect RECT
 
+#include "KEYBOARD_KEYS.h"
+#include "MOUSE_BUTTONS.h"
+
 #endif

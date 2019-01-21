@@ -5,9 +5,12 @@ namespace Input
 {
 	static IInput* CreateDirectInputInterface(HWND hWnd, HINSTANCE hInstance)
 	{
-		DirectInput* pInstance = new DirectInput(hInstance, hWnd);
-		return (IInput*)pInstance;
+		return (IInput*)(new DirectInput(hInstance, hWnd));
 	}
 
-	static void DestroyInputInterface(IInput* pInput) { if(pInput) delete pInput; }
+	static void DestroyInputInterface(IInput* pInput) {
+      if (pInput) {
+         delete pInput;
+      }
+   }
 }

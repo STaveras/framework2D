@@ -263,29 +263,34 @@ public:
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-   Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd", "• • • •");
-   rndrWind.Initialize(hInstance, lpCmdLine);
+   try {
+      Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd", "• • • •");
+      rndrWind.Initialize(hInstance, lpCmdLine);
 
-   DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-   RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
+      DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
+      RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
 
-   Engine2D* engine = Engine2D::getInstance();
-   engine->SetInputInterface(pInput);
-   engine->SetRenderer(pRenderer);
-   engine->SetGame(&game);
-   engine->Initialize();
+      Engine2D* engine = Engine2D::getInstance();
+      engine->SetInputInterface(pInput);
+      engine->SetRenderer(pRenderer);
+      engine->SetGame(&game);
+      engine->Initialize();
 
-   while (!rndrWind.HasQuit() && !engine->HasQuit())
-   {
-      rndrWind.Update();
-      engine->Update();
+      while (!rndrWind.HasQuit() && !engine->HasQuit())
+      {
+         rndrWind.Update();
+         engine->Update();
+      }
+
+      engine->Shutdown();
+
+      Input::DestroyInputInterface(pInput);
+      Renderer::DestroyRenderer(pRenderer);
+
+      rndrWind.Shutdown();
    }
-
-   engine->Shutdown();
-
-   Input::DestroyInputInterface(pInput);
-   Renderer::DestroyRenderer(pRenderer);
-
-   rndrWind.Shutdown();
+   catch (const char *errorMessage) {
+      MessageBox(NULL, errorMessage, "Error", MB_OK | MB_ICONERROR);
+   }
 }
 // Stan Taveras 

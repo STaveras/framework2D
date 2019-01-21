@@ -4,6 +4,9 @@
 #include "ISingleton.h"
 #include "EventSystem.h"
 #include "Timer.h"
+#ifdef _DEBUG
+#include "Debug.h"
+#endif
 class Game;
 class IInput;
 class IRenderer;
