@@ -31,14 +31,6 @@ void Camera::Pan(vector2 direction, float amount)
 	_position += direction * amount;
 }
 
-void Camera::Zoom(float amount)
-{
-	m_fZoom += amount;
-	
-	if(m_fZoom <= 0.0f)
-		m_fZoom = 0.0f;
-}
-
 // Trying to make this as simple as possible...
 bool Camera::OnScreen(GameObject *object)
 {

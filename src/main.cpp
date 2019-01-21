@@ -1,4 +1,6 @@
 // main.cpp
+#include <Windows.h>
+
 #include "Engine2D.h"
 #include "Camera.h"
 #include "Input.h"
@@ -93,13 +95,12 @@ class FlappyTurd : public Game
       {
          GameState::onEnter();
 
-         _background = new Image("./data/images/bg.png");
-         _background->center();
-
-         _renderList->push_back(_background);
+         _camera = new Camera;
+         _objectManager.addObject("Camera", _camera);
 
          _updateBackground.useRenderList(_renderList);
-         _updateBackground.setBackground(_background);
+         _updateBackground.setCamera(_camera);
+         _updateBackground.setBackground(new Image("./data/images/bg.png"));
          _updateBackground.setMode(Background::Mode_Mirror);
 
          Animations::addToRenderList(Animations::fromXML("./data/example.ani"), _renderList);
@@ -118,9 +119,7 @@ class FlappyTurd : public Game
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
 
-         _camera = new Camera;
-         _objectManager.addObject("Camera", _camera);
-         _updateBackground.setCamera(_camera);
+         _camera->SetZoom(0.5);
 
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
@@ -128,16 +127,38 @@ class FlappyTurd : public Game
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
-      //void onExecute(float time)
-      //{
-      //   GameState::onExecute(time);
-      //}
+#if _DEBUG
+      void onExecute(float time)
+      {
+         GameState::onExecute(time);
+
+         static float timer = 0.0f;
+         timer += time;
+
+         if (timer >= 1.0f) {
+            GameObject *debugObject = _camera;
+
+            char debugBuffer[255];
+
+
+            sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
+            OutputDebugString(debugBuffer);
+
+            for (int i = 0; i < _objectManager.numObjects(); i++) {
+               debugObject = _objectManager[i];
+               sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
+               OutputDebugString(debugBuffer);
+            }
+            timer = 0.0f;
+         }
+         //if (Engine2D::GetInput())
+
+      }
+#endif
 
       void onExit(void)
       {
          // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         delete _camera;
-
          _player->shutdown();
 
          _objectManager.clearOperators();
@@ -153,9 +174,9 @@ class FlappyTurd : public Game
          delete _player->getGameObject();
          delete _player;
 
-         _renderList->remove(_background);
+         delete _updateBackground.getBackground();
 
-         delete _background;
+         delete _camera;
 
          GameState::onExit();
       }

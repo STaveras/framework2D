@@ -1,5 +1,6 @@
 // File: Engine2D.h
 #pragma once
+#include "Types.h"
 #include "ISingleton.h"
 #include "EventSystem.h"
 #include "Timer.h"

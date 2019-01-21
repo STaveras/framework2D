@@ -13,22 +13,44 @@ class ObjectOperator;
 
 class ObjectManager
 {
-	std::map<std::string, GameObject*> m_mObjects;
-	std::list<ObjectOperator*> m_lsObjOperators;
+   std::map<std::string, GameObject*> m_mObjects;
+   std::list<ObjectOperator*> m_lsObjOperators;
 
 public:
-	GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
 
-	void Update(float fTime);
+   std::string getObjectName(GameObject *object) {
+      std::map<std::string, GameObject *>::iterator itr = m_mObjects.begin();
+      for (; itr != m_mObjects.end(); itr++) {
+         if (itr->second == object) {
+            return itr->first;
+         }
+      }
+      return "";
+   }
 
-	void addObject(const char* name, GameObject* object);
-	void removeObject(const char* name);
+   GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
 
-	void pushOperator(ObjectOperator* objOperation);
-	void popOperator(void);
-  void clearOperators(void);
+   void Update(float fTime);
 
-	void SendEvent(Event::event_key key, void* sender);
+   void addObject(const char* name, GameObject* object);
+   void removeObject(const char* name);
+
+   void pushOperator(ObjectOperator* objOperation);
+   void popOperator(void);
+   void clearOperators(void);
+
+   size_t numObjects(void) const { return m_mObjects.size(); }
+
+   GameObject* operator[](unsigned int index) { 
+      std::map<std::string, GameObject *>::iterator itr = m_mObjects.begin();
+      for (; itr != m_mObjects.end(); itr++) {
+         if (index-- == 0)
+            return itr->second;
+      }
+      return NULL;
+   }
+
+   void SendEvent(Event::event_key key, void* sender);
 };
 #endif  //_OBJECTMANAGER_H
 // Author: Stanley Taveras

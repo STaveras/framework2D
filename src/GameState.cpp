@@ -85,4 +85,16 @@ void GameState::_OnObjectStateExit(const Event& e) {
    }
 }
 
+void GameState::_OnObjectAdded(const Event & e)
+{
+   // Do something
+   throw "GameState::_OnObjectAdded unimplemented";
+}
+
+void GameState::_OnObjectRemoved(const Event & e)
+{
+   // Do something
+   throw "GameState::_OnObjectRemoved unimplemented";
+}
+
 // Author: Stanley Taveras
