@@ -62,7 +62,7 @@ namespace Animations {
       std::vector<Animation *>::iterator itr = animations.begin();
 
       while (itr != animations.end()) {
-         renderList->push_back((*itr)); itr++;
+         renderList->push_back((Renderable*)(*itr)); itr++;
       }
    }
 
