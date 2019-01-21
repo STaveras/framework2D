@@ -1,9 +1,9 @@
 #pragma once
 // TODO: Overhaul
-//#ifdef __DINPUT_INCLUDED__
+#ifdef _WIN32 // not good but hey
 #include "KEYBOARD_KEYS_DI.h"
-//#endif
-
+#ifndef __DINPUT_INCLUDED__
+// TODO: Map to Virtual-Key Codes (Win32 api 'getasynckeystate' keys)
 //enum KEYBOARD_KEYS;
 //{
 //	KBK_ESCAPE,
@@ -152,3 +152,5 @@
 //	KBK_MEDIASELECT,
 //	KBK_KEY_COUNT
 //};
+#endif
+#endif

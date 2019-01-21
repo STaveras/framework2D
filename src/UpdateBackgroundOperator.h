@@ -109,21 +109,21 @@ public:
 
    bool operator()(GameObject *object) {
 
-      _updateCache();
+      //_updateCache();
 
-      switch (_mode) {
-      case Background::Mode_Repeat:
-
-
-
-         break;
-      case Background::Mode_Mirror:
+      //switch (_mode) {
+      //case Background::Mode_Repeat:
 
 
-         break;
-      default: // Background::Mode_Still:
-         break; // Do nothing, really
-      }
+
+      //   break;
+      //case Background::Mode_Mirror:
+
+
+      //   break;
+      //default: // Background::Mode_Still:
+      //   break; // Do nothing, really
+      //}
       return true;
    }
 };

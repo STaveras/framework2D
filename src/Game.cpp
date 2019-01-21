@@ -9,7 +9,17 @@ void Game::Begin(void)
 
 void Game::Update(Timer* timer)
 {
-   if (timer) ProgramStack::update((float)timer->GetDeltaTime());
+   if (!this->empty()) {
+      if (timer) {
+         ProgramStack::update((float)timer->GetDeltaTime());
+      }
+      else {
+         // TODO: Create a timer
+      }
+   }
+   else {
+      Engine2D::Quit();
+   }
 }
 
 void Game::End(void)
