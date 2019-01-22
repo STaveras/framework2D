@@ -172,6 +172,9 @@
     <Filter Include="engine2Dbase\cpp">
       <UniqueIdentifier>{1eb30f23-2679-477c-8140-238a7948bec2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine2Dbase\operators">
+      <UniqueIdentifier>{bac86428-1ddd-4482-844b-29758ac8d541}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\UpdateRenderableOperator.h">
@@ -198,5 +201,13 @@
     <ClInclude Include="src\UpdateBackgroundOperator.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
+    <ClInclude Include="src\ForceDegradation.h">
+      <Filter>engine2Dbase\operators</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="doc\todo.txt">
+      <Filter>engine2Dbase</Filter>
+    </Text>
   </ItemGroup>
 </Project>

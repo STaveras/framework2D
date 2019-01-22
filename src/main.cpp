@@ -29,7 +29,7 @@ class FlappyTurd : public Game
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
-      Image* _background; // Lights; the set
+      //Image* _background; // Lights; the set
       Camera* _camera; // Camera
       Player* _player; // Action; the actors
 
@@ -107,8 +107,12 @@ class FlappyTurd : public Game
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
+
+         // -- The below are to simulate ''gamey'' physics instead of having *real* physics
          _objectManager.pushOperator(&_applyVelocity);
          //_objectManager.pushOperator(&_maxVelocity);
+         // --                               ^ ^ ^ ^                                  -- //
+
          _objectManager.pushOperator(&_updateRenderable);
          _objectManager.pushOperator(&_attachCamera);
          _objectManager.getGameObject("Turd")->Initialize();

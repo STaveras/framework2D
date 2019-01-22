@@ -6,6 +6,8 @@
 #include "Image.h"
 #include "Factory.h" // should maybe use this for the cache...? 
 
+#include <vector>
+
 class Camera;
 
 // NOTES: 
@@ -24,60 +26,16 @@ class UpdateBackgroundOperator: public ObjectOperator
    Image* _background;
    Camera* _camera; 
 
-   std::list<Image*> _cache; // Stores the extra images for other modes
+   std::vector<Image*> _cache; // Stores the extra images for other modes
 
    Background::Mode _mode;
 
    void _updateCache() {
 
-      if (_background) {
+   }
 
-         short flip = 1;
-         short axis = 0;
-         short count = 0;
+   void _update() {
 
-         vector2 lastPos = _background->getPosition();
-
-         // We need a better way to make a spiral
-         // TODO: Needs to be a generalized math function to make it any size, to support zooming (just cus)
-         for (int i = 0; i < 8; i++) {
-
-            if (_firstRun) {
-               _cache.push_back(new Image(*_background));
-
-               if (_renderList)
-                  _renderList->push_front(_cache.back());
-
-               _cache.back()->center();
-            }
-
-            // Ugh I hate the below so bad but my brain isn't working as good as it used to... D:
-            if (i < 2) 
-            {
-               updatePos(lastPos, axis++, flip);
-
-               if (axis > 1)
-               {
-                  axis = 0;
-                  flip = -flip;
-               }
-            }
-            else {
-
-               if (i == 5)
-                  flip = -flip;
-
-               updatePos(lastPos, axis, flip);
-               
-               if (i % 2 == 1)
-                  axis = !axis;
-            }
-
-            _cache.back()->setPosition(lastPos);
-         }
-
-         _firstRun = false;
-      }
    }
 
    void updatePos(D3DXVECTOR2 &lastPos, short axis, short flip)
@@ -109,26 +67,10 @@ public:
       }
 
       _firstRun = true;
-
    }
 
    bool operator()(GameObject *object) {
 
-      //_updateCache();
-
-      //switch (_mode) {
-      //case Background::Mode_Repeat:
-
-
-
-      //   break;
-      //case Background::Mode_Mirror:
-
-
-      //   break;
-      //default: // Background::Mode_Still:
-      //   break; // Do nothing, really
-      //}
       return true;
    }
 };
