@@ -8,7 +8,12 @@
 
 class Camera;
 
-// This is probably gonna be one of the crazier operators I'll make
+// NOTES: 
+// So originally I wanted this to make an infinite tile grid of background images at any scale, 
+// but also being memory-conscious enough to clean the things off-screen. The idea is to build a
+// cache of images, based on the original one you give it. However my brain no longer works, so 
+// I keep getting distracted, going through multiple iterations, etc. etc. and I'm just going to
+// make a simple version where it just mirrors in one direction as you go along, and no cleanup...
 
 class UpdateBackgroundOperator: public ObjectOperator
 {
