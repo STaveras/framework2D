@@ -8,15 +8,20 @@
 
 // TODO : Write your own wrapper for the DirectX math classes...
 
-#include <windows.h>
-
+#ifdef WIN32
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <d3dx9math.h>
+#endif
+
+#include "color.h"
 
 #define byte unsigned char
-//#define color D3DCOLOR
 #define vector2 D3DXVECTOR2 // TODO: As above, write the wrapper so you don't have to use raw d3d math calls in your code...
 #define matrix4x4 D3DXMATRIX
 #define rect RECT
+
+#include "KEYBOARD_KEYS.h"
+#include "MOUSE_BUTTONS.h"
 
 #endif

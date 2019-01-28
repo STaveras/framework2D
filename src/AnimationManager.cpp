@@ -9,7 +9,12 @@
 
 Animation* AnimationManager::GetAnimation(const char* szName)
 {
-	return this->Find(szName);
+   // This is kinda dumb.
+   for (unsigned int i = 0; i < this->Size(); i++) {
+      if (this->At(i)->GetName() == szName)
+         return this->At(i);
+   }
+   return NULL;
 }
 
 //Animation* AnimationManager::LoadAnimationFromFile(const char* szFilename)
@@ -136,53 +141,46 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //	return pAnimation;
 //}
 
-Animation* AnimationManager::CreateAnimation(const char* szName)
+Animation* AnimationManager::CreateAnimation(const char* szName, std::vector<Sprite*>* vSprites, int nTargetFPS)
 {
-	Animation* pAnimation = this->Find(szName);
+   Animation* animation = this->GetAnimation(szName);
 
-	if(!pAnimation)
-	{
-		pAnimation = this->Create();
-		pAnimation->SetName(szName);
-		_pRenderList->push_back(pAnimation);
-	}
+   if (!animation) {
+      animation = this->Create();
+      animation->SetName(szName);
+   }
 
-	return pAnimation;
-}
+   std::vector<Sprite*>::const_iterator itr = vSprites->begin();
+   for (; itr != vSprites->end(); itr++)
+      animation->AddFrame((*itr), (float)(nTargetFPS / vSprites->size()));
 
-Animation* AnimationManager::CreateAnimation(const char* szName, const std::vector<Sprite*>& vSprites, int nTargetFPS)
-{
-	Animation* pAnimation = CreateAnimation(szName);
-	
-	std::vector<Sprite*>::const_iterator itr = vSprites.begin();
-		for(; itr != vSprites.end(); itr++)
-			pAnimation->AddFrame((*itr), (float)(nTargetFPS/vSprites.size()));														
+   _renderList->push_back(animation);
 
-	return pAnimation;
+   return animation;
 }
 
 void AnimationManager::DestroyAnimation(Animation* pAnimation)
 {
-	for (IRenderer::RenderList::iterator i = _pRenderList->begin(); i != _pRenderList->end(); i++)
-		if ((*i) == pAnimation)
-			_pRenderList->erase(i);
+   for (IRenderer::RenderList::iterator i = _renderList->begin(); i != _renderList->end(); i++)
+      if ((*i) == pAnimation)
+         _renderList->erase(i);
 
-	this->Destroy(pAnimation);
+   this->Destroy(pAnimation);
 }
 
 void AnimationManager::DestroyAnimation(const char* szName)
 {
-	for(Factory<Animation>::const_factory_iterator itr = this->Begin(); itr != this->End(); itr++)
-		if(!strcmp((*itr)->GetName(), szName))
-			return DestroyAnimation(*itr);
+   for (Factory<Animation>::const_factory_iterator itr = this->Begin(); itr != this->End(); itr++)
+      if (!strcmp((*itr)->GetName(), szName))
+         return DestroyAnimation(*itr);
 }
 
 void AnimationManager::Update(float fTime)
 {
-	Factory<Animation>::const_factory_iterator itr = this->Begin();
+   Factory<Animation>::const_factory_iterator itr = this->Begin();
 
-	for(; itr != this->End(); itr++)
-	{
-		(*itr)->update(fTime);
-	}
+   for (; itr != this->End(); itr++)
+   {
+      (*itr)->update(fTime);
+   }
 }

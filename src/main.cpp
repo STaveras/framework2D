@@ -1,4 +1,6 @@
 // main.cpp
+#include <Windows.h>
+
 #include "Engine2D.h"
 #include "Camera.h"
 #include "Input.h"
@@ -17,11 +19,13 @@
 #include "UpdateRenderableOperator.h"
 #include "UpdateBackgroundOperator.h"
 
+#include "AnimationUtils.h"
+
 #define FALL_FORCE 100.0f
 #define FLAP_MULTIPLIER 3.33f
 
 class FlappyTurd : public Game
-{  
+{
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
@@ -91,14 +95,15 @@ class FlappyTurd : public Game
       {
          GameState::onEnter();
 
-         _background = new Image("./data/images/bg.png");
-         _background->center();
-
-         _renderList->push_back(_background);
+         _camera = new Camera;
+         _objectManager.addObject("Camera", _camera);
 
          _updateBackground.useRenderList(_renderList);
-         _updateBackground.setBackground(_background);
+         _updateBackground.setCamera(_camera);
+         _updateBackground.setBackground(new Image("./data/images/bg.png"));
          _updateBackground.setMode(Background::Mode_Mirror);
+
+         Animations::addToRenderList(Animations::fromXML("./data/example.ani"), _renderList);
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
@@ -114,81 +119,180 @@ class FlappyTurd : public Game
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
 
-         _camera = new Camera;
-         _objectManager.addObject("Camera", _camera);
-         _updateBackground.setCamera(_camera);
+         //_camera->SetZoom(0.5);
 
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
          
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
+      void onExecute(float time)
+      {
+         if (_objectManager.getGameObject("Turd")->getPosition().y < (_camera->GetScreenHeight() / 2)) {
+            GameState::onExecute(time);
+         }
+         else {// Push on 'GameOverState'
+            ((FlappyTurd*)Engine2D::GetGame())->GameOver();
+         }
 
-      //void onExecute(float time)
-      //{
-      //   GameState::onExecute(time);
-      //}
+#if _DEBUG
+         if (Debug::dbgObjects) {
+            static float timer = 0.0f;
+            timer += time;
+
+            if (timer >= 1.0f) {
+               GameObject *debugObject = _camera;
+
+               char debugBuffer[255];
+
+               sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
+               OutputDebugString(debugBuffer);
+
+               for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
+                  debugObject = _objectManager[i];
+                  sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
+                  OutputDebugString(debugBuffer);
+               }
+               timer = 0.0f;
+            }
+         }
+#endif
+         if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {
+            Engine2D::Quit();
+         }
+      }
 
       void onExit(void)
       {
          // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         delete _camera;
-
          _player->shutdown();
 
          _objectManager.clearOperators();
          _objectManager.removeObject("Turd");
 
+         // The below isn't really that safe, but since we know we're allocating our animations here manually... 
+         IRenderer::RenderList::iterator i = _renderList->begin();
+         for (; i != _renderList->end(); i++) {
+            if ((*i)->getRenderableType() == RENDERABLE_TYPE_ANIMATION)
+               Animations::destroyAnimation((Animation*)(*i));
+         }
+
          delete _player->getGameObject();
          delete _player;
 
-         _renderList->remove(_background);
+         delete _updateBackground.getBackground();
 
-         delete _background;
+         delete _camera;
+
+         GameState::onExit();
+      }
+   }*_playState;
+
+   class GameOverState : public GameState
+   {
+      Image *_gameOver = NULL;
+
+   public:
+      void onEnter(void) {
+         GameState::onEnter();
+
+         _gameOver = new Image("./data/images/game_over.png");
+         _gameOver->center();
+         _gameOver->setPosition(Engine2D::GetRenderer()->GetCamera()->getPosition());
+
+         _renderList->push_back(_gameOver);
+      }
+
+      void onExecute(float time) {
+         if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_SPACE)) {
+            ((FlappyTurd*)Engine2D::GetGame())->Reset();
+         }
+      }
+
+      void onExit(void) {
+         _renderList->pop_back();
+         delete _gameOver;
 
          GameState::onExit();
       }
    };
 
+   void GameOver(void) {
+      this->push(new GameOverState);
+   }
+
+   void StartGame(void) {
+      if (!_playState) {
+         this->push(new PlayState);
+         _playState = (PlayState*)this->top();
+      }
+   }
+
+   void EndGame(void) {
+      if (_playState) {
+         while (!this->empty()) {
+            this->pop();
+         }
+         delete _playState;
+         _playState = NULL;
+      }
+   }
+
    friend PlayState;
 
 public:
+
+   void Reset(void) {
+      EndGame();
+      StartGame();
+   }
+
    void Begin(void)
    {
-      this->push(new PlayState);
+      StartGame();
    }
 
    void End(void)
    {
-      void* playState = this->top(); this->pop(); delete playState;
+      while (!this->empty()) {
+         void* gameState = this->top(); this->pop(); delete gameState;
+      }
    }
 }game;
 
+#define GLOBAL_WIDTH (640 / 2) /*320*/
+#define GLOBAL_HEIGHT 480
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-   Window rndrWind = Window(320, 460, "Flap a Turd", "· · · ·");
-   rndrWind.Initialize(hInstance, lpCmdLine);
+   try {
+      Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd", "• • • •");
+      rndrWind.Initialize(hInstance, lpCmdLine);
 
-   DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-   RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 320, 480, false, false);
+      DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
+      RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
 
-   Engine2D* engine = Engine2D::getInstance();
-   engine->SetInputInterface(pInput);
-   engine->SetRenderer(pRenderer);
-   engine->SetGame(&game);
-   engine->Initialize();
+      Engine2D* engine = Engine2D::getInstance();
+      engine->SetInputInterface(pInput);
+      engine->SetRenderer(pRenderer);
+      engine->SetGame(&game);
+      engine->Initialize();
 
-   while (!rndrWind.HasQuit() && !engine->HasQuit())
-   {
-      rndrWind.Update();
-      engine->Update();
+      while (!rndrWind.HasQuit() && !engine->HasQuit())
+      {
+         rndrWind.Update();
+         engine->Update();
+      }
+
+      engine->Shutdown();
+
+      Input::DestroyInputInterface(pInput);
+      Renderer::DestroyRenderer(pRenderer);
+
+      rndrWind.Shutdown();
    }
-
-   engine->Shutdown();
-
-   Input::DestroyInputInterface(pInput);
-   Renderer::DestroyRenderer(pRenderer);
-
-   rndrWind.Shutdown();
+   catch (const char *errorMessage) {
+      MessageBox(NULL, errorMessage, "Error", MB_OK | MB_ICONERROR);
+   }
 }
 // Stan Taveras 

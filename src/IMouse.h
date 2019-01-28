@@ -16,10 +16,10 @@ public:
 	vector2 GetPosition(void) const { return m_Position; }
 	void SetPosition(vector2 position) { m_Position = position; }
 
-	bool ButtonPressed(MOUSE_BUTTONS eBtn);
-	bool ButtonReleased(MOUSE_BUTTONS eBtn);
-	bool ButtonDown(MOUSE_BUTTONS eBtn);
-	bool ButtonUp(MOUSE_BUTTONS eBtn);
+   virtual bool ButtonPressed(MOUSE_BUTTONS eBtn) = 0;
+   virtual bool ButtonReleased(MOUSE_BUTTONS eBtn) = 0;
+   virtual bool ButtonDown(MOUSE_BUTTONS eBtn) = 0;
+   virtual bool ButtonUp(MOUSE_BUTTONS eBtn) = 0;
 };
 
 #endif

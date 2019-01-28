@@ -83,22 +83,36 @@ void Factory<Type>::Erase(unsigned int index)
 	}
 }
 
-template<typename Type>
-Type* Factory<Type>::Find(const Type& itemDesc)
-{
-	Type* pReturn = NULL;
-	std::list<Type*>::iterator itr = m_lsItems.begin();
+//template<typename Type>
+//Type* Factory<Type>::Find(const Type& itemDesc)
+//{
+//	Type* pReturn = NULL;
+//	std::list<Type*>::iterator itr = m_lsItems.begin();
+//
+//	for(;itr != m_lsItems.end(); itr++)
+//	{
+//		if(itemDesc == *(*itr))
+//		{
+//			pReturn = (*itr);
+//		}
+//	}
+//
+//	return pReturn;
+//}
 
-	for(;itr != m_lsItems.end(); itr++)
-	{
-		if(itemDesc == *(*itr))
-		{
-			pReturn = (*itr);
-		}
-	}
-
-	return pReturn;
-}
+//template<typename Type> // Thinkin' 'bout reflection
+//Type* Factory<Type>::Filter()
+//{
+//   std::map::<std::string,
+//
+//
+//   do {
+//
+//   }
+//   while ()
+//
+//   return NULL;
+//}
 
 template<typename Type>
 template<class Derived>
@@ -118,6 +132,12 @@ Derived* Factory<Type>::CreateDerived(const Derived& rhs)
 	m_lsItems.push_back((Type*)item);
 
 	return item;
+}
+
+template<class Type>
+bool Factory<Type>::operator==(Factory<Type>& f)
+{
+   return (this == (const_cast<const Factory<Type>>f)); // Why is this here again...?
 }
 
 template<typename Type>

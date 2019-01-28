@@ -18,6 +18,9 @@ namespace Debug
         static void enable(void) { _bDebug = true; }
         static void disable(void) { _bDebug = false; }
     }Mode;
+
+    static bool dbgMouse = false;
+    static bool dbgObjects = false;
 }
 
 #define DEBUGGING (Debug::Mode.isEnabled())
