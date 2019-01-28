@@ -123,5 +123,6 @@ void GameObject::GameObjectState::onExit(State* next)
 
 void GameObject::update(float time) // lawl time as a float xfd
 {
-   StateMachine::update(time); _position += _velocity * time;
+   Physical::update(time);
+   StateMachine::update(time);
 }

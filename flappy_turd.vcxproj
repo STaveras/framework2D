@@ -140,11 +140,15 @@
     <ClInclude Include="src\AnimationUtils.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
+    <ClInclude Include="src\ForceDegradation.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Positionable.h" />
     <ClInclude Include="src\Square.h" />
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="doc\todo.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

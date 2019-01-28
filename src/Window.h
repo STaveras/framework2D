@@ -18,7 +18,7 @@ class Window
 
 public:
 	Window(void);
-	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName);
+	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName = "");
 	~Window(void){}
 
 	bool HasQuit(void) const { return m_bHasQuit; }
