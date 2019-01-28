@@ -72,8 +72,8 @@ class FlappyTurd : public Game
             GameObjectState* rising = this->addState("Rising");
             //rising->setDirection(vector2(0.1f, -1.0f));
             rising->setExecuteTime(0.27);
-            rising->setDirection(vector2(0.1f, -1.0f * FLAP_MULTIPLIER));
-            rising->setForce(FALL_FORCE);
+            rising->setDirection(vector2(0.1f, -1.0f));
+            rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
             rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
             ((Image*)rising->getRenderable())->center();
 
@@ -270,7 +270,7 @@ public:
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
    try {
-      Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd", "• • • •");
+      Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd");
       rndrWind.Initialize(hInstance, lpCmdLine);
 
       DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
