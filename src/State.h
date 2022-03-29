@@ -14,7 +14,7 @@ class State
 
 public:
    State(void) :m_szName(NULL) {}
-   State(const char* szName) :m_szName(_strdup(szName)) {}
+   State(const char* szName) :m_szName( _strdup(szName) ) {}
    State(const State& rhs) : m_szName(_strdup(rhs.m_szName)) {}
    virtual ~State(void) { if (m_szName) free(m_szName); }
 

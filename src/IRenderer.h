@@ -33,7 +33,7 @@ protected:
 public:
     IRenderer(void):m_bStaticBG(false),m_nWidth(0), m_nHeight(0), m_ClearColor(0xFFFFFFFF), m_pCamera(NULL){_RenderLists.Create();} // Comes with one global render list
 	IRenderer(int nWidth, int nHeight):m_bStaticBG(false),m_nWidth(nWidth), m_nHeight(nHeight), m_ClearColor(0xFFFFFFFF), m_pCamera(NULL){}
-	virtual ~IRenderer(void) = 0 { m_Textures.Clear(); }
+	virtual ~IRenderer(void) = 0;
 
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
 	int GetWidth(void) const { return m_nWidth; }

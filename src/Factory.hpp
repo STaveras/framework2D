@@ -6,7 +6,7 @@
 template<typename Type>
 Type* Factory<Type>::At(unsigned int index)
 {
-	std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type *>::iterator itr = m_lsItems.begin();
 	for(unsigned int i = 0; itr != m_lsItems.end(); itr++, i++)
 	{
 		if(i == index)
@@ -37,7 +37,7 @@ Type* Factory<Type>::Create(const Type& rhs)
 template<typename Type>
 void Factory<Type>::Destroy(Type* item)
 {
-	std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = m_lsItems.begin();
 
 	for(;itr != m_lsItems.end(); itr++)
 	{
@@ -53,7 +53,7 @@ void Factory<Type>::Destroy(Type* item)
 template<typename Type>
 void Factory<Type>::Clear()
 {
-	std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = m_lsItems.begin();
 
 	for(;itr != m_lsItems.end(); itr++)
 	{
@@ -72,7 +72,7 @@ void Factory<Type>::Store(Type* item)
 template<typename Type>
 void Factory<Type>::Erase(unsigned int index)
 {
-	std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = m_lsItems.begin();
 
 	for(unsigned int i = 0; itr != m_lsItems.end(); itr++, i++)
 	{
@@ -87,7 +87,7 @@ template<typename Type>
 Type* Factory<Type>::Find(const Type& itemDesc)
 {
 	Type* pReturn = NULL;
-	std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = m_lsItems.begin();
 
 	for(;itr != m_lsItems.end(); itr++)
 	{
@@ -125,8 +125,8 @@ bool Factory<Type>::operator==(const Factory<Type>& f) const
 {
 	if (this->Size() == f.Size())
 	{
-		std::list<Type*>::const_iterator i = m_lsItems.begin();
-		std::list<Type*>::const_iterator j = f.m_lsItems.begin();
+		typename std::list<Type*>::const_iterator i = m_lsItems.begin();
+		typename std::list<Type*>::const_iterator j = f.m_lsItems.begin();
 
 		for (; i != m_lsItems.end(); i++, j++)
 			if ((*i) != (*j))

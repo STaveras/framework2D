@@ -16,6 +16,11 @@ void Engine2D::Initialize(void)
 	_Timer.ResetElapsed();
 	_EventSystem.Initialize(INFINITE);
 
+#ifdef _WIN32
+    //DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
+#else
+#endif
+
 	if (_pInput)
 		_pInput->Initialize();
 
@@ -58,4 +63,4 @@ void Engine2D::Shutdown(void)
 
 	_EventSystem.Shutdown();
 }
-// Author: Stanley Taveras
+// Stanley Taveras

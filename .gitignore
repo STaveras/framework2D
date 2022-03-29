@@ -7,4 +7,7 @@ Release/
 *.vcxproj.user
 *.pdb
 *.ilk
+*.o
+*.d
 bin/flappy_turd_d.exe
+**/.DS_Store

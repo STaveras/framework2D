@@ -10,11 +10,11 @@ class IProgramState
 {
 public:
 	IProgramState(void){}
-	virtual ~IProgramState(void) = 0{}
+	virtual ~IProgramState(void) = 0;
 
-	virtual void onEnter(void) = 0{}
-	virtual void onExecute(float fTime) = 0{}
-	virtual void onExit(void) = 0{}
+	virtual void onEnter(void) = 0;
+	virtual void onExecute(float fTime) = 0;
+	virtual void onExit(void) = 0;
 };
 
 #endif

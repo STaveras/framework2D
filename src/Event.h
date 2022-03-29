@@ -13,6 +13,8 @@ class Event
    friend class EventSystem;
 
 public:
+
+   // This is kinda dumb???
    enum event_priority_level
    {
       event_priority_immediate,
@@ -36,7 +38,7 @@ public:
       {
          return ((int)lhs.m_ePriority > (int)rhs.m_ePriority);
       }
-   }event_compare;
+   } event_compare;
 
 protected:
    event_priority_level	m_ePriority;
@@ -48,8 +50,8 @@ public:
    Event(event_key eventID, void* sender, event_priority_level ePriority = event_priority_normal) :m_ePriority(ePriority), m_EventID(eventID), m_pSender(sender) {}
    virtual ~Event(void) {}
 
-   event_key	GetEventID(void) const { return m_EventID; }
-   void*      GetSender(void) const { return m_pSender; }
+   event_key GetEventID(void) const { return m_EventID; }
+   void*     GetSender(void) const { return m_pSender; }
 
    bool operator==(const Event& rhs) const { return (!strcmp(m_EventID, rhs.m_EventID) && m_ePriority == rhs.m_ePriority && m_pSender == rhs.m_pSender); }
    bool operator==(const event_key e) { return (bool)(!strcmp(m_EventID, e)); }

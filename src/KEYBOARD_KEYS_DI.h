@@ -6,6 +6,7 @@
 #if !defined(_KEYBOARD_KEYS_DI_H_)
 #define _KEYBOARD_KEYS_DI_H_
 
+#ifdef _WIN32
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
@@ -156,5 +157,6 @@ enum KEYBOARD_KEYS
 	KBK_MAIL            = DIK_MAIL,            
 	KBK_MEDIASELECT     = DIK_MEDIASELECT
 };
+#endif
 
 #endif
