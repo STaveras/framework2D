@@ -23,7 +23,7 @@ class StateMachine
 	void OnEvent(const StateMachineEvent& evt);
 
 protected:
-	Factory<State> _states;
+	Factory<State> _states; // TODO: Kinda want to make a StateMachine *be* a State-Factory
 	std::queue<StateMachineEvent> m_qEvents;
 	std::multimap<State*, std::pair<StateMachineEvent, State*>> m_mTransitionTable;
 

@@ -6,7 +6,7 @@
 #if !defined(_STATE_H)
 #define _STATE_H
 
-#include <string>
+#include "Types.h"
 
 class State
 {

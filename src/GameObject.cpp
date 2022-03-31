@@ -21,9 +21,11 @@
 
 GameObject::GameObjectState* GameObject::addState(const char* szName)
 {
-   GameObjectState* state = _states.CreateDerived<GameObjectState>(); // TODO: Some way for the factory to take constructor arguments
-   state->SetName(szName);
-
+   GameObjectState* state = (GameObjectState*)this->GetState(szName);
+   if (!state) {
+      _states.CreateDerived<GameObjectState>(); // TODO: Some way for the factory to take constructor arguments
+      state->SetName(szName);
+   }
    return state;
 }
 
@@ -54,6 +56,8 @@ void GameObject::GameObjectState::onEnter(State* prev)
       case RENDERABLE_TYPE_ANIMATION:
          ((Animation*)_renderable)->Play();
          break;
+      default:
+         break;
       }
    }
 
@@ -77,6 +81,8 @@ bool GameObject::GameObjectState::onExecute(float time)
             return false;
       }
       break;
+      default:
+         break;
       }
    }
 
@@ -96,6 +102,8 @@ void GameObject::GameObjectState::onExit(State* next)
       {
       case RENDERABLE_TYPE_ANIMATION:
          ((Animation*)_renderable)->Stop();
+         break;
+      default:
          break;
       }
 

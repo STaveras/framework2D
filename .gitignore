@@ -9,5 +9,7 @@ Release/
 *.ilk
 *.o
 *.d
-bin/flappy_turd_d.exe
 **/.DS_Store
+bin/*.exe
+bin/*.dSYM/**
+bin/2Dgameframework

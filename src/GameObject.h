@@ -79,8 +79,9 @@ public:
    GameObjectState* addState(const char* szName);
    //void setAnimation(Animation* ani);
    //void setStateAnimation(const char* stateName, Animation* ani);
+   GameObjectState* GetCurrentState() const { return (GameObjectState*)this->GetCurrentState(); }
 
-   GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
+   // GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
    virtual void Setup(void) {}
    virtual void update(float fTime);

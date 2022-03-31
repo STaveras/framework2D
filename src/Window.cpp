@@ -5,10 +5,7 @@
 
 #include "Window.h"
 
-// void Window::_setup(void) {
-
-
-// }
+#include <iostream>
 
 Window::Window(void):
 	m_bHasQuit(false),
@@ -79,9 +76,7 @@ LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 	return DefWindowProc( hWnd, msg, wParam, lParam );
 }
-#endif
 
-#ifdef _WIN32
 void Window::Initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 {
 	m_hInstance = hInstance;
@@ -101,11 +96,18 @@ void Window::Initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
 #else
 void Window::Initialize(void) {
-	
+
+	#if __APPLE__
+	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_TRUE);
+	#endif
+
     /* Initialize the library */
     if (!glfwInit())
         return; // -1
-		
+
+	if (glfwVulkanSupported() == GLFW_FALSE)
+		std::cout << "Vulkan is not supported on this platform." << std::endl;
+
 	/* Create a windowed mode window and its OpenGL context */
     _window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle, NULL, NULL);
     if (!_window)
@@ -153,6 +155,7 @@ void Window::Shutdown(void)
     DestroyWindow(m_hWnd);
 	UnregisterClass(m_szWindowClassName, m_hInstance);
 #else
+	glfwDestroyWindow(_window);
     glfwTerminate();
 #endif
 }

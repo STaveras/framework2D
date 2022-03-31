@@ -34,6 +34,8 @@ void Trigger::_Trigger(void)
 		break;
 	case SOUND:
 		break;
+	default:
+		break;
 	}
 
 	_bTriggered = true;

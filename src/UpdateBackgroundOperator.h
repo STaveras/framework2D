@@ -75,7 +75,7 @@ class UpdateBackgroundOperator: public ObjectOperator
       }
    }
 
-   void updatePos(D3DXVECTOR2 &lastPos, short axis, short flip)
+   void updatePos(vector2 &lastPos, short axis, short flip)
    {
       lastPos.x += (axis == 0 ? flip * _background->getWidth() : 0);
       lastPos.y += (axis == 1 ? flip * _background->getHeight() : 0);

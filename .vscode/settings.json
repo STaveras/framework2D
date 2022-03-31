@@ -70,6 +70,21 @@
         "numeric": "cpp",
         "stack": "cpp",
         "valarray": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "queue": "cpp",
+        "fstream": "cpp",
+        "cfenv": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "csignal": "cpp",
+        "random": "cpp",
+        "ranges": "cpp",
+        "set": "cpp",
+        "strstream": "cpp",
+        "thread": "cpp",
+        "typeindex": "cpp",
+        "unordered_set": "cpp",
+        "variant": "cpp",
+        "allocator": "cpp"
     }
 }

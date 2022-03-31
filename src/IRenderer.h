@@ -20,6 +20,8 @@ public:
 
 protected:
 	bool m_bStaticBG;
+	bool m_bFullScreen;
+	bool m_bVerticalSync;
 	int m_nWidth;
 	int m_nHeight;
 	color m_ClearColor;	
@@ -31,9 +33,18 @@ protected:
 	ITexture* _TextureExists(const char* szFilename);
 
 public:
-    IRenderer(void):m_bStaticBG(false),m_nWidth(0), m_nHeight(0), m_ClearColor(0xFFFFFFFF), m_pCamera(NULL){_RenderLists.Create();} // Comes with one global render list
+    IRenderer(void):m_bStaticBG(false),
+	m_bFullScreen(false),
+	m_bVerticalSync(false),
+	m_nWidth(0), m_nHeight(0), 
+	m_ClearColor(0xFFFFFFFF),
+	m_pCamera(NULL)
+	{
+		_RenderLists.Create();
+	} // Comes with one global render list
+	
 	IRenderer(int nWidth, int nHeight):m_bStaticBG(false),m_nWidth(nWidth), m_nHeight(nHeight), m_ClearColor(0xFFFFFFFF), m_pCamera(NULL){}
-	virtual ~IRenderer(void) = 0;
+	virtual ~IRenderer() = 0;
 
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
 	int GetWidth(void) const { return m_nWidth; }

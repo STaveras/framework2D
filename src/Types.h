@@ -26,11 +26,12 @@
 #define vector2 glm::vec2
 #define matrix4x4 glm::mat4
 
+#define strtok_s strtok_r
 #define _strdup strdup
 #define INFINITE INFINITY
 
 struct rect {
-    int left, right;
+    int left, top, right, bottom;
 };
 
 #endif

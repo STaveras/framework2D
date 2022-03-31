@@ -7,8 +7,8 @@
 #include "Camera.h"
 #include "Timer.h"
 
-IRenderer::~IRenderer{ 
-	m_Textures.Clear(); 
+IRenderer::~IRenderer() {
+	m_Textures.Clear();
 }
 
 void IRenderer::_BackgroundColorShift(void)

@@ -31,7 +31,7 @@ protected:
 
 public:
 	explicit Renderable(RENDERABLE_TYPE eType):m_eType(eType) { _appearance._isVisible = true; }
-	virtual ~Renderable(void) = 0;
+	virtual ~Renderable(void) = default;
 
 	bool IsVisible(void) const { return _appearance._isVisible; }
 	RENDERABLE_TYPE getRenderableType(void) const { return m_eType; }

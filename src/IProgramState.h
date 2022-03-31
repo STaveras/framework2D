@@ -10,7 +10,7 @@ class IProgramState
 {
 public:
 	IProgramState(void){}
-	virtual ~IProgramState(void) = 0;
+	virtual ~IProgramState(void) = default;
 
 	virtual void onEnter(void) = 0;
 	virtual void onExecute(float fTime) = 0;

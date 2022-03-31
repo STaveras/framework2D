@@ -14,5 +14,5 @@ union color
 		return _color;
 	}
 #endif
-	color& operator=(unsigned long value) { _color = value; }
+	const color& operator=(unsigned long value) { _color = value; return *this;}
 };

@@ -18,7 +18,7 @@ class Factory
 
 public:
 	Factory(void) {}
-	~Factory(void) { Clear(); }
+	~Factory() { Clear(); }
 
 	typedef typename std::list<Type*>::iterator factory_iterator;
 	typedef typename std::list<Type*>::const_iterator const_factory_iterator;

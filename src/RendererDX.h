@@ -1,4 +1,5 @@
 // File: RendererDX.h
+#ifdef _WIN32
 #if !defined(_RENDERERD3D_H)
 #define _RENDERERD3D_H
 #include "IRenderer.h"
@@ -9,8 +10,6 @@ class Appearance;
 class Image;
 class RendererDX : public IRenderer
 {
-   bool				m_bFullscreen;
-   bool				m_bVsync;
    HWND				m_hWnd;
    LPDIRECT3D9			m_pD3D;
    LPDIRECT3DDEVICE9	m_pD3DDevice;
@@ -21,7 +20,7 @@ class RendererDX : public IRenderer
 
 public:
    RendererDX(void);
-   RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync);
+   RendererDX(HWND hWnd, int nWidth, int nHeight);
    ~RendererDX(void);
 
    HWND GetHWND(void) const { return m_hWnd; }
@@ -43,5 +42,6 @@ private:
    void Shutdown(void);
    void Render(void);
 };
-#endif  //_RENDERER_H
+#endif //_RENDERER_H
+#endif
 // Author: Stanley Taveras

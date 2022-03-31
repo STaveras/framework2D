@@ -3,6 +3,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#define GLFW_BUILD_UNIVERSAL
+#define GLFW_USE_MENUBAR
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #endif
 class Window
@@ -21,7 +24,6 @@ class Window
 	const char* m_szWindowTitle;
 	const char* m_szWindowClassName;
 
-	// void _setup(void);
 	void _resize(void);
 
 #ifdef _WIN32
@@ -30,7 +32,7 @@ class Window
 
 public:
 	Window(void);
-	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName);
+	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName = "2DEF");
 	~Window(void){}
 
 	bool HasQuit(void) const { return m_bHasQuit; }
