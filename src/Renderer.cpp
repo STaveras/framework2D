@@ -2,7 +2,9 @@
 #include "Renderer.h"
 #include "Engine2D.h"
 
-IRenderer *Renderer::Get(void) { return Engine2D::getInstance()->GetRenderer(); }
+Window *Renderer::window = NULL;
+
+IRenderer *Renderer::Get(void) { return Engine2D::GetRenderer(); }
 
 #if _WIN32
 // This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
@@ -14,8 +16,10 @@ IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool b
 #else
 IRenderer *Renderer::CreateVKRenderer(Window *window)
 {
-	IRenderer *renderer = nullptr;
-
+	Renderer::window = window;
+	IRenderer *renderer = new RendererVK();
+	renderer->SetWidth(window->GetWidth());
+	renderer->SetHeight(window->GetHeight());
 	return renderer;
 }
 #endif

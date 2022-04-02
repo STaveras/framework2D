@@ -25,68 +25,67 @@ class FlappyTurd : public Game
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
-      Image* _background; // Lights; the set
-      Camera* _camera; // Camera
-      Player* _player; // Action; the actors
+      Image *_background; // Lights; the set
+      Camera *_camera;    // Camera
+      Player *_player;    // Action; the actors
 
       // Game rules
       FollowObject _attachCamera;
-      //MaxVelocityOperator _maxVelocity;
+      // MaxVelocityOperator _maxVelocity;
       ApplyVelocityOperator _applyVelocity;
       UpdateBackgroundOperator _updateBackground;
       UpdateRenderableOperator _updateRenderable;
-      //TODO: UpdateCollidable _updateCollidable;
+      // TODO: UpdateCollidable _updateCollidable;
 
       class Turd : public GameObject
       {
          // Currently unused
-         //class TurdState : public GameObjectState
+         // class TurdState : public GameObjectState
          //{
-         //public:
-           // void onEnter()
-           // {
-           //	 //GameObjectState::onEnter();
-           // }
+         // public:
+         // void onEnter()
+         // {
+         //	 //GameObjectState::onEnter();
+         // }
 
-           // void onExit()
-           // {
+         // void onExit()
+         // {
 
-           // }
+         // }
          //};
 
       public:
          Turd(void)
          {
             // NOTE: All of this should ideally be in a script
-            GameObjectState* falling = this->addState("Falling");
-            //falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
-            falling->setDirection(vector2(0.1f, 1.0f)); 
+            GameObjectState *falling = this->addState("Falling");
+            // falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
+            falling->setDirection(vector2(0.1f, 1.0f));
             falling->setForce(FALL_FORCE);
             falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
-            ((Image*)falling->getRenderable())->center();
+            ((Image *)falling->getRenderable())->center();
 
-            GameObjectState* rising = this->addState("Rising");
-            //rising->setDirection(vector2(0.1f, -1.0f));
+            GameObjectState *rising = this->addState("Rising");
+            // rising->setDirection(vector2(0.1f, -1.0f));
             rising->setExecuteTime(0.27);
             rising->setDirection(vector2(0.1f, -1.0f * FLAP_MULTIPLIER));
             rising->setForce(FALL_FORCE);
             rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
-            ((Image*)rising->getRenderable())->center();
+            ((Image *)rising->getRenderable())->center();
 
             RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
-            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
+            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising");   // lets you chain together flaps
             RegisterTransition("Rising", "BUTTON_RELEASED", "Falling"); // stop rising when you let go of the button
          }
 
-         ~Turd(void) 
+         ~Turd(void)
          {
             for (unsigned int i = 0; i < _states.Size(); i++)
-               delete ((GameObjectState*)_states.At(i))->getRenderable();
+               delete ((GameObjectState *)_states.At(i))->getRenderable();
          }
       };
 
    public:
-
       void onEnter(void)
       {
          GameState::onEnter();
@@ -120,13 +119,13 @@ class FlappyTurd : public Game
 
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
-         
+
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
-      //void onExecute(float time)
+      // void onExecute(float time)
       //{
-           // TODO: Check if the player hit anything and trigger a gamestate change
+      //  TODO: Check if the player hit anything and trigger a gamestate change
       //   GameState::onExecute(time);
       //}
 
@@ -162,46 +161,50 @@ public:
 
    void End(void)
    {
-      IProgramState* playState = this->top(); this->pop(); delete playState;
+      IProgramState *playState = this->top();
+      this->pop();
+      delete playState;
    }
-}game;
-
-#ifdef _WIN32 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
-#else
-int main(int argc, char**argv)
-#endif
-{
-    Window rndrWind = Window(320, 460, "Flap a Turd");
+} game;
 
 #ifdef _WIN32
-    rndrWind.Initialize(hInstance, lpCmdLine);
-
-    DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-    RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), 320, 480, false, false);
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 #else
-    rndrWind.Initialize();
+int main(int argc, char **argv)
+#endif
+{
+   Window window = Window(320, 460, "Flap a Turd");
+
+#ifdef _WIN32
+   rndrWind.Initialize(hInstance, lpCmdLine);
+
+   DirectInput *pInput = (DirectInput *)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
+   RendererDX *pRenderer = (RendererDX *)Renderer::CreateDXRenderer(window.GetHWND(), 320, 480, false, false);
+#else
+   window.Initialize();
+
+   RendererVK *pRenderer = (RendererVK *)Renderer::CreateVKRenderer(&window);
 #endif
 
-    Engine2D* engine = Engine2D::getInstance();
-//    engine->SetInputInterface(pInput);
-//    engine->SetRenderer(pRenderer);
-//    engine->SetGame(&game);
-    engine->Initialize();
+   Engine2D *engine = Engine2D::getInstance();
+   //    engine->SetInputInterface(pInput);
+   engine->SetRenderer(pRenderer);
+   //    engine->SetGame(&game);
+   engine->Initialize();
 
-    while (!rndrWind.HasQuit() && !engine->HasQuit())
-    {
-       rndrWind.Update();
-       engine->Update();
-    }
+   while (!window.HasQuit() && !engine->HasQuit())
+   {
+      window.Update();
+      engine->Update();
+   }
 
-    engine->Shutdown();
+   engine->Shutdown();
 
-//    Input::DestroyInputInterface(pInput);
-//    Renderer::DestroyRenderer(pRenderer);
+   //    Input::DestroyInputInterface(pInput);
+   //    Renderer::DestroyRenderer(pRenderer);
 
-    rndrWind.Shutdown();
+   window.Shutdown();
 
-    return 0;
+   return 0;
 }
-// Stan Taveras 
+// Stan Taveras

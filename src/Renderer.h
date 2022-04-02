@@ -12,9 +12,12 @@
 #include "Renderable.h"
 #include "RendererDX.h"
 #include "RendererVK.h"
+#include "Window.h"
 
 namespace Renderer
 {
+	extern Window *window;
+	
 	IRenderer* Get(void);
 
 	#ifdef _WIN32

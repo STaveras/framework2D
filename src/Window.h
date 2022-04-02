@@ -28,11 +28,17 @@ class Window
 
 #ifdef _WIN32
 	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#else
+protected:
+	friend class RendererVK;
+
+	GLFWwindow * getUnderlyingWindow(void) { return _window; }
 #endif
 
 public:
 	Window(void);
-	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName = "2DEF");
+	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName = "2DGF");
 	~Window(void){}
 
 	bool HasQuit(void) const { return m_bHasQuit; }

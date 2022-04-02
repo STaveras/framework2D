@@ -5,6 +5,8 @@
 
 #include "Window.h"
 
+// NOTE: We're going to have to redesign a large portion of this eventually
+
 #include <iostream>
 
 Window::Window(void):
@@ -105,8 +107,13 @@ void Window::Initialize(void) {
     if (!glfwInit())
         return; // -1
 
-	if (glfwVulkanSupported() == GLFW_FALSE)
+	if (glfwVulkanSupported() == GLFW_FALSE) {
 		std::cout << "Vulkan is not supported on this platform." << std::endl;
+		return; 
+	}
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	/* Create a windowed mode window and its OpenGL context */
     _window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle, NULL, NULL);

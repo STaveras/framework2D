@@ -1,7 +1,7 @@
 // File: IRenderer.cpp
 // Author: Stanley Taveras
 // Created: 2/24/2010
-// Modified: 2/24/2010
+// Modified: 4/1/2022
 
 #include "IRenderer.h"
 #include "Camera.h"
@@ -13,7 +13,7 @@ IRenderer::~IRenderer() {
 
 void IRenderer::_BackgroundColorShift(void)
 {
-	if(!m_bStaticBG)
+	if (!m_bStaticBG)
     {
 		static Timer timer;
         static bool bReverse = false;
@@ -105,4 +105,8 @@ bool IRenderer::DestroyTexture(const ITexture* pTexture)
 	}
 
 	return false;
+}
+
+void IRenderer::Render(void) {
+	_BackgroundColorShift();
 }

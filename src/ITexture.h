@@ -9,13 +9,13 @@
 #include <string>
 
 class ITexture
-{	
-	std::string m_strFilename;
+{
 	color m_ClrColor; // transparent color
+	std::string m_strFilename;
 
 public:
-	ITexture(void):m_ClrColor(0){}
-	ITexture(const char* szFilename):m_strFilename(szFilename), m_ClrColor(0){}
+	ITexture(void): m_ClrColor(0) {}
+	ITexture(const char* szFilename): m_strFilename(szFilename), m_ClrColor(0) {}
 	virtual ~ITexture(void){ }
 
 	const char* GetFilename(void) const { return m_strFilename.c_str(); }

@@ -10,6 +10,7 @@
 #include "Frame.h"
 #include "Renderable.h"
 #include "Image.h"
+#if _WIN32
 #include "TextureD3D.h"
 #pragma comment(lib, "d3d9.lib")
 #ifdef _DEBUG
@@ -160,8 +161,6 @@ void RendererDX::Render(void)
 	if (!m_pD3DDevice)
 		return;
 
-	_BackgroundColorShift();
-
 	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 
 	// Begin drawing the scene
@@ -232,3 +231,4 @@ void RendererDX::Render(void)
 	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 	InvalidateRect(m_hWnd, NULL, true);
 }
+#endif
