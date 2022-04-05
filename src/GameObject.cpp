@@ -81,7 +81,7 @@ bool GameObject::GameObjectState::onExecute(float time)
    }
 
    if (_executeTime > 0 && _runTime >= _executeTime) {
-      return false;
+      return false; // state no longer valid
    }
 
    return true;

@@ -150,6 +150,7 @@ void StateMachine::update(float fTime)
    }
 }
 
+// This is before I knew JSON was a thing
 bool StateMachine::LoadTransitionTableFromFile(const char* szFilename)
 {
    std::ifstream ifl(szFilename);

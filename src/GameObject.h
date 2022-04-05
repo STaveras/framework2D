@@ -66,7 +66,7 @@ protected:
    vector2 _velocity;
 
 public:
-   GameObject(void) :m_eType(GAME_OBJ_NULL), _rotation(0.0f) {}
+   GameObject(void) : m_eType(GAME_OBJ_NULL), _rotation(0.0f) {}
    GameObject(GAME_OBJ_TYPE eType) :m_eType(eType), _rotation(0.0f) {}
    ~GameObject(void) {}
 
@@ -89,6 +89,10 @@ public:
    void AddImpulse(vector2 direction, double force) {
       _velocity += (direction * (float)force);
    }
+
+   // TODO: GameObjects should maybe have an overload for operator()
+   //       they could take in other objects, and perform collision checks between it and the other object?
+   //       maybe do other things... 
 };
 typedef GameObject::GameObjectState ObjectState;
 #endif
