@@ -1,12 +1,12 @@
 // main.cpp
 #include "Engine2D.h"
 #include "Camera.h"
-// #include "Input.h"
-// #include "InputEvent.h"
+#include "Input.h"
+#include "InputEvent.h"
 #include "Game.h"
 #include "GameState.h"
-//#include "GameObject.h"
-//#include "Renderer.h"
+#include "GameObject.h"
+#include "Renderer.h"
 #include "Window.h"
 
 //#include "SDSParser.h"
@@ -97,7 +97,7 @@ class FlappyTurd : public Game
 
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setBackground(_background);
-         _updateBackground.setMode(Background::Mode_Mirror);
+         _updateBackground.setMode(Background::Mode::Mirror);
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
@@ -143,6 +143,7 @@ class FlappyTurd : public Game
          delete _player->getGameObject();
          delete _player;
 
+         _updateBackground.setBackground(NULL);
          _renderList->remove(_background);
 
          delete _background;
@@ -162,7 +163,7 @@ public:
    void End(void)
    {
       IProgramState *playState = this->top();
-      this->pop();
+      this->clear();
       delete playState;
    }
 } game;
@@ -176,7 +177,7 @@ int main(int argc, char **argv)
    Window window = Window(320, 460, "Flap a Turd");
 
 #ifdef _WIN32
-   rndrWind.Initialize(hInstance, lpCmdLine);
+   window.Initialize(hInstance, lpCmdLine);
 
    DirectInput *pInput = (DirectInput *)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
    RendererDX *pRenderer = (RendererDX *)Renderer::CreateDXRenderer(window.GetHWND(), 320, 480, false, false);
@@ -187,9 +188,9 @@ int main(int argc, char **argv)
 #endif
 
    Engine2D *engine = Engine2D::getInstance();
-   //    engine->SetInputInterface(pInput);
+   engine->SetInputInterface(pInput);
    engine->SetRenderer(pRenderer);
-   //    engine->SetGame(&game);
+   engine->SetGame(&game);
    engine->Initialize();
 
    while (!window.HasQuit() && !engine->HasQuit())
@@ -199,9 +200,9 @@ int main(int argc, char **argv)
    }
 
    engine->Shutdown();
-
-   //    Input::DestroyInputInterface(pInput);
-   //    Renderer::DestroyRenderer(pRenderer);
+   
+   Input::DestroyInputInterface(pInput);
+   Renderer::DestroyRenderer(pRenderer);
 
    window.Shutdown();
 

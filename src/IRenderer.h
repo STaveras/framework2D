@@ -42,10 +42,20 @@ public:
 		_RenderLists.Create();
 	} // Comes with one global render list
 
-	IRenderer(int nWidth, int nHeight) : m_bStaticBG(false), m_nWidth(nWidth), m_nHeight(nHeight), m_ClearColor(0xFFFFFFFF), m_pCamera(NULL) {}
+	IRenderer(int nWidth, int nHeight) :
+		 m_bStaticBG(false),
+		 m_bFullScreen(false),
+		 m_bVerticalSync(false), 
+		 m_nWidth(nWidth), 
+		 m_nHeight(nHeight), 
+		 m_ClearColor(0xFFFFFFFF),
+		 m_pCamera(NULL) {}
+
 	virtual ~IRenderer() = 0;
 
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
+	bool isFullScreen(void) const { return m_bFullScreen; }
+	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
 	int GetWidth(void) const { return m_nWidth; }
 	int GetHeight(void) const { return m_nHeight; }
 	color GetClearColor(void) const { return m_ClearColor; }
@@ -61,6 +71,9 @@ public:
 		m_bStaticBG = true;
 	}
 	void SetCamera(Camera *pCamera);
+
+	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }
+	virtual void setVerticalSync(bool vsyncEnabled) { m_bVerticalSync = vsyncEnabled; }
 
 	virtual ITexture *CreateTexture(const char *szFilename, color colorKey = 0) = 0;
 	virtual bool DestroyTexture(const ITexture *pTexture);

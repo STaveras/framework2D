@@ -13,6 +13,7 @@ class GameObject : public StateMachine, public Positionable
 {
    GAME_OBJ_TYPE m_eType;
 
+   // GameObject is a lil' dim
    friend class ObjectOperator;
 
    //void _OnKeyPressed(const Event & e);
@@ -79,7 +80,7 @@ public:
    GameObjectState* addState(const char* szName);
    //void setAnimation(Animation* ani);
    //void setStateAnimation(const char* stateName, Animation* ani);
-   GameObjectState* GetCurrentState() const { return (GameObjectState*)this->GetCurrentState(); }
+   //GameObjectState* GetCurrentState() const { return (GameObjectState*)this->GetCurrentState(); }
 
    // GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
@@ -90,6 +91,11 @@ public:
    void AddImpulse(vector2 direction, double force) {
       _velocity += (direction * (float)force);
    }
+
+private:
+    virtual void GameObject::_OnKeyPressed(const Event& e);
+    virtual void GameObject::_OnKeyReleased(const Event& e);
+    virtual void GameObject::_OnAnimationStopped(const Event& e);
 };
 typedef GameObject::GameObjectState ObjectState;
 #endif

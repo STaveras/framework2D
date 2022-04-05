@@ -12,7 +12,6 @@ void ProgramStack::pop(void)
 	if (!this->empty())
 	{
 		this->top()->onExit();
-
 		std::stack<IProgramState*>::pop();
 	}
 }
@@ -25,10 +24,8 @@ void ProgramStack::update(float fTime)
 
 void ProgramStack::clear(void)
 {
-	while(!this->empty())
-	{
-		this->top()->onExit();
-		this->pop();
+	while(!this->empty()) {
+		 this->pop();
 	}
 }
 // Author: Stanley Taveras

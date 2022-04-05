@@ -25,15 +25,14 @@ RendererDX::RendererDX(void) : IRenderer(),
 							   m_hWnd(NULL),
 							   m_pD3D(NULL),
 							   m_pD3DDevice(NULL),
-							   m_pD3DSprite(NULL)
-{
+							   m_pD3DSprite(NULL) {
 }
 
-RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight) : IRenderer(nWidth, nHeight),
-															 m_hWnd(hWnd),
-															 m_pD3D(NULL),
-															 m_pD3DDevice(NULL),
-															 m_pD3DSprite(NULL)
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight),
+m_hWnd(hWnd),
+m_pD3D(NULL),
+m_pD3DDevice(NULL),
+m_pD3DSprite(NULL)
 {
 }
 

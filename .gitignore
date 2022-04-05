@@ -1,7 +1,4 @@
-Debug/
 .vs/
-enc_temp_folder/
-Release/
 *.iobj
 *.ipdb
 *.vcxproj.user
@@ -13,3 +10,6 @@ Release/
 bin/*.exe
 bin/*.dSYM/**
 bin/2Dgameframework
+Debug/
+Release/
+enc_temp_folder/

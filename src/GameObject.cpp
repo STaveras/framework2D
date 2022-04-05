@@ -2,28 +2,29 @@
 #include "Animation.h"
 #include "InputEvent.h"
 
-//void GameObject::_OnKeyPressed(const Event& e)
-//{
-//   this->SendInput(((std::string)((InputEvent*)&e)->GetButtonID() + "_PRESSED").c_str(), e.GetSender());
-//}
-//
-//void GameObject::_OnKeyReleased(const Event& e)
-//{
-//   this->SendInput(((std::string)((InputEvent*)&e)->GetButtonID() + "_RELEASED").c_str(), e.GetSender());
-//}
+void GameObject::_OnKeyPressed(const Event& e)
+{
+   this->SendInput(((std::string)((InputEvent*)&e)->GetButtonID() + "_PRESSED").c_str(), e.GetSender());
+}
 
-//void GameObject::_OnAnimationStopped(const Event& e)
-//{
-//	for (unsigned int i = 0; i < _states.Size(); i++)
-//		if (_states.At(i) == (GameObjectState*)e.GetSender())
-//			return this->SendInput("ANIMATION_STOPPED");
-//}
+void GameObject::_OnKeyReleased(const Event& e)
+{
+   this->SendInput(((std::string)((InputEvent*)&e)->GetButtonID() + "_RELEASED").c_str(), e.GetSender());
+}
+
+void GameObject::_OnAnimationStopped(const Event& e)
+{
+	for (unsigned int i = 0; i < _states.Size(); i++)
+		if (_states.At(i) == (GameObjectState*)e.GetSender())
+			return this->SendInput("ANIMATION_STOPPED");
+}
 
 GameObject::GameObjectState* GameObject::addState(const char* szName)
 {
+    // TODO: Some way for the factory to take constructor arguments
    GameObjectState* state = (GameObjectState*)this->GetState(szName);
    if (!state) {
-      _states.CreateDerived<GameObjectState>(); // TODO: Some way for the factory to take constructor arguments
+      state = _states.CreateDerived<GameObjectState>(); 
       state->SetName(szName);
    }
    return state;

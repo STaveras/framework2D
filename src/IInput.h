@@ -20,7 +20,7 @@ protected:
 
 public:
 	IInput(void):m_pKeyboard(NULL){}
-	virtual ~IInput(void) = 0;
+	virtual ~IInput(void) = default;
 
 	virtual IKeyboard* GetKeyboard(void) { return m_pKeyboard; }
 	virtual IMouse* GetMouse(void) { return m_pMouse; }
