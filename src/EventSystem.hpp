@@ -83,12 +83,14 @@ void EventSystem::UnregisterAll(T* p, void (T::*fn)(const Event&))
 //}
 
 template<class T>
-void EventSystem::sendEvent(const T& e)
+void EventSystem::sendEvent(const T& e, void* pSender, Event::event_priority_level ePriority)
 {
 	if(m_EventQueue.size() >= m_uiFloodLimit)
 		return;
 
 	Event* pEvent = m_EventFactory.CreateDerived<T>(e);
+	pEvent->m_pSender = pSender;
+	pEvent->m_ePriority = ePriority;
 
 	if(pEvent->m_ePriority == Event::event_priority_immediate)
 	{

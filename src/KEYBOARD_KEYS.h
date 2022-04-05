@@ -1,6 +1,6 @@
 #pragma once
 // TODO: Overhaul
-#ifdef __DINPUT_INCLUDED__
+#ifdef _WIN32
 #include "KEYBOARD_KEYS_DI.h"
 #else
 #include <GLFW/glfw3.h>

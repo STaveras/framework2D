@@ -4,6 +4,8 @@
 class IKeyboard
 {
 public:
+	virtual ~IKeyboard(void) = 0;
+
 	virtual void Release(void) = 0;
 
 	virtual bool KeyDown(int nKey) = 0;

@@ -24,6 +24,9 @@ void InputManager::Update(float fTime)
 {
 	m_fElapsed += fTime;
 
+	if (!m_pInput)
+		return;
+
 	for(Factory<VirtualGamePad>::const_factory_iterator vpad_itr = m_GamePads.Begin(); vpad_itr != m_GamePads.End(); vpad_itr++)
 	{
 		std::list<VirtualButton>::iterator itr = (*vpad_itr)->GetButtons().begin();

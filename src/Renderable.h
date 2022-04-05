@@ -7,7 +7,7 @@
 #define _IRENDERABLE_H
 
 #include "color.h"
-#include "positionable.h"
+#include "Positionable.h"
 #include <list>
 #include <math.h>
 

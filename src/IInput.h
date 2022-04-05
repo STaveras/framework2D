@@ -19,7 +19,7 @@ protected:
 	// TODO: Add physical gamepad support
 
 public:
-	IInput(void):m_pKeyboard(NULL){}
+	IInput(void) : m_pKeyboard(NULL), m_pMouse(NULL) {}
 	virtual ~IInput(void) = 0;
 
 	virtual IKeyboard* GetKeyboard(void) { return m_pKeyboard; }

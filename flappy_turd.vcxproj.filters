@@ -3,185 +3,200 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Animation.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\AnimationManager.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Appearance.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Camera.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\CFont.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Circle.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\CollidableGroup.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Command.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\CommandInterpreter.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\CullObjectOperator.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Debug.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\DebugState.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\DIKeyboard.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\DirectInput.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine2D.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\EventSystem.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Font.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Frame.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Game.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\GameObject.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\GameState.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Image.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\InputEvent.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\InputManager.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\IRenderer.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Menu.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\ObjectManager.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Plane.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Player.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\PlayState.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Popup.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\ProgramStack.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Renderer.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\RendererDX.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\SDSParser.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Slider.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Sound.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Sprite.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\SpriteManager.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Square.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Stage.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StartState.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StateMachine.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Timer.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Trigger.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\VirtualButton.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\VirtualGamePad.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\Window.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\WorldOperator.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\XAudio.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
     <ClCompile Include="src\XAudioFile.cpp">
-      <Filter>cpp\engine2Dbase</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Stage.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StartState.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StateMachine.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Trigger.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UpdateBackgroundOperator.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="cpp">
-      <UniqueIdentifier>{1eb30f23-2679-477c-8140-238a7948bec2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="cpp\engine2Dbase">
+    <Filter Include="engine2Dbase">
       <UniqueIdentifier>{80b93f5b-06f2-4067-b310-a318c75f8d98}</UniqueIdentifier>
     </Filter>
-    <Filter Include="h">
+    <Filter Include="engine2Dbase\cpp">
+      <UniqueIdentifier>{1eb30f23-2679-477c-8140-238a7948bec2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine2Dbase\h">
       <UniqueIdentifier>{2f943bb8-a2db-4f3f-be24-07a474e1ad4c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\UpdateRenderableOperator.h">
-      <Filter>h</Filter>
-    </ClInclude>
     <ClInclude Include="src\MaxVelocityOperator.h">
-      <Filter>h</Filter>
+      <Filter>engine2Dbase\h</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine2D.h">
-      <Filter>h</Filter>
+      <Filter>engine2Dbase\h</Filter>
     </ClInclude>
     <ClInclude Include="src\Positionable.h">
-      <Filter>h</Filter>
+      <Filter>engine2Dbase\h</Filter>
     </ClInclude>
     <ClInclude Include="src\Square.h">
-      <Filter>h</Filter>
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UpdateRenderableOperator.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KEYBOARD_KEYS.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KEYBOARD_KEYS_DI.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IInput.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IRenderer.h">
+      <Filter>engine2Dbase\h</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

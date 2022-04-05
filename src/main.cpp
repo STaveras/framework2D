@@ -1,12 +1,12 @@
 // main.cpp
 #include "Engine2D.h"
 #include "Camera.h"
-// #include "Input.h"
-// #include "InputEvent.h"
+#include "Input.h"
+#include "InputEvent.h"
 #include "Game.h"
 #include "GameState.h"
-//#include "GameObject.h"
-//#include "Renderer.h"
+#include "GameObject.h"
+#include "Renderer.h"
 #include "Window.h"
 
 //#include "SDSParser.h"
@@ -25,9 +25,7 @@ class FlappyTurd : public Game
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
-      Image *_background; // Lights; the set
-      Camera *_camera;    // Camera
-      Player *_player;    // Action; the actors
+      Image* _background; // Lights; the set
 
       // Game rules
       FollowObject _attachCamera;
@@ -55,7 +53,7 @@ class FlappyTurd : public Game
          //};
 
       public:
-         Turd(void)
+         Turd(void) : GameObject()
          {
             // NOTE: All of this should ideally be in a script
             GameObjectState *falling = this->addState("Falling");
@@ -97,7 +95,7 @@ class FlappyTurd : public Game
 
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setBackground(_background);
-         _updateBackground.setMode(Background::Mode_Mirror);
+         _updateBackground.setMode(Background::Mode::Mirror);
 
          _objectManager.addObject("Turd", new Turd);
          _objectManager.pushOperator(&_updateBackground);
@@ -107,13 +105,11 @@ class FlappyTurd : public Game
          _objectManager.pushOperator(&_attachCamera);
          _objectManager.getGameObject("Turd")->Initialize();
 
-         _player = new Player;
          _player->setGamePad(_inputManager.CreateGamePad());
          _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
 
-         _camera = new Camera;
          _objectManager.addObject("Camera", _camera);
          _updateBackground.setCamera(_camera);
 
@@ -123,28 +119,31 @@ class FlappyTurd : public Game
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
-      // void onExecute(float time)
-      //{
-      //  TODO: Check if the player hit anything and trigger a gamestate change
-      //   GameState::onExecute(time);
-      //}
+      void onExecute(float time)
+      {
+         GameState::onExecute(time);
+
+         //  TODO: Check if the player hit anything and trigger a gamestate change
+
+         if (_camera) {
+             if (!_camera->OnScreen(_player->getGameObject())) {
+                 Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
+             }
+         }
+      }
 
       void onExit(void)
       {
-         // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         delete _camera;
-
-         // I feel like players shouldn't "shutdown"
-         _player->shutdown();
+          // I feel like players shouldn't "shutdown"
+          _player->shutdown();
 
          _objectManager.clearOperators();
          _objectManager.removeObject("Turd");
-
-         delete _player->getGameObject();
-         delete _player;
+         _updateBackground.setBackground(NULL);
 
          _renderList->remove(_background);
 
+         delete _player->getGameObject();
          delete _background;
 
          GameState::onExit();
@@ -162,7 +161,7 @@ public:
    void End(void)
    {
       IProgramState *playState = this->top();
-      this->pop();
+      this->clear();
       delete playState;
    }
 } game;
@@ -176,7 +175,7 @@ int main(int argc, char **argv)
    Window window = Window(320, 460, "Flap a Turd");
 
 #ifdef _WIN32
-   rndrWind.Initialize(hInstance, lpCmdLine);
+   window.Initialize(hInstance, lpCmdLine);
 
    DirectInput *pInput = (DirectInput *)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
    RendererDX *pRenderer = (RendererDX *)Renderer::CreateDXRenderer(window.GetHWND(), 320, 480, false, false);
@@ -184,12 +183,14 @@ int main(int argc, char **argv)
    window.Initialize();
 
    RendererVK *pRenderer = (RendererVK *)Renderer::CreateVKRenderer(&window);
+   IInput *pInput = NULL;
+   
 #endif
 
    Engine2D *engine = Engine2D::getInstance();
-   //    engine->SetInputInterface(pInput);
+   engine->SetInputInterface(pInput);
    engine->SetRenderer(pRenderer);
-   //    engine->SetGame(&game);
+   engine->SetGame(&game);
    engine->Initialize();
 
    while (!window.HasQuit() && !engine->HasQuit())
@@ -199,9 +200,9 @@ int main(int argc, char **argv)
    }
 
    engine->Shutdown();
-
-   //    Input::DestroyInputInterface(pInput);
-   //    Renderer::DestroyRenderer(pRenderer);
+   
+   Input::DestroyInputInterface(pInput);
+   Renderer::DestroyRenderer(pRenderer);
 
    window.Shutdown();
 

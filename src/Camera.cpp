@@ -44,9 +44,9 @@ bool Camera::OnScreen(GameObject *object)
 {
    Square square(vector2(_position.x - (m_nScreenWidth * 0.5f), 
                          _position.y - (m_nScreenHeight * 0.5f)),
-                         m_nScreenWidth, m_nScreenHeight);
+                         static_cast<float>(m_nScreenWidth), static_cast<float>(m_nScreenHeight));
 
-   ObjectState *objectState = object->GetCurrentState();
+   ObjectState *objectState = (ObjectState*)object->GetCurrentState();
 
    if (objectState->getCollidable()) {
       return objectState->getCollidable()->Check(&square);

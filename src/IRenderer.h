@@ -16,7 +16,9 @@ class Camera;
 class IRenderer
 {
 public:
-	typedef std::list<class Renderable *> RenderList;
+	 typedef struct RenderList : public std::list<class Renderable*> {
+		  // TODO: Add other state information
+	 }RenderList;
 
 protected:
 	bool m_bStaticBG;
@@ -29,8 +31,8 @@ protected:
 	Factory<ITexture> m_Textures;
 	Factory<RenderList> _RenderLists;
 
-	void _BackgroundColorShift(void);
-	ITexture *_TextureExists(const char *szFilename);
+	 void _BackgroundColorShift(void);
+	 ITexture* _TextureExists(const char* szFilename);
 
 public:
 	IRenderer(void) : m_bStaticBG(false),
@@ -42,10 +44,20 @@ public:
 		_RenderLists.Create();
 	} // Comes with one global render list
 
-	IRenderer(int nWidth, int nHeight) : m_bStaticBG(false), m_nWidth(nWidth), m_nHeight(nHeight), m_ClearColor(0xFFFFFFFF), m_pCamera(NULL) {}
+	IRenderer(int nWidth, int nHeight) :
+		 m_bStaticBG(false),
+		 m_bFullScreen(false),
+		 m_bVerticalSync(false), 
+		 m_nWidth(nWidth), 
+		 m_nHeight(nHeight), 
+		 m_ClearColor(0xFFFFFFFF),
+		 m_pCamera(NULL) {}
+
 	virtual ~IRenderer() = 0;
 
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
+	bool isFullScreen(void) const { return m_bFullScreen; }
+	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
 	int GetWidth(void) const { return m_nWidth; }
 	int GetHeight(void) const { return m_nHeight; }
 	color GetClearColor(void) const { return m_ClearColor; }
@@ -62,18 +74,21 @@ public:
 	}
 	void SetCamera(Camera *pCamera);
 
-	virtual ITexture *CreateTexture(const char *szFilename, color colorKey = 0) = 0;
-	virtual bool DestroyTexture(const ITexture *pTexture);
+	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }
+	virtual void setVerticalSync(bool vsyncEnabled) { m_bVerticalSync = vsyncEnabled; }
 
-	void PushRenderList(RenderList *pRenderList) { _RenderLists.Store(pRenderList); }
-	void PopRenderList(void) { _RenderLists.Erase(_RenderLists.End()); }
+	 virtual ITexture* CreateTexture(const char* szFilename, color colorKey = 0) = 0;
+	 virtual bool DestroyTexture(const ITexture* pTexture);
 
-	RenderList *CreateRenderList(void) { return _RenderLists.Create(); }
-	void DestroyRenderList(RenderList *list) { _RenderLists.Destroy(list); }
+	 void PushRenderList(RenderList* pRenderList) { _RenderLists.Store(pRenderList); }
+	 void PopRenderList(void) { _RenderLists.Erase(_RenderLists.End()); }
 
-	virtual void Initialize(void) = 0;
-	virtual void Shutdown(void) = 0;
-	virtual void Render(void) = 0;
+	 RenderList* CreateRenderList(void) { return _RenderLists.Create(); }
+	 void DestroyRenderList(RenderList* list) { _RenderLists.Destroy(list); }
+
+	 virtual void Initialize(void) = 0;
+	 virtual void Shutdown(void) = 0;
+	 virtual void Render(void) = 0;
 };
 
 #endif

@@ -5,7 +5,10 @@
 
 #pragma once
 
+#ifdef _WIN32
+
 #include "IInput.h"
+
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 
@@ -25,3 +28,5 @@ public:
 	void Update(void);
 	void Shutdown(void);
 };
+
+#endif
