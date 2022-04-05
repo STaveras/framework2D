@@ -16,10 +16,6 @@ class GameObject : public StateMachine, public Positionable
    // GameObject is a lil' dim
    friend class ObjectOperator;
 
-   //void _OnKeyPressed(const Event & e);
-   //void _OnKeyReleased(const Event & e);
-   //void _OnAnimationStopped(const Event& e);
-
 public:
    class GameObjectState : public State
    {
@@ -67,7 +63,7 @@ protected:
    vector2 _velocity;
 
 public:
-   GameObject(void) :m_eType(GAME_OBJ_NULL), _rotation(0.0f) {}
+   GameObject(void) : m_eType(GAME_OBJ_NULL), _rotation(0.0f) {}
    GameObject(GAME_OBJ_TYPE eType) :m_eType(eType), _rotation(0.0f) {}
    ~GameObject(void) {}
 
@@ -80,9 +76,8 @@ public:
    GameObjectState* addState(const char* szName);
    //void setAnimation(Animation* ani);
    //void setStateAnimation(const char* stateName, Animation* ani);
-   //GameObjectState* GetCurrentState() const { return (GameObjectState*)this->GetCurrentState(); }
 
-   // GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
+   GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
    virtual void Setup(void) {}
    virtual void update(float fTime);
@@ -91,6 +86,10 @@ public:
    void AddImpulse(vector2 direction, double force) {
       _velocity += (direction * (float)force);
    }
+
+   // TODO: GameObjects should maybe have an overload for operator()
+   //       they could take in other objects, and perform collision checks between it and the other object?
+   //       maybe do other things... 
 
 private:
     virtual void GameObject::_OnKeyPressed(const Event& e);

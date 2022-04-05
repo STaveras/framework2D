@@ -40,6 +40,9 @@ void ObjectManager::Update(float fTime)
 
             Collidable *collisionObject = objectState->getCollidable();
 
+            // TODO: We need to make checking collisions happen only once per pair of objects;
+            //       e.g. objA & objB will come up again, as objB & objA; the order of the two shouldn't matter
+
             if (collisionObject) {
 
                ObjectState *secondState = (ObjectState*)itr->second->GetCurrentState();
@@ -98,8 +101,7 @@ void ObjectManager::SendEvent(Event::event_key key, void* sender)
 {
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 
-   for (; itr != m_mObjects.end(); itr++)
-   {
+   for (; itr != m_mObjects.end(); itr++) {
       itr->second->SendInput(key, sender);
    }
 }

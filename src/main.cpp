@@ -25,9 +25,7 @@ class FlappyTurd : public Game
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
-      Image *_background; // Lights; the set
-      Camera *_camera;    // Camera
-      Player *_player;    // Action; the actors
+      Image* _background; // Lights; the set
 
       // Game rules
       FollowObject _attachCamera;
@@ -55,7 +53,7 @@ class FlappyTurd : public Game
          //};
 
       public:
-         Turd(void)
+         Turd(void) : GameObject()
          {
             // NOTE: All of this should ideally be in a script
             GameObjectState *falling = this->addState("Falling");
@@ -107,13 +105,11 @@ class FlappyTurd : public Game
          _objectManager.pushOperator(&_attachCamera);
          _objectManager.getGameObject("Turd")->Initialize();
 
-         _player = new Player;
          _player->setGamePad(_inputManager.CreateGamePad());
          _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
 
-         _camera = new Camera;
          _objectManager.addObject("Camera", _camera);
          _updateBackground.setCamera(_camera);
 
@@ -123,29 +119,31 @@ class FlappyTurd : public Game
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
 
-      // void onExecute(float time)
-      //{
-      //  TODO: Check if the player hit anything and trigger a gamestate change
-      //   GameState::onExecute(time);
-      //}
+      void onExecute(float time)
+      {
+         GameState::onExecute(time);
+
+         //  TODO: Check if the player hit anything and trigger a gamestate change
+
+         if (_camera) {
+             if (!_camera->OnScreen(_player->getGameObject())) {
+                 Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
+             }
+         }
+      }
 
       void onExit(void)
       {
-         // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
-         delete _camera;
-
-         // I feel like players shouldn't "shutdown"
-         _player->shutdown();
+          // I feel like players shouldn't "shutdown"
+          _player->shutdown();
 
          _objectManager.clearOperators();
          _objectManager.removeObject("Turd");
-
-         delete _player->getGameObject();
-         delete _player;
-
          _updateBackground.setBackground(NULL);
+
          _renderList->remove(_background);
 
+         delete _player->getGameObject();
          delete _background;
 
          GameState::onExit();
