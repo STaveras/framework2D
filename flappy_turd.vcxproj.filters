@@ -166,6 +166,9 @@
     <Filter Include="engine2Dbase">
       <UniqueIdentifier>{80b93f5b-06f2-4067-b310-a318c75f8d98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine2Dbase\cpp">
+      <UniqueIdentifier>{1eb30f23-2679-477c-8140-238a7948bec2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="engine2Dbase\h">
       <UniqueIdentifier>{2f943bb8-a2db-4f3f-be24-07a474e1ad4c}</UniqueIdentifier>
     </Filter>

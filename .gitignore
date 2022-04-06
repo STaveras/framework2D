@@ -1,10 +1,11 @@
 Debug/
-.vs/
-enc_temp_folder/
 Release/
+enc_temp_folder/
+.vs/
 *.iobj
 *.ipdb
 *.vcxproj.user
 *.pdb
 *.ilk
-bin/flappy_turd_d.exe
+bin/*.exe
+/add/inc/glm

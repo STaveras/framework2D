@@ -6,6 +6,7 @@
 #include "Renderable.h"
 #include "StateMachine.h"
 #include "Types.h"
+#include "ObjectOperator.h"
 
 class Collidable;
 
@@ -15,9 +16,8 @@ class GameObject : public StateMachine, public Physical
 
    friend class ObjectOperator;
 
-   //void _OnKeyPressed(const Event & e);
-   //void _OnKeyReleased(const Event & e);
-   //void _OnAnimationStopped(const Event& e);
+protected:
+   Factory<ObjectOperator> _specialOpsFactory; // lmao
 
 public:
    class GameObjectState : public State
@@ -47,7 +47,7 @@ public:
       void setCollidable(Collidable* collidable) { _collidable = collidable; }
 
       vector2 getDirection(void) const { return _direction; }
-      void setDirection(vector2 direction) { /*D3DXNormalize*/ _direction = direction; }
+      void setDirection(vector2 direction) { _direction = direction; }
 
       double getForce(void) const { return _force; }
       void setForce(double force) { _force = force; }
@@ -68,9 +68,6 @@ public:
    ~GameObject(void) {}
 
    GAME_OBJ_TYPE GetType(void) const { return m_eType; }
-
-   //void setAnimation(Animation* ani);
-   //void setStateAnimation(const char* stateName, Animation* ani);
 
    GameObjectState* addState(const char* szName);
    GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot

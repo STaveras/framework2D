@@ -3,25 +3,26 @@
 #include "Event.h"
 #include "GameObject.h"
 
+// I don't think there should be a Player class, anymore :(
+
 class VirtualGamePad;
 class Player
 {
-	friend class GameState;
+	 friend class GameState;
 
-	VirtualGamePad* _pad;
-	GameObject* _object;
+	 VirtualGamePad* _pad;
+	 GameObject* _object;
 
-	void _OnKeyPress(const Event& evt);
-  void _OnKeyRelease(const Event & evt);
+	 void _OnKeyPress(const Event& evt);
+	 void _OnKeyRelease(const Event& evt);
 
 public:
-	GameObject* getGameObject(void) const { return _object; }
-  void setGameObject(GameObject* object) { _object = object; }
+	 GameObject* getGameObject(void) const { return _object; }
+	 void setGameObject(GameObject* object) { _object = object; }
 
-	VirtualGamePad* getGamePad(void) const { return _pad; }
-	void setGamePad(VirtualGamePad* pad) { _pad = pad; }
+	 VirtualGamePad* getGamePad(void) const { return _pad; }
+	 void setGamePad(VirtualGamePad* pad) { _pad = pad; }
 
-	void setup(void);
-	//void update(float time);
-	void shutdown(void);
+	 void setup(void);
+	 void shutdown(void);
 };

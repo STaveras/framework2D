@@ -39,16 +39,20 @@ public:
 	template<class T>
 	void Unregister(Event::event_key evtKey, T* p, void (T::*fn)(const Event&));
 	void Unregister(Event::event_key evtKey, void (*fn)(const Event&));
+	
+	//template<class T>
+	//void UnregisterAll(T* p); 
+	// TODO: Unregister object from everything associated with it
 
 	template<class T>
 	void UnregisterAll(T* p, void (T::*fn)(const Event&));
-	//template<class T>
-	//void UnregisterAll(T* p);
 	void UnregisterAll(void (*fn)(const Event&));
 
 	template<class T>
-	void sendEvent(const T& evt);
-	void sendEvent(Event::event_key evtKey, void* pSender, Event::event_priority_level ePriority = Event::event_priority_normal);
+	void sendEvent(const T& evt, void* pSender = NULL, Event::event_priority_level ePriority = Event::event_priority_normal);
+	void sendEvent(Event::event_key evtKey, void* pSender = NULL, Event::event_priority_level ePriority = Event::event_priority_normal);
+	
+	typedef void (EventHandler)(const Event&);
 
 	void FlushEvents(void);
 	void ProcessEvents(void);

@@ -5,18 +5,19 @@
 
 #include "Plane.h"
 
-bool Plane::WithCircle(const Circle* circle)
-{
-	return false;
-}
+//bool WithCircle(const Circle* circle);
+//bool WithPlane(const Plane* plane);
+//bool WithSquare(const Square* square);
 
-bool Plane::WithPlane(const Plane* plane)
-{
-	return false;
-}
+bool Plane::Check(const Collidable* c) {
 
-bool Plane::WithSquare(const Square* square)
-{
-	return false;
-}
+	 switch (c->getType()) {
+	 case COL_OBJ_PLANE:
 
+
+		  break;
+	 default:
+		  return false;
+
+	 }
+}
