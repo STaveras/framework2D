@@ -36,7 +36,7 @@ bool Camera::OnScreen(GameObject *object)
 {
    Square square(vector2(_position.x - (m_nScreenWidth * 0.5f), 
                          _position.y - (m_nScreenHeight * 0.5f)),
-                         (float)m_nScreenWidth, (float)m_nScreenHeight);
+                         static_cast<float>(m_nScreenWidth), static_cast<float>(m_nScreenHeight));
 
    ObjectState *objectState = object->getState();
 

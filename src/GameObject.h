@@ -78,6 +78,10 @@ public:
    virtual void Setup(void) {}
    virtual void update(float fTime);
    virtual void Shutdown(void) {}
+
+   // TODO: GameObjects should maybe have an overload for operator()
+   //       they could take in other objects, and perform collision checks between it and the other object?
+   //       maybe do other things... 
 };
 typedef GameObject::GameObjectState ObjectState;
 #endif

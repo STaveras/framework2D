@@ -5,29 +5,32 @@
 #include "InputManager.h"	
 #include "ObjectManager.h"
 #include "Player.h"
+#include "Camera.h"
 class GameState : public IProgramState
 {
-   Factory<Sprite> _sprites;
-
-   void _OnObjectStateEnter(const Event& e);
-   void _OnObjectStateExit(const Event& e);
-   void _OnObjectAdded(const Event& e);
-   void _OnObjectRemoved(const Event& e);
+   virtual void _OnObjectStateEnter(const Event& e);
+   virtual void _OnObjectStateExit(const Event& e);
+   virtual void _OnObjectAdded(const Event& e);
+   virtual void _OnObjectRemoved(const Event& e);
 
    friend Game;
 
 protected:
-   IRenderer::RenderList* _renderList;
+   Player*                _player = NULL; // Action; the actors
+   Camera*                _camera = NULL; // Camera
+   Factory<Sprite>        _sprites;
+   IRenderer::RenderList* _renderList = NULL;
 
+   // Should gamestate *be* all three of these? (inherit from, instead of having)
    AnimationManager _animationManager;
    InputManager     _inputManager;
    ObjectManager    _objectManager;
 
 public:
-   GameState(void) : IProgramState() { }
-   ~GameState(void) { }
+    GameState(void) : IProgramState() { _player = new Player; _camera = new Camera; }
+   ~GameState(void) { delete _camera; delete _player; }
 
-   Sprite* AddSprite(const char* filename, color clearColor = 0, rect* srcRect = NULL);
+   Sprite* addSprite(const char* filename, color clearColor = 0, rect* srcRect = NULL);
    void removeSprite(Sprite* sprite);
 
    //void addObject(GameObject* object);

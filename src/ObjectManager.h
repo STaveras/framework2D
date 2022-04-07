@@ -11,10 +11,11 @@
 class GameObject;
 class ObjectOperator;
 
+// Maybe should also be a factory?
 class ObjectManager
 {
-   std::map<std::string, GameObject*> m_mObjects;
-   std::list<ObjectOperator*> m_lsObjOperators;
+	 std::map<std::string, GameObject*> m_mObjects;
+	 std::list<ObjectOperator*> m_lsObjOperators;
 
 public:
 
@@ -30,14 +31,14 @@ public:
 
    GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
 
-   void Update(float fTime);
+	 void Update(float fTime);
 
-   void addObject(const char* name, GameObject* object);
-   void removeObject(const char* name);
+	 void addObject(const char* name, GameObject* object);
+	 void removeObject(const char* name);
 
-   void pushOperator(ObjectOperator* objOperation);
-   void popOperator(void);
-   void clearOperators(void);
+	 void pushOperator(ObjectOperator* objOperation);
+	 void popOperator(void);
+	 void clearOperators(void);
 
    size_t numObjects(void) const { return m_mObjects.size(); }
 

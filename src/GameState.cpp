@@ -5,7 +5,7 @@
 
 Engine2D* engine = Engine2D::getInstance();
 
-Sprite* GameState::AddSprite(const char * filename, color clearColor, rect* srcRect)
+Sprite* GameState::addSprite(const char * filename, color clearColor, rect* srcRect)
 {
    Sprite* sprite = _sprites.Create(Sprite(filename, clearColor, srcRect));
    _renderList->push_back(sprite);
@@ -29,10 +29,14 @@ void GameState::removeSprite(Sprite * sprite)
 
 void GameState::onEnter(void)
 {
+   _camera = new Camera;
+   _player = new Player; // I think players should have a Camera pointer
    _renderList = engine->GetRenderer()->CreateRenderList();
 
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
+   engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_ADDED", this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_REMOVED", this, &GameState::_OnObjectAdded);
 
    _animationManager.Initialize(_renderList);
    _inputManager.Initialize(engine->getEventSystem(),
@@ -51,10 +55,15 @@ void GameState::onExit(void)
    _inputManager.Shutdown();
    _animationManager.Shutdown();
 
+   engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_REMOVED", this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_ADDED", this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->Unregister<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->Unregister<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
 
    engine->GetRenderer()->DestroyRenderList(_renderList);
+
+   delete _player;
+   delete _camera;
 }
 
 ///
@@ -88,13 +97,15 @@ void GameState::_OnObjectStateExit(const Event& e) {
 void GameState::_OnObjectAdded(const Event & e)
 {
    // Do something
-   throw "GameState::_OnObjectAdded unimplemented";
+   // TODO: GameState::_OnObjectAdded (y tho)
+   //throw "GameState::_OnObjectAdded unimplemented";
 }
 
 void GameState::_OnObjectRemoved(const Event & e)
 {
    // Do something
-   throw "GameState::_OnObjectRemoved unimplemented";
+   // TODO: GameState::_OnObjectRemoved (???)
+   //throw "GameState::_OnObjectRemoved unimplemented";
 }
 
 // Author: Stanley Taveras

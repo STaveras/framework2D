@@ -207,6 +207,9 @@
     <ClInclude Include="src\ForceDegradation.h">
       <Filter>engine2Dbase\operators</Filter>
     </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="doc\todo.txt">

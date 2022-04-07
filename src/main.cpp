@@ -29,9 +29,7 @@ class FlappyTurd : public Game
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
-      //Image* _background; // Lights; the set
-      Camera* _camera; // Camera
-      Player* _player; // Action; the actors
+      Image* _background; // Lights; the set
 
       // Game rules
       FollowObject _attachCamera;
@@ -59,7 +57,7 @@ class FlappyTurd : public Game
          //};
 
       public:
-         Turd(void)
+         Turd(void) : GameObject()
          {
             // NOTE: All of this should ideally be in a script
             GameObjectState* falling = this->addState("Falling");
@@ -117,12 +115,13 @@ class FlappyTurd : public Game
          _objectManager.pushOperator(&_attachCamera);
          _objectManager.getGameObject("Turd")->Initialize();
 
-         _player = new Player;
          _player->setGamePad(_inputManager.CreateGamePad());
          _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
          _player->setGameObject(_objectManager.getGameObject("Turd"));
          _player->setup();
 
+         _objectManager.addObject("Camera", _camera);
+         _updateBackground.setCamera(_camera);
          //_camera->SetZoom(0.5);
 
          _attachCamera.setSource(_camera);
@@ -161,6 +160,12 @@ class FlappyTurd : public Game
             }
          }
 #endif
+         if (_camera) {
+             if (!_camera->OnScreen(_player->getGameObject())) {
+                 Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
+             }
+         }
+
          if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {
             Engine2D::Quit();
          }
@@ -168,7 +173,6 @@ class FlappyTurd : public Game
 
       void onExit(void)
       {
-         // Figure out pausing...? (Wrapping this in a 'paused' bool before pushing the PauseState?)
          _player->shutdown();
 
          _objectManager.clearOperators();
@@ -182,11 +186,7 @@ class FlappyTurd : public Game
          }
 
          delete _player->getGameObject();
-         delete _player;
-
          delete _updateBackground.getBackground();
-
-         delete _camera;
 
          GameState::onExit();
       }
