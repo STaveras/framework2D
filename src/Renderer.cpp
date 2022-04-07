@@ -2,34 +2,47 @@
 #include "Renderer.h"
 #include "Engine2D.h"
 
-IRenderer* Renderer::Get(void) { return Engine2D::getInstance()->GetRenderer(); }
+Window *Renderer::window = NULL;
 
+IRenderer *Renderer::Get(void) { return Engine2D::GetRenderer(); }
+
+#if _WIN32
 // This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
-IRenderer* Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
+IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
 {
-	IRenderer* renderer = new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync);
+	IRenderer *renderer = new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync);
 	return renderer;
 }
+#else
+IRenderer *Renderer::CreateVKRenderer(Window *window)
+{
+	Renderer::window = window;
+	IRenderer *renderer = new RendererVK();
+	renderer->SetWidth(window->GetWidth());
+	renderer->SetHeight(window->GetHeight());
+	return renderer;
+}
+#endif
 
-void Renderer::DestroyRenderer(IRenderer* pRenderer)
-{ 
-	if(pRenderer)
-	{ 
-		pRenderer->Shutdown(); 
-		delete pRenderer; 
-	} 
+void Renderer::DestroyRenderer(IRenderer *pRenderer)
+{
+	if (pRenderer)
+	{
+		pRenderer->Shutdown();
+		delete pRenderer;
+	}
 }
 
-//void Renderer::Render(Renderable* r)
+// void Renderer::Render(Renderable* r)
 //{
-//    // TODO: Improve this massively.
-//    IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
-//    renderList->push_back(r);
-//    Engine2D::getInstance()->GetRenderer()->DestroyRenderList(renderList);
-//}
+//     // TODO: Improve this massively.
+//     IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
+//     renderList->push_back(r);
+//     Engine2D::getInstance()->GetRenderer()->DestroyRenderList(renderList);
+// }
 //
-//void Renderer::AddToRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable) { pRenderList->push_back(pRenderable); }
-//bool Renderer::RemoveFromRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable)
+// void Renderer::AddToRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable) { pRenderList->push_back(pRenderable); }
+// bool Renderer::RemoveFromRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable)
 //{
 //	std::list<Renderable*>::iterator itr = pRenderList->begin();
 //	for(;itr != pRenderList->end();itr++)
@@ -42,7 +55,7 @@ void Renderer::DestroyRenderer(IRenderer* pRenderer)
 //	}
 //
 //	return false;
-//}
+// }
 //
-//void Renderer::AddToRenderList(Renderable* pRenderable) { AddToRenderList(&g_RenderList, pRenderable); }
-//bool Renderer::RemoveFromRenderList(Renderable* pRenderable) { return RemoveFromRenderList(&g_RenderList, pRenderable); }
+// void Renderer::AddToRenderList(Renderable* pRenderable) { AddToRenderList(&g_RenderList, pRenderable); }
+// bool Renderer::RemoveFromRenderList(Renderable* pRenderable) { return RemoveFromRenderList(&g_RenderList, pRenderable); }

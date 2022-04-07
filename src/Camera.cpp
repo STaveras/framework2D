@@ -38,7 +38,7 @@ bool Camera::OnScreen(GameObject *object)
                          _position.y - (m_nScreenHeight * 0.5f)),
                          static_cast<float>(m_nScreenWidth), static_cast<float>(m_nScreenHeight));
 
-   ObjectState *objectState = object->getState();
+   ObjectState *objectState = (ObjectState*)object->GetCurrentState();
 
    if (objectState->getCollidable()) {
       return objectState->getCollidable()->Check(&square);

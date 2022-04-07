@@ -42,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)_d</TargetName>
     <OutDir>.\bin\</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86;$(VK_SDK_PATH)\Lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\bin\</OutDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86;$(VK_SDK_PATH)\Lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,6 +129,7 @@
     <ClCompile Include="src\StateMachine.cpp" />
     <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\Trigger.cpp" />
+    <ClCompile Include="src\UpdateBackgroundOperator.cpp" />
     <ClCompile Include="src\VirtualButton.cpp" />
     <ClCompile Include="src\VirtualGamePad.cpp" />
     <ClCompile Include="src\Window.cpp" />
@@ -141,10 +142,15 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
+    <ClInclude Include="src\IInput.h" />
+    <ClInclude Include="src\IRenderer.h" />
+    <ClInclude Include="src\KEYBOARD_KEYS.h" />
+    <ClInclude Include="src\KEYBOARD_KEYS_DI.h" />
     <ClInclude Include="src\ForceDegradation.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Positionable.h" />
     <ClInclude Include="src\Square.h" />
+    <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />
   </ItemGroup>

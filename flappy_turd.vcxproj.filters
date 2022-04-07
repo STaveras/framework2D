@@ -158,6 +158,25 @@
     <ClCompile Include="src\XAudioFile.cpp">
       <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="src\Stage.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StartState.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StateMachine.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Trigger.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UpdateBackgroundOperator.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
     <ClCompile Include="src\DIMouse.cpp">
       <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
@@ -195,6 +214,22 @@
     <ClInclude Include="src\Square.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
+    <ClInclude Include="src\UpdateRenderableOperator.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KEYBOARD_KEYS.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KEYBOARD_KEYS_DI.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IInput.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IRenderer.h">
+      <Filter>engine2Dbase\h</Filter>
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
     <ClInclude Include="src\DIMouse.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
@@ -208,6 +243,9 @@
       <Filter>engine2Dbase\operators</Filter>
     </ClInclude>
     <ClInclude Include="src\Camera.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Types.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
   </ItemGroup>

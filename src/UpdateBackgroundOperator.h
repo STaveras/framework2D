@@ -30,47 +30,36 @@ class UpdateBackgroundOperator: public ObjectOperator
 
    Background::Mode _mode;
 
-   void _updateCache() {
-
-   }
-
-   void _update() {
-
-   }
-
-   void updatePos(D3DXVECTOR2 &lastPos, short axis, short flip)
-   {
-      lastPos.x += (axis == 0 ? flip * _background->getWidth() : 0);
-      lastPos.y += (axis == 1 ? flip * _background->getHeight() : 0);
-   }
+   void _updatePos(vector2& lastPos, short axis, short flip);
+   void _clearCache(void);
+   void _updateCache(void);
 
 public:
 
    ~UpdateBackgroundOperator() {
-      clearCache();
+      _clearCache();
    }
 
    Image* getBackground(void) const { return _background; }
 
    void setMode(Background::Mode mode) { _mode = mode; }
-   void setBackground(Image *image) { _background = image; _firstRun = true; }
+   void setBackground(Image *image) { _background = image; _clearCache(); }
    void setCamera(Camera *camera) { _camera = camera; }
 
-   void useRenderList(IRenderer::RenderList *renderList) { _renderList = renderList; clearCache(); }
-
-   void clearCache(void) {
-
-      while (!_cache.empty()) {
-         _renderList->remove(_cache.back());
-         delete _cache.back();
-         _cache.pop_back();
-      }
-
-      _firstRun = true;
-   }
+   void useRenderList(IRenderer::RenderList *renderList) { _renderList = renderList; _clearCache(); }
 
    bool operator()(GameObject *object) {
 
+      _updateCache();
+
+      switch (_mode) {
+      case Background::Mode::Repeat:
+         break;
+      case Background::Mode::Mirror:
+          break;
+      default: // Background::Mode::Still:
+         break; // Do nothing, really
+      }
       return true;
    }
 };

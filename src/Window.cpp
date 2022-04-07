@@ -5,14 +5,22 @@
 
 #include "Window.h"
 
+// NOTE: We're going to have to redesign a large portion of this eventually
+
+#include <iostream>
+
 Window::Window(void):
 	m_bHasQuit(false),
 	m_nWidth(640),
 	m_nHeight(480),
+#ifdef _WIN32
 	m_hWnd(NULL),
 	m_hDC(NULL),
 	m_hInstance(NULL),
 	m_lpCmdLine(NULL),
+#else
+	_window(NULL),
+#endif
 	m_szWindowTitle(""),
 	m_szWindowClassName("_ENGINE_2D_WINDOW")
 {}
@@ -21,16 +29,21 @@ Window::Window(int nWidth, int nHeight, const char* szWindowTitle, const char* s
 	m_bHasQuit(false),
 	m_nWidth(nWidth),
 	m_nHeight(nHeight),
+#ifdef _WIN32
 	m_hWnd(NULL),
 	m_hDC(NULL),
 	m_hInstance(NULL),
 	m_lpCmdLine(NULL),
+#else
+	_window(NULL),
+#endif
 	m_szWindowTitle(szWindowTitle),
 	m_szWindowClassName((!strcmp(szWindowClassName, "")) ? "_ENGINE_2D_WINDOW" : szWindowClassName)
 {}
 
 void Window::_resize(void)
 {
+#ifdef _WIN32
 	RECT rcClient, rcWindow;
 	POINT diff;
 
@@ -46,8 +59,10 @@ void Window::_resize(void)
 
 	// resize the client area
 	MoveWindow(m_hWnd,rcWindow.left, rcWindow.top, m_nWidth + diff.x, m_nHeight + diff.y, TRUE);
+#endif
 }
 
+#ifdef _WIN32
 LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch( msg )
@@ -81,10 +96,41 @@ void Window::Initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 	_resize();
 
 	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
+#else
+void Window::Initialize(void) {
+
+	#if __APPLE__
+	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_TRUE);
+	#endif
+
+    /* Initialize the library */
+    if (!glfwInit())
+        return; // -1
+
+	if (glfwVulkanSupported() == GLFW_FALSE) {
+		std::cout << "Vulkan is not supported on this platform." << std::endl;
+		return; 
+	}
+
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+	/* Create a windowed mode window and its OpenGL context */
+    _window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle, NULL, NULL);
+    if (!_window)
+    {
+        glfwTerminate();
+        return; // -1
+    }
+
+    /* Make the window's context current */
+    glfwMakeContextCurrent(_window);
+#endif
 }
 
 void Window::Update(void)
 {
+#ifdef _WIN32
 	MSG msg;
 	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
@@ -94,10 +140,30 @@ void Window::Update(void)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+	InvalidateRect(m_hWnd, NULL, true);
+#else
+	if (_window) {
+		/* Loop until the user closes the window */
+		m_bHasQuit = glfwWindowShouldClose(_window);
+
+		/* Poll for and process events */
+		glfwPollEvents();
+	}
+	/* Render here */
+	// glClear(GL_COLOR_BUFFER_BIT);
+
+	/* Swap front and back buffers */
+	//glfwSwapBuffers(window);
+#endif
 }
 
 void Window::Shutdown(void)
 {
+#ifdef _WIN32
     DestroyWindow(m_hWnd);
 	UnregisterClass(m_szWindowClassName, m_hInstance);
+#else
+	glfwDestroyWindow(_window);
+    glfwTerminate();
+#endif
 }

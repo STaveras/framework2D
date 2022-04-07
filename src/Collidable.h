@@ -1,7 +1,7 @@
 // File: Collidable.h
 #pragma once
 #include "COL_OBJ_TYPE.h"
-#include "Positionable.h"
+#include "positionable.h"
 #include "Types.h"
 #include "Event.h"
 

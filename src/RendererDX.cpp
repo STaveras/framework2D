@@ -10,6 +10,7 @@
 #include "Frame.h"
 #include "Renderable.h"
 #include "Image.h"
+#if _WIN32
 #include "TextureD3D.h"
 
 #pragma comment(lib, "d3d9.lib")
@@ -21,34 +22,29 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
-RendererDX::RendererDX(void) :
-   IRenderer(),
-   m_bFullscreen(true),
-   m_bVsync(true),
-   m_hWnd(NULL),
-   m_pD3D(NULL),
-   m_pD3DDevice(NULL),
-   m_pD3DSprite(NULL)
-{}
+RendererDX::RendererDX(void) : IRenderer(),
+							   m_hWnd(NULL),
+							   m_pD3D(NULL),
+							   m_pD3DDevice(NULL),
+							   m_pD3DSprite(NULL) {
+}
 
-RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) :
-   IRenderer(nWidth, nHeight),
-   m_bFullscreen(bFullscreen),
-   m_bVsync(bVsync),
-   m_hWnd(hWnd),
-   m_pD3D(NULL),
-   m_pD3DDevice(NULL),
-   m_pD3DSprite(NULL)
-{}
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight),
+m_hWnd(hWnd),
+m_pD3D(NULL),
+m_pD3DDevice(NULL),
+m_pD3DSprite(NULL)
+{
+}
 
 RendererDX::~RendererDX(void)
 {
    Shutdown();
 }
 
-//void RendererDX::_DrawAppearance(Appearance* pAppearance)
+// void RendererDX::_DrawAppearance(Appearance* pAppearance)
 //{
-//	// Calculate the tint and 
+//	// Calculate the tint and
 //	color tint = ((int)(pAppearance->GetAlpha() * 255) << 24) | (pAppearance->GetTint() & 0x00FFFFFF);
 //
 //	std::list<Image*>::const_iterator itr = pAppearance->GetSprites().begin();
@@ -60,10 +56,10 @@ RendererDX::~RendererDX(void)
 //
 //	if(pAppearance->GetAnimation())
 //		_DrawImage(pAppearance->GetAnimation()->GetCurrentFrame()->GetSprite(), tint, pAppearance->GetAnimation()->GetCurrentFrame()->GetAnchor());
-//}
+// }
 
 // Why do we have offset? Center is already an offset...
-void RendererDX::_DrawImage(Image* image, color tint, D3DXVECTOR2 offset)
+void RendererDX::_DrawImage(Image *image, color tint, D3DXVECTOR2 offset)
 {
    D3DXMATRIX transform;
    D3DXMatrixTransformation2D(&transform, &image->GetRectCenter(), 0.0f, &image->GetScale(), &image->GetCenter(), image->GetRotation(), NULL);
@@ -78,12 +74,12 @@ void RendererDX::_DrawImage(Image* image, color tint, D3DXVECTOR2 offset)
    m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), &image->GetSourceRect(), &D3DXVECTOR3(image->GetCenter().x * image->GetScale().x, image->GetCenter().y * image->GetScale().y, 0.0f), &position, tint._color);
 }
 
-//void RendererDX::_DrawFont(Font* pFont)
+// void RendererDX::_DrawFont(Font* pFont)
 //{
 
 //}
 
-ITexture* RendererDX::CreateTexture(const char* szFilename, color colorKey)
+ITexture *RendererDX::CreateTexture(const char *szFilename, color colorKey)
 {
    ITexture* pTexture = _TextureExists(szFilename);
 
@@ -121,12 +117,12 @@ void RendererDX::Initialize(void)
    D3DPRESENT_PARAMETERS D3DPP;
    ZeroMemory(&D3DPP, sizeof(D3DPP));
 
-   D3DPP.Windowed = (!m_bFullscreen) ? TRUE : FALSE;
+   D3DPP.Windowed = (!m_bFullScreen) ? TRUE : FALSE;
    D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
    D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
    D3DPP.BackBufferWidth = m_nWidth;
    D3DPP.BackBufferHeight = m_nHeight;
-   D3DPP.PresentationInterval = (m_bVsync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+   D3DPP.PresentationInterval = (m_bVerticalSync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
 
    m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
    if (m_pD3DDevice)
@@ -141,46 +137,44 @@ void RendererDX::Initialize(void)
 
 void RendererDX::Shutdown(void)
 {
-   if (m_pD3DSprite)
-   {
-      m_pD3DSprite->Release();
-      m_pD3DSprite = NULL;
-   }
+	if (m_pD3DSprite)
+	{
+		m_pD3DSprite->Release();
+		m_pD3DSprite = NULL;
+	}
 
-   if (m_pD3DDevice)
-   {
-      m_pD3DDevice->Release();
-      m_pD3DDevice = NULL;
-   }
+	if (m_pD3DDevice)
+	{
+		m_pD3DDevice->Release();
+		m_pD3DDevice = NULL;
+	}
 
-   if (m_pD3D)
-   {
-      m_pD3D->Release();
-      m_pD3D = NULL;
-   }
+	if (m_pD3D)
+	{
+		m_pD3D->Release();
+		m_pD3D = NULL;
+	}
 }
 
 void RendererDX::Render(void)
 {
-   if (!m_pD3DDevice)
-      return;
+	if (!m_pD3DDevice)
+		return;
 
-   _BackgroundColorShift();
+	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 
-   m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
+	// Begin drawing the scene
+	if (SUCCEEDED(m_pD3DDevice->BeginScene()))
+	{
+		// TODO : (Optional) 3D Rendering here
 
-   // Begin drawing the scene
-   if (SUCCEEDED(m_pD3DDevice->BeginScene()))
-   {
-      // TODO : (Optional) 3D Rendering here
-
-      // Draw sprites 
-      if (SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
-      {
-         if (m_pCamera)
-         {
-            D3DXMATRIX viewMat;
-            D3DXMatrixIdentity(&viewMat);
+		// Draw sprites
+		if (SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
+		{
+			if (m_pCamera)
+			{
+				D3DXMATRIX viewMat;
+				D3DXMatrixIdentity(&viewMat);
 
             D3DXMATRIX scaleMat;
             D3DXMatrixScaling(&scaleMat, m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
@@ -236,5 +230,5 @@ void RendererDX::Render(void)
    }
 
    m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
-   InvalidateRect(m_hWnd, NULL, true);
 }
+#endif

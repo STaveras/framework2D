@@ -29,8 +29,6 @@ void GameState::removeSprite(Sprite * sprite)
 
 void GameState::onEnter(void)
 {
-   _camera = new Camera;
-   _player = new Player; // I think players should have a Camera pointer
    _renderList = engine->GetRenderer()->CreateRenderList();
 
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
@@ -61,9 +59,6 @@ void GameState::onExit(void)
    engine->getEventSystem()->Unregister<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
 
    engine->GetRenderer()->DestroyRenderList(_renderList);
-
-   delete _player;
-   delete _camera;
 }
 
 ///

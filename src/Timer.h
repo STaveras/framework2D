@@ -4,7 +4,9 @@
 
 #pragma once
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 class Timer
 {
@@ -14,13 +16,19 @@ class Timer
 	unsigned int	m_uiTicks;
 	unsigned int	m_uiCurrentFPS;
 
+#ifdef _WIN32
 	LARGE_INTEGER	m_liFrequency;
 	LARGE_INTEGER	m_liDelta;
 	LARGE_INTEGER	m_liElapsed;
 	LARGE_INTEGER	m_liTimer; // Used internally for calculating FPS
+#endif
 
 	double _GetTimer(void);
-	void _ResetTimer(void) { QueryPerformanceCounter(&m_liTimer); }
+	void _ResetTimer(void) { 
+#ifdef _WIN32
+		QueryPerformanceCounter(&m_liTimer); 
+#endif
+	}
 
 public:
 	Timer(void);
@@ -33,5 +41,9 @@ public:
 	void LimitFrameRate(unsigned int uiFrameRate);
 
 	void Update(void);
-	void ResetElapsed(void) { QueryPerformanceCounter(&m_liElapsed); }
+	void ResetElapsed(void) { 
+#ifdef _WIN32
+		QueryPerformanceCounter(&m_liElapsed); 
+#endif
+}
 };

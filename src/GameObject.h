@@ -14,6 +14,7 @@ class GameObject : public StateMachine, public Physical
 {
    GAME_OBJ_TYPE m_eType;
 
+   // GameObject is a lil' dim
    friend class ObjectOperator;
 
 protected:
@@ -82,6 +83,11 @@ public:
    // TODO: GameObjects should maybe have an overload for operator()
    //       they could take in other objects, and perform collision checks between it and the other object?
    //       maybe do other things... 
+
+private:
+    virtual void GameObject::_OnKeyPressed(const Event& e);
+    virtual void GameObject::_OnKeyReleased(const Event& e);
+    virtual void GameObject::_OnAnimationStopped(const Event& e);
 };
 typedef GameObject::GameObjectState ObjectState;
 #endif

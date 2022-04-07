@@ -8,6 +8,7 @@
 #include "StrUtil.h"
 
 #include <fstream>
+#include <string.h>
 
 StateMachine::StateMachine(void) :
    m_bBuffered(false),

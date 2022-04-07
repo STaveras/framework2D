@@ -9,9 +9,13 @@ class ISingleton
 
 public:
 	static T* getInstance(void) { static T instance; return &instance; }
-	//virtual void shutdown(void) = 0;
 
 protected:
+#if __cplusplus > 199711L
+	ISingleton(void) = default;
+	virtual ~ISingleton(void) = default;
+#else
 	ISingleton(void){}
 	virtual ~ISingleton(void) = 0{}
+#endif
 };

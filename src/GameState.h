@@ -6,6 +6,7 @@
 #include "ObjectManager.h"
 #include "Player.h"
 #include "Camera.h"
+
 class GameState : public IProgramState
 {
    virtual void _OnObjectStateEnter(const Event& e);

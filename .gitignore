@@ -1,3 +1,5 @@
+
+/add/inc/glm
 Debug/
 Release/
 enc_temp_folder/
@@ -7,5 +9,10 @@ enc_temp_folder/
 *.vcxproj.user
 *.pdb
 *.ilk
+*.o
+*.d
+**/.DS_Store
 bin/*.exe
-/add/inc/glm
+bin/*.dSYM/**
+bin/2Dgameframework
+bin/*.exe

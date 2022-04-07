@@ -31,15 +31,24 @@ bool Square::WithPlane(const Plane* plane)
 
 bool Square::WithSquare(const Square* square)
 {
+#if _WIN32
 	if(_position > square->m_Max || m_Max < square->_position)
+#else
+	if (glm::all(glm::greaterThan(_position, square->m_Max)) && glm::all(glm::lessThan(m_Max, square->_position)))
+#endif
 		return false;
-	else
-		return true;
+	
+	return true;
 }
 
 bool Square::Check(vector2 point)
 {
-   if (point > _position && point < m_Max)
+#if _WIN32
+	if (point > _position && point < m_Max)
+#else
+	// I wish GLM just overrode the comparison operators
+	if (glm::all(glm::greaterThan(point, _position)) && glm::all(glm::lessThan(point, m_Max)))
+#endif
       return true;
 
    return false;

@@ -11,10 +11,10 @@
 #include "Renderer.h"
 #include "Window.h"
 
-#include "SDSParser.h"
+//#include "SDSParser.h"
 
 #include "FollowObjectOperator.h"
-#include "MaxVelocityOperator.h"
+// #include "MaxVelocityOperator.h"
 #include "ApplyVelocityOperator.h"
 #include "UpdateRenderableOperator.h"
 #include "UpdateBackgroundOperator.h"
@@ -33,62 +33,61 @@ class FlappyTurd : public Game
 
       // Game rules
       FollowObject _attachCamera;
-      //MaxVelocityOperator _maxVelocity;
+      // MaxVelocityOperator _maxVelocity;
       ApplyVelocityOperator _applyVelocity;
       UpdateBackgroundOperator _updateBackground;
       UpdateRenderableOperator _updateRenderable;
-      //TODO: UpdateCollidable _updateCollidable;
+      // TODO: UpdateCollidable _updateCollidable;
 
       class Turd : public GameObject
       {
          // Currently unused
-         //class TurdState : public GameObjectState
+         // class TurdState : public GameObjectState
          //{
-         //public:
-           // void onEnter()
-           // {
-           //	 //GameObjectState::onEnter();
-           // }
+         // public:
+         // void onEnter()
+         // {
+         //	 //GameObjectState::onEnter();
+         // }
 
-           // void onExit()
-           // {
+         // void onExit()
+         // {
 
-           // }
+         // }
          //};
 
       public:
          Turd(void) : GameObject()
          {
             // NOTE: All of this should ideally be in a script
-            GameObjectState* falling = this->addState("Falling");
-            //falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
-            falling->setDirection(vector2(0.1f, 1.0f)); 
+            GameObjectState *falling = this->addState("Falling");
+            // falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
+            falling->setDirection(vector2(0.1f, 1.0f));
             falling->setForce(FALL_FORCE);
             falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
-            ((Image*)falling->getRenderable())->center();
+            ((Image *)falling->getRenderable())->center();
 
-            GameObjectState* rising = this->addState("Rising");
-            //rising->setDirection(vector2(0.1f, -1.0f));
+            GameObjectState *rising = this->addState("Rising");
+            // rising->setDirection(vector2(0.1f, -1.0f));
             rising->setExecuteTime(0.27);
             rising->setDirection(vector2(0.1f, -1.0f));
             rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
             rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
-            ((Image*)rising->getRenderable())->center();
+            ((Image *)rising->getRenderable())->center();
 
             RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
-            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising"); // lets you chain together flaps
+            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising");   // lets you chain together flaps
             RegisterTransition("Rising", "BUTTON_RELEASED", "Falling"); // stop rising when you let go of the button
          }
 
-         ~Turd(void) 
+         ~Turd(void)
          {
             for (unsigned int i = 0; i < _states.Size(); i++)
-               delete ((GameObjectState*)_states.At(i))->getRenderable();
+               delete ((GameObjectState *)_states.At(i))->getRenderable();
          }
       };
 
    public:
-
       void onEnter(void)
       {
          GameState::onEnter();
@@ -98,8 +97,9 @@ class FlappyTurd : public Game
 
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setCamera(_camera);
-         _updateBackground.setBackground(new Image("./data/images/bg.png"));
-         _updateBackground.setMode(Background::Mode_Mirror);
+         // _updateBackground.setBackground(new Image("./data/images/bg.png"));
+         _updateBackground.setBackground(_background);
+         _updateBackground.setMode(Background::Mode::Mirror);
 
          Animations::addToRenderList(Animations::fromXML("./data/example.ani"), _renderList);
 
@@ -126,7 +126,7 @@ class FlappyTurd : public Game
 
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
-         
+
          Engine2D::GetRenderer()->SetCamera(_camera);
       }
       void onExecute(float time)
@@ -173,10 +173,12 @@ class FlappyTurd : public Game
 
       void onExit(void)
       {
-         _player->shutdown();
+          // I feel like players shouldn't "shutdown"
+          _player->shutdown();
 
          _objectManager.clearOperators();
          _objectManager.removeObject("Turd");
+         _updateBackground.setBackground(NULL);
 
          // The below isn't really that safe, but since we know we're allocating our animations here manually... 
          IRenderer::RenderList::iterator i = _renderList->begin();
@@ -258,45 +260,56 @@ public:
 
    void End(void)
    {
-      while (!this->empty()) {
-         void* gameState = this->top(); this->pop(); delete gameState;
-      }
+      IProgramState *playState = this->top();
+      this->clear();
+      delete playState;
+      //while (!this->empty()) {
+      //   void* gameState = this->top(); this->pop(); delete gameState;
+      //}
    }
-}game;
+} game;
 
 #define GLOBAL_WIDTH (640 / 2) /*320*/
 #define GLOBAL_HEIGHT 480
 
+#ifdef _WIN32
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+#else
+int main(int argc, char **argv)
+#endif
 {
-   try {
-      Window rndrWind = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, "Flap a Turd");
-      rndrWind.Initialize(hInstance, lpCmdLine);
+   Window window = Window(320, 460, "Flap a Turd");
 
-      DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-      RendererDX* pRenderer = (RendererDX*)Renderer::CreateDXRenderer(rndrWind.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
+#ifdef _WIN32
+   window.Initialize(hInstance, lpCmdLine);
 
-      Engine2D* engine = Engine2D::getInstance();
-      engine->SetInputInterface(pInput);
-      engine->SetRenderer(pRenderer);
-      engine->SetGame(&game);
-      engine->Initialize();
+   DirectInput *pInput = (DirectInput *)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
+   RendererDX *pRenderer = (RendererDX *)Renderer::CreateDXRenderer(window.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
+#else
+   window.Initialize();
 
-      while (!rndrWind.HasQuit() && !engine->HasQuit())
-      {
-         rndrWind.Update();
-         engine->Update();
-      }
+   RendererVK *pRenderer = (RendererVK *)Renderer::CreateVKRenderer(&window);
+#endif
 
-      engine->Shutdown();
+   Engine2D *engine = Engine2D::getInstance();
+   engine->SetInputInterface(pInput);
+   engine->SetRenderer(pRenderer);
+   engine->SetGame(&game);
+   engine->Initialize();
 
-      Input::DestroyInputInterface(pInput);
-      Renderer::DestroyRenderer(pRenderer);
-
-      rndrWind.Shutdown();
+   while (!window.HasQuit() && !engine->HasQuit())
+   {
+      window.Update();
+      engine->Update();
    }
-   catch (const char *errorMessage) {
-      MessageBox(NULL, errorMessage, "Error", MB_OK | MB_ICONERROR);
-   }
+
+   engine->Shutdown();
+   
+   Input::DestroyInputInterface(pInput);
+   Renderer::DestroyRenderer(pRenderer);
+
+   window.Shutdown();
+
+   return 0;
 }
-// Stan Taveras 
+// Stan Taveras

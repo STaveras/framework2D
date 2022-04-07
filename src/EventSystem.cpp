@@ -2,7 +2,9 @@
 #include "EventSystem.h"
 #include "EventSystem_defines.h"
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 EventSystem::EventSystem(void) :
 m_uiFloodLimit(DEFAULT_EVENT_FLOOD_LIMIT)
@@ -10,7 +12,7 @@ m_uiFloodLimit(DEFAULT_EVENT_FLOOD_LIMIT)
 
 void EventSystem::Initialize(size_t uiFloodLimit)
 {
-	if(uiFloodLimit > 0)
+	if (uiFloodLimit > 0)
 		m_uiFloodLimit = uiFloodLimit;
 }
 
