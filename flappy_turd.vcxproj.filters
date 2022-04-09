@@ -248,6 +248,13 @@
     <ClInclude Include="src\Types.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
+    <ClInclude Include="src\FlappyTurd.h" />
+    <ClInclude Include="src\Game.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EventSystem.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="doc\todo.txt">

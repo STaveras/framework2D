@@ -117,7 +117,7 @@ void RendererDX::Initialize(void)
    D3DPRESENT_PARAMETERS D3DPP;
    ZeroMemory(&D3DPP, sizeof(D3DPP));
 
-   D3DPP.Windowed = (!m_bFullScreen) ? TRUE : FALSE;
+   D3DPP.Windowed = (!m_bFullScreen ) ? TRUE : FALSE;
    D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
    D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
    D3DPP.BackBufferWidth = m_nWidth;
@@ -125,6 +125,7 @@ void RendererDX::Initialize(void)
    D3DPP.PresentationInterval = (m_bVerticalSync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
 
    m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
+
    if (m_pD3DDevice)
    {
       D3DXCreateSprite(m_pD3DDevice, &m_pD3DSprite);

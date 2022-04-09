@@ -142,6 +142,9 @@
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
+    <ClInclude Include="src\EventSystem.h" />
+    <ClInclude Include="src\FlappyTurd.h" />
+    <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\IInput.h" />
     <ClInclude Include="src\IRenderer.h" />
     <ClInclude Include="src\KEYBOARD_KEYS.h" />
