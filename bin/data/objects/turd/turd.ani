@@ -2,10 +2,10 @@
 <AnimationFile Version="v0.4a" Character="Turd">
   <Animation Name="Falling" PlayMode="ONCE" Forward="True" Speed="1">
     <Frame Duration="0.016">
-      <Filename>D:\stan\Documents\flappy_turd\bin\data\images\turd0.png</Filename>
+      <Filename>.\data\images\turd0.png</Filename>
       <Trigger Type="NONE"></Trigger>
       <Anchor X="0" Y="0" />
-      <DisplayRect>0,0,103,48</DisplayRect>
+      <DisplayRect>{X=0,Y=0,Width=103,Height=48}</DisplayRect>
       <CollisionRects />
       <AttackRects />
     </Frame>

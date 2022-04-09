@@ -11,7 +11,7 @@ class FlappyTurd : public Game
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)
-      Image* _background; // Lights; the set
+      Image* _background = NULL; // Lights; the set
 
       // Game rules
       FollowObject _attachCamera;
@@ -80,10 +80,10 @@ class FlappyTurd : public Game
 
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setCamera(_camera);
-         // _updateBackground.setBackground(_background);
+         _updateBackground.setBackground(_background);
          _updateBackground.setMode(Background::Mode::Mirror);
 
-         Animations::addToRenderList(Animations::fromXML("./data/example.ani"), _renderList);
+         //Animations::addToRenderList(Animations::fromXML("./data/objects/turd/turd.ani"), _renderList);
 
          _objectManager.addObject("Turd", [&] {_turd = new Turd; return _turd; }());
          _objectManager.pushOperator(&_updateBackground);
@@ -95,12 +95,11 @@ class FlappyTurd : public Game
 
          _objectManager.pushOperator(&_updateRenderable);
          _objectManager.pushOperator(&_attachCamera);
-         _objectManager.getGameObject("Turd")->Initialize();
 
+         _player->setup();
          _player->setGamePad(_inputManager.CreateGamePad());
          _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
          _player->setGameObject(_objectManager.getGameObject("Turd"));
-         _player->setup();
 
          _objectManager.addObject("Camera", _camera);
          _updateBackground.setCamera(_camera);
@@ -232,7 +231,6 @@ class FlappyTurd : public Game
 public:
 
    void Reset(void) {
-      //Engine2D::getEventSystem()->
       EndGame();
       StartGame();
    }
@@ -244,6 +242,8 @@ public:
 
    void End(void)
    {
+      Engine2D::getEventSystem()->FlushEvents();
+
       IProgramState* playState = this->top();
       this->clear();
       delete playState;

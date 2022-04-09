@@ -51,7 +51,7 @@ public:
 	void RegisterTransition(State* pState, const StateMachineEvent& evt, State* pStateResult);
 	void RegisterTransition(const char* szStateName, const char* szCondition, const char* szResultState);
 
-	void Initialize(void);
+	void initialize(void);
 	void Reset(void);
 
 	void SendInput(const char* szCondition, void* pSender = NULL);

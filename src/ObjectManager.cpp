@@ -43,6 +43,7 @@ void ObjectManager::Update(float fTime)
          m_lsObjOperators.remove(objOp);
          removalList.pop_front();
 
+         // TODO: Check if this is used somewhere?
          Engine2D::getEventSystem()->sendEvent("OBJ_OP_REMOVED", objOp);
       }
 
@@ -95,7 +96,7 @@ void ObjectManager::removeObject(const char* name)
 
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
-   m_mObjects[name] = object; object->Setup(); Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_ADDED", object);
+   m_mObjects[name] = object; object->initialize(); Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_ADDED", object);
 }
 
 void ObjectManager::pushOperator(ObjectOperator* objOperation)

@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.props" Condition="Exists('packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -146,6 +147,7 @@
     <ClInclude Include="src\FlappyTurd.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\IInput.h" />
+    <ClInclude Include="src\IProgramState.h" />
     <ClInclude Include="src\IRenderer.h" />
     <ClInclude Include="src\KEYBOARD_KEYS.h" />
     <ClInclude Include="src\KEYBOARD_KEYS_DI.h" />
@@ -153,6 +155,7 @@
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Positionable.h" />
     <ClInclude Include="src\Square.h" />
+    <ClInclude Include="src\State.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />
@@ -160,7 +163,18 @@
   <ItemGroup>
     <Text Include="doc\todo.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.targets" Condition="Exists('packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.props'))" />
+    <Error Condition="!Exists('packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\vcpkg.C.Tools.vcpkg.1.0.0\build\native\vcpkg.C.Tools.vcpkg.targets'))" />
+  </Target>
 </Project>

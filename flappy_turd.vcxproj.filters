@@ -255,10 +255,19 @@
     <ClInclude Include="src\EventSystem.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
+    <ClInclude Include="src\IProgramState.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\State.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="doc\todo.txt">
       <Filter>engine2Dbase</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

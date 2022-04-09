@@ -3,14 +3,11 @@
 #include "Animation.h"
 #include "AnimationManager.h"
 
-#include <tinyxml2/tinyxml2.h>
-#ifdef _DEBUG
-#pragma comment(lib, "tinyxml2_d.lib")
-#else
-#pragma comment(lib, "tinyxml2.lib")
-#endif
 
 #include <string>
+#include <tinyxml2.h>
+
+#pragma comment(lib, "tinyxml2.lib")
 
 using namespace tinyxml2;
 
@@ -114,9 +111,9 @@ namespace Animations {
                   // TODO: Collision information
                   // TODO: Add support for triggers (sound, effects, scripts, etc.)
 
-                  animation->AddFrame(new Frame(new Sprite(frameElement->FirstChildElement("Filename")->GetText(),
-                                                0xFFFF00FF,
-                                                &srcRect), frameElement->FloatAttribute("Duration")));
+                  const char* frameImagePath = frameElement->FirstChildElement("Filename")->GetText();
+
+                  animation->AddFrame(new Frame(new Sprite(frameImagePath, 0xFFFF00FF, &srcRect), frameElement->FloatAttribute("Duration")));
 
                } while (frameElement = frameElement->NextSiblingElement("Frame"));
 

@@ -12,7 +12,7 @@ enc_temp_folder/
 *.o
 *.d
 **/.DS_Store
+bin/*.dll
 bin/*.exe
 bin/*.dSYM/**
 bin/2Dgameframework
-bin/*.exe

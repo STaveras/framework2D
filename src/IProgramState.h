@@ -6,6 +6,8 @@
 #if !defined(_IPROGRAMSTATE_H_)
 #define _IPROGRAMSTATE_H_
 
+// TODO: Maybe inherent from 'State' ???
+
 class IProgramState
 {
 public:

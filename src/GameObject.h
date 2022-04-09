@@ -76,7 +76,7 @@ public:
    Renderable* getRenderable(void) const { return this->getState()->getRenderable(); }
    Collidable* getCollisionInfo(void) const { return this->getState()->getCollidable(); }
 
-   virtual void Setup(void) {}
+   virtual void initialize(void) { StateMachine::initialize(); }
    virtual void update(float fTime);
    virtual void Shutdown(void) {}
 

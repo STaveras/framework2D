@@ -21,16 +21,6 @@ public:
    const char* GetName(void) const { return m_szName; }
    void SetName(const char* szName) { if (m_szName) free(m_szName); m_szName = _strdup(szName); }
 
-   //State& SetName(const char* szName) { 
-
-   //   if (m_szName) 
-   //      free(m_szName); 
-
-   //   m_szName = _strdup(szName); 
-
-   //   return (*this);
-   //}
-
    virtual void onEnter(State* prevState) {} // EVT_PREV_TRANSITION FROM
    virtual bool onExecute(float fTime) { return false; }
    virtual void onExit(State* nextState) {}  // EVT_WILL_TRANSITION TO

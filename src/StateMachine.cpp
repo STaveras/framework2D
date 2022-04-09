@@ -93,7 +93,7 @@ void StateMachine::RegisterTransition(const char* szStateName, const char* szCon
    }
 }
 
-void StateMachine::Initialize(void)
+void StateMachine::initialize(void)
 {
    if (!m_pStartState && _states.Size() > 0)
       m_pStartState = _states.At(0);

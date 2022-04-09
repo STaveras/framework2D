@@ -59,7 +59,7 @@ void PlayState::onEnter(void)
 	_player->getGameObject()->RegisterTransition("ATTACKING","ATK_PRESSED","ATTACKING");
 	_player->getGameObject()->RegisterTransition("ATTACKING","ANIMATION_STOPPED","IDLING");
 
-	_player->getGameObject()->Initialize();   
+	_player->getGameObject()->initialize();   
 
     for (int i = 0; i < NUM_BLOCKS; i++)
     {
