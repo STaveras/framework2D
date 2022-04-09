@@ -15,14 +15,6 @@
 
 //#include "SDSParser.h"
 
-#include "FollowObjectOperator.h"
-// #include "MaxVelocityOperator.h"
-#include "ApplyVelocityOperator.h"
-#include "UpdateRenderableOperator.h"
-#include "UpdateBackgroundOperator.h"
-
-#include "AnimationUtils.h"
-
 #include "FlappyTurd.h"
 
 #ifdef _WIN32

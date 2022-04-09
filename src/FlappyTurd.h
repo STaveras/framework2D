@@ -1,5 +1,13 @@
 #pragma once
 
+#include "AnimationUtils.h"
+
+#include "FollowObjectOperator.h"
+// #include "MaxVelocityOperator.h"
+#include "ApplyVelocityOperator.h"
+#include "UpdateRenderableOperator.h"
+#include "UpdateBackgroundOperator.h"
+
 #define GLOBAL_WIDTH (640 / 2) /*320*/
 #define GLOBAL_HEIGHT 480
 
