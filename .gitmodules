@@ -1,0 +1,6 @@
+[submodule "add/inc/glm"]
+	path = add/inc/glm
+	url = https://github.com/g-truc/glm
+[submodule "add/inc/vld"]
+	path = add/inc/vld
+	url = https://github.com/KindDragon/vld
