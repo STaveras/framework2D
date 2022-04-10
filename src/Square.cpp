@@ -6,12 +6,12 @@
 #include "Square.h"
 #include "Plane.h"
 
-bool Square::WithCircle(const Circle* circle)
+bool WithCircle(const Square* square, const Circle* circle)
 {
 	return false;
 }
 
-bool Square::WithPlane(const Plane* plane)
+bool WithPlane(const Square* square, const Plane* plane)
 {
 	//vector2 position = ((_position + m_Max) / 2);
 
@@ -23,16 +23,16 @@ bool Square::WithPlane(const Plane* plane)
 	//float fRadius = D3DXVec2Length(&width) / 2;
 	//float fDotResult = D3DXVec2Dot(&toSquare, &plane->GetNormal());
 
-	//if(fDotResult < fRadius)
-	//	return true;
+	// if(fDotResult < fRadius)
+	//	   return true;
 
 	return false;
 }
 
-bool Square::WithSquare(const Square* square)
+bool WithSquare(const Square* squareA, const Square* squareB)
 {
 #if _WIN32
-	if(_position > square->m_Max || m_Max < square->_position)
+	if (squareA->getPosition() > squareB->GetMax() || squareA->GetMax() < squareB->getPosition())
 #else
 	if (glm::all(glm::greaterThan(_position, square->m_Max)) && glm::all(glm::lessThan(m_Max, square->_position)))
 #endif
@@ -44,10 +44,14 @@ bool Square::WithSquare(const Square* square)
 bool Square::Check(vector2 point)
 {
 #if _WIN32
-	if (point > _position && point < m_Max)
+	// For whatever reason, just using > or < wouldn't work?
+	//if (point >= this->getPosition() && point <= this->GetMax())
+
+	if (point.x >= this->getPosition().x && point.y >= this->getPosition().y)
+		if ( point.x <= this->GetMax().x && point.y <= this->GetMax().y)
 #else
 	// I wish GLM just overrode the comparison operators
-	if (glm::all(glm::greaterThan(point, _position)) && glm::all(glm::lessThan(point, m_Max)))
+	if (glm::all(glm::greaterThan(point, _position)) && glm::all(glm::lessThan(point, this->GetMax())))
 #endif
       return true;
 
@@ -59,8 +63,8 @@ bool Square::Check(const Collidable* collidable)
 {
    switch (collidable->getType()) {
    case COL_OBJ_SQUARE:
-      return this->WithSquare((Square*)collidable);
+      return WithSquare(this, (Square*)collidable);
    default:
-      return false;
+		return this->Check(collidable->getPosition());
    }
 }

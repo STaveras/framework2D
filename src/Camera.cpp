@@ -40,9 +40,10 @@ bool Camera::OnScreen(GameObject *object)
 
    ObjectState *objectState = (ObjectState*)object->GetCurrentState();
 
-   if (objectState->getCollidable()) {
-      return objectState->getCollidable()->Check(&square);
+   if (objectState) {
+      if (objectState->getCollidable()) {
+         return objectState->getCollidable()->Check(&square);
+      }
    }
-
    return square.Check(object->getPosition());
 }

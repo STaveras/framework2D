@@ -39,7 +39,7 @@ class FlappyTurd : public Game
          //};
 
       public:
-         Turd(void) : GameObject()
+         Turd(void) : GameObject(GAME_OBJ_OBJECT)
          {
             // NOTE: All of this should ideally be in a script
             GameObjectState* falling = this->addState("Falling");
@@ -120,33 +120,34 @@ class FlappyTurd : public Game
          }
 
 #if _DEBUG
-         if (Debug::dbgObjects) {
-            static float timer = 0.0f;
-            timer += time;
+			static float timer = 0.0f;
+			timer += time;
 
-            if (timer >= 1.0f) {
-               GameObject* debugObject = _camera;
+			if (timer >= 1.0f) {
 
-               char debugBuffer[255];
+				if (Debug::dbgObjects) {
 
-               sprintf_s(debugBuffer, "(camera) pos: (x%f, y%f) zoom: %f\n", debugObject->getPosition().x, debugObject->getPosition().y, _camera->getZoom());
-               OutputDebugString(debugBuffer);
+					char debugBuffer[255];
 
-               for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
-                  debugObject = _objectManager[i];
-                  sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
-                  OutputDebugString(debugBuffer);
+               OutputDebugString("\nObjects:\n-------\n");
+
+					for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
+                  GameObject* debugObject = _objectManager[i];
+						sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
+						OutputDebugString(debugBuffer);
+					}
+				}
+
+            if (_camera) {
+               if (!_camera->OnScreen(_player->getGameObject())) {
+                  //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
+                  OutputDebugString("GameObject off screen\n\n");
                }
-               timer = 0.0f;
             }
-         }
+
+				timer = 0.0f;
+			}
 #endif
-         if (_camera) {
-            if (!_camera->OnScreen(_player->getGameObject())) {
-               //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
-               std::cout << "GameObject off screen\n";
-            }
-         }
 
          if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {
             Engine2D::Quit();
@@ -247,6 +248,7 @@ public:
       IProgramState* playState = this->top();
       this->clear();
       delete playState;
+
       //while (!this->empty()) {
       //   void* gameState = this->top(); this->pop(); delete gameState;
       //}

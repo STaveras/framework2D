@@ -12,7 +12,7 @@ class Collidable;
 
 class GameObject : public StateMachine, public Physical
 {
-   GAME_OBJ_TYPE m_eType;
+   GAME_OBJ_TYPE m_eType; // I feel like this shouldn't be a thing
 
    // GameObject is a lil' dim
    friend class ObjectOperator;
