@@ -71,17 +71,17 @@ State* StateMachine::AddState(const char* name)
    return state;
 }
 
-void StateMachine::AddTransition(const char* condition, const char* nextState)
+void StateMachine::addTransition(const char* condition, const char* nextState)
 {
-   RegisterTransition(_states.At(_states.Size() - 1)->GetName(), condition, nextState);
+   registerTransition(_states.At(_states.Size() - 1)->GetName(), condition, nextState);
 }
 
-void StateMachine::RegisterTransition(State* pState, const StateMachineEvent& evt, State* pStateResult)
+void StateMachine::registerTransition(State* pState, const StateMachineEvent& evt, State* pStateResult)
 {
    m_mTransitionTable.insert(std::make_pair(pState, std::make_pair(evt, pStateResult)));
 }
 
-void StateMachine::RegisterTransition(const char* szStateName, const char* szCondition, const char* szResultState)
+void StateMachine::registerTransition(const char* szStateName, const char* szCondition, const char* szResultState)
 {
    State* pState = GetState(szStateName);
    State* pStateResult = GetState(szResultState);
@@ -104,7 +104,7 @@ void StateMachine::initialize(void)
    }
 }
 
-void StateMachine::Reset(void)
+void StateMachine::reset(void)
 {
    if (m_pState)
       m_pState->onExit(m_pStartState);
@@ -235,7 +235,7 @@ bool StateMachine::LoadTransitionTableFromFile(const char* szFilename)
 
                            strsubst(szResultingState, '\0', ",");
 
-                           RegisterTransition(strStateName.c_str(), szCondition, szResultingState);
+                           registerTransition(strStateName.c_str(), szCondition, szResultingState);
                         }
                      }
                   }

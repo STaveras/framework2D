@@ -55,9 +55,9 @@ void PlayState::onEnter(void)
 	//theGuyAttacking->AddFrame(_Sprites.Create(Sprite("./data/characters/person/sprites/attacking/1.bmp",0xFFFF00FF)),0.0167f);
 	//_player->getGameObject()->setAnimation(theGuyAttacking);
 
-	_player->getGameObject()->RegisterTransition("IDLING","ATK_PRESSED","ATTACKING");
-	_player->getGameObject()->RegisterTransition("ATTACKING","ATK_PRESSED","ATTACKING");
-	_player->getGameObject()->RegisterTransition("ATTACKING","ANIMATION_STOPPED","IDLING");
+	_player->getGameObject()->registerTransition("IDLING","ATK_PRESSED","ATTACKING");
+	_player->getGameObject()->registerTransition("ATTACKING","ATK_PRESSED","ATTACKING");
+	_player->getGameObject()->registerTransition("ATTACKING","ANIMATION_STOPPED","IDLING");
 
 	_player->getGameObject()->initialize();   
 

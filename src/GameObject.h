@@ -8,6 +8,9 @@
 #include "Types.h"
 #include "ObjectOperator.h"
 
+#define EVT_GAMEOBJECT_STATE_ENTER "EVT_STATE_ENTER"
+#define EVT_GAMEOBJECT_STATE_EXIT  "EVT_STATE_EXIT"
+
 class Collidable;
 
 class GameObject : public StateMachine, public Physical

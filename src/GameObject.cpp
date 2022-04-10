@@ -48,7 +48,7 @@ void GameObject::GameObjectState::onEnter(State* prev)
       }
    }
 
-   Engine2D::getInstance()->getEventSystem()->sendEvent("EVT_STATE_ENTER", this);
+   Engine2D::getInstance()->getEventSystem()->sendEvent(EVT_GAMEOBJECT_STATE_ENTER, this);
 }
 
 bool GameObject::GameObjectState::onExecute(float time)
@@ -78,7 +78,7 @@ bool GameObject::GameObjectState::onExecute(float time)
 
 void GameObject::GameObjectState::onExit(State* next)
 {
-   Engine2D::getInstance()->getEventSystem()->sendEvent("EVT_STATE_EXIT", this);
+   Engine2D::getInstance()->getEventSystem()->sendEvent(EVT_GAMEOBJECT_STATE_EXIT, this);
 
    if (_renderable) {
       switch (_renderable->getRenderableType())

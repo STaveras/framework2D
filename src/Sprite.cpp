@@ -16,7 +16,7 @@ void Sprite::Save(const char* filePath)
 
 		ofl.write((char*)&uiStrLength, sizeof(size_t));
 		ofl.write(m_pTexture->GetFilename(), uiStrLength);
-		ofl.write((char*)&m_SrcRect, sizeof(rect));
+		ofl.write((char*)&m_SrcRect, sizeof(RECT));
 		ofl.write((char*)&clrColor, sizeof(color));
 		ofl.write((char*)&m_Center, sizeof(vector2));
 	}
@@ -36,7 +36,7 @@ Sprite* Sprite::Load(const char* filePath)
 		{
 			size_t uiStrLength;
 			char szPath[MAX_PATH];
-			rect srcRect;
+			RECT srcRect;
 			color clrColor;
 			vector2 center;
 

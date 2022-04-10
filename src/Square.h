@@ -22,7 +22,7 @@ public:
 	Square(vector2 position, float width, float height) : Collidable(COL_OBJ_SQUARE) { _position = position; _fWidth = width; _fHeight = height; }
 
 	//vector2 GetMin(void) const { return _position; }
-	vector2 GetMax(void) const { return vector2(this->getPosition().x + _fWidth, this->getPosition().y + _fHeight); }
+	vector2 getMax(void) const { return vector2(this->getPosition().x + _fWidth, this->getPosition().y + _fHeight); }
 	//float GetWidth(void) const { return (m_Max.x - _position.x); }
 	//float GetHeight(void) const { return (m_Max.y - _position.y); }
 	float GetWidth(void) const { return _fWidth; }

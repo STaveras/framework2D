@@ -43,23 +43,21 @@ class FlappyTurd : public Game
          {
             // NOTE: All of this should ideally be in a script
             GameObjectState* falling = this->addState("Falling");
-            // falling->setDirection(vector2(0.1019108280254777f, 0.1464968152866242f)); // normalized it myself ;)
             falling->setDirection(vector2(0.1f, 1.0f));
             falling->setForce(FALL_FORCE);
             falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
             ((Image*)falling->getRenderable())->center();
 
             GameObjectState* rising = this->addState("Rising");
-            // rising->setDirection(vector2(0.1f, -1.0f));
             rising->setExecuteTime(0.27);
             rising->setDirection(vector2(0.1f, -1.0f));
             rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
             rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
             ((Image*)rising->getRenderable())->center();
 
-            RegisterTransition("Falling", "BUTTON_PRESSED", "Rising");
-            RegisterTransition("Rising", "BUTTON_PRESSED", "Rising");   // lets you chain together flaps
-            RegisterTransition("Rising", "BUTTON_RELEASED", "Falling"); // stop rising when you let go of the button
+            registerTransition("Falling", "BUTTON_PRESSED", "Rising");
+            registerTransition("Rising", "BUTTON_PRESSED", "Rising");   // lets you chain together flaps
+            registerTransition("Rising", "BUTTON_RELEASED", "Falling"); // stop rising when you let go of the button
          }
 
          ~Turd(void)

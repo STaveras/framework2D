@@ -5,7 +5,7 @@
 
 Engine2D* engine = Engine2D::getInstance();
 
-Sprite* GameState::addSprite(const char * filename, color clearColor, rect* srcRect)
+Sprite* GameState::addSprite(const char * filename, color clearColor, RECT* srcRect)
 {
    Sprite* sprite = _sprites.Create(Sprite(filename, clearColor, srcRect));
    _renderList->push_back(sprite);
@@ -31,8 +31,8 @@ void GameState::onEnter(void)
 {
    _renderList = engine->GetRenderer()->CreateRenderList();
 
-   engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
-   engine->getEventSystem()->RegisterCallback<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
+   engine->getEventSystem()->RegisterCallback<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
+   engine->getEventSystem()->RegisterCallback<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_ADDED", this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_REMOVED", this, &GameState::_OnObjectAdded);
 
@@ -55,8 +55,8 @@ void GameState::onExit(void)
 
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_REMOVED", this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_ADDED", this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->Unregister<GameState>("EVT_STATE_EXIT", this, &GameState::_OnObjectStateExit);
-   engine->getEventSystem()->Unregister<GameState>("EVT_STATE_ENTER", this, &GameState::_OnObjectStateEnter);
+   engine->getEventSystem()->Unregister<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
+   engine->getEventSystem()->Unregister<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
 
    engine->GetRenderer()->DestroyRenderList(_renderList);
 }

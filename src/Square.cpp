@@ -31,8 +31,8 @@ bool WithPlane(const Square* square, const Plane* plane)
 
 bool WithSquare(const Square* squareA, const Square* squareB)
 {
-#if _WIN32
-	if (squareA->getPosition() > squareB->GetMax() || squareA->GetMax() < squareB->getPosition())
+#if _WIN32 && !defined(GLM)
+	if (squareA->getPosition() > squareB->getMax() || squareA->getMax() < squareB->getPosition())
 #else
 	if (glm::all(glm::greaterThan(_position, square->m_Max)) && glm::all(glm::lessThan(m_Max, square->_position)))
 #endif
@@ -43,12 +43,12 @@ bool WithSquare(const Square* squareA, const Square* squareB)
 
 bool Square::Check(vector2 point)
 {
-#if _WIN32
+#if _WIN32 && !defined(GLM)
 	// For whatever reason, just using > or < wouldn't work?
 	//if (point >= this->getPosition() && point <= this->GetMax())
 
-	if (point.x >= this->getPosition().x && point.y >= this->getPosition().y)
-		if ( point.x <= this->GetMax().x && point.y <= this->GetMax().y)
+	if (point.x >= this->getPosition().x && point.y >= this->getPosition().y && 
+		point.x <= this->getMax().x && point.y <= this->getMax().y)
 #else
 	// I wish GLM just overrode the comparison operators
 	if (glm::all(glm::greaterThan(point, _position)) && glm::all(glm::lessThan(point, this->GetMax())))
