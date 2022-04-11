@@ -241,8 +241,6 @@ public:
 
    void End(void)
    {
-      Engine2D::getEventSystem()->FlushEvents();
-
       IProgramState* playState = this->top();
       this->clear();
       delete playState;
