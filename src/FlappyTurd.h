@@ -131,7 +131,7 @@ class FlappyTurd : public Game
 
 					for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
                   GameObject* debugObject = _objectManager[i];
-						sprintf_s(debugBuffer, "(%s) pos: (x%f, y%f)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
+						sprintf_s(debugBuffer, "(%s) pos: (%fx, %fy)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
 						OutputDebugString(debugBuffer);
 					}
 				}
