@@ -1,8 +1,7 @@
 // RendererVK.h
 #pragma once
 
-#include "IRenderer.h"
-#include "Window.h"
+#include "Renderer.h"
 
 #include <vector>
 

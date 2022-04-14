@@ -7,10 +7,13 @@ namespace Input
 #ifdef _WIN32
 	static IInput* CreateDirectInputInterface(HWND hWnd, HINSTANCE hInstance)
 	{
-		DirectInput* pInstance = new DirectInput(hInstance, hWnd);
-		return (IInput*)pInstance;
+		return (IInput*)(new DirectInput(hInstance, hWnd));
 	}
 #endif
 
-	static void DestroyInputInterface(IInput* pInput) { if(pInput) delete pInput; }
+	static void DestroyInputInterface(IInput* pInput) {
+      if (pInput) {
+         delete pInput;
+      }
+   }
 }

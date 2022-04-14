@@ -21,7 +21,7 @@ public:
    COL_OBJ_TYPE getType(void) const { return m_eType; } 
 
    virtual bool Check(vector2 point) { return _position == point; } // issa joke
-   virtual bool Check(const Collidable* colObject) = 0;
+   virtual bool Check(const Collidable* collidable) { return this->Check(collidable->getPosition()); }
 };
 
 // NOTE: Would be nice to have a 'batched' version of this

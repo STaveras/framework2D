@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AnimationFile Version="v0.1a">
+  <Animation Name="Standing" PlayMode="LOOPING" Forward="True" Speed="1">
+    <Frame Duration="0.016">
+      <Filename>.\data\images\turd0.png</Filename>
+      <Trigger Type="NONE"></Trigger>
+      <Anchor X="0" Y="0" />
+      <DisplayRect>{X=26,Y=1,Width=34,Height=40}</DisplayRect>
+      <CollisionRects />
+      <AttackRects />
+    </Frame>
+    <Frame Duration="0.016">
+      <Filename>C:\Documents and Settings\Administrator\Desktop\AnimationSystemPrototype\AnimationSystemPrototype\GameData\FrameData\Sprite1.png</Filename>
+      <Trigger Type="NONE"></Trigger>
+      <Anchor X="0" Y="0" />
+      <DisplayRect>{X=60,Y=1,Width=37,Height=40}</DisplayRect>
+      <CollisionRects />
+      <AttackRects />
+    </Frame>
+    <Frame Duration="0.016">
+      <Filename>C:\Documents and Settings\Administrator\Desktop\AnimationSystemPrototype\AnimationSystemPrototype\GameData\FrameData\Sprite1.png</Filename>
+      <Trigger Type="NONE"></Trigger>
+      <Anchor X="0" Y="0" />
+      <DisplayRect>{X=97,Y=1,Width=36,Height=40}</DisplayRect>
+      <CollisionRects />
+      <AttackRects />
+    </Frame>
+    <Frame Duration="0.016">
+      <Filename>C:\Documents and Settings\Administrator\Desktop\AnimationSystemPrototype\AnimationSystemPrototype\GameData\FrameData\Sprite1.png</Filename>
+      <Trigger Type="NONE"></Trigger>
+      <Anchor X="0" Y="0" />
+      <DisplayRect>{X=133,Y=1,Width=35,Height=41}</DisplayRect>
+      <CollisionRects />
+      <AttackRects />
+    </Frame>
+    <Frame Duration="0.016">
+      <Filename>C:\Documents and Settings\Administrator\Desktop\AnimationSystemPrototype\AnimationSystemPrototype\GameData\FrameData\Sprite1.png</Filename>
+      <Trigger Type="NONE"></Trigger>
+      <Anchor X="0" Y="0" />
+      <DisplayRect>{X=168,Y=1,Width=36,Height=40}</DisplayRect>
+      <CollisionRects />
+      <AttackRects />
+    </Frame>
+  </Animation>
+</AnimationFile>

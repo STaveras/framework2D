@@ -36,7 +36,9 @@ public:
 	void Clear(void);
 	void Store(Type* item);
 	size_t Size(void) const { return m_lsItems.size(); }
-	Type* Find(const Type& itemDesc);
+
+   Type* Find(const Type& itemDesc); // BROKEN
+   //Type* Factory<Type>::Filter(const char *attribute, const void* value);
 
 	template<class _Pr3>
 	void Sort(_Pr3 _Pred) { m_lsItems.sort(_Pred); }

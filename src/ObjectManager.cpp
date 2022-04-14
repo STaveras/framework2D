@@ -8,6 +8,11 @@
 #include "ObjectOperator.h"
 #include "Engine2D.h"
 #include "Collidable.h"
+#include "EventSystem.h"
+
+// How we should start thinking about events:
+// SYSTEM EVENTS: The backend, mechanical stuff that glues the ''engine'' together (out/in)
+// SIMULATION EVENTS: Pertinent only to the objects, and their interactions with one another. (in/out)
 
 void ObjectManager::Update(float fTime)
 {
@@ -17,15 +22,29 @@ void ObjectManager::Update(float fTime)
    {
       GameObject *object = itr->second;
 
+      // NOTE: You should probably be sending nearly ALL events to objects
+
+      object->update(fTime);
+
+      std::list<ObjectOperator*> removalList;
+
       // This is to apply operators on an object
       std::list<ObjectOperator*>::iterator itr2 = m_lsObjOperators.begin();
     
       for (; itr2 != m_lsObjOperators.end(); itr2++) {
          if (!(**itr2)(object))
-            continue;
-         else {
-            // Remove the operator
-         }
+            removalList.push_back((*itr2));
+      }
+
+      // Remove operator(s)
+      while (!removalList.empty()) 
+      {
+         ObjectOperator *objOp = removalList.front();
+         m_lsObjOperators.remove(objOp);
+         removalList.pop_front();
+
+         // TODO: Check if this is used somewhere?
+         Engine2D::getEventSystem()->sendEvent("OBJ_OP_REMOVED", objOp);
       }
 
       // Now lets check for collisions
@@ -59,8 +78,6 @@ void ObjectManager::Update(float fTime)
 
          // TODO: Rewrite to broad / narrow phases
       }
-
-      object->update(fTime);
    }
 }
 
@@ -79,7 +96,7 @@ void ObjectManager::removeObject(const char* name)
 
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
-   m_mObjects[name] = object; object->Setup(); Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_ADDED", object);
+   m_mObjects[name] = object; object->initialize(); Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_ADDED", object);
 }
 
 void ObjectManager::pushOperator(ObjectOperator* objOperation)

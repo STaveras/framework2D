@@ -150,9 +150,9 @@ void DebugState::onExecute(float fTime)
 			m_Camera.setPosition(vector2(0,0));
 
 		if(pKeyboard->KeyDown(KBK_ADD))
-			m_Camera.Zoom(fZoomSpeed);
+			m_Camera.SetZoom(m_Camera.getZoom() + fZoomSpeed);
 		else if(pKeyboard->KeyDown(KBK_SUBTRACT))
-			m_Camera.Zoom(-fZoomSpeed);
+			m_Camera.SetZoom(m_Camera.getZoom() - fZoomSpeed);
 		else if(pKeyboard->KeyDown(KBK_NUMPADENTER))
 			m_Camera.SetZoom(1.0);
 

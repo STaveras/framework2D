@@ -13,33 +13,17 @@ Window::Window(void):
 	m_bHasQuit(false),
 	m_nWidth(640),
 	m_nHeight(480),
-#ifdef _WIN32
-	m_hWnd(NULL),
-	m_hDC(NULL),
-	m_hInstance(NULL),
-	m_lpCmdLine(NULL),
-#else
-	_window(NULL),
-#endif
 	m_szWindowTitle(""),
-	m_szWindowClassName("")
-{}
+	m_szWindowClassName("_ENGINE_2D_WINDOW"),
+	_window(NULL) {}
 
 Window::Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName):
 	m_bHasQuit(false),
 	m_nWidth(nWidth),
 	m_nHeight(nHeight),
-#ifdef _WIN32
-	m_hWnd(NULL),
-	m_hDC(NULL),
-	m_hInstance(NULL),
-	m_lpCmdLine(NULL),
-#else
-	_window(NULL),
-#endif
 	m_szWindowTitle(szWindowTitle),
-	m_szWindowClassName(szWindowClassName)
-{}
+	m_szWindowClassName((!strcmp(szWindowClassName, "")) ? "_ENGINE_2D_WINDOW" : szWindowClassName),
+	_window(NULL) {}
 
 void Window::_resize(void)
 {
@@ -140,6 +124,7 @@ void Window::Update(void)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+	InvalidateRect(m_hWnd, NULL, true);
 #else
 	if (_window) {
 		/* Loop until the user closes the window */

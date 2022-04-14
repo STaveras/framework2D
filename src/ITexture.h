@@ -3,9 +3,11 @@
 // Created: 2/24/2010
 // Modified: 2/24/2010
 
-#if !defined(_ITEXTURE_H_)
+#ifndef _ITEXTURE_H_
 #define _ITEXTURE_H_
-#include "color.h"
+
+#include "Types.h"
+
 #include <string>
 
 class ITexture

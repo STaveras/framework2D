@@ -6,15 +6,22 @@
 #include "Renderable.h"
 #include "StateMachine.h"
 #include "Types.h"
+#include "ObjectOperator.h"
+
+#define EVT_GAMEOBJECT_STATE_ENTER "EVT_STATE_ENTER"
+#define EVT_GAMEOBJECT_STATE_EXIT  "EVT_STATE_EXIT"
 
 class Collidable;
 
-class GameObject : public StateMachine, public Positionable
+class GameObject : public StateMachine, public Physical
 {
-   GAME_OBJ_TYPE m_eType;
+   GAME_OBJ_TYPE m_eType; // I feel like this shouldn't be a thing
 
    // GameObject is a lil' dim
    friend class ObjectOperator;
+
+protected:
+   Factory<ObjectOperator> _specialOpsFactory; // lmao
 
 public:
    class GameObjectState : public State
@@ -44,7 +51,7 @@ public:
       void setCollidable(Collidable* collidable) { _collidable = collidable; }
 
       vector2 getDirection(void) const { return _direction; }
-      void setDirection(vector2 direction) { /*D3DXNormalize*/ _direction = direction; }
+      void setDirection(vector2 direction) { _direction = direction; }
 
       double getForce(void) const { return _force; }
       void setForce(double force) { _force = force; }
@@ -58,34 +65,23 @@ public:
    };
 
 protected:
-   float _mass;
-   float _rotation;
-   vector2 _velocity;
 
 public:
-   GameObject(void) : m_eType(GAME_OBJ_NULL), _rotation(0.0f) {}
-   GameObject(GAME_OBJ_TYPE eType) :m_eType(eType), _rotation(0.0f) {}
+   GameObject(void) :m_eType(GAME_OBJ_NULL) {}
+   GameObject(GAME_OBJ_TYPE eType) :m_eType(eType) {}
    ~GameObject(void) {}
 
    GAME_OBJ_TYPE GetType(void) const { return m_eType; }
-   float GetRotation(void) const { return _rotation; }
-   vector2 GetVelocity(void) const { return _velocity; }
-   void SetRotation(float rotation) { _rotation = rotation; } // UNDONE: PLEASE DON'T USE THIS ON ANYTHING OTHER THAN A CAMERA (cus collision objects don't rotate yet... :/)
-   void SetVelocity(vector2 velocity) { _velocity = velocity; }
 
    GameObjectState* addState(const char* szName);
-   //void setAnimation(Animation* ani);
-   //void setStateAnimation(const char* stateName, Animation* ani);
-
    GameObjectState* getState(void) const { return (GameObjectState*)this->GetCurrentState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
-   virtual void Setup(void) {}
+   Renderable* getRenderable(void) const { return this->getState()->getRenderable(); }
+   Collidable* getCollisionInfo(void) const { return this->getState()->getCollidable(); }
+
+   virtual void initialize(void) { StateMachine::initialize(); }
    virtual void update(float fTime);
    virtual void Shutdown(void) {}
-
-   void AddImpulse(vector2 direction, double force) {
-      _velocity += (direction * (float)force);
-   }
 
    // TODO: GameObjects should maybe have an overload for operator()
    //       they could take in other objects, and perform collision checks between it and the other object?

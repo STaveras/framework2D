@@ -13,32 +13,31 @@ class Window
 	bool m_bHasQuit;
 	int m_nWidth;
 	int m_nHeight;
-#ifdef _WIN32
-	HWND m_hWnd;
-	HDC m_hDC;
-	HINSTANCE m_hInstance;
-	LPSTR m_lpCmdLine;
-#else
-	GLFWwindow* _window;
-#endif
 	const char* m_szWindowTitle;
 	const char* m_szWindowClassName;
+#ifndef _WIN32
+	GLFWwindow* _window;
+
+	GLFWwindow * getUnderlyingWindow(void) { return _window; }
+#else
+	struct {
+		HWND m_hWnd;
+		HDC m_hDC;
+		HINSTANCE m_hInstance;
+		LPSTR m_lpCmdLine;
+	}_window{};
+
+	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 
 	void _resize(void);
 
-#ifdef _WIN32
-	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-#else
 protected:
 	friend class RendererVK;
 
-	GLFWwindow * getUnderlyingWindow(void) { return _window; }
-#endif
-
 public:
 	Window(void);
-	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName = "2DGF");
+	Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName = "");
 	~Window(void){}
 
 	bool HasQuit(void) const { return m_bHasQuit; }

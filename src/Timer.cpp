@@ -4,7 +4,7 @@
 #include <cfloat>
 
 Timer::Timer(void):
-m_dDelta(0.0f),
+   m_dDelta(0.0f),
 	m_dFrameCap(0.0f),
 	m_uiTicks(0)
 {

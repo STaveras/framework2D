@@ -11,15 +11,15 @@
 
 class ProgramStack : private std::stack<IProgramState*>
 {
-	typedef std::stack<IProgramState*> _programStack;
+	typedef std::stack<IProgramState*> _ProgramStack;
 
 public:
 	ProgramStack(void) {}
 	~ProgramStack(void) { clear(); }
 
-	using _programStack::empty;
-	using _programStack::size;
-	using _programStack::top;
+	using _ProgramStack::empty;
+	using _ProgramStack::size;
+	using _ProgramStack::top;
 
 	void push(IProgramState* state);
 	void pop(void);

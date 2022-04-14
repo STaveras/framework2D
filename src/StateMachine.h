@@ -47,16 +47,16 @@ public:
 	Factory<State>* GetStateFactory(void) { return &_states; }
 
 	State* AddState(const char* name);
-	void AddTransition(const char* condition, const char* nextState);
-	void RegisterTransition(State* pState, const StateMachineEvent& evt, State* pStateResult);
-	void RegisterTransition(const char* szStateName, const char* szCondition, const char* szResultState);
+	void addTransition(const char* condition, const char* nextState);
+	void registerTransition(State* pState, const StateMachineEvent& evt, State* pStateResult);
+	void registerTransition(const char* szStateName, const char* szCondition, const char* szResultState);
 
-	void Initialize(void);
-	void Reset(void);
-
-	void SendInput(const char* szCondition, void* pSender = NULL);
+	void initialize(void);
+	void reset(void);
 
 	virtual void update(float fTime);
+
+	void SendInput(const char* szCondition, void* pSender = NULL);
 
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class

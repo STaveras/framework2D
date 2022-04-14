@@ -522,9 +522,9 @@ void RendererVK::Initialize(void)
             throw std::runtime_error("Failed to create Vulkan instance!");
         }
 
-        if (glfwCreateWindowSurface(_instance, window, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create window surface!");
-        }
+        // if (glfwCreateWindowSurface(_instance, window, nullptr, &surface) != VK_SUCCESS) {
+        //     throw std::runtime_error("Failed to create window surface!");
+        // }
 
         uint32_t extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);

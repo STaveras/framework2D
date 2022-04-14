@@ -8,6 +8,9 @@
     <ClCompile Include="src\AnimationManager.cpp">
       <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="src\AnimationUtils.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
     <ClCompile Include="src\Appearance.cpp">
       <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
@@ -122,6 +125,21 @@
     <ClCompile Include="src\Square.cpp">
       <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
+    <ClCompile Include="src\Stage.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StartState.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StateMachine.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Trigger.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
     <ClCompile Include="src\VirtualButton.cpp">
       <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
@@ -157,6 +175,10 @@
     </ClCompile>
     <ClCompile Include="src\UpdateBackgroundOperator.cpp">
       <Filter>engine2Dbase\cpp</Filter>
+      <Filter>engine2Dbase\cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DIMouse.cpp">
+      <Filter>engine2Dbase\cpp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,8 +191,17 @@
     <Filter Include="engine2Dbase\h">
       <UniqueIdentifier>{2f943bb8-a2db-4f3f-be24-07a474e1ad4c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine2Dbase\cpp">
+      <UniqueIdentifier>{1eb30f23-2679-477c-8140-238a7948bec2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine2Dbase\operators">
+      <UniqueIdentifier>{bac86428-1ddd-4482-844b-29758ac8d541}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\UpdateRenderableOperator.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
     <ClInclude Include="src\MaxVelocityOperator.h">
       <Filter>engine2Dbase\h</Filter>
     </ClInclude>
@@ -197,6 +228,46 @@
     </ClInclude>
     <ClInclude Include="src\IRenderer.h">
       <Filter>engine2Dbase\h</Filter>
+      <Filter>engine2Dbase\h</Filter>
     </ClInclude>
+    <ClInclude Include="src\DIMouse.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimationUtils.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UpdateBackgroundOperator.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ForceDegradation.h">
+      <Filter>engine2Dbase\operators</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Types.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FlappyTurd.h" />
+    <ClInclude Include="src\Game.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EventSystem.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IProgramState.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+    <ClInclude Include="src\State.h">
+      <Filter>engine2Dbase\h</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="doc\todo.txt">
+      <Filter>engine2Dbase</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -24,6 +24,7 @@
                 "Frame.cpp",
                 "Animation.cpp",
                 "AnimationManager.cpp",
+                "AnimationUtils.cpp",
                 "Square.cpp",
                 "Camera.cpp",
                 "Timer.cpp",
@@ -42,7 +43,8 @@
                 "-MMD","-MF",
                 "project.d",
                 "-lglfw",
-                "-lvulkan"
+                "-lvulkan",
+                "-ltinyxml2"
             ],
             "options": {
                 "cwd": "${fileDirname}"

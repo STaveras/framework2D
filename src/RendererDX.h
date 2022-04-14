@@ -3,9 +3,6 @@
 #if !defined(_RENDERERD3D_H)
 #define _RENDERERD3D_H
 #include "IRenderer.h"
-#include <windows.h>
-#include <d3d9.h>
-#include <d3dx9.h>
 class Appearance;
 class Image;
 class RendererDX : public IRenderer

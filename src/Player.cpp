@@ -22,12 +22,12 @@ void Player::_OnKeyRelease(const Event& e)
 
 void Player::setup(void)
 {
-   Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
-   Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
+	 Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
+	 Engine2D::getInstance()->getEventSystem()->RegisterCallback<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
 }
 
 void Player::shutdown(void)
 {
-   Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
-   Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
+	 Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYRELEASED", this, &Player::_OnKeyRelease);
+	 Engine2D::getInstance()->getEventSystem()->Unregister<Player>("EVT_KEYPRESSED", this, &Player::_OnKeyPress);
 }

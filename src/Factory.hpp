@@ -120,6 +120,12 @@ Derived* Factory<Type>::CreateDerived(const Derived& rhs)
 	return item;
 }
 
+template<class Type>
+bool Factory<Type>::operator==(Factory<Type>& f)
+{
+   return (this == (const_cast<const Factory<Type>>(f))); // Why is this here again...?
+}
+
 template<typename Type>
 bool Factory<Type>::operator==(const Factory<Type>& f) const
 {

@@ -13,5 +13,6 @@ public:
 	virtual bool KeyPressed(int nKey) = 0;
 	virtual bool KeyReleased(int nKey) = 0;
 
-	virtual void Update(void) = 0;
+	//virtual void Release(void) = 0;
+	//virtual void Update(void) = 0;
 };

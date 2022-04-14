@@ -19,7 +19,7 @@ public:
 
 	 int GetScreenWidth(void) const { return m_nScreenWidth; }
 	 int GetScreenHeight(void) const { return m_nScreenHeight; }
-	 float GetZoom(void) const { return m_fZoom; }
+	 float getZoom(void) const { return m_fZoom; }
 	 vector2 GetCenter(void) const { return vector2(m_nScreenWidth / 2.0f, m_nScreenHeight / 2.0f); }
 
 	 void SetScreenWidth(unsigned int uiWidth) { m_nScreenWidth = uiWidth; }

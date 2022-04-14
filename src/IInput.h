@@ -6,9 +6,9 @@
 #pragma once
 
 #include "Types.h"
-#include "IKeyboard.h"
 
-class IMouse;
+#include "IKeyboard.h"
+#include "IMouse.h"
 
 class IInput
 {

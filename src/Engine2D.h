@@ -1,8 +1,12 @@
 // File: Engine2D.h
 #pragma once
+#include "Types.h"
 #include "ISingleton.h"
 #include "EventSystem.h"
 #include "Timer.h"
+#ifdef _DEBUG
+#include "Debug.h"
+#endif
 class Game;
 class IInput;
 class IRenderer;
@@ -21,7 +25,7 @@ public:
    Engine2D(void);
    ~Engine2D(void) {}
 
-   bool HasQuit(void) const { return _hasQuit; }
+   static bool HasQuit(void) { return Engine2D::getInstance()->_hasQuit; }
 
    static Game* GetGame(void) { return Engine2D::getInstance()->_pGame; }
    static void SetGame(Game* game) { Engine2D::getInstance()->_pGame = game; }
@@ -38,7 +42,8 @@ public:
    void Initialize(void);
    void Update(void);
    void Shutdown(void);
+
    // Pause? We should be able to "fast forward" and "rewind" as well... Should this be implemented by the 'game' (application)?
-   void Quit(void) { _hasQuit = true; }
+   static void Quit(void) { Engine2D::getInstance()->_hasQuit = true; }
 };
 // Author: Stanley Taveras

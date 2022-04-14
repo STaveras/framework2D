@@ -6,6 +6,7 @@
 #if !defined(_PLANE_H)
 #define _PLANE_H
 
+#include "Types.h"
 #include "Collidable.h"
 
 class Circle;
@@ -16,12 +17,12 @@ class Plane : public Collidable
 	vector2 m_Normal;
 
 public:
+	 Plane(void);
+
 	vector2 GetNormal(void) const { return m_Normal; }
 	void SetNormal(const vector2& normal) { m_Normal = normal; }
 
-	bool WithCircle(const Circle* circle);
-	bool WithPlane(const Plane* plane);
-	bool WithSquare(const Square* square);
+	bool Check(const Collidable* colObject);
 };
 
 #endif  //_PLANE_H

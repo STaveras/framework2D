@@ -3,6 +3,7 @@
 #include "ObjectOperator.h"
 #include "GameObject.h"
 
+// This is more like "hard attach"
 class FollowObject: public ObjectOperator
 {
       GameObject* _source; // the object following

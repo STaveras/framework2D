@@ -12,6 +12,8 @@ class GameObject;
 class ObjectOperator
 {
 public:
+	virtual ~ObjectOperator(void) {}
+
 	virtual bool operator()(GameObject* object) = 0; // TODO: Make it return a status code?
 };
 

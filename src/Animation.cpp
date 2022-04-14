@@ -83,10 +83,10 @@ void Animation::Mirror(bool bHorizontal, bool bVertical)
 		(*i)->GetSprite()->Mirror(bHorizontal,bVertical);
 }
 
-Frame* Animation::AddFrame(Sprite* sprite)
-{
-	return AddFrame(sprite, 0.0f);
-}
+//Frame* Animation::AddFrame(Sprite* sprite)
+//{
+//	return AddFrame(sprite, 0.0f);
+//}
 
 Frame* Animation::AddFrame(Sprite* sprite, float duration)
 {
@@ -135,4 +135,15 @@ bool Animation::operator==(const Animation& a) const
 {
 	return (m_eMode == a.m_eMode && m_bForward == a.m_bForward && m_fSpeed == a.m_fSpeed && m_szName == a.m_szName && m_Frames == a.m_Frames);
 }
+
+Animation* Animation::loadAnimationsFrom(const char* szFilename)
+{
+   throw "Animation::loadAnimationFrame unimplemented;";
+}
+
+//void Animation::removeFrameData(void)
+//{
+//   
+//}
+
 // Author: Stanley Taveras

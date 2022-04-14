@@ -208,7 +208,7 @@ void CommandInterpreter::AddCommand(const char* szCommand)
 
 void CommandInterpreter::RemoveCommand(const char* szCommand)
 {
-	m_Commands.Destroy(m_Commands.Find(Command(szCommand)));
+	//m_Commands.Destroy(m_Commands.Find(Command(szCommand)));
 }
 
 void CommandInterpreter::RegisterKeyPress(ButtonID btnID, float fTimeStamp)

@@ -8,44 +8,46 @@
 #include "Image.h"
 #include "GameObject.h"
 #include "Types.h"
+#include "Plane.h"
 #include "IRenderer.h"
 #include <list>
 #include <vector>
 // Forward declarations
-class Plane;
 class Music;
 class Stage
 {
 public:
-	struct Layer
-	{
-		Image* m_pImage;
-		vector2 m_Position;
+	 struct Layer
+	 {
+		  Image* m_pImage;
+		  vector2 m_Position;
 
-		Layer(Image* pImage, vector2 position):m_pImage(pImage), m_Position(position){}
-	};
+		  Layer(Image* pImage, vector2 position) :m_pImage(pImage), m_Position(position) {}
+	 };
 
-	bool _bVisible;
-	Plane* m_pGroundPlane;
-	IRenderer::RenderList* _renderList;
-	std::vector<Music*> m_lsRoundMusic;
-	std::list<Layer> m_lsBackgroundLayers;
+	 bool _bVisible;
+	 Plane m_pGroundPlane;
+	 IRenderer::RenderList* _renderList;
+	 std::vector<Music*> m_lsRoundMusic;
+	 std::list<Layer> m_lsBackgroundLayers;
+
+	 // std::list<ObjectOperator*> _ruleSet;
 
 public:
-	Stage(void):_bVisible(false),m_pGroundPlane(NULL){}
+	 Stage(void) :_bVisible(false) {}
 
-	bool isVisible(void) const { return _bVisible; }
-	void setVisibility(bool bVisible);
+	 bool isVisible(void) const { return _bVisible; }
+	 void setVisibility(bool bVisible);
 
-	Music* GetRoundMusic(unsigned int uiIndex) { return m_lsRoundMusic[uiIndex]; }
-	void AddRoundMusic(Music* pMusic) { m_lsRoundMusic.push_back(pMusic); }
+	 Music* GetRoundMusic(unsigned int uiIndex) { return m_lsRoundMusic[uiIndex]; }
+	 void AddRoundMusic(Music* pMusic) { m_lsRoundMusic.push_back(pMusic); }
 
-	void AddLayer(Image* layer, vector2 position);
-	void PopLayer(void);
-	void Move(vector2 amount);
-	bool LoadFromFile(const char* filepath);
-	void Update(float fTime);
-	void Reset(void);
+	 void AddLayer(Image* layer, vector2 position);
+	 void PopLayer(void);
+	 void Move(vector2 amount);
+	 bool LoadFromFile(const char* filepath);
+	 void Update(float fTime);
+	 void Reset(void);
 };
 
 #endif  //_STAGE_H
