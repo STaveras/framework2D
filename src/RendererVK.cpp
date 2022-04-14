@@ -2,7 +2,6 @@
 // Modified: 4/1/2022
 
 #include "RendererVK.h"
-#include "Renderer.h"
 
 // NOTE: We should try and decouple the ide of a "window" from this, considering we may want to use this to render off-screen
 
@@ -522,9 +521,9 @@ void RendererVK::Initialize(void)
             throw std::runtime_error("Failed to create Vulkan instance!");
         }
 
-        // if (glfwCreateWindowSurface(_instance, window, nullptr, &surface) != VK_SUCCESS) {
-        //     throw std::runtime_error("Failed to create window surface!");
-        // }
+        if (glfwCreateWindowSurface(_instance, window, nullptr, &surface) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create window surface!");
+        }
 
         uint32_t extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -561,11 +560,14 @@ void RendererVK::Shutdown(void)
 {
     if (_instance) {
 
-        vkDestroySwapchainKHR(_device, swapChain, nullptr);
+        if (swapChain != VK_NULL_HANDLE)
+            vkDestroySwapchainKHR(_device, swapChain, nullptr);
 
-        vkDestroySurfaceKHR(_instance, surface, nullptr);
+        if (surface != VK_NULL_HANDLE)
+            vkDestroySurfaceKHR(_instance, surface, nullptr);
 
-        vkDestroyDevice(_device, nullptr);
+        if (_device != VK_NULL_HANDLE)
+            vkDestroyDevice(_device, nullptr);
 
         if (enableValidationLayers) {
             destroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);

@@ -18,12 +18,23 @@
 #include <d3dx9math.h>
 
 #else
+
+#define GLFW_BUILD_UNIVERSAL
+#define GLFW_USE_MENUBAR
+#define GLFW_INCLUDE_VULKAN
+
+#include <GLFW/glfw3.h>
+
+#endif
+
 #if defined(GLM) || defined(__APPLE__) || defined(unix) || defined(__unix) || defined(__unix__)
 
 #include <glm/glm.hpp>
 
 #define vector2 glm::vec2
 #define matrix4x4 glm::mat4
+
+#endif
 
 #ifndef _WIN32
 
@@ -37,23 +48,23 @@ struct rect {
 
 #define RECT rect
 
-#endif 
+#elif !defined(GLM)
 
-#else
-
+// Windows
 #define vector2 D3DXVECTOR2 // TODO: As above, write the wrapper so you don't have to use raw d3d math calls in your code...
 #define matrix4x4 D3DXMATRIX
 #define RECT RECT
+// ---------------------------------------------------------------------------------------------------------------------
 
 #endif
 
 #define byte unsigned char
 
-#endif
-
 #include "color.h"
 
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"
+
+#define SAFE_DELETE(x) if(x) { delete x; x = NULL; }
 
 #endif

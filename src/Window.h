@@ -1,13 +1,8 @@
 // File: Window.h
 #pragma once
-#ifdef _WIN32
-#include <windows.h>
-#else
-#define GLFW_BUILD_UNIVERSAL
-#define GLFW_USE_MENUBAR
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#endif
+
+#include "Types.h"
+
 class Window
 {
 	bool m_bHasQuit;
@@ -17,8 +12,9 @@ class Window
 	const char* m_szWindowClassName;
 #ifndef _WIN32
 	GLFWwindow* _window;
-
+public:
 	GLFWwindow * getUnderlyingWindow(void) { return _window; }
+private:
 #else
 	struct {
 		HWND m_hWnd;

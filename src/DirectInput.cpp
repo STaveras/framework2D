@@ -10,49 +10,64 @@ DirectInput::DirectInput(HINSTANCE hInstance, HWND hWnd) :
    m_hWnd(hWnd),
    m_lpDirectInput(NULL) {
 
-   m_pKeyboard = new DIKeyboard();
-   m_pMouse = new DIMouse();
+   _keyboard = new DIKeyboard();
+   _mouse = new DIMouse();
 
    if (FAILED(DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDirectInput, NULL)))
       throw "Failed to create DirectInput COM interface";
 }
 
 DirectInput::~DirectInput(void) {
-   delete m_pMouse;
-   delete m_pKeyboard;
+   
+   SAFE_DELETE(_keyboard);
+   SAFE_DELETE(_mouse);
+   
+   // if (m_lpDirectInput) {
+   //    if (_mouse) {
+   //       ((DIMouse*)_mouse)->Release();
+   //    }
+
+   //    if (_keyboard) {
+   //       ((DIKeyboard*)_keyboard)->Release();
+   //    }
+
+   //    m_lpDirectInput->Release();
+   //    m_lpDirectInput = NULL;
+   // }
 }
 
 void DirectInput::Initialize(void)
 {
+   // We should honestly just do all this stuff in the constructor
    if (m_lpDirectInput)
    {
-	   if (m_pKeyboard && !((DIKeyboard*)m_pKeyboard)->Acquire(m_lpDirectInput, m_hWnd))
+	   if (_keyboard && !((DIKeyboard*)_keyboard)->Acquire(m_lpDirectInput, m_hWnd))
          throw "Failed to create the keyboard";
 
-      if (m_pMouse && !((DIMouse*)m_pMouse)->Acquire(m_lpDirectInput, m_hWnd))
+      if (_mouse && !((DIMouse*)_mouse)->Acquire(m_lpDirectInput, m_hWnd))
          throw "Failed to create the mouse";
    }
 }
 
 void DirectInput::Update(void)
 {
-   if (m_pKeyboard)
-      ((DIKeyboard*)m_pKeyboard)->Update();
+   if (_keyboard)
+      ((DIKeyboard*)_keyboard)->Update();
 
-   if (m_pMouse)
-      ((DIMouse*)m_pMouse)->Update();
+   if (_mouse)
+      ((DIMouse*)_mouse)->Update();
 }
 
 void DirectInput::Shutdown(void)
 {
    if (m_lpDirectInput)
    {
-      if (m_pMouse) {
-         ((DIMouse*)m_pMouse)->Release();
+      if (_mouse) {
+         ((DIMouse*)_mouse)->Release();
       }
 
-      if (m_pKeyboard) {
-         ((DIKeyboard*)m_pKeyboard)->Release();
+      if (_keyboard) {
+         ((DIKeyboard*)_keyboard)->Release();
       }
 
       m_lpDirectInput->Release();

@@ -9,3 +9,11 @@
    - Varying heights
    - Varying distances from each other
  - Count the flaps
+
+---
+
+Building dependencies:
+- GLM
+- GLFW
+- Vulkan
+- TinyXML2

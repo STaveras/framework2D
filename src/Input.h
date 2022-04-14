@@ -2,6 +2,8 @@
 #pragma once
 #include "IInput.h"
 #include "DirectInput.h"
+#include "PlatformInput.h"
+#include "Window.h"
 namespace Input
 {
 #ifdef _WIN32
@@ -9,8 +11,13 @@ namespace Input
 	{
 		return (IInput*)(new DirectInput(hInstance, hWnd));
 	}
+#else
+	static IInput* CreateInputInterface(Window *window)
+	{
+		return new PlatformInput(window);
+	}
 #endif
-
+	// This shouldn't be a thing
 	static void DestroyInputInterface(IInput* pInput) {
       if (pInput) {
          delete pInput;

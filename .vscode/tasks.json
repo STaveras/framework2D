@@ -38,6 +38,8 @@
                 "Trigger.cpp",
                 "UpdateBackgroundOperator.cpp",
                 "SDSParser.cpp",
+                "PlatformInput.cpp",
+                "PlatformKeyboard.cpp",
                 "-o",
                 "${workspaceFolder}/bin/${workspaceFolderBasename}",
                 "-MMD","-MF",

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
    window.Initialize();
 
    RendererVK *pRenderer = (RendererVK *)Renderer::CreateVKRenderer(&window);
-   IInput *pInput = NULL;
+   IInput *pInput = (IInput*)Input::CreateInputInterface(&window);
    
 #endif
 

@@ -4,7 +4,7 @@
 class IKeyboard
 {
 public:
-	virtual ~IKeyboard(void) = 0;
+	virtual ~IKeyboard(void) = default; // GCC/Clang requires this because of stupidity
 
 	virtual void Release(void) = 0;
 

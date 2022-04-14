@@ -13,17 +13,17 @@
 class IInput
 {
 protected:
-	IKeyboard* m_pKeyboard;
-	IMouse* m_pMouse;
+	IKeyboard* _keyboard;
+	IMouse* _mouse;
 
 	// TODO: Add physical gamepad support
 
 public:
-	IInput(void) : m_pKeyboard(NULL), m_pMouse(NULL) {}
+	IInput(void) : _keyboard(NULL), _mouse(NULL) {}
 	virtual ~IInput(void) = 0;
 
-	virtual IKeyboard* GetKeyboard(void) { return m_pKeyboard; }
-	virtual IMouse* GetMouse(void) { return m_pMouse; }
+	virtual IKeyboard* GetKeyboard(void) { return _keyboard; }
+	virtual IMouse* GetMouse(void) { return _mouse; }
 
 	virtual void Initialize(void) = 0;
 	virtual void Update(void) = 0;
