@@ -232,4 +232,5 @@ void RendererDX::Render(void)
 
    m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 }
+
 #endif
