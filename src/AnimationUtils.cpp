@@ -124,4 +124,13 @@ namespace Animations {
 
       return animations;
    }
+
+   std::vector<Animation*> fromDirectory(const char* directoryPath)
+   {
+      std::vector<Animation*> animations;
+
+      // TODO: Go through a directory, and use the structure of the subdirectories to import animations and their associated images
+
+      return animations;
+   }
 }

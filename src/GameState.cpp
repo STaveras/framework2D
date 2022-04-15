@@ -53,8 +53,8 @@ void GameState::onExit(void)
    _inputManager.Shutdown();
    _animationManager.Shutdown();
 
-   engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_REMOVED", this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->RegisterCallback<GameState>("EVT_OBJECT_ADDED", this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->Unregister<GameState>("EVT_OBJECT_REMOVED", this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->Unregister<GameState>("EVT_OBJECT_ADDED", this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->Unregister<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->Unregister<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
 
