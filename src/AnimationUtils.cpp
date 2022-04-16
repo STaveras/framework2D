@@ -3,6 +3,8 @@
 #include "Animation.h"
 #include "AnimationManager.h"
 
+#include "FileSystem.h"
+
 #include <string>
 #include <tinyxml2.h>
 
@@ -129,6 +131,9 @@ namespace Animations {
    {
       std::vector<Animation*> animations;
 
+      // FileSystem namespace function test
+      // std::vector<std::string> files = FileSystem::GetFiles(directoryPath, "*.xml");
+      std::vector<std::string> files = FileSystem::ListFiles(directoryPath);
       // TODO: Go through a directory, and use the structure of the subdirectories to import animations and their associated images
 
       return animations;

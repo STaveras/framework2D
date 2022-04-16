@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",

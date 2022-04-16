@@ -85,6 +85,7 @@
         "typeindex": "cpp",
         "unordered_set": "cpp",
         "variant": "cpp",
-        "allocator": "cpp"
+        "allocator": "cpp",
+        "cfloat": "cpp"
     }
 }

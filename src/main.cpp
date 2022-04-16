@@ -20,6 +20,7 @@
 #include "UpdateBackgroundOperator.h"
 
 #include "AnimationUtils.h"
+#include "FileSystem.h"
 
 #include "FlappyTurd.h"
 
@@ -33,6 +34,21 @@ int main(int argc, char **argv)
 #endif
 {
    Window window = Window(320, 460, "Flap a Turd");
+
+   std::string dataDirectoryPath = "data/";
+   std::vector<std::string> subdirectories = FileSystem::ListSubdirectories(dataDirectoryPath.c_str());
+
+   for (std::string subdirectory : subdirectories)
+   {
+      std::cout << dataDirectoryPath + subdirectory << std::endl;
+      std::vector<std::string> files = FileSystem::ListFiles((dataDirectoryPath + subdirectory).c_str());
+
+      for (std::string file: files) {
+         std::cout << "Found file: " << file << std::endl;
+      }
+
+      std::cout << std::endl;
+   }
 
 #ifdef _WIN32
    window.Initialize(hInstance, lpCmdLine);
