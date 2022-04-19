@@ -1,6 +1,11 @@
 
 #include "Timer.h"
 
+// I'm just realizing that this timer has been based on fractional seconds, instead of milliseconds...
+// The bugs are going to be hilarious.
+
+using namespace std::chrono;
+
 Timer::Timer(void) : m_lDelta(0.0f),
 					 m_lFrameCap(0.0f),
 					 m_uiTicks(0)
@@ -11,7 +16,7 @@ Timer::Timer(void) : m_lDelta(0.0f),
 	QueryPerformanceCounter(&m_liElapsed);
 	QueryPerformanceCounter(&m_liTimer);
 #else
-	m_tpTime = m_tpElapsed = m_tpDelta = std::chrono::high_resolution_clock::now();
+	m_tpTime = m_tpElapsed = m_tpDelta = high_resolution_clock::now();
 #endif
 }
 
@@ -24,7 +29,7 @@ long Timer::_GetTimer(void)
 	return (double)(liCurrent.QuadPart - m_liTimer.QuadPart) / (double)m_liFrequency.QuadPart;
 #else
 	// return std::chrono::high_resolution_clock::now().time_since_epoch().count();
-	return std::chrono::duration_cast<std::chrono::duration<long>>(std::chrono::high_resolution_clock::now() - m_tpTime).count();
+	return duration_cast<duration<long>>(high_resolution_clock::now() - m_tpTime).count();
 #endif
 	return -1;
 }
@@ -37,7 +42,7 @@ long Timer::GetElapsedTime(void) const
 
 	return (double)(liCurrent.QuadPart - m_liElapsed.QuadPart) / (double)m_liFrequency.QuadPart;
 #else
-	return std::chrono::duration_cast<std::chrono::duration<long>>(std::chrono::high_resolution_clock::now() - m_tpElapsed).count();
+	return duration_cast<duration<long>>(high_resolution_clock::now() - m_tpElapsed).count();
 #endif
 	return -1;
 }

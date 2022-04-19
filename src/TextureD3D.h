@@ -2,6 +2,7 @@
 #pragma once
 
 #include "ITexture.h"
+#ifdef _WIN32
 #include <d3d9.h>
 #include <d3dx9tex.h>
 
@@ -24,3 +25,4 @@ public:
 	unsigned int GetWidth(void) const { return m_tImageInfo.Width; }
 	unsigned int GetHeight(void) const { return m_tImageInfo.Height; }
 };
+#endif

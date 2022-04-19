@@ -164,21 +164,21 @@ int rateDeviceSuitability(VkPhysicalDevice device) {
     return score;
 }
 
-RendererVK::QueueFamilyIndices RendererVK::findQueueFamilies(void) {
+RendererVK::QueueFamilyIndices RendererVK::findQueueFamilies(VkPhysicalDevice device) {
 
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(_physicalDevice, &queueFamilyCount, nullptr);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(_physicalDevice, &queueFamilyCount, queueFamilies.data());
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
     int i = 0;
     for (const auto &queueFamily : queueFamilies) {
 
         VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(_physicalDevice, i, _surface, &presentSupport);
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, _surface, &presentSupport);
 
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
@@ -198,26 +198,26 @@ RendererVK::QueueFamilyIndices RendererVK::findQueueFamilies(void) {
     return indices;
 }
 
-RendererVK::SwapChainSupportDetails RendererVK::querySwapChainSupport(void)
+RendererVK::SwapChainSupportDetails RendererVK::querySwapChainSupport(VkPhysicalDevice device)
 {
     SwapChainSupportDetails details;
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_physicalDevice, _surface, &details.capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
 
     uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(_physicalDevice, _surface, &formatCount, nullptr);
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
 
     if (formatCount != 0) {
         details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(_physicalDevice, _surface, &formatCount, details.formats.data());
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
     }
 
     uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(_physicalDevice, _surface, &presentModeCount, nullptr);
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
 
     if (presentModeCount != 0) {
         details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(_physicalDevice, _surface, &presentModeCount, details.presentModes.data());
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
     }
 
     return details;
@@ -307,20 +307,20 @@ bool RendererVK::isDeviceSuitable(VkPhysicalDevice device) {
 
     // return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 
-    QueueFamilyIndices indices = findQueueFamilies();
+    QueueFamilyIndices indices = findQueueFamilies(device);
     bool extensionsSupported = checkDeviceExtensionSupport(device);
 
     bool swapChainAdequate = false;
 
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport();
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
     return indices.isComplete() && extensionsSupported && swapChainAdequate;
 }
 
-void RendererVK::pickPhysicalDevice(VkInstance instance, VkPhysicalDevice& physicalDevice) 
+void RendererVK::pickPhysicalDevice(VkInstance instance) 
 {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -333,16 +333,18 @@ void RendererVK::pickPhysicalDevice(VkInstance instance, VkPhysicalDevice& physi
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
     for (const auto &device : devices) {
-        if (isDeviceSuitable(device)) {
-            physicalDevice = device;
-            break;
+        if (device != VK_NULL_HANDLE) {
+            if (isDeviceSuitable(device)) {
+                _physicalDevice = device;
+                break;
+            }
         }
     }
 }
 
-void RendererVK::createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice& device) {
+void RendererVK::createLogicalDevice(VkPhysicalDevice physicalDevice) {
 
-    QueueFamilyIndices indices = findQueueFamilies();
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
     float queuePriority = 1.0f;
 
@@ -371,17 +373,17 @@ void RendererVK::createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice& 
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &_device) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
 
-    vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &_graphicsQueue);
-    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &_presentQueue);
+    vkGetDeviceQueue(_device, indices.graphicsFamily.value(), 0, &_graphicsQueue);
+    vkGetDeviceQueue(_device, indices.presentFamily.value(), 0, &_presentQueue);
 }
 
 void RendererVK::createSwapChain(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window) 
 {
-    SwapChainSupportDetails swapChainSupport = querySwapChainSupport();
+    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -402,13 +404,13 @@ void RendererVK::createSwapChain(VkPhysicalDevice physicalDevice, VkDevice devic
     createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1; // This would be 2 in VR!
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+    createInfo.preTransform = swapChainSupport.capabilities.currentTransform; // y tho; i wanna find out if we can set this to mean that our world's coordinate system is oriented in the same way that it would be in DirectX
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE; // Screen-space-based algorithms may not work?
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    QueueFamilyIndices indices = findQueueFamilies();
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
     if (indices.graphicsFamily != indices.presentFamily)
@@ -424,8 +426,8 @@ void RendererVK::createSwapChain(VkPhysicalDevice physicalDevice, VkDevice devic
         createInfo.pQueueFamilyIndices = nullptr; // Optional
     }
 
-    // swapChainImageFormat = surfaceFormat.format;
-    // swapChainExtent = extent;
+    _swapChainImageFormat = surfaceFormat.format;
+    _swapChainExtent = extent;
 
     if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &_swapChain) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create swap chain!");
@@ -517,8 +519,8 @@ void RendererVK::Initialize(void)
             setupDebugMessenger(_instance);
         }
 
-        pickPhysicalDevice(_instance, _physicalDevice);
-        createLogicalDevice(_physicalDevice, _device);
+        pickPhysicalDevice(_instance);
+        createLogicalDevice(_physicalDevice);
         createSwapChain(_physicalDevice, _device, window);
 
         // we might have to wait a lil bit for this to work? (grabbing a "swapChain" apparently takes a while)
@@ -563,6 +565,8 @@ void RendererVK::Render(void)
 
     if (_device == VK_NULL_HANDLE)
 		return;
+
+    // _device-
 
 	// m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 

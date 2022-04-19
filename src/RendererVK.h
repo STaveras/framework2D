@@ -51,12 +51,12 @@ class RendererVK : public IRenderer
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    QueueFamilyIndices findQueueFamilies(void);
-    SwapChainSupportDetails querySwapChainSupport(void);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
     bool isDeviceSuitable(VkPhysicalDevice device);
-    void pickPhysicalDevice(VkInstance instance, VkPhysicalDevice& physicalDevice);
-    void createLogicalDevice(VkPhysicalDevice physicalDevice, VkDevice& device);
+    void pickPhysicalDevice(VkInstance instance);
+    void createLogicalDevice(VkPhysicalDevice physicalDevice);
     void createSwapChain(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window);
 
 public:

@@ -58,7 +58,7 @@ struct rect {
 
 #endif
 
-#define byte unsigned char
+#define byte char
 
 #include "color.h"
 

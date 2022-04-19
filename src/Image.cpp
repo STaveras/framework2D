@@ -95,8 +95,7 @@ Image* Image::Load(const char* filePath, color clearColor, const RECT* srcRect)
 
 		if (m_pTexture)
 		{
-			if(srcRect)
-			{
+			if(srcRect) {
 				this->SetSourceRect(*srcRect);
 			}
 			else
