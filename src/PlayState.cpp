@@ -78,7 +78,7 @@ void PlayState::onEnter(void)
 void PlayState::onExecute(float time)
 {
 	GameState::onExecute(time);	
-	Engine2D::getInstance()->GetTimer()->LimitFrameRate(60);
+	Engine2D::getInstance()->getTimer()->LimitFrameRate(60);
     _backgroundNoise->update(time);
 }
 

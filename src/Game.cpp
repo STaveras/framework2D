@@ -10,11 +10,14 @@ void Game::Begin(void)
 void Game::Update(Timer* timer)
 {
    if (!this->empty()) {
+
       if (timer) {
          ProgramStack::update((float)timer->GetDeltaTime());
       }
       else {
-         // TODO: Create a timer
+         timer = new Timer();
+         this->Update(new Timer());
+         delete timer;
       }
    }
    else {

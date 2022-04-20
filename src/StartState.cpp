@@ -22,7 +22,7 @@ void StartState::onEnter(void)
 void StartState::onExecute(float time)
 {
 	GameState::onExecute(time);
-	Engine2D::getInstance()->GetTimer()->LimitFrameRate(60);
+	Engine2D::getInstance()->getTimer()->LimitFrameRate(60);
 }
 
 void StartState::onExit(void)

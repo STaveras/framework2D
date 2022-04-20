@@ -1,6 +1,8 @@
 // Created:  3/31/2022
 // Modified: 4/1/2022
 
+#pragma comment(lib, "vulkan-1.lib")
+
 #include "RendererVK.h"
 #include "Renderer.h"
 #include "Window.h"
@@ -268,6 +270,7 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
 
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 
+   return VkExtent2D();
 }
 
 bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -288,8 +291,8 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 bool isDeviceSuitable(VkPhysicalDevice device) {
-
-        // // Use an ordered map to automatically sort candidates by increasing score
+   
+   // // Use an ordered map to automatically sort candidates by increasing score
     // std::multimap<int, VkPhysicalDevice> candidates;
 
     // for (const auto& device : devices) {
@@ -573,6 +576,11 @@ void RendererVK::Render(void)
 
 	// m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 	// InvalidateRect(m_hWnd, NULL, true);
+
+    /* Swap front and back buffers */
+    //if (_window) {
+    //   glfwSwapBuffers(_window);
+    //}
 }
 
 ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)

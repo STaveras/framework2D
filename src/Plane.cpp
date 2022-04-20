@@ -16,8 +16,8 @@ bool Plane::Check(const Collidable* c) {
 
 
 		  break;
-	 default:
-		  return false;
 
 	 }
+
+	 return false;
 }

@@ -7,22 +7,21 @@ Window *Renderer::window = NULL;
 IRenderer *Renderer::Get(void) { return Engine2D::GetRenderer(); }
 
 #if _WIN32
-// This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
 IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
 {
 	IRenderer *renderer = new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync);
 	return renderer;
 }
-#else
-IRenderer *Renderer::CreateVKRenderer(Window *window)
+#endif
+
+IRenderer* Renderer::CreateVKRenderer(Window* window)
 {
 	Renderer::window = window;
-	IRenderer *renderer = new RendererVK();
+	IRenderer* renderer = new RendererVK();
 	renderer->SetWidth(window->GetWidth());
 	renderer->SetHeight(window->GetHeight());
 	return renderer;
 }
-#endif
 
 void Renderer::DestroyRenderer(IRenderer *pRenderer)
 {

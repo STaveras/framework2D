@@ -18,8 +18,6 @@ class Engine2D : public ISingleton<Engine2D>
    Game* _pGame;
    IInput* _pInput;
    IRenderer* _pRenderer;
-   EventSystem _EventSystem; // Move to the CPP?
-   Timer _Timer; // Move to the CPP?
 
 public:
    Engine2D(void);
@@ -30,10 +28,10 @@ public:
    static Game* GetGame(void) { return Engine2D::getInstance()->_pGame; }
    static void SetGame(Game* game) { Engine2D::getInstance()->_pGame = game; }
 
-   static EventSystem* getEventSystem(void) { return &(Engine2D::getInstance()->_EventSystem); }
-   static Timer* GetTimer(void) { return &(Engine2D::getInstance()->_Timer); }
+   static EventSystem* getEventSystem(void);
+   static Timer* getTimer(void);
 
-   static IRenderer* GetRenderer(void) { return Engine2D::getInstance()->_pRenderer; }
+   static IRenderer* GetRenderer(void);
    static void SetRenderer(IRenderer* renderer) { Engine2D::getInstance()->_pRenderer = renderer; }
 
    static IInput* GetInput(void) { return Engine2D::getInstance()->_pInput; } // Add support for multiple devices...?

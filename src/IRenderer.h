@@ -13,7 +13,7 @@
 
 class Camera;
 
-class IRenderer
+typedef class IRenderer
 {
 public:
 	 typedef struct RenderList : public std::list<class Renderable*> {
@@ -89,6 +89,6 @@ public:
 	 virtual void Initialize(void) = 0;
 	 virtual void Shutdown(void) = 0;
 	 virtual void Render(void) = 0;
-};
+}RenderingInterface;
 
 #endif

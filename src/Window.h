@@ -5,9 +5,9 @@
 #else
 #define GLFW_BUILD_UNIVERSAL
 #define GLFW_USE_MENUBAR
+#endif
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#endif
 class Window
 {
 	bool m_bHasQuit;
@@ -18,23 +18,20 @@ class Window
 	HDC m_hDC;
 	HINSTANCE m_hInstance;
 	LPSTR m_lpCmdLine;
-#else
-	GLFWwindow* _window;
 #endif
+	GLFWwindow* _window;
+
 	const char* m_szWindowTitle;
 	const char* m_szWindowClassName;
 
 	void _resize(void);
-
 #ifdef _WIN32
 	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-#else
+#endif
 protected:
 	friend class RendererVK;
 
 	GLFWwindow * getUnderlyingWindow(void) { return _window; }
-#endif
 
 public:
 	Window(void);
@@ -56,12 +53,10 @@ public:
 	void SetWidth(int nWidth) { m_nWidth = nWidth; }
 	void SetHeight(int nHeight) { m_nHeight = nHeight; }
 	void SetWindowTitle(const char* szWindowTitle) { m_szWindowTitle = szWindowTitle; }
-
 #ifdef _WIN32
 	void Initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
-#else
-	void Initialize(void);
 #endif
+	void Initialize(void);
 	void Update(void);
 	void Shutdown(void);
 };
