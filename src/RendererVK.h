@@ -3,6 +3,8 @@
 
 #include "Renderer.h"
 
+#include "ImageLoaders.h"
+
 #include <vector>
 
 #if __APPLE__
@@ -25,10 +27,26 @@ class RendererVK : public IRenderer
     VkQueue _presentQueue = VK_NULL_HANDLE;
     VkQueue _graphicsQueue = VK_NULL_HANDLE;
 
+    VkPipeline _graphicsPipeline = VK_NULL_HANDLE;
+    VkPipelineLayout _pipelineLayout = VK_NULL_HANDLE;
+
+    VkRenderPass _renderPass = VK_NULL_HANDLE;
+
+    VkCommandPool _commandPool;
+
+    VkCommandBuffer _commandBuffer;
+
+    std::vector<VkCommandBuffer> _commandBuffers;
+
     VkSwapchainKHR _swapChain = VK_NULL_HANDLE;
     VkExtent2D _swapChainExtent;
     VkFormat _swapChainImageFormat;
-    std::vector<VkImage> swapChainImages;
+
+    std::vector<VkImage> _swapChainImages;
+    std::vector<VkImageView> swapChainImageViews;
+    std::vector<VkFramebuffer> _swapChainFramebuffers;
+
+    std::vector<VkShaderModule> _shaderModules;
 
     #if !defined(NDEBUG)
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -54,10 +72,25 @@ class RendererVK : public IRenderer
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
+    VkShaderModule createShaderModule(VkDevice device, const std::vector<char> &code);
+
     bool isDeviceSuitable(VkPhysicalDevice device);
     void pickPhysicalDevice(VkInstance instance);
     void createLogicalDevice(VkPhysicalDevice physicalDevice);
     void createSwapChain(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window);
+
+    void createImageViews(VkDevice device);
+
+    void createRenderPass(VkDevice device);
+
+    void createGraphicsPipeline(VkDevice device);
+
+    void createFramebuffers(VkDevice device);    
+    
+    void createCommandPool(VkDevice device);
+    void createCommandBuffer(VkDevice device);
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 public:
     RendererVK(void);

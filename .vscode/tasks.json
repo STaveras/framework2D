@@ -1,6 +1,11 @@
 {
     "tasks": [
         {
+            "type": "shell",
+            "label": "Compile shaders",
+            "command": "./compile-shaders.sh",
+        },
+        {
             "type": "cppbuild",
             "label": "C/C++: clang++ build active file",
             "command": "/usr/bin/clang++",
@@ -40,6 +45,8 @@
                 "SDSParser.cpp",
                 "PlatformInput.cpp",
                 "PlatformKeyboard.cpp",
+                /*this might be temporary*/
+                "ImageLoaders.cpp",
                 "-o",
                 "${workspaceFolder}/bin/${workspaceFolderBasename}",
                 "-MMD","-MF",

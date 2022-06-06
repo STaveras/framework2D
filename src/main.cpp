@@ -24,31 +24,41 @@
 
 #include "FlappyTurd.h"
 
+// Ultimately, I want the executable to just be able to support running games without having to statically build a game
+// from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
+// load assets, levels, and other miscellaneous data
+
+#define DATA_PATH "./data/"
+
+const char* checkArgumentsForDataPath(int argc, char** argv) 
+{
+   if (argc > 1) {
+
+      for (int i = 0; i < argc; i++) {
+         if (!strcmp(argv[i], "--dataPath") || !strcmp(argv[i], "-D")) {
+            return argv[i + 1]; // What if it's empty?
+         }
+      }
+   }
+   return DATA_PATH;
+}
+
 #ifdef _WIN32
 
 //#include <vld.h>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+{
+   // TODO: Process lpCmdLine for data path and/or other flags
 #else
 int main(int argc, char **argv)
-#endif
 {
+   const char *dataPath = checkArgumentsForDataPath(argc, argv);
+#endif
+   // Check for game data
+   FileSystem::ScoutDirectory(dataPath);
+
    Window window = Window(320, 460, "Flap a Turd");
-
-   std::string dataDirectoryPath = "data/";
-   std::vector<std::string> subdirectories = FileSystem::ListSubdirectories(dataDirectoryPath.c_str());
-
-   for (std::string subdirectory : subdirectories)
-   {
-      std::cout << dataDirectoryPath + subdirectory << std::endl;
-      std::vector<std::string> files = FileSystem::ListFiles((dataDirectoryPath + subdirectory).c_str());
-
-      for (std::string file: files) {
-         std::cout << "Found file: " << file << std::endl;
-      }
-
-      std::cout << std::endl;
-   }
 
 #ifdef _WIN32
    window.Initialize(hInstance, lpCmdLine);
@@ -60,7 +70,6 @@ int main(int argc, char **argv)
 
    RendererVK *pRenderer = (RendererVK *)Renderer::CreateVKRenderer(&window);
    IInput *pInput = (IInput*)Input::CreateInputInterface(&window);
-   
 #endif
 
    Engine2D *engine = Engine2D::getInstance();

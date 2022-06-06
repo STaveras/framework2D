@@ -6,6 +6,17 @@
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
 
+#ifndef _CUSTOM_STREAM_OBJECT
+#include <fstream>
+
+// This makes it easy to convert to our own file stream later
+typedef std::fstream fpstream;
+typedef std::ifstream ifpstream;
+typedef std::ofstream ofpstream;
+#else
+// TODO: Use our own file stream for use with file packing
+#endif
+
 // TODO : Write your own wrapper for the DirectX math classes...
 
 #ifdef _WIN32
@@ -32,6 +43,7 @@
 #include <glm/glm.hpp>
 
 #define vector2 glm::vec2
+#define vector4 glm::vec4
 #define matrix4x4 glm::mat4
 
 #endif
@@ -58,7 +70,7 @@ struct rect {
 
 #endif
 
-#define byte char
+#define byte uint8_t
 
 #include "color.h"
 
@@ -66,5 +78,6 @@ struct rect {
 #include "MOUSE_BUTTONS.h"
 
 #define SAFE_DELETE(x) if(x) { delete x; x = NULL; }
+#define COUNT_OF(arr) sizeof(arr) / sizeof(arr[0])
 
 #endif

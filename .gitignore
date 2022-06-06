@@ -15,4 +15,5 @@ enc_temp_folder/
 bin/*.dll
 bin/*.exe
 bin/*.dSYM/**
+bin/data/cache/**
 bin/2Dgameframework

@@ -10,7 +10,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": [],
+            "args": ["--dataPath", "${workspaceFolder}/data"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],

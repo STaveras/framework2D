@@ -14,5 +14,10 @@ union color
 		return _color;
 	}
 #endif
-	const color& operator=(unsigned long value) { _color = value; return *this;}
+	const color& operator=(unsigned long value) { _color = value; return *this; }
+	const color& operator=(const color& value) { _color = value._color; return *this; }
+
+	operator vector4() const{
+		return vector4(r, g, b, a);
+	}
 };

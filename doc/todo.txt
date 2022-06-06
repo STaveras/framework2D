@@ -1,1 +1,3 @@
 - Reorganize base folder filters into folders by related-modules 
+- Write a CMake file to auto-generate project filters
+- Functions for reading in shader files and compiling them when necessary (as needed)
