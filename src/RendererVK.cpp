@@ -762,7 +762,7 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = _swapChainExtent;
     
-    VkClearValue clearColor = {{{m_ClearColor.r/255.0f, m_ClearColor.g/255.0f, m_ClearColor.g/255.0f, m_ClearColor.a/255.0f}}};
+    VkClearValue clearColor = {{{m_ClearColor.a/255.0f, m_ClearColor.r/255.0f, m_ClearColor.g/255.0f, m_ClearColor.b/255.0f}}};
     renderPassInfo.pClearValues = &clearColor;
     renderPassInfo.clearValueCount = 1;
 
