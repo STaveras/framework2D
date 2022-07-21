@@ -966,6 +966,8 @@ void RendererVK::Initialize(void)
 void RendererVK::Shutdown(void)
 {
     if (_instance) {
+        
+        vkDeviceWaitIdle(_device);
 
         if (_device)
         {
@@ -1068,7 +1070,6 @@ void RendererVK::Render(void)
 
     // m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 	// InvalidateRect(m_hWnd, NULL, true);
-    vkDeviceWaitIdle(_device);
 }
 
 ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)
