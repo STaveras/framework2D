@@ -17,4 +17,6 @@ public:
    virtual void Begin(void) = 0;
    virtual void Update(Timer* timer);
    virtual void End(void) = 0;
+
+   // virtual ~Game(void) { delete[] _Players; }
 };

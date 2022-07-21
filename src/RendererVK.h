@@ -36,6 +36,10 @@ class RendererVK : public IRenderer
 
     VkCommandBuffer _commandBuffer;
 
+    VkSemaphore imageAvailableSemaphore;
+    VkSemaphore renderFinishedSemaphore;
+    VkFence inFlightFence;
+
     std::vector<VkCommandBuffer> _commandBuffers;
 
     VkSwapchainKHR _swapChain = VK_NULL_HANDLE;
@@ -91,6 +95,7 @@ class RendererVK : public IRenderer
     void createCommandBuffer(VkDevice device);
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+    void createSyncObjects(void); // I don't necessarily want to even declare this here
 
 public:
     RendererVK(void);

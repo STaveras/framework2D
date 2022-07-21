@@ -1,6 +1,8 @@
 // Created:  3/31/2022
 // Modified: 4/1/2022
 
+// This is a Vulkan renderer based on the tutorial at: https://vulkan-tutorial.com/
+
 #include "RendererVK.h"
 
 #include "FileSystem.h"
@@ -652,13 +654,13 @@ void RendererVK::createRenderPass(VkDevice device)
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
 
-    // VkSubpassDependency dependency{};
-    // dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    // dependency.dstSubpass = 0;
-    // dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    // dependency.srcAccessMask = 0;
-    // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    VkSubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT /*| VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT8*/;
 
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -666,8 +668,8 @@ void RendererVK::createRenderPass(VkDevice device)
     renderPassInfo.pAttachments = &colorAttachment;
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
-    // renderPassInfo.dependencyCount = 1;
-    // renderPassInfo.pDependencies = &dependency;
+    renderPassInfo.dependencyCount = 1;
+    renderPassInfo.pDependencies = &dependency;
 
     if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
@@ -741,6 +743,7 @@ VkShaderModule RendererVK::createShaderModule(VkDevice device, const std::vector
     return shaderModule;
 }
 
+// This is going to be equivalent to the DirectX _DrawImage implementation.
 void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
     VkCommandBufferBeginInfo beginInfo{};
@@ -767,7 +770,74 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicsPipeline);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-    // This is where you'd draw stuff
+    // TODO: This is where you'd draw stuff
+
+	// m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
+
+	// // Begin drawing the scene
+	// if (SUCCEEDED(m_pD3DDevice->BeginScene()))
+	// {
+	// 	// TODO : (Optional) 3D Rendering here
+
+	// 	// Draw sprites
+	// 	if (SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
+	// 	{
+	// 		if (m_pCamera)
+	// 		{
+	// 			D3DXMATRIX viewMat;
+	// 			D3DXMatrixIdentity(&viewMat);
+
+	// 			D3DXMATRIX scaleMat;
+	// 			D3DXMatrixScaling(&scaleMat, m_pCamera->GetZoom(), m_pCamera->GetZoom(), 1.0f);
+
+	// 			D3DXMATRIX rotationMat;
+	// 			D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
+
+	// 			D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->GetCenter();
+
+	// 			viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1, 0), &position);
+	// 			viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0, 1), &position);
+
+	// 			viewMat = scaleMat * rotationMat * viewMat;
+
+	// 			m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
+	// 		}
+
+	// 		if (!_RenderLists.Empty())
+	// 		{
+	// 			for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+	// 			{
+	// 				for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+	// 				{
+	// 					if ((*o)->IsVisible())
+	// 					{
+	// 						switch ((*o)->getRenderableType())
+	// 						{
+	// 						case RENDERABLE_TYPE_IMAGE:
+	// 							_DrawImage((Image *)(*o));
+	// 							break;
+	// 						case RENDERABLE_TYPE_ANIMATION:
+	// 						{
+	// 							Animation *pAnimation = (Animation *)(*o);
+	// 							Frame *frame = pAnimation->GetCurrentFrame();
+
+	// 							if (frame)
+	// 								_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
+	// 						}
+	// 						break;
+	// 						}
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+
+	// 		m_pD3DSprite->End();
+	// 	}
+
+	// 	// TODO : Font rendering here
+
+	// 	m_pD3DDevice->EndScene();
+	// }
 
     vkCmdEndRenderPass(commandBuffer);
     
@@ -776,10 +846,27 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
     }
 }
 
+void RendererVK::createSyncObjects(void)
+{
+    VkSemaphoreCreateInfo semaphoreInfo{};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    if (vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
+        vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS ||
+        vkCreateFence(_device, &fenceInfo, nullptr, &inFlightFence) != VK_SUCCESS) {
+
+        throw std::runtime_error("failed to create sync objects!");
+    }
+}
+
 void RendererVK::Initialize(void)
 {
-    if (Renderer::window)
-    {
+    if (Renderer::window) {
+
         GLFWwindow *window = Renderer::window->getUnderlyingWindow();
 
         VkApplicationInfo appInfo{};
@@ -872,6 +959,7 @@ void RendererVK::Initialize(void)
         createFramebuffers(_device);
         createCommandPool(_device);
         createCommandBuffer(_device);
+        createSyncObjects();
     }
 }
 
@@ -879,40 +967,51 @@ void RendererVK::Shutdown(void)
 {
     if (_instance) {
 
-        vkDestroyCommandPool(_device, _commandPool, nullptr);
+        if (_device)
+        {
+            vkDestroySemaphore(_device, imageAvailableSemaphore, nullptr);
+            vkDestroySemaphore(_device, renderFinishedSemaphore, nullptr);
+            vkDestroyFence(_device, inFlightFence, nullptr);
 
-        for (auto framebuffer : _swapChainFramebuffers) {
-            vkDestroyFramebuffer(_device, framebuffer, nullptr);
+            vkDestroyCommandPool(_device, _commandPool, nullptr);
+
+            for (auto framebuffer : _swapChainFramebuffers) {
+                vkDestroyFramebuffer(_device, framebuffer, nullptr);
+            }
+
+            vkDestroyPipeline(_device, _graphicsPipeline, nullptr);
+
+            vkDestroyPipelineLayout(_device, _pipelineLayout, nullptr);
+
+            vkDestroyRenderPass(_device, _renderPass, nullptr);
+
+            for (auto shaderModule : _shaderModules) {
+                vkDestroyShaderModule(_device, shaderModule, nullptr);
+            }
+
+            for (auto imageView : swapChainImageViews) {
+                vkDestroyImageView(_device, imageView, nullptr);
+            }
+
+            if (_swapChain != VK_NULL_HANDLE)
+                vkDestroySwapchainKHR(_device, _swapChain, nullptr);
+
+            if (_surface != VK_NULL_HANDLE)
+                vkDestroySurfaceKHR(_instance, _surface, nullptr);
+
+            if (_device != VK_NULL_HANDLE)
+            {
+                vkDestroyDevice(_device, nullptr);
+                _device = VK_NULL_HANDLE;
+            }
         }
-
-        vkDestroyPipeline(_device, _graphicsPipeline, nullptr);
-
-        vkDestroyPipelineLayout(_device, _pipelineLayout, nullptr);
-
-        vkDestroyRenderPass(_device, _renderPass, nullptr);
-
-        for (auto shaderModule : _shaderModules) {
-            vkDestroyShaderModule(_device, shaderModule, nullptr);
-        }
-
-        for (auto imageView : swapChainImageViews) {
-            vkDestroyImageView(_device, imageView, nullptr);
-        }
-
-        if (_swapChain != VK_NULL_HANDLE)
-            vkDestroySwapchainKHR(_device, _swapChain, nullptr);
-
-        if (_surface != VK_NULL_HANDLE)
-            vkDestroySurfaceKHR(_instance, _surface, nullptr);
-
-        if (_device != VK_NULL_HANDLE)
-            vkDestroyDevice(_device, nullptr);
 
         if (enableValidationLayers) {
             destroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);
         }
 
         vkDestroyInstance(_instance, nullptr);
+        _instance = VK_NULL_HANDLE;
     }
 }
 
@@ -923,82 +1022,51 @@ void RendererVK::Render(void)
     if (_device == VK_NULL_HANDLE)
 		return;
 
-    
+    vkWaitForFences(_device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
+    vkResetFences(_device, 1, &inFlightFence);
 
-    // for (int i = 0; i < _swapChainImages.size(); i++) {
-    //     recordCommandBuffer(_commandBuffer, i);
-    // }
+    uint32_t imageIndex;
+    vkAcquireNextImageKHR(_device, _swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-    // _device-
+    vkResetCommandBuffer(_commandBuffer, 0);
 
-	// m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
+    recordCommandBuffer(_commandBuffer, imageIndex);
 
-	// // Begin drawing the scene
-	// if (SUCCEEDED(m_pD3DDevice->BeginScene()))
-	// {
-	// 	// TODO : (Optional) 3D Rendering here
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	// 	// Draw sprites
-	// 	if (SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
-	// 	{
-	// 		if (m_pCamera)
-	// 		{
-	// 			D3DXMATRIX viewMat;
-	// 			D3DXMatrixIdentity(&viewMat);
+    VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
 
-	// 			D3DXMATRIX scaleMat;
-	// 			D3DXMatrixScaling(&scaleMat, m_pCamera->GetZoom(), m_pCamera->GetZoom(), 1.0f);
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &_commandBuffer;
 
-	// 			D3DXMATRIX rotationMat;
-	// 			D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
 
-	// 			D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->GetCenter();
+    if (vkQueueSubmit(_graphicsQueue, 1, &submitInfo, inFlightFence) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
 
-	// 			viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1, 0), &position);
-	// 			viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0, 1), &position);
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-	// 			viewMat = scaleMat * rotationMat * viewMat;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
 
-	// 			m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
-	// 		}
+    VkSwapchainKHR swapChains[] = {_swapChain};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
 
-	// 		if (!_RenderLists.Empty())
-	// 		{
-	// 			for (unsigned int i = 0; i < _RenderLists.Size(); i++)
-	// 			{
-	// 				for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
-	// 				{
-	// 					if ((*o)->IsVisible())
-	// 					{
-	// 						switch ((*o)->getRenderableType())
-	// 						{
-	// 						case RENDERABLE_TYPE_IMAGE:
-	// 							_DrawImage((Image *)(*o));
-	// 							break;
-	// 						case RENDERABLE_TYPE_ANIMATION:
-	// 						{
-	// 							Animation *pAnimation = (Animation *)(*o);
-	// 							Frame *frame = pAnimation->GetCurrentFrame();
+    presentInfo.pImageIndices = &imageIndex;
 
-	// 							if (frame)
-	// 								_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->GetCenter());
-	// 						}
-	// 						break;
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 		}
+    vkQueuePresentKHR(_presentQueue, &presentInfo);
 
-	// 		m_pD3DSprite->End();
-	// 	}
-
-	// 	// TODO : Font rendering here
-
-	// 	m_pD3DDevice->EndScene();
-	// }
-
-	// m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+    // m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 	// InvalidateRect(m_hWnd, NULL, true);
     vkDeviceWaitIdle(_device);
 }
@@ -1009,3 +1077,5 @@ ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)
 
     return NULL;
 }
+
+// Stan Taveras

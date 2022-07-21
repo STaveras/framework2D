@@ -86,6 +86,16 @@
         "unordered_set": "cpp",
         "variant": "cpp",
         "allocator": "cpp",
-        "cfloat": "cpp"
+        "cfloat": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "future": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "hash_map": "cpp",
+        "*.tcc": "cpp",
+        "memory_resource": "cpp",
+        "stop_token": "cpp",
+        "cinttypes": "cpp"
     }
 }
