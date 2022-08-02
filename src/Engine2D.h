@@ -4,6 +4,7 @@
 #include "ISingleton.h"
 #include "EventSystem.h"
 #include "Timer.h"
+#include "System.h"
 #ifdef _DEBUG
 #include "Debug.h"
 #endif

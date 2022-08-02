@@ -6,6 +6,7 @@
 #include "RendererVK.h"
 
 #include "FileSystem.h"
+#include "System.h"
 
 // NOTE: We should try and decouple the ide of a "window" from this, considering we may want to use this to render off-screen
 #include <iostream>
@@ -27,6 +28,8 @@
 //     PFN_vkInternalAllocationNotification    pfnInternalAllocation;
 //     PFN_vkInternalFreeNotification          pfnInternalFree;
 // }
+
+const int MAX_FRAMES_IN_FLIGHT = 2; // This should dynamically adjust based on the GPU's performance
 
 VkAllocationCallbacks vkCallbacks{};
 
@@ -484,8 +487,10 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 
     // The following is a triangle rendering test.
 
-    auto vertShaderCode = FileSystem::File::Read("./data/cache/shader/tri.v.spv");
-    auto fragShaderCode = FileSystem::File::Read("./data/cache/shader/tri.f.spv");
+    // We need a shader loader that automatically reads and compiles shaders from files.
+    // auto vertShaderCode = FileSystem::File::Read("./data/cache/shader/tri.v.spv");
+    auto vertShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "cache/shader/tri.v.spv");
+    auto fragShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "cache/shader/tri.f.spv");
 
     VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
@@ -715,18 +720,20 @@ void RendererVK::createCommandPool(VkDevice device)
     }
 }
 
-void RendererVK::createCommandBuffer(VkDevice device)
+void RendererVK::createCommandBuffers(VkDevice device)
 {
+    _commandBuffers.resize(MAX_FRAMES_IN_FLIGHT); //_swapChainFramebuffers.size()
+
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = _commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
+    allocInfo.commandBufferCount = (uint32_t)_commandBuffers.size();
 
-    if (vkAllocateCommandBuffers(device, &allocInfo, &_commandBuffer) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(device, &allocInfo, _commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
-}
+}                                                                                                           
 
 VkShaderModule RendererVK::createShaderModule(VkDevice device, const std::vector<char> &code)
 {
@@ -848,6 +855,11 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 
 void RendererVK::createSyncObjects(void)
 {
+    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
+    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -855,11 +867,14 @@ void RendererVK::createSyncObjects(void)
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    if (vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
-        vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS ||
-        vkCreateFence(_device, &fenceInfo, nullptr, &inFlightFence) != VK_SUCCESS) {
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+    {
+        if (vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+            vkCreateSemaphore(_device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+            vkCreateFence(_device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
 
-        throw std::runtime_error("failed to create sync objects!");
+            throw std::runtime_error("failed to create sync objects!");
+        }
     }
 }
 
@@ -958,7 +973,7 @@ void RendererVK::Initialize(void)
         createGraphicsPipeline(_device);
         createFramebuffers(_device);
         createCommandPool(_device);
-        createCommandBuffer(_device);
+        createCommandBuffers(_device);
         createSyncObjects();
     }
 }
@@ -971,9 +986,12 @@ void RendererVK::Shutdown(void)
 
         if (_device)
         {
-            vkDestroySemaphore(_device, imageAvailableSemaphore, nullptr);
-            vkDestroySemaphore(_device, renderFinishedSemaphore, nullptr);
-            vkDestroyFence(_device, inFlightFence, nullptr);
+            for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)  {
+
+                vkDestroySemaphore(_device, imageAvailableSemaphores[i], nullptr);
+                vkDestroySemaphore(_device, renderFinishedSemaphores[i], nullptr);
+                vkDestroyFence(_device, inFlightFences[i], nullptr);
+            }
 
             vkDestroyCommandPool(_device, _commandPool, nullptr);
 
@@ -1024,35 +1042,38 @@ void RendererVK::Render(void)
     if (_device == VK_NULL_HANDLE)
 		return;
 
-    vkWaitForFences(_device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(_device, 1, &inFlightFence);
+    vkWaitForFences(_device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(_device, 1, &inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(_device, _swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-    vkResetCommandBuffer(_commandBuffer, 0);
+    vkAcquireNextImageKHR(_device, _swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-    recordCommandBuffer(_commandBuffer, imageIndex);
+    vkResetCommandBuffer(_commandBuffers[currentFrame], 0);
+
+    recordCommandBuffer(_commandBuffers[currentFrame], imageIndex);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
 
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &_commandBuffer;
+    submitInfo.pCommandBuffers = &_commandBuffers[currentFrame];
 
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(_graphicsQueue, 1, &submitInfo, inFlightFence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
+
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

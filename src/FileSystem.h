@@ -26,6 +26,7 @@ namespace FileSystem
         return std::string(buffer);
     }
 
+    // Finds at files at the specified path with the given extension
     static std::vector<std::string> GetFiles(const std::string& path, const std::string& extension)
     {
         std::vector<std::string> files;
@@ -49,6 +50,7 @@ namespace FileSystem
         return files;
     }
     
+    // Lists all files in the specified directory
     static std::vector<std::string> ListFiles(const char *path) 
     {
         std::vector<std::string> files;
@@ -128,8 +130,6 @@ namespace FileSystem
 
     static void ScoutDirectory(const char *path)
 	{
-        std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
-
         std::string dataDirectoryPath = path;
         std::vector<std::string> subdirectories = FileSystem::ListAllSubdirectories(dataDirectoryPath.c_str());
 
@@ -153,8 +153,10 @@ namespace FileSystem
         {
             std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
+            // We should just return an empty vector if the file doesn't exist
             if (!file.is_open()) {
-                throw std::runtime_error("failed to open file!");
+                // throw std::runtime_error("failed to open file!");
+                return std::vector<char>();
             }
 
             size_t fileSize = (size_t)file.tellg();

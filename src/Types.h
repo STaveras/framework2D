@@ -6,6 +6,8 @@
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
 
+#define DEFAULT_DATA_PATH "./data/"
+
 #ifndef _CUSTOM_STREAM_OBJECT
 #include <fstream>
 

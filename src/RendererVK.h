@@ -34,11 +34,12 @@ class RendererVK : public IRenderer
 
     VkCommandPool _commandPool;
 
-    VkCommandBuffer _commandBuffer;
+    uint32_t currentFrame = 0;
 
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
-    VkFence inFlightFence;
+    std::vector<VkFence> inFlightFences;
+
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
 
     std::vector<VkCommandBuffer> _commandBuffers;
 
@@ -92,7 +93,7 @@ class RendererVK : public IRenderer
     void createFramebuffers(VkDevice device);    
     
     void createCommandPool(VkDevice device);
-    void createCommandBuffer(VkDevice device);
+    void createCommandBuffers(VkDevice device);
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void createSyncObjects(void); // I don't necessarily want to even declare this here

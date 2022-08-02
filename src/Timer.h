@@ -2,6 +2,9 @@
 // Author: Stanley Taveras
 // Purpose: A timer for Win32
 
+// TODO: Move to System namespace and make a platform-agnostic timer.
+// TODO: Rebase units to milliseconds instead of seconds.
+
 #pragma once
 
 #ifdef _WIN32

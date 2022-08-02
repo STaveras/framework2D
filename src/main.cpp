@@ -26,9 +26,7 @@
 
 // Ultimately, I want the executable to just be able to support running games without having to statically build a game
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
-// load assets, levels, and other miscellaneous data
-
-#define DATA_PATH "./data/"
+// load assets, levels, and other miscellaneous data. Like a more modern MUGEN
 
 const char* checkArgumentsForDataPath(int argc, char** argv) 
 {
@@ -40,7 +38,7 @@ const char* checkArgumentsForDataPath(int argc, char** argv)
          }
       }
    }
-   return DATA_PATH;
+   return DEFAULT_DATA_PATH;
 }
 
 #ifdef _WIN32
@@ -53,10 +51,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #else
 int main(int argc, char **argv)
 {
-   const char *dataPath = checkArgumentsForDataPath(argc, argv);
+   std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
+
+   System::GlobalDataPath(checkArgumentsForDataPath(argc, argv));
+
 #endif
    // Check for game data
-   FileSystem::ScoutDirectory(dataPath);
+   FileSystem::ScoutDirectory(System::GlobalDataPath());
 
    Window window = Window(320, 460, "Flap a Turd");
 
