@@ -18,6 +18,20 @@
             "MIMode": "lldb",
             "preLaunchTask": "C/C++: clang++ build active file",
             "targetArchitecture":"arm64"
+        },
+        {
+            "name": "clang++ - Debug active file",
+            // "type": "cppdbg",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
+            "args": ["--dataPath", "${workspaceFolder}/data"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "targetArchitecture":"arm64"
         }
     ]
 }

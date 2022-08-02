@@ -1,7 +1,7 @@
 // File: Square.h
 // Author: Stanley Taveras
 // Created: 2/20/2010
-// Modified: 2/20/2010
+// Modified: 7/21/2022
 
 #if !defined(_SQUARE_H)
 #define _SQUARE_H
@@ -12,6 +12,7 @@ class Circle;
 class Plane;
 
 // Probably should be renamed 'rectangle' or 'box'
+// Shouldn't be "Collidable" but instead just a general "Geometry" parent class
 class Square : public Collidable
 {
 	float _fWidth = 0;
