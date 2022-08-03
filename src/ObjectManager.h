@@ -29,8 +29,6 @@ public:
 		return "";
 	}
 
-	GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
-
 	void Update(float fTime);
 
 	void addObject(const char* name, GameObject* object);
@@ -42,6 +40,8 @@ public:
 
 	size_t numObjects(void) const { return m_mObjects.size(); }
 
+	GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
+
 	GameObject* operator[](unsigned int index) {
 		std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 		for (; itr != m_mObjects.end(); itr++) {
@@ -49,6 +49,10 @@ public:
 				return itr->second;
 		}
 		return NULL;
+	}
+
+	GameObject* operator[](const char* name) {
+		return this->getGameObject(name);
 	}
 
 	void SendEvent(Event::event_key key, void* sender);

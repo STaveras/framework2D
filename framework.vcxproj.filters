@@ -250,12 +250,14 @@
     <Filter Include="engine2Dbase\Application">
       <UniqueIdentifier>{c9a13681-48d5-48ba-994a-fa527d4e2709}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Games">
+      <UniqueIdentifier>{83f74eb2-b7e9-47d4-8769-c059df3d071c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ForceDegradation.h">
       <Filter>engine2Dbase\Objects\operators</Filter>
     </ClInclude>
-    <ClInclude Include="src\FlappyTurd.h" />
     <ClInclude Include="src\IInput.h">
       <Filter>engine2Dbase\Input</Filter>
     </ClInclude>
@@ -314,6 +316,12 @@
       <Filter>engine2Dbase\System</Filter>
     </ClInclude>
     <ClInclude Include="src\UpdateRenderableOperator.h" />
+    <ClInclude Include="src\FlappyTurd.h">
+      <Filter>Games</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EverTale.h">
+      <Filter>Games</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="doc\todo.txt">

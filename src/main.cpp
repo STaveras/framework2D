@@ -13,16 +13,6 @@
 
 #include <iostream>
 
-//#include "SDSParser.h"
-
-#include "FollowObjectOperator.h"
-#include "ApplyVelocityOperator.h"
-// #include "MaxVelocityOperator.h"
-#include "UpdateRenderableOperator.h"
-#include "UpdateBackgroundOperator.h"
-
-#include "AnimationUtils.h"
-
 // TODO: Put this in a DLL and have loader functions to search for "game" library files
 #include "FlappyTurd.h"
 
