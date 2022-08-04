@@ -2,6 +2,7 @@
 // Author: Stanley Taveras
 // Created: 2/24/2010
 // Modified: 1/13/2013
+#if _WIN32
 
 #include "RendererDX.h"
 #include "Animation.h"
@@ -10,7 +11,6 @@
 #include "Frame.h"
 #include "Renderable.h"
 #include "Image.h"
-#if _WIN32
 #include "TextureD3D.h"
 
 #pragma comment(lib, "d3d9.lib")

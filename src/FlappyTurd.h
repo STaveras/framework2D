@@ -1,13 +1,29 @@
 #pragma once
 
+#include "Game.h"
+#include "GameObject.h"
+#include "GameState.h"
+
+#include "AnimationUtils.h"
+
+//#include "SDSParser.h"
+
+#include "FollowObjectOperator.h"
+#include "ApplyVelocityOperator.h"
+#include "MaxVelocityOperator.h" 
+#include "UpdateRenderableOperator.h"
+#include "UpdateBackgroundOperator.h"
+
 #define GLOBAL_WIDTH (640 / 2) /*320*/
 #define GLOBAL_HEIGHT 480
 
 #define FALL_FORCE 100.0f
 #define FLAP_MULTIPLIER 3.33f
 
+// Game should hold all the managers
 class FlappyTurd : public Game
 {
+   // States should just queue up operators, potentially stacking up other states
    class PlayState : public GameState
    {
       // (Probably should just go in GameState...?)

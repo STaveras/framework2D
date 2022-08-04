@@ -13,8 +13,8 @@ Engine2D::Engine2D(void) :
 
 void Engine2D::Initialize(void)
 {
-	_Timer.ResetElapsed();
-	_EventSystem.Initialize(INFINITE);
+	Engine2D::getTimer()->ResetElapsed();
+	Engine2D::getEventSystem()->Initialize(INFINITE);
 
 #ifdef _WIN32
     //DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
@@ -36,7 +36,7 @@ void Engine2D::Initialize(void)
 
 void Engine2D::Update(void)
 {
-	_EventSystem.ProcessEvents();
+	Engine2D::getEventSystem()->ProcessEvents();
 
 	if (_pInput)
 		_pInput->Update();
@@ -45,9 +45,9 @@ void Engine2D::Update(void)
 		_pRenderer->Render();
 
 	if (_pGame)
-		_pGame->Update(&_Timer);
+		_pGame->Update(Engine2D::getTimer());
 
-	_Timer.Update();
+	Engine2D::getTimer()->Update();
 }
 
 void Engine2D::Shutdown(void)
@@ -61,6 +61,33 @@ void Engine2D::Shutdown(void)
 	if (_pInput)
 		_pInput->Shutdown();
 
-	_EventSystem.Shutdown();
+	Engine2D::getEventSystem()->Shutdown();
 }
+
+IRenderer* Engine2D::GetRenderer(void)
+{
+	Engine2D* engine = Engine2D::getInstance();
+
+	if (engine->_pRenderer)
+		return engine->_pRenderer;
+	else {
+		// TODO: Return the best suited renderer; send an event somewhere to set up a window for that renderer
+	}
+
+	return NULL;
+}
+
+EventSystem* Engine2D::getEventSystem(void) 
+{
+	static EventSystem _EventSystem;
+	return &_EventSystem;
+} 
+
+Timer* Engine2D::getTimer(void)
+{
+	static Timer _Timer;
+	return &_Timer; 
+}
+
+
 // Stanley Taveras

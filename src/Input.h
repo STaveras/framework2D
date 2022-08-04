@@ -14,7 +14,7 @@ namespace Input
 #else
 	static IInput* CreateInputInterface(Window *window)
 	{
-		return new PlatformInput(window);
+		return (IInput*)(new PlatformInput(window));
 	}
 #endif
 	// This shouldn't be a thing

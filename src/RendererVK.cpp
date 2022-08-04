@@ -3,6 +3,10 @@
 
 // This is a Vulkan renderer based on the tutorial at: https://vulkan-tutorial.com/
 
+#ifdef _WIN32
+#pragma comment(lib, "vulkan-1.lib")
+#endif
+
 #include "RendererVK.h"
 
 #include "FileSystem.h"
@@ -112,11 +116,6 @@ void setupDebugMessenger(VkInstance instance)
     }
 }
 #endif
-
-RendererVK::RendererVK(void) : _instance(NULL), IRenderer()
-{
-    // Ehh
-}
 
 bool checkValidationLayerSupport(std::vector<const char *>  validationLayers) {
 
@@ -1091,6 +1090,11 @@ void RendererVK::Render(void)
 
     // m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 	// InvalidateRect(m_hWnd, NULL, true);
+
+    /* Swap front and back buffers */
+    //if (_window) {
+    //   glfwSwapBuffers(_window);
+    //}
 }
 
 ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)

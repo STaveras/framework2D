@@ -10,7 +10,7 @@
 #include "IKeyboard.h"
 #include "IMouse.h"
 
-class IInput
+typedef class IInput
 {
 protected:
 	IKeyboard* _keyboard;
@@ -28,4 +28,4 @@ public:
 	virtual void Initialize(void) = 0;
 	virtual void Update(void) = 0;
 	virtual void Shutdown(void) = 0;
-};
+}InputInterface;

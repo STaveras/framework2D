@@ -29,9 +29,7 @@ public:
 		return "";
 	}
 
-	GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
-
-	 void Update(float fTime);
+	void Update(float fTime);
 
 	 void addObject(const char* name, GameObject* object);
 	 void removeObject(const char* name);
@@ -42,6 +40,8 @@ public:
 
 	size_t numObjects(void) const { return m_mObjects.size(); }
 
+	GameObject* getGameObject(const char* name) { return m_mObjects[name]; }
+
 	GameObject* operator[](unsigned int index) {
 		std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 		for (; itr != m_mObjects.end(); itr++) {
@@ -51,7 +51,11 @@ public:
 		return NULL;
 	}
 
-	 void SendEvent(Event::event_key key, void* sender);
+	GameObject* operator[](const char* name) {
+		return this->getGameObject(name);
+	}
+
+	void SendEvent(Event::event_key key, void* sender);
 };
 #endif  //_OBJECTMANAGER_H
 // Author: Stanley Taveras

@@ -7,13 +7,6 @@
 
 #include <vector>
 
-#if __APPLE__
-#include <MoltenVK/mvk_vulkan.h>
-#include <MoltenVK/vk_mvk_moltenvk.h>
-#else
-#include <vulkan/vulkan.h>
-#endif
-
 class RendererVK : public IRenderer
 {
     VkInstance _instance = VK_NULL_HANDLE;
@@ -99,7 +92,6 @@ class RendererVK : public IRenderer
     void createSyncObjects(void); // I don't necessarily want to even declare this here
 
 public:
-    RendererVK(void);
 
     void Initialize(void);
     void Shutdown(void);

@@ -15,6 +15,7 @@ class PlatformKeyboard : public IKeyboard
     std::map<KEYBOARD_KEYS, bool> _keyStates;
     std::map<KEYBOARD_KEYS, bool> _keyStatesLast;
 
+protected:
     void _onKeyEventHandler(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 public:

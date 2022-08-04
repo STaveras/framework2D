@@ -15,6 +15,7 @@
     <ProjectGuid>{8F705A33-1FC7-484E-8A0E-BC4CC88A5B57}</ProjectGuid>
     <RootNamespace>fighter</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>framework</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -44,20 +45,27 @@
     <TargetName>$(ProjectName)_d</TargetName>
     <OutDir>.\bin\</OutDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86;$(VK_SDK_PATH)\Lib</LibraryPath>
+    <LibraryPath>$(VK_SDK_PATH)\Lib32;$(DXSDK_DIR)Lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\bin\</OutDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86;$(VK_SDK_PATH)\Lib</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnabled>true</VcpkgEnabled>
+    <VcpkgAutoLink>true</VcpkgAutoLink>
+    <VcpkgEnableManifest>false</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;_HAS_AUTO_PTR_ETC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\add\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -71,8 +79,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;VC_EXTRALEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;WIN32_LEAN_AND_MEAN;_HAS_AUTO_PTR_ETC;VC_EXTRALEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\add\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -119,6 +129,7 @@
     <ClCompile Include="src\ProgramStack.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\RendererDX.cpp" />
+    <ClCompile Include="src\RendererVK.cpp" />
     <ClCompile Include="src\SDSParser.cpp" />
     <ClCompile Include="src\Slider.cpp" />
     <ClCompile Include="src\Sound.cpp" />
@@ -144,6 +155,7 @@
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\EventSystem.h" />
+    <ClInclude Include="src\EverTale.h" />
     <ClInclude Include="src\FlappyTurd.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\IInput.h" />
@@ -154,6 +166,7 @@
     <ClInclude Include="src\ForceDegradation.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Positionable.h" />
+    <ClInclude Include="src\RendererVK.h" />
     <ClInclude Include="src\Square.h" />
     <ClInclude Include="src\State.h" />
     <ClInclude Include="src\Types.h" />

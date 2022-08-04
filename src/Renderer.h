@@ -23,10 +23,10 @@ namespace Renderer
 	#ifdef _WIN32
 	// This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
 	IRenderer* CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync);
-	#else
+	#endif
+
 	// Create a Vulkan renderer
 	IRenderer* CreateVKRenderer(Window* window);
-	#endif
 	
 	void DestroyRenderer(IRenderer* pRenderer);
   //void Render(Renderable* r); // TODO: You can use it to draw stuff in real-time (kinda slow, but uses less overall memory)

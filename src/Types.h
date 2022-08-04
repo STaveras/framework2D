@@ -1,7 +1,7 @@
 // File: Types.h
 // Author: Stanley Taveras
 // Created: 2/20/2010
-// Modified: 2/24/2010
+// Modified: 5/24/2022
 
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
@@ -32,26 +32,6 @@ typedef std::ofstream ofpstream;
 
 #else
 
-#define GLFW_BUILD_UNIVERSAL
-#define GLFW_USE_MENUBAR
-#define GLFW_INCLUDE_VULKAN
-
-#include <GLFW/glfw3.h>
-
-#endif
-
-#if defined(GLM) || defined(__APPLE__) || defined(unix) || defined(__unix) || defined(__unix__)
-
-#include <glm/glm.hpp>
-
-#define vector2 glm::vec2
-#define vector4 glm::vec4
-#define matrix4x4 glm::mat4
-
-#endif
-
-#ifndef _WIN32
-
 #define strtok_s strtok_r
 #define _strdup strdup
 #define INFINITE INFINITY
@@ -62,17 +42,50 @@ struct rect {
 
 #define RECT rect
 
-#elif !defined(GLM)
-
-// Windows
-#define vector2 D3DXVECTOR2 // TODO: As above, write the wrapper so you don't have to use raw d3d math calls in your code...
-#define matrix4x4 D3DXMATRIX
-#define RECT RECT
-// ---------------------------------------------------------------------------------------------------------------------
-
 #endif
 
 #define byte uint8_t
+
+#if defined(GLM) || defined(__APPLE__) || defined(__linux__) || defined(__unix__)
+
+#define GLFW_BUILD_UNIVERSAL
+#define GLFW_USE_MENUBAR
+
+#if __APPLE__
+#include <MoltenVK/mvk_vulkan.h>
+#include <MoltenVK/vk_mvk_moltenvk.h>
+#else
+#define GLFW_INCLUDE_VULKAN
+#include <vulkan/vulkan.h>
+#endif
+
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+
+#ifdef _WIN32
+struct vector2 : public glm::vec2 {
+   operator D3DXVECTOR2() const { return D3DXVECTOR2(this->x, this->y); }
+};
+#else
+#define vector2 glm::vec2
+#define vector4 glm::vec4
+#define matrix4x4 glm::mat4
+#endif
+
+#else
+
+// Windows
+#if !defined(GLM) // We're going to have to check this at run time if we want to swap between DX and VK on the fly
+#define vector2 D3DXVECTOR2 // TODO: As above, write the wrapper so you don't have to use raw d3d math calls in your code...
+#define matrix4x4 D3DXMATRIX
+#endif
+#define RECT RECT
+// ---------------------------------------------------------------------------------------------------------------------
+
+// TODO: Remove any direct references to D3DXVECTOR2 and related functions
+
+#endif
 
 #include "color.h"
 

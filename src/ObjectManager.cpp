@@ -75,7 +75,7 @@ void ObjectManager::Update(float fTime)
                }
             }
          }
-
+         
          // TODO: Rewrite to broad / narrow phases
       }
    }
@@ -98,6 +98,8 @@ void ObjectManager::addObject(const char* name, GameObject* object)
 {
    m_mObjects[name] = object; object->initialize(); Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_ADDED", object);
 }
+
+// NOTE: Maybe use a map instead and add/remove the operators by name?
 
 void ObjectManager::pushOperator(ObjectOperator* objOperation)
 {

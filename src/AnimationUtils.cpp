@@ -108,7 +108,7 @@ namespace Animations {
 
                   RECT srcRect = rectFromString(frameElement->FirstChildElement("DisplayRect")->GetText());
 
-                  // TODO: Make key color configurable via the tool
+                  // TODO: Make key color configurable via a tool
                   // TODO: Collision information
                   // TODO: Add support for triggers (sound, effects, scripts, etc.)
 
