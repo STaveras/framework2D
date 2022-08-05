@@ -164,15 +164,6 @@
     <ClCompile Include="src\Stage.cpp">
       <Filter>engine2Dbase\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="src\Renderer.cpp">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RendererDX.cpp">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RendererVK.cpp">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="src\Game.cpp">
       <Filter>engine2Dbase\Application</Filter>
     </ClCompile>
@@ -181,6 +172,27 @@
     </ClCompile>
     <ClCompile Include="src\Debug.cpp">
       <Filter>engine2Dbase\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System.cpp">
+      <Filter>engine2Dbase\System</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RendererVK.cpp">
+      <Filter>engine2Dbase\Rendering\Renderers\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer.cpp">
+      <Filter>engine2Dbase\Rendering\Renderers\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RendererDX.cpp">
+      <Filter>engine2Dbase\Rendering\Renderers\DirectX</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IInput.cpp">
+      <Filter>engine2Dbase\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlatformInput.cpp">
+      <Filter>engine2Dbase\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlatformKeyboard.cpp">
+      <Filter>engine2Dbase\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -253,6 +265,15 @@
     <Filter Include="Games">
       <UniqueIdentifier>{83f74eb2-b7e9-47d4-8769-c059df3d071c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine2Dbase\Rendering\Renderers">
+      <UniqueIdentifier>{0d33f555-c238-4761-aa14-caa3e520a5c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine2Dbase\Rendering\Renderers\Vulkan">
+      <UniqueIdentifier>{34581c15-f047-460f-9126-247c0f3da34a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine2Dbase\Rendering\Renderers\DirectX">
+      <UniqueIdentifier>{b5f22483-b9a5-4421-8cad-72eb63b44e6b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ForceDegradation.h">
@@ -297,9 +318,6 @@
     <ClInclude Include="src\Square.h">
       <Filter>engine2Dbase\Math\Geometry</Filter>
     </ClInclude>
-    <ClInclude Include="src\RendererVK.h">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="src\Game.h">
       <Filter>engine2Dbase\Application</Filter>
     </ClInclude>
@@ -321,6 +339,18 @@
     </ClInclude>
     <ClInclude Include="src\EverTale.h">
       <Filter>Games</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System.h">
+      <Filter>engine2Dbase\System</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RendererVK.h">
+      <Filter>engine2Dbase\Rendering\Renderers\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlatformInput.h">
+      <Filter>engine2Dbase\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlatformKeyboard.h">
+      <Filter>engine2Dbase\Input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

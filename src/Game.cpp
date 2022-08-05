@@ -14,11 +14,6 @@ void Game::Update(Timer* timer)
       if (timer) {
          ProgramStack::update((float)timer->GetDeltaTime());
       }
-      else {
-         timer = new Timer();
-         this->Update(new Timer());
-         delete timer;
-      }
    }
    else {
       Engine2D::Quit();

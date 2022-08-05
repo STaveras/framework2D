@@ -3,11 +3,11 @@
 
 // This is a Vulkan renderer based on the tutorial at: https://vulkan-tutorial.com/
 
+#include "RendererVK.h"
+
 #ifdef _WIN32
 #pragma comment(lib, "vulkan-1.lib")
 #endif
-
-#include "RendererVK.h"
 
 #include "FileSystem.h"
 #include "System.h"
@@ -15,9 +15,6 @@
 // NOTE: We should try and decouple the ide of a "window" from this, considering we may want to use this to render off-screen
 #include <iostream>
 #include <set>
-
-// Not sure how I feel about this, since it's a C++17 feature
-#include <optional>
 
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
@@ -256,9 +253,9 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
 
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow *window) {
 
-    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-        return capabilities.currentExtent;
-    }
+    //if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+    //    return capabilities.currentExtent;
+    //}
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);

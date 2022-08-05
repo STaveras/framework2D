@@ -17,8 +17,8 @@
 
 class Timer
 {
-	long			m_lDelta;
-	long			m_lFrameCap;
+	double			m_dDelta;
+	double			m_dFrameCap;
 
 	unsigned int	m_uiTicks;
 	unsigned int	m_uiCurrentFPS;
@@ -36,7 +36,7 @@ class Timer
 	TimePoint m_tpDelta;
 #endif
 
-	long _GetTimer(void);
+	double _GetTimer(void);
 	void _ResetTimer(void) { 
 #ifdef _WIN32
 		QueryPerformanceCounter(&m_liTimer); 
@@ -48,8 +48,8 @@ public:
 	~Timer(void) {}
 
 	unsigned int GetFPS(void) const { return m_uiCurrentFPS; }
-	long GetDeltaTime(void) const { return m_lDelta; }
-	long GetElapsedTime(void) const;
+	double GetDeltaTime(void) const { return m_dDelta; }
+	double GetElapsedTime(void) const;
 
 	void LimitFrameRate(unsigned int uiFrameRate);
 

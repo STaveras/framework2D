@@ -6,8 +6,8 @@
 
 using namespace std::chrono;
 
-Timer::Timer(void) : m_lDelta(0.0f),
-					 m_lFrameCap(0.0f),
+Timer::Timer(void) : m_dDelta(0.0f),
+					 m_dFrameCap(0.0f),
 					 m_uiTicks(0)
 {
 #ifdef _WIN32
@@ -20,7 +20,7 @@ Timer::Timer(void) : m_lDelta(0.0f),
 #endif
 }
 
-long Timer::_GetTimer(void)
+double Timer::_GetTimer(void)
 {
 #ifdef _WIN32
 	LARGE_INTEGER liCurrent;
@@ -34,7 +34,7 @@ long Timer::_GetTimer(void)
 	return -1;
 }
 
-long Timer::GetElapsedTime(void) const
+double Timer::GetElapsedTime(void) const
 {
 #ifdef _WIN32
 	LARGE_INTEGER liCurrent;
@@ -53,7 +53,7 @@ void Timer::LimitFrameRate(unsigned int uiFrameRate)
 		return;
 
 	double dFrameTime = 1.0 / uiFrameRate;
-	double dSleepTime = (m_lFrameCap += dFrameTime) - m_lDelta;
+	double dSleepTime = (m_dFrameCap += dFrameTime) - m_dDelta;
 
 	if (dSleepTime > 0.0)
 	{
@@ -62,7 +62,7 @@ void Timer::LimitFrameRate(unsigned int uiFrameRate)
 #else
 		sleep((unsigned int)(dSleepTime * 1000));
 #endif
-		m_lFrameCap = m_lDelta;
+		m_dFrameCap = m_dDelta;
 	}
 }
 

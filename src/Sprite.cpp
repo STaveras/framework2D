@@ -1,6 +1,6 @@
 #include "Sprite.h"
 #include "ITexture.h"
-#include "fileUtil.h"
+#include "FileSystem.h"
 #include <fstream>
 
 void Sprite::Save(const char* filePath)
@@ -28,7 +28,7 @@ void Sprite::Save(const char* filePath)
 Sprite* Sprite::Load(const char* filePath)
 {
 	Sprite* sprite = NULL;
-	if (!strcmp(File::getFileExtension(filePath), "spr"))
+	if (!strcmp(FileSystem::File::GetFileExtension(filePath), "spr"))
 	{
 		std::ifstream ifl(filePath);
 

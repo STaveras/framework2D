@@ -15,7 +15,7 @@ InputManager::~InputManager(void){}
 VirtualGamePad* InputManager::CreateGamePad(void)
 {
 	VirtualGamePad* pGamePad = m_GamePads.Create();	
-	pGamePad->SetPadNumber(m_GamePads.Size() - 1);
+	pGamePad->SetPadNumber((int)(m_GamePads.Size() - 1));
 
 	return pGamePad;
 }

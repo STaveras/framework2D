@@ -31,8 +31,8 @@ public:
    bool IsPlaying(void) const { return m_bPlaying; }
    float GetSpeed(void) const { return m_fSpeed; }
    const char* GetName(void) const { return m_szName.c_str(); }
-   unsigned int GetCurrentFrameIndex(void) const { return _frameIndex; }
-   unsigned int GetFrameCount(void) { return m_Frames.Size(); }
+   size_t GetCurrentFrameIndex(void) const { return _frameIndex; }
+   size_t GetFrameCount(void) { return m_Frames.Size(); }
    Frame* GetCurrentFrame(void) { return m_Frames[_frameIndex]; }
    Frame* operator[](unsigned int i) { return m_Frames[i]; }
 
