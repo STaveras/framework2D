@@ -17,9 +17,6 @@
 #include <iostream>
 #include <set>
 
-// Not sure how I feel about this, since it's a C++17 feature
-#include <optional>
-
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
 #include <algorithm> // Necessary for std::clamp
@@ -1041,11 +1038,18 @@ void RendererVK::Shutdown(void)
                 vkDestroyShaderModule(_device, shaderModule, nullptr);
             }
 
-            if (_surface != VK_NULL_HANDLE) {
-                vkDestroySurfaceKHR(_instance, _surface, nullptr);
+            for (auto imageView : swapChainImageViews) {
+                vkDestroyImageView(_device, imageView, nullptr);
             }
 
-            if (_device != VK_NULL_HANDLE) {
+            if (_swapChain != VK_NULL_HANDLE)
+                vkDestroySwapchainKHR(_device, _swapChain, nullptr);
+
+            if (_surface != VK_NULL_HANDLE)
+                vkDestroySurfaceKHR(_instance, _surface, nullptr);
+
+            if (_device != VK_NULL_HANDLE)
+            {
                 vkDestroyDevice(_device, nullptr);
                 _device = VK_NULL_HANDLE;
             }

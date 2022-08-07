@@ -189,7 +189,7 @@ char* CommandInterpreter::_NextCommand(char* pCmdIter)
 
 VirtualButton* CommandInterpreter::_ButtonInBuffer(char* szButtonID, size_t dwStartIndex)
 {
-	for(int i = dwStartIndex; i < (int)m_vButtons.size(); i++)
+	for (int i = (int)dwStartIndex; i < (int)m_vButtons.size(); i++)
 	{
 		if(!strcmp(szButtonID, m_vButtons[i].GetButtonID().c_str()))
 		{

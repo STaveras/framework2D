@@ -66,7 +66,7 @@ void ::Animation::_Reset(void)
 	if (m_bForward)
 		_frameIndex = 0;
 	else
-		_frameIndex = m_Frames.Size() - 1;
+		_frameIndex = (unsigned int)(m_Frames.Size() - 1);
 }
 
 void Animation::setPosition(vector2 position)

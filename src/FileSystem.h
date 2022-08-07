@@ -6,7 +6,7 @@
 #ifndef _FILESYSTEM_H_
 #define _FILESYSTEM_H_
 
-#if __APPLE__
+#if defined(__APPLE__)
 #include <dirent.h>
 #include <unistd.h>
 #endif
@@ -30,6 +30,7 @@ namespace FileSystem
     static std::vector<std::string> GetFiles(const std::string& path, const std::string& extension)
     {
         std::vector<std::string> files;
+#ifndef _WIN32
         DIR* dir = opendir(path.c_str());
         if (dir)
         {
@@ -47,13 +48,15 @@ namespace FileSystem
             }
             closedir(dir);
         }
+#endif
         return files;
     }
     
     // Lists all files in the specified directory
     static std::vector<std::string> ListFiles(const char *path) 
     {
-        std::vector<std::string> files;
+       std::vector<std::string> files;
+#ifndef _WIN32
         DIR* dir = opendir(path);
         if (dir)
         {
@@ -68,12 +71,14 @@ namespace FileSystem
             }
             closedir(dir);
         }
-        return files;        
+#endif
+        return files;
     }
 
     static std::vector<std::string> ListSubdirectories(const char *path)
     {
         std::vector<std::string> files;
+#ifndef _WIN32
         DIR* dir = opendir(path);
         if (dir)
         {
@@ -91,12 +96,14 @@ namespace FileSystem
             }
             closedir(dir);
         }
+#endif
         return files;
     }
 
     static std::vector<std::string> ListAllSubdirectories(const char *path) 
     {
         std::vector<std::string> files;
+#ifndef _WIN32
         DIR* dir = opendir(path);
         if (dir)
         {
@@ -118,6 +125,7 @@ namespace FileSystem
             }
             closedir(dir);
         }
+#endif
         return files;
     }
 

@@ -6,6 +6,7 @@
 #include "EventSystem.h"
 #include "ImageLoaders.h"
 
+#include <optional>
 #include <vector>
 
 class RendererVK : public IRenderer

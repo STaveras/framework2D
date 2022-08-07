@@ -106,18 +106,6 @@ void Window::Initialize(void) {
 
 void Window::Update(void)
 {
-#ifdef _WIN32
-	MSG msg;
-	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-	{
-		if (msg.message == WM_QUIT)
-			m_bHasQuit = true;
-
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-	InvalidateRect(m_hWnd, NULL, true);
-#endif
 	if (_window) {
 		/* Loop until the user closes the window */
 		m_bHasQuit = glfwWindowShouldClose(_window);
@@ -125,6 +113,20 @@ void Window::Update(void)
 		/* Poll for and process events */
 		glfwPollEvents();
 	}
+#ifdef _WIN32
+	else {
+		MSG msg;
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+				m_bHasQuit = true;
+
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		InvalidateRect(m_hWnd, NULL, true);
+	}
+#endif
 }
 
 void Window::Shutdown(void)
