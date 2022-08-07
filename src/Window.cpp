@@ -8,7 +8,7 @@
 #endif
 
 #include "Window.h"
-// NOTE: We're going to have to redesign a large portion of this eventually
+#include "Engine2D.h"
 
 #include <iostream>
 
@@ -86,11 +86,19 @@ void Window::Initialize(void) {
 
 	/* Create a windowed mode window and its OpenGL context */
 	_window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle, NULL, NULL);
-	if (!_window)
-	{
+	if (!_window) {
 		glfwTerminate();
 		return; // -1 // Maybe throw an exception
 	}
+	
+	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
+		// this is le gross, because it means we won't be able to (easily) render to multiple windows in this manner...
+		Window *_window = Renderer::window;
+		if (_window->getUnderlyingWindow() == window) {
+			_window->_resize(width, height); 
+			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
+		}
+	});
 
 	/* Make the window's context current */
 	glfwMakeContextCurrent(_window);
@@ -131,23 +139,34 @@ void Window::Shutdown(void)
 	}
 }
 
-void Window::_resize(void)
+void Window::_resize(int width, int height)
 {
+	if (_window) {
+		this->SetWidth(width);
+		this->SetHeight(height);
+
+		//glfwSetWindowSize(_window, width, height); // not sure if this is going to cause a spinlock
+	}
 #ifdef _WIN32
-	RECT rcClient, rcWindow;
-	POINT diff;
+	else {
+		RECT rcClient, rcWindow;
+		POINT diff;
 
-	// get the size of the current client area
-	GetClientRect(m_hWnd, &rcClient);
+		// get the size of the current client area
+		GetClientRect(m_hWnd, &rcClient);
 
-	// get the size of the containing window
-	GetWindowRect(m_hWnd, &rcWindow);
+		// get the size of the containing window
+		GetWindowRect(m_hWnd, &rcWindow);
 
-	// determine the difference between the two
-	diff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
-	diff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
+		// determine the difference between the two
+		diff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
+		diff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
 
-	// resize the client area
-	MoveWindow(m_hWnd, rcWindow.left, rcWindow.top, m_nWidth + diff.x, m_nHeight + diff.y, TRUE);
+		SetWidth(m_nWidth + diff.x);
+		SetHeight(m_nHeight + diff.y);
+
+		// resize the client area
+		MoveWindow(m_hWnd, rcWindow.left, rcWindow.top, m_nWidth, m_nHeight, TRUE);
+	}
 #endif
 }

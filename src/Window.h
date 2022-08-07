@@ -19,7 +19,7 @@ class Window
 	const char* m_szWindowTitle;
 	const char* m_szWindowClassName;
 
-	void _resize(void);
+	void _resize(int width = 0, int height = 0);
 #ifdef _WIN32
 	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
@@ -45,6 +45,7 @@ public:
 	const char* GetWindowTitle(void) const { return m_szWindowTitle; }
 	const char* GetWindowClassName(void) const { return m_szWindowClassName; }
 
+	// Re-implement these so that setting them here actually resizes the window
 	void SetWidth(int nWidth) { m_nWidth = nWidth; }
 	void SetHeight(int nHeight) { m_nHeight = nHeight; }
 	void SetWindowTitle(const char* szWindowTitle) { m_szWindowTitle = szWindowTitle; }

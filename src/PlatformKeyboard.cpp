@@ -12,6 +12,8 @@ PlatformKeyboard::PlatformKeyboard(Window *window)
         keyboard->_onKeyEventHandler(window, key, scancode, action, mods);
     };
     glfwSetKeyCallback(window->getUnderlyingWindow(), func);
+    // ..it works. But I'm concerned as to how it works, in regards to memory management 
+    // Are lambda funcs passed as a stack object?
 }
 
 void PlatformKeyboard::_onKeyEventHandler(GLFWwindow *window, int key, int scancode, int action, int mods)

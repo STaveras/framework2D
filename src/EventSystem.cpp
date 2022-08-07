@@ -1,6 +1,5 @@
 
 #include "EventSystem.h"
-#include "EventSystem_defines.h"
 
 #ifdef _WIN32
 #include <windows.h>

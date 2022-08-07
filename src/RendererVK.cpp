@@ -9,6 +9,7 @@
 
 #include "RendererVK.h"
 
+#include "Engine2D.h"
 #include "FileSystem.h"
 #include "System.h"
 
@@ -419,6 +420,9 @@ void RendererVK::createSwapChain(VkPhysicalDevice physicalDevice, VkDevice devic
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE; // Screen-space-based algorithms may not work?
     createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+    // You need to pass the previous swap chain to the oldSwapChain field in the VkSwapchainCreateInfoKHR
+    // struct and destroy the old swap chain as soon as you've finished using it.
 
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
@@ -852,6 +856,30 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
     }
 }
 
+void RendererVK::cleanupSwapChain(void)
+{
+    for (auto framebuffer : _swapChainFramebuffers) {
+        vkDestroyFramebuffer(_device, framebuffer, nullptr);
+    }
+
+    for (auto imageView : swapChainImageViews) {
+        vkDestroyImageView(_device, imageView, nullptr);
+    }
+
+    vkDestroySwapchainKHR(_device, _swapChain, nullptr);
+}
+
+void RendererVK::recreateSwapChain(void)
+{
+    vkDeviceWaitIdle(_device);
+    
+    cleanupSwapChain();
+
+    createSwapChain(_physicalDevice, _device, Renderer::window->getUnderlyingWindow());
+    createImageViews(_device);
+    createFramebuffers(_device);
+}
+
 void RendererVK::createSyncObjects(void)
 {
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -877,11 +905,18 @@ void RendererVK::createSyncObjects(void)
     }
 }
 
+void RendererVK::OnWindowResized(const Event &e)
+{
+    recreateSwapChain();
+}
+
 void RendererVK::Initialize(void)
 {
     if (Renderer::window) {
 
         GLFWwindow *window = Renderer::window->getUnderlyingWindow();
+
+        Engine2D::getEventSystem()->RegisterCallback<RendererVK>(EVT_WINDOW_RESIZED, this, &RendererVK::OnWindowResized);
 
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -993,10 +1028,8 @@ void RendererVK::Shutdown(void)
             }
 
             vkDestroyCommandPool(_device, _commandPool, nullptr);
-
-            for (auto framebuffer : _swapChainFramebuffers) {
-                vkDestroyFramebuffer(_device, framebuffer, nullptr);
-            }
+        
+            cleanupSwapChain();
 
             vkDestroyPipeline(_device, _graphicsPipeline, nullptr);
 
@@ -1008,18 +1041,11 @@ void RendererVK::Shutdown(void)
                 vkDestroyShaderModule(_device, shaderModule, nullptr);
             }
 
-            for (auto imageView : swapChainImageViews) {
-                vkDestroyImageView(_device, imageView, nullptr);
+            if (_surface != VK_NULL_HANDLE) {
+                vkDestroySurfaceKHR(_instance, _surface, nullptr);
             }
 
-            if (_swapChain != VK_NULL_HANDLE)
-                vkDestroySwapchainKHR(_device, _swapChain, nullptr);
-
-            if (_surface != VK_NULL_HANDLE)
-                vkDestroySurfaceKHR(_instance, _surface, nullptr);
-
-            if (_device != VK_NULL_HANDLE)
-            {
+            if (_device != VK_NULL_HANDLE) {
                 vkDestroyDevice(_device, nullptr);
                 _device = VK_NULL_HANDLE;
             }
@@ -1042,11 +1068,23 @@ void RendererVK::Render(void)
 		return;
 
     vkWaitForFences(_device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(_device, 1, &inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
 
-    vkAcquireNextImageKHR(_device, _swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(_device,
+                                         _swapChain,
+                                         UINT64_MAX, 
+             imageAvailableSemaphores[currentFrame],
+                                     VK_NULL_HANDLE,
+                                        &imageIndex);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        return recreateSwapChain();
+    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+
+    vkResetFences(_device, 1, &inFlightFences[currentFrame]);
 
     vkResetCommandBuffer(_commandBuffers[currentFrame], 0);
 
@@ -1086,15 +1124,15 @@ void RendererVK::Render(void)
 
     presentInfo.pImageIndices = &imageIndex;
 
-    vkQueuePresentKHR(_presentQueue, &presentInfo);
-
-    // m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
-	// InvalidateRect(m_hWnd, NULL, true);
-
-    /* Swap front and back buffers */
-    //if (_window) {
-    //   glfwSwapBuffers(_window);
-    //}
+    switch(vkQueuePresentKHR(_presentQueue, &presentInfo))
+    {
+    case VK_ERROR_OUT_OF_DATE_KHR:
+        return recreateSwapChain();
+    case VK_SUCCESS:
+        break;
+    default: // I feel like this is p. dumb
+        throw std::runtime_error("failed to present swap chain image!");
+    };
 }
 
 ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)

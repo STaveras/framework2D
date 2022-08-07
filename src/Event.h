@@ -44,6 +44,7 @@ protected:
    event_priority_level	m_ePriority;
    event_key            m_EventID;
    void*                m_pSender;
+   // void*                m_pData;
 
 public:
    Event(void) :m_ePriority(event_priority_normal), m_EventID(""), m_pSender(NULL) {}

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "EventSystem_defines.h"
+
 template<class T>
 void EventSystem::RegisterCallback(Event::event_key evtKey, T* p, void (T::*fn)(const Event&))
 {

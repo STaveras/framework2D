@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 
+#include "EventSystem.h"
 #include "ImageLoaders.h"
 
 #include <vector>
@@ -26,7 +27,7 @@ class RendererVK : public IRenderer
     VkRenderPass _renderPass = VK_NULL_HANDLE;
 
     VkCommandPool _commandPool;
-
+    
     uint32_t currentFrame = 0;
 
     std::vector<VkFence> inFlightFences;
@@ -76,6 +77,8 @@ class RendererVK : public IRenderer
     void pickPhysicalDevice(VkInstance instance);
     void createLogicalDevice(VkPhysicalDevice physicalDevice);
     void createSwapChain(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window);
+    void recreateSwapChain(void);
+    void cleanupSwapChain(void);
 
     void createImageViews(VkDevice device);
 
@@ -90,6 +93,8 @@ class RendererVK : public IRenderer
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void createSyncObjects(void); // I don't necessarily want to even declare this here
+
+    void OnWindowResized(const Event& e);
 
 public:
 
