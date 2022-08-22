@@ -45,7 +45,7 @@ const std::vector<const char *> instanceExtensions = {
 const std::vector<const char *> deviceExtensions = {
 #if __APPLE__
     // MoltenVK is a portability subset
-    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
+    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
 #endif
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
@@ -281,7 +281,7 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
     if (enableValidationLayers) {
-        std::cout << "Available Extensions:" << std::endl;
+        std::cout << "Available device extensions:" << std::endl;
         for (auto extension: availableExtensions){
             std::cout << '\t' << extension.extensionName << std::endl;
         }
@@ -1000,7 +1000,7 @@ void RendererVK::Initialize(void)
 
         if (enableValidationLayers) {
 
-            std::cout << "Available extension properties:\n";
+            std::cout << "Available instance extensions:\n";
 
             for (const auto &extension : extensionProperties) {
                 std::cout << '\t' << extension.extensionName << '\n';
