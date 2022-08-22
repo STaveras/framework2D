@@ -10,10 +10,9 @@
    - Varying distances from each other
  - Count the flaps
 
----
-
-Building dependencies:
+Build dependencies:
+-------------------
 - GLM
 - GLFW
-- Vulkan
+- Vulkan (additionally, MoltenVK for Mac)
 - TinyXML2

@@ -16,4 +16,4 @@ bin/*.dll
 bin/*.exe
 bin/*.dSYM/**
 bin/data/cache/**
-bin/2Dgameframework
+bin/framework2D

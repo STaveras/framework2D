@@ -37,14 +37,15 @@ VkAllocationCallbacks vkCallbacks{};
 
 const std::vector<const char *> instanceExtensions = {
 #if __APPLE__
-    "VK_KHR_get_physical_device_properties2"
+    VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
 #endif
 };
 
 const std::vector<const char *> deviceExtensions = {
 #if __APPLE__
     // MoltenVK is a portability subset
-    "VK_KHR_portability_subset",
+    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
 #endif
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
@@ -278,6 +279,13 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
 
     std::vector<VkExtensionProperties> availableExtensions(extensionCount);
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+    if (enableValidationLayers) {
+        std::cout << "Available Extensions:" << std::endl;
+        for (auto extension: availableExtensions){
+            std::cout << '\t' << extension.extensionName << std::endl;
+        }
+    }
 
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
@@ -913,8 +921,6 @@ void RendererVK::Initialize(void)
 
         GLFWwindow *window = Renderer::window->getUnderlyingWindow();
 
-        Engine2D::getEventSystem()->RegisterCallback<RendererVK>(EVT_WINDOW_RESIZED, this, &RendererVK::OnWindowResized);
-
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = Renderer::window->GetWindowTitle();
@@ -924,8 +930,11 @@ void RendererVK::Initialize(void)
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
         VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+#if __APPLE__
+        createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
         uint32_t glfwExtensionCount = 0;
         const char **glfwExtensions;
@@ -969,6 +978,11 @@ void RendererVK::Initialize(void)
         {
         case VK_SUCCESS:
             std::cout << "Vulkan initialized" << std::endl;
+            std::cout << "Requested instance extensions:" << std::endl;
+
+            for (auto instanceExtension : extensions) {
+                std::cout << '\t' << instanceExtension << std::endl;
+            }
             break;
         default:
             throw std::runtime_error("Failed to create Vulkan instance!");
@@ -986,7 +1000,7 @@ void RendererVK::Initialize(void)
 
         if (enableValidationLayers) {
 
-            std::cout << "Available extensions:\n";
+            std::cout << "Available extension properties:\n";
 
             for (const auto &extension : extensionProperties) {
                 std::cout << '\t' << extension.extensionName << '\n';
@@ -1006,6 +1020,8 @@ void RendererVK::Initialize(void)
         createCommandPool(_device);
         createCommandBuffers(_device);
         createSyncObjects();
+
+        Engine2D::getEventSystem()->RegisterCallback<RendererVK>(EVT_WINDOW_RESIZED, this, &RendererVK::OnWindowResized);
     }
 }
 
