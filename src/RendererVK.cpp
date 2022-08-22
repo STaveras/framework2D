@@ -85,7 +85,7 @@ VkResult createDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
     }
 }
 
-void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) 
+void destroyDebugUtilsMessengerEXT(VkInstance instance, const VkAllocationCallbacks* pAllocator) 
 {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
@@ -1011,15 +1011,17 @@ void RendererVK::Initialize(void)
 
         pickPhysicalDevice(_instance);
 
-        createLogicalDevice(_physicalDevice);
-        createSwapChain(_physicalDevice, _device, window);
-        createImageViews(_device);
-        createRenderPass(_device);
-        createGraphicsPipeline(_device);
-        createFramebuffers(_device);
-        createCommandPool(_device);
-        createCommandBuffers(_device);
-        createSyncObjects();
+        if (_physicalDevice) {
+            createLogicalDevice(_physicalDevice);
+            createSwapChain(_physicalDevice, _device, window);
+            createImageViews(_device);
+            createRenderPass(_device);
+            createGraphicsPipeline(_device);
+            createFramebuffers(_device);
+            createCommandPool(_device);
+            createCommandBuffers(_device);
+            createSyncObjects();
+        }
 
         Engine2D::getEventSystem()->RegisterCallback<RendererVK>(EVT_WINDOW_RESIZED, this, &RendererVK::OnWindowResized);
     }
@@ -1028,11 +1030,14 @@ void RendererVK::Initialize(void)
 void RendererVK::Shutdown(void)
 {
     if (_instance) {
-        
-        vkDeviceWaitIdle(_device);
+
+        if (_surface != VK_NULL_HANDLE)
+            vkDestroySurfaceKHR(_instance, _surface, nullptr);
 
         if (_device)
-        {
+        { 
+            vkDeviceWaitIdle(_device);
+
             for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)  {
 
                 vkDestroySemaphore(_device, imageAvailableSemaphores[i], nullptr);
@@ -1061,9 +1066,6 @@ void RendererVK::Shutdown(void)
             if (_swapChain != VK_NULL_HANDLE)
                 vkDestroySwapchainKHR(_device, _swapChain, nullptr);
 
-            if (_surface != VK_NULL_HANDLE)
-                vkDestroySurfaceKHR(_instance, _surface, nullptr);
-
             if (_device != VK_NULL_HANDLE)
             {
                 vkDestroyDevice(_device, nullptr);
@@ -1072,10 +1074,11 @@ void RendererVK::Shutdown(void)
         }
 
         if (enableValidationLayers) {
-            destroyDebugUtilsMessengerEXT(_instance, debugMessenger, nullptr);
+            destroyDebugUtilsMessengerEXT(_instance, nullptr);
         }
 
         vkDestroyInstance(_instance, nullptr);
+
         _instance = VK_NULL_HANDLE;
     }
 }
