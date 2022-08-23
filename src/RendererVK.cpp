@@ -915,6 +915,25 @@ void RendererVK::createSyncObjects(void)
 
 void RendererVK::OnWindowResized(const Event &e)
 {
+    GLFWwindow *window = (GLFWwindow*)e.GetSender();
+
+    if (window) 
+    {
+        int width = 0, height = 0;
+
+        glfwGetFramebufferSize(window, &width, &height);
+
+        // This is not the right way to handle this, especially when we network this engine
+        // We'll need to spawn a render thread seperately from the rest of the framework
+        
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(window, &width, &height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(this->_device);
+    }
+
     recreateSwapChain();
 }
 

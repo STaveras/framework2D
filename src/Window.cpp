@@ -1,7 +1,8 @@
 // File: Window.cpp
 // Author: Stanley Taveras
 // Created: 2/21/2010
-// Modified: 4/19/2022
+// Modified: 8/23/2022
+// TODO: Rethink how we handle resizing the window
 
 #ifdef _WIN32
 #pragma comment(lib, "glfw3dll.lib")
@@ -93,9 +94,12 @@ void Window::Initialize(void) {
 	
 	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
 		// this is le gross, because it means we won't be able to (easily) render to multiple windows in this manner...
+
 		Window *_window = Renderer::window;
 		if (_window->getUnderlyingWindow() == window) {
-			_window->_resize(width, height); 
+			_window->SetWidth(width);
+			_window->SetHeight(height);
+			
 			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
 		}
 	});
@@ -141,13 +145,23 @@ void Window::Shutdown(void)
 	}
 }
 
+void Window::SetWidth(int nWidth)
+{
+	this->_resize(nWidth, m_nHeight);
+}
+
+void Window::SetHeight(int nHeight)
+{
+	this->_resize(m_nWidth, nHeight);
+}
+
 void Window::_resize(int width, int height)
 {
 	if (_window) {
-		this->SetWidth(width);
-		this->SetHeight(height);
+		this->m_nWidth = width;
+		this->m_nHeight = height;
 
-		//glfwSetWindowSize(_window, width, height); // not sure if this is going to cause a spinlock
+		glfwSetWindowSize(_window, width, height);
 	}
 #ifdef _WIN32
 	else {

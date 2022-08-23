@@ -46,8 +46,8 @@ public:
 	const char* GetWindowClassName(void) const { return m_szWindowClassName; }
 
 	// Re-implement these so that setting them here actually resizes the window
-	void SetWidth(int nWidth) { m_nWidth = nWidth; }
-	void SetHeight(int nHeight) { m_nHeight = nHeight; }
+	void SetWidth(int nWidth);
+	void SetHeight(int nHeight);
 	void SetWindowTitle(const char* szWindowTitle) { m_szWindowTitle = szWindowTitle; }
 #ifdef _WIN32
 	void Initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
