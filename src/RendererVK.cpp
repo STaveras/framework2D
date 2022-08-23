@@ -863,15 +863,18 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 
 void RendererVK::cleanupSwapChain(void)
 {
-    for (auto framebuffer : _swapChainFramebuffers) {
-        vkDestroyFramebuffer(_device, framebuffer, nullptr);
-    }
+    if (_swapChain != VK_NULL_HANDLE) {
+            
+        for (auto framebuffer : _swapChainFramebuffers) {
+            vkDestroyFramebuffer(_device, framebuffer, nullptr);
+        }
 
-    for (auto imageView : swapChainImageViews) {
-        vkDestroyImageView(_device, imageView, nullptr);
-    }
+        for (auto imageView : swapChainImageViews) {
+            vkDestroyImageView(_device, imageView, nullptr);
+        }
 
-    vkDestroySwapchainKHR(_device, _swapChain, nullptr);
+        vkDestroySwapchainKHR(_device, _swapChain, nullptr);
+    }
 }
 
 void RendererVK::recreateSwapChain(void)
@@ -1031,9 +1034,6 @@ void RendererVK::Shutdown(void)
 {
     if (_instance) {
 
-        if (_surface != VK_NULL_HANDLE)
-            vkDestroySurfaceKHR(_instance, _surface, nullptr);
-
         if (_device)
         { 
             vkDeviceWaitIdle(_device);
@@ -1059,18 +1059,15 @@ void RendererVK::Shutdown(void)
                 vkDestroyShaderModule(_device, shaderModule, nullptr);
             }
 
-            for (auto imageView : swapChainImageViews) {
-                vkDestroyImageView(_device, imageView, nullptr);
-            }
-
-            if (_swapChain != VK_NULL_HANDLE)
-                vkDestroySwapchainKHR(_device, _swapChain, nullptr);
-
-            if (_device != VK_NULL_HANDLE)
-            {
+            if (_device != VK_NULL_HANDLE) {
                 vkDestroyDevice(_device, nullptr);
+
                 _device = VK_NULL_HANDLE;
             }
+        }
+
+        if (_surface != VK_NULL_HANDLE) {
+            vkDestroySurfaceKHR(_instance, _surface, nullptr);
         }
 
         if (enableValidationLayers) {
