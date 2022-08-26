@@ -44,5 +44,6 @@ public:
 
    // Pause? We should be able to "fast forward" and "rewind" as well... Should this be implemented by the 'game' (application)?
    static void Quit(void) { Engine2D::getInstance()->_hasQuit = true; }
+   static const char* Version(void) { return FRAMEWORK_VERSION; }
 };
 // Author: Stanley Taveras

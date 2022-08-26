@@ -6,7 +6,12 @@
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
 
+#define FRAMEWORK_VERSION "0.01"
+
 #define DEFAULT_DATA_PATH "./data/"
+
+#define GLOBAL_WIDTH  640
+#define GLOBAL_HEIGHT 480
 
 #ifndef _CUSTOM_STREAM_OBJECT
 #include <fstream>

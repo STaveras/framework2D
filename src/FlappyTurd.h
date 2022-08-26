@@ -85,6 +85,9 @@ class FlappyTurd : public Game
       {
          GameState::onEnter();
 
+         // 320, 460
+         // window setwidth, setheight
+
          //_background = new Image("./data/images/bg.png");
 
          _objectManager.addObject("Camera", _camera);

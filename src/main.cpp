@@ -59,7 +59,7 @@ int main(int argc, char **argv)
    // Check for game data
    FileSystem::ScoutDirectory(System::GlobalDataPath());
 
-   Window window = Window(320, 460, "Flap a Turd");
+   Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::Version());
 
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
