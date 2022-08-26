@@ -145,6 +145,20 @@ void Window::Shutdown(void)
 	}
 }
 
+void Window::SetWindowTitle(const char* szWindowTitle) 
+{ 
+	m_szWindowTitle = szWindowTitle; 
+
+	if (_window) {
+		glfwSetWindowTitle(_window, m_szWindowTitle);
+	}
+#if WIN32
+	else {
+		SetWindowTextA(m_hWnd, m_szWindowTitle);
+	}
+#endif
+}
+
 void Window::SetWidth(int nWidth)
 {
 	this->_resize(nWidth, m_nHeight);

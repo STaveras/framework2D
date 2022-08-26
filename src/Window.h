@@ -48,7 +48,7 @@ public:
 	// Re-implement these so that setting them here actually resizes the window
 	void SetWidth(int nWidth);
 	void SetHeight(int nHeight);
-	void SetWindowTitle(const char* szWindowTitle) { m_szWindowTitle = szWindowTitle; }
+	void SetWindowTitle(const char* szWindowTitle);
 #ifdef _WIN32
 	void Initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
 #endif
