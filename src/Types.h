@@ -76,9 +76,7 @@ struct vector2 : public glm::vec2 {
    operator D3DXVECTOR2() const { return D3DXVECTOR2(this->x, this->y); }
 };
 #else
-#define vector2 glm::vec2
-#define vector4 glm::vec4
-#define matrix4x4 glm::mat4
+#include "Maths.h"
 #endif
 
 #else
@@ -96,7 +94,7 @@ struct vector2 : public glm::vec2 {
 
 #endif
 
-#include "color.h"
+#include "_color.h"
 
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"

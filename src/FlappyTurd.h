@@ -14,9 +14,6 @@
 #include "UpdateRenderableOperator.h"
 #include "UpdateBackgroundOperator.h"
 
-#define GLOBAL_WIDTH (640 / 2) /*320*/
-#define GLOBAL_HEIGHT 480
-
 #define FALL_FORCE 100.0f
 #define FLAP_MULTIPLIER 3.33f
 

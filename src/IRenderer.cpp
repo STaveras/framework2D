@@ -20,7 +20,7 @@ void IRenderer::_BackgroundColorShift(void)
         static short nStage = 0;
         static float fAccum = 0.0f;
 
-		color colors[] = {
+		Color colors[] = {
 			0xFF000000, // Black
 			0xFFFF0000, // Red
 			0xFFFFFF00, // Yellow

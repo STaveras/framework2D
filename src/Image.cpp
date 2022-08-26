@@ -31,7 +31,7 @@ Image::Image(const Image& image):
 
 }
 
-Image::Image(const char* filePath, color clearColor, const RECT* srcRect):
+Image::Image(const char* filePath, Color clearColor, const RECT* srcRect):
 	Renderable(RENDERABLE_TYPE_IMAGE),
 	m_pTexture(NULL), 
 	_rotation(0.0f),
@@ -86,7 +86,7 @@ void Image::center(void)
    SetCenter(GetRectCenter());
 }
 
-Image* Image::Load(const char* filePath, color clearColor, const RECT* srcRect)
+Image* Image::Load(const char* filePath, Color clearColor, const RECT* srcRect)
 {
 	IRenderer* renderer = Engine2D::getInstance()->GetRenderer();
 	if (renderer)

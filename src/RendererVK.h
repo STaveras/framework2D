@@ -103,5 +103,5 @@ public:
     void Shutdown(void);
     void Render(void);
 
-    ITexture *CreateTexture(const char *szFilename, color colorKey = 0);
+    ITexture *CreateTexture(const char *szFilename, Color colorKey = 0);
 };

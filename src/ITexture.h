@@ -10,9 +10,9 @@
 
 #include <string>
 
-class ITexture
+typedef class ITexture
 {
-	color m_ClrColor; // transparent color
+	Color m_ClrColor; // transparent color
 	std::string m_strFilename;
 
 public:
@@ -21,12 +21,13 @@ public:
 	virtual ~ITexture(void){ }
 
 	const char* GetFilename(void) const { return m_strFilename.c_str(); }
-	color GetKeyColor(void) const { return m_ClrColor; }
+	Color GetKeyColor(void) const { return m_ClrColor; }
 	virtual unsigned int GetWidth(void) const = 0;
 	virtual unsigned int GetHeight(void) const = 0;
 
 	void SetFilename(const char* szFilename) { m_strFilename = szFilename; }
-	void SetKeyColor(color clrColor) { m_ClrColor = clrColor; }
-};
+	void SetKeyColor(Color clrColor) { m_ClrColor = clrColor; }
+	
+}Texture;
 
 #endif

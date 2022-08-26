@@ -6,8 +6,8 @@
 #if !defined(_IRENDERABLE_H)
 #define _IRENDERABLE_H
 
-#include "color.h"
 #include "Positionable.h"
+
 #include <list>
 #include <math.h>
 
@@ -22,12 +22,12 @@ class Renderable : public Positionable
 		bool m_bIsFlashing;
 		float m_fAlpha;
 		float m_fFlash;
-		color m_Flash;
-		color m_Tint;
+		Color m_Flash;
+		Color m_Tint;
 	}_appearance;
 
 protected:
-    Renderable(void):m_eType(RENDERABLE_TYPE_NULL){memset(&_appearance,0,(sizeof(bool)*2+sizeof(float)*2+sizeof(color)*2));}
+    Renderable(void):m_eType(RENDERABLE_TYPE_NULL){memset(&_appearance,0,(sizeof(bool)*2+sizeof(float)*2+sizeof(Color)*2));}
 
 public:
 	explicit Renderable(RENDERABLE_TYPE eType):m_eType(eType) { _appearance._isVisible = true; }
@@ -41,8 +41,8 @@ public:
 	// Appearance properties
 	/////////////////////////
 	void SetAlpha(float fAlpha) { _appearance.m_fAlpha = (fAlpha <= 0.0f) ? 0 : ((fAlpha >= 1.0f) ? 1.0f : fAlpha); }
-	void SetFlash(bool isFlashing, color flashColor, float fFlashRate) { _appearance.m_bIsFlashing = isFlashing; _appearance.m_Flash = flashColor; _appearance.m_fFlash = fFlashRate; }
-	void SetTint(color tintColor) { _appearance.m_Tint = tintColor; }
+	void SetFlash(bool isFlashing, Color flashColor, float fFlashRate) { _appearance.m_bIsFlashing = isFlashing; _appearance.m_Flash = flashColor; _appearance.m_fFlash = fFlashRate; }
+	void SetTint(Color tintColor) { _appearance.m_Tint = tintColor; }
 };
 
 #endif  //_IRENDERABLE_H

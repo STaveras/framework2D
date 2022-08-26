@@ -8,7 +8,6 @@
 
 #include "Factory.h"
 #include "ITexture.h"
-#include "color.h"
 #include <list>
 
 class Camera;
@@ -26,8 +25,8 @@ protected:
 	bool m_bVerticalSync;
 	int m_nWidth;
 	int m_nHeight;
-	color m_ClearColor;
-	Camera *m_pCamera;
+	Color m_ClearColor;
+	Camera *m_pCamera; // This is going to change into a list of cameras
 	Factory<ITexture> m_Textures;
 	Factory<RenderList> _RenderLists;
 
@@ -60,14 +59,14 @@ public:
 	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
 	int GetWidth(void) const { return m_nWidth; }
 	int GetHeight(void) const { return m_nHeight; }
-	color GetClearColor(void) const { return m_ClearColor; }
+	Color GetClearColor(void) const { return m_ClearColor; }
 	Camera *GetCamera(void) { return m_pCamera; }
 	ITexture *getTexture(const char *szFilename) { return _TextureExists(szFilename); }
 
 	void isBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
 	void SetWidth(int nWidth) { m_nWidth = nWidth; }
 	void SetHeight(int nHeight) { m_nHeight = nHeight; }
-	void SetClearColor(color clearColor)
+	void SetClearColor(Color clearColor)
 	{
 		m_ClearColor = clearColor;
 		m_bStaticBG = true;
@@ -77,7 +76,7 @@ public:
 	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }
 	virtual void setVerticalSync(bool vsyncEnabled) { m_bVerticalSync = vsyncEnabled; }
 
-	 virtual ITexture* CreateTexture(const char* szFilename, color colorKey = 0) = 0;
+	 virtual ITexture* CreateTexture(const char* szFilename, Color colorKey = 0) = 0;
 	 virtual bool DestroyTexture(const ITexture* pTexture);
 
 	 void PushRenderList(RenderList* pRenderList) { _RenderLists.Store(pRenderList); }

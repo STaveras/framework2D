@@ -13,6 +13,8 @@
 #include "FileSystem.h"
 #include "System.h"
 
+#include "Vertex.h"
+
 // NOTE: We should try and decouple the ide of a "window" from this, considering we may want to use this to render off-screen
 #include <iostream>
 #include <set>
@@ -939,6 +941,10 @@ void RendererVK::OnWindowResized(const Event &e)
 
 void RendererVK::Initialize(void)
 {
+    // std::vector<vertex> _vertices = {{{0.0f, 0.0f, 0.0f}, {1.0f, 0.5f, 0.0f}}};
+
+    // Vertex vertex{{0,0,0},{0,0,0}};
+
     if (Renderer::window) {
 
         GLFWwindow *window = Renderer::window->getUnderlyingWindow();
@@ -1174,7 +1180,7 @@ void RendererVK::Render(void)
     };
 }
 
-ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)
+ITexture *RendererVK::CreateTexture(const char *szFilename, Color colorKey)
 {
     ITexture *texture = NULL;
 
