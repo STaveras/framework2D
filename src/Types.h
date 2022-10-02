@@ -58,6 +58,7 @@ typedef std::ofstream ofpstream;
 #define GLFW_BUILD_UNIVERSAL
 #define GLFW_USE_MENUBAR
 
+#define sprintf_s printf
 #define strtok_s strtok_r
 #define _strdup strdup
 #define INFINITE INFINITY

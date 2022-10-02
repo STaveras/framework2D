@@ -20,19 +20,6 @@
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
 // load assets, levels, and other miscellaneous data. Like a more modern MUGEN
 
-const char* checkArgumentsForDataPath(int argc, char** argv) 
-{
-   if (argc > 1) {
-
-      for (int i = 0; i < argc; i++) {
-         if (!strcmp(argv[i], "--dataPath") || !strcmp(argv[i], "-D")) {
-            return argv[i + 1]; // What if it's empty?
-         }
-      }
-   }
-   return DEFAULT_DATA_PATH;
-}
-
 #ifdef _WIN32
 
 //#include <vld.h>
@@ -51,13 +38,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #else
 int main(int argc, char **argv)
 {
-   std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
-
-   System::GlobalDataPath(checkArgumentsForDataPath(argc, argv));
+   (System::checkArgumentsForDebugMode(argc, argv)) ? Debug::Mode.enable() : Debug::Mode.disable(); // ONLY TIME WE CHECK FOR THIS
+   
+   std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl; 
+   System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
 
 #endif
-   // Check for game data
-   FileSystem::ScoutDirectory(System::GlobalDataPath());
+
+   if (Debug::Mode.isEnabled()) {
+      // Check for game data
+      FileSystem::ScoutDirectory(System::GlobalDataPath());
+   }
 
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::Version());
 
@@ -88,6 +79,17 @@ int main(int argc, char **argv)
    {
       window.Update();
       engine->Update();
+
+#ifdef _DEBUG
+   static unsigned int lastFPS = 0;
+      if (DEBUGGING) {
+         if (engine->getTimer()->GetElapsedTime() >= 1.0f) {
+            std::cout << "FPS: " << (lastFPS + engine->getTimer()->GetFPS()) / 2 << std::endl;
+            lastFPS = engine->getTimer()->GetFPS();
+            engine->getTimer()->Reset();
+         }
+      }
+#endif
    }
 
    engine->Shutdown();

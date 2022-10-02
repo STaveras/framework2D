@@ -1,6 +1,6 @@
 // File: Timer.h
 // Author: Stanley Taveras
-// Purpose: A timer for Win32
+// Purpose: A simple timer class
 
 // TODO: Move to System namespace and make a platform-agnostic timer.
 // TODO: Rebase units to milliseconds instead of seconds.
@@ -14,6 +14,7 @@
 #endif
 
 #include <chrono>
+#include <string>
 
 class Timer
 {
@@ -23,25 +24,25 @@ class Timer
 	unsigned int	m_uiTicks;
 	unsigned int	m_uiCurrentFPS;
 
+private:
+	// Internal timer
+	double _Timer(void) const;
 #ifdef _WIN32
 	LARGE_INTEGER	m_liFrequency;
 	LARGE_INTEGER	m_liDelta;
 	LARGE_INTEGER	m_liElapsed;
 	LARGE_INTEGER	m_liTimer; // Used internally for calculating FPS
 #else
-	typedef std::chrono::high_resolution_clock::time_point TimePoint;
+	std::chrono::high_resolution_clock::time_point m_tpTime;
+	
+	double m_dNow = 0.0;
+	double m_dElapsed = 0.0;
 
-	TimePoint m_tpTime;
-	TimePoint m_tpElapsed;
-	TimePoint m_tpDelta;
 #endif
+protected:
 
-	double _GetTimer(void);
-	void _ResetTimer(void) { 
-#ifdef _WIN32
-		QueryPerformanceCounter(&m_liTimer); 
-#endif
-	}
+	void _Tick(void);
+	void _Tock(void);
 
 public:
 	Timer(void);
@@ -52,7 +53,8 @@ public:
 	double GetElapsedTime(void) const;
 
 	void LimitFrameRate(unsigned int uiFrameRate);
+	std::string GetTimeStamp(void) const;
 
 	void Update(void);
-	void ResetElapsed(void);
+	void Reset(void);
 };

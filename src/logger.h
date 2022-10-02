@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 
-class Logger
+class Logger /*: public std::streambuf*/
 {
     bool _isNew;
     std::ofstream* _pFileStream;
@@ -36,29 +36,29 @@ public:
     Logger(const char* filename):_isNew(true),_szFilename(filename), _pFileStream(NULL){}
     ~Logger(void){ if (_pFileStream) { _pFileStream->clear(); delete _pFileStream; } }    
 
-    //void close(void)
-    //{
-    //    if (_pFileStream)
-    //    {
-    //        if (_pFileStream->is_open())
-    //        {
-    //            _pFileStream->flush();
-    //            _pFileStream->close();
-    //            _pFileStream->clear();
-    //        }
-    //    }
-    //}
+    void close(void)
+    {
+       if (_pFileStream)
+       {
+           if (_pFileStream->is_open())
+           {
+               _pFileStream->flush();
+               _pFileStream->close();
+               _pFileStream->clear();
+           }
+       }
+    }
 
-    //void open(const char* szFilename)
-    //{
-    //    if (_szFilename != szFilename)
-    //        close();
-    //    else
-    //    {
-    //        _szFilename = szFilename;
-    //        _createFileStream();
-    //    }
-    //}
+    void open(const char* szFilename)
+    {
+       if (_szFilename != szFilename)
+           close();
+       else
+       {
+           _szFilename = szFilename;
+           _createFileStream();
+       }
+    }
 
     virtual void write(const char* entry)
     {

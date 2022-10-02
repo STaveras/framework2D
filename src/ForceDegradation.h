@@ -19,7 +19,7 @@ public:
       _object = targetObject;
       _state = targetObject->getState();
       _force = _state->getForce();
-      _timer.ResetElapsed();
+      _timer.Reset();
    }
 
 protected:
@@ -44,7 +44,7 @@ protected:
             }
          }
          else
-            _timer.ResetElapsed();
+            _timer.Reset();
       }
       return true;
    }

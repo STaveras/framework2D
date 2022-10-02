@@ -84,9 +84,11 @@ class FlappyTurd : public Game
       void onEnter(void)
       {
          GameState::onEnter();
-
-         // 320, 460
-         // window setwidth, setheight
+         
+         Renderer::window->SetWindowTitle("Flappy Turd");
+         Renderer::window->SetWidth(GLOBAL_WIDTH/2);
+         Renderer::window->SetHeight(GLOBAL_HEIGHT-20);
+         Renderer::window->Resize();
 
          //_background = new Image("./data/images/bg.png");
 
@@ -143,19 +145,24 @@ class FlappyTurd : public Game
 
 					char debugBuffer[255];
 
-               OutputDebugString("\nObjects:\n-------\n");
+               // OutputDebugString("\nObjects:\n-------\n");
+
+               // Debug::Log << "\nObjects:\n-------\n";
+               Debug::Log->write("\nObjects:\n-------\n");
 
 					for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
                   GameObject* debugObject = _objectManager[i];
 						sprintf_s(debugBuffer, "(%s) pos: (%fx, %fy)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
-						OutputDebugString(debugBuffer);
+						// OutputDebugString(debugBuffer);
+                  Debug::Log->write(debugBuffer);
 					}
 				}
 
             if (_camera) {
                if (!_camera->OnScreen(_player->getGameObject())) {
                   //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
-                  OutputDebugString("GameObject off screen\n\n");
+                  // OutputDebugString("GameObject off screen\n\n");
+                  Debug::Log->write("GameObject off screen\n\n");
                }
             }
 
@@ -260,9 +267,5 @@ public:
       IProgramState* playState = this->top();
       this->clear();
       delete playState;
-
-      //while (!this->empty()) {
-      //   void* gameState = this->top(); this->pop(); delete gameState;
-      //}
    }
 } game;

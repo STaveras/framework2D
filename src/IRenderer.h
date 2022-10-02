@@ -66,11 +66,7 @@ public:
 	void isBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
 	void SetWidth(int nWidth) { m_nWidth = nWidth; }
 	void SetHeight(int nHeight) { m_nHeight = nHeight; }
-	void SetClearColor(Color clearColor)
-	{
-		m_ClearColor = clearColor;
-		m_bStaticBG = true;
-	}
+	void SetClearColor(Color clearColor);
 	void SetCamera(Camera *pCamera);
 
 	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }

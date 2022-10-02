@@ -99,6 +99,7 @@
         "cinttypes": "cpp",
         "source_location": "cpp",
         "material": "c",
-        "color.h": "c"
+        "color.h": "c",
+        "filesystem": "cpp"
     }
 }

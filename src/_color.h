@@ -19,6 +19,10 @@ namespace framework {
 		const color& operator=(unsigned long value) { _color = value; return *this; }
 		const color& operator=(const color& value) { _color = value._color; return *this; }
 
+		operator vector3() const{
+			return vector3(r, g, b);
+		}
+
 		operator vector4() const{
 			return vector4(r, g, b, a);
 		}

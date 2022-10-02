@@ -15,8 +15,8 @@
 
 Window::Window(void) :
 	m_bHasQuit(false),
-	m_nWidth(640),
-	m_nHeight(480),
+	m_nWidth(GLOBAL_WIDTH),
+	m_nHeight(GLOBAL_HEIGHT),
 	m_szWindowTitle(""),
 	m_szWindowClassName("_ENGINE_2D_WINDOW"),
 	_window(NULL) {}
@@ -88,8 +88,7 @@ void Window::Initialize(void) {
 	/* Create a windowed mode window and its OpenGL context */
 	_window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle, NULL, NULL);
 	if (!_window) {
-		glfwTerminate();
-		return; // -1 // Maybe throw an exception
+		return glfwTerminate(); // -1 // Maybe throw an exception
 	}
 	
 	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
@@ -135,14 +134,16 @@ void Window::Update(void)
 
 void Window::Shutdown(void)
 {
-#ifdef _WIN32
-	DestroyWindow(m_hWnd);
-	UnregisterClass(m_szWindowClassName, m_hInstance);
-#endif
 	if (_window) {
 		glfwDestroyWindow(_window);
 		glfwTerminate();
 	}
+#ifdef _WIN32
+	else {
+	DestroyWindow(m_hWnd);
+	UnregisterClass(m_szWindowClassName, m_hInstance);
+	}
+#endif
 }
 
 void Window::SetWindowTitle(const char* szWindowTitle) 
@@ -161,21 +162,28 @@ void Window::SetWindowTitle(const char* szWindowTitle)
 
 void Window::SetWidth(int nWidth)
 {
-	this->_resize(nWidth, m_nHeight);
+	if (m_nWidth != nWidth) {
+		m_nWidth = nWidth;
+	}
 }
 
 void Window::SetHeight(int nHeight)
 {
-	this->_resize(m_nWidth, nHeight);
+	if (m_nHeight != nHeight) {
+		m_nHeight = nHeight;
+	}
 }
 
-void Window::_resize(int width, int height)
+void Window::Resize(void)
 {
 	if (_window) {
-		this->m_nWidth = width;
-		this->m_nHeight = height;
 
-		glfwSetWindowSize(_window, width, height);
+		int width = 0, height = 0; 
+		glfwGetWindowSize(_window, &width, &height);
+
+		if (m_nWidth != width || m_nHeight != height) {
+		glfwSetWindowSize(_window, m_nWidth, m_nHeight);
+		}
 	}
 #ifdef _WIN32
 	else {

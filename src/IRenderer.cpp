@@ -7,6 +7,8 @@
 #include "Camera.h"
 #include "Timer.h"
 
+#include "Engine2D.h"
+
 IRenderer::~IRenderer() {
 	m_Textures.Clear();
 }
@@ -15,7 +17,9 @@ void IRenderer::_BackgroundColorShift(void)
 {
 	if (!m_bStaticBG)
     {
-		static Timer timer;
+		// static Timer timer;
+		Timer *timer = Engine2D::getTimer();
+
         static bool bReverse = false;
         static short nStage = 0;
         static float fAccum = 0.0f;
@@ -36,7 +40,7 @@ void IRenderer::_BackgroundColorShift(void)
 		colors[7].b = (byte)(colors[nStage].b + fAccum * (colors[nStage+1].b - colors[nStage].b));
 		colors[7].a = (byte)(colors[nStage].a + fAccum * (colors[nStage+1].a - colors[nStage].a));
 
-		fAccum += (float)(bReverse ? -(timer.GetDeltaTime()) : timer.GetDeltaTime());
+		fAccum += (float)(bReverse ? -(timer->GetDeltaTime()) : timer->GetDeltaTime());
 
         if (fAccum >= 1.0f)
         {
@@ -64,7 +68,7 @@ void IRenderer::_BackgroundColorShift(void)
         }
 
         m_ClearColor = colors[7];
-		timer.Update();
+		// timer.Update();
     }
 }
 
@@ -79,6 +83,12 @@ ITexture* IRenderer::_TextureExists(const char* szFilename)
 	}
 
 	return NULL;
+}
+
+void IRenderer::SetClearColor(Color clearColor)
+{
+	m_ClearColor = clearColor;
+	//m_bStaticBG = true;
 }
 
 void IRenderer::SetCamera(Camera* pCamera)
