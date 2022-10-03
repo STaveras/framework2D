@@ -24,23 +24,18 @@
 
 //#include <vld.h>
 
-bool checkForVKCommand(const char* lpCmdLine) {
-
-   if (strstr(lpCmdLine, "-vk")) {
-      return true;
-   }
-   return false;
-}
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-   // TODO: Process lpCmdLine for data path and/or other flags
+   int argc = 0;
+   LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
 #else
 int main(int argc, char **argv)
 {
    (System::checkArgumentsForDebugMode(argc, argv)) ? Debug::Mode.enable() : Debug::Mode.disable(); // ONLY TIME WE CHECK FOR THIS
    
    std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl; 
+   
    System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
 
 #endif
@@ -56,7 +51,7 @@ int main(int argc, char **argv)
    InputInterface* pInput = nullptr;
 
 #ifdef _WIN32
-   if (!checkForVKCommand(lpCmdLine)) {
+   if (!System::checkArgumentsForVulkan(argc, argv)) {
       window.Initialize(hInstance, lpCmdLine);
       pInput = (DirectInput*)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
       pRenderer = (RendererDX*)Renderer::CreateDXRenderer(window.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
