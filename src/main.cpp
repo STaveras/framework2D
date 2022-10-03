@@ -66,6 +66,9 @@ int main(int argc, char **argv)
       pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window);
    }
 
+   pRenderer->setFullScreen(System::checkArgumentsForFullscreen(argc, argv));
+   pRenderer->setVerticalSync(System::checkArgumentsForVSync(argc, argv));
+
    Engine2D *engine = Engine2D::getInstance();
    engine->SetInputInterface(pInput);
    engine->SetRenderer(pRenderer);
