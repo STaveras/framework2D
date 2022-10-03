@@ -32,9 +32,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #else
 int main(int argc, char **argv)
 {
+#if _DEBUG
    (System::checkArgumentsForDebugMode(argc, argv)) ? Debug::Mode.enable() : Debug::Mode.disable(); // ONLY TIME WE CHECK FOR THIS
    
    std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl; 
+#endif
    
    System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
 
