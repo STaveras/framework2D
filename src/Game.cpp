@@ -20,7 +20,13 @@ void Game::Update(Timer* timer)
    }
 }
 
+// Adding a sort of garbage collector
 void Game::End(void)
 {
-   throw "Game::End() unimplemented.";
+   while (!this->empty())
+   {
+      void *gameState = this->top();
+      this->pop();
+      delete reinterpret_cast<GameState*>(gameState);
+   }
 }

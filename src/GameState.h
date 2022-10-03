@@ -31,7 +31,7 @@ public:
     GameState(void) : IProgramState() { _player = new Player; _camera = new Camera; }
    ~GameState(void) { delete _camera; delete _player; }
 
-   Sprite* addSprite(const char* filename, color clearColor = 0, RECT* srcRect = NULL);
+   Sprite* addSprite(const char* filename, Color clearColor = 0, RECT* srcRect = NULL);
    void removeSprite(Sprite* sprite);
 
    //void addObject(GameObject* object);

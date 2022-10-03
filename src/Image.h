@@ -18,7 +18,7 @@ public:
 	 Image(void);
 	 Image(ITexture* pImage);
 	 Image(const Image& image);
-	 Image(const char* filePath, color clearColor = 0, const RECT* srcRect = NULL);
+	 Image(const char* filePath, Color clearColor = 0, const RECT* srcRect = NULL);
 	 ~Image(void);
 
 	 const ITexture* getTexture(void) const { return m_pTexture; }
@@ -41,7 +41,7 @@ public:
 
 	 void center(void);
 
-	 virtual Image* Load(const char* filePath, color clearColor = 0, const RECT* srcRect = NULL);
+	 virtual Image* Load(const char* filePath, Color clearColor = 0, const RECT* srcRect = NULL);
 	 virtual void Unload(void);
 };
 #endif  //_SPRITE_H

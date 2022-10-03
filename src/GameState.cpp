@@ -5,7 +5,7 @@
 
 Engine2D* engine = Engine2D::getInstance();
 
-Sprite* GameState::addSprite(const char * filename, color clearColor, RECT* srcRect)
+Sprite* GameState::addSprite(const char * filename, Color clearColor, RECT* srcRect)
 {
    Sprite* sprite = _sprites.Create(Sprite(filename, clearColor, srcRect));
    _renderList->push_back(sprite);
