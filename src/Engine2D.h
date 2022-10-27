@@ -1,4 +1,5 @@
 // File: Engine2D.h
+// Mostly a nexus point of subsystems that support an object graph and a collection of "operators" to apply effects to the graph (e.g. physics, rendering, etc.)) 
 #pragma once
 #include "Types.h"
 #include "ISingleton.h"

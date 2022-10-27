@@ -20,15 +20,19 @@
             "includePath": [
                 "${workspaceFolder}/**"
             ],
-            "defines": ["_DEBUG"],
+            "defines": [
+                "_DEBUG"
+            ],
             "macFrameworkPath": [
                 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"
             ],
             "compilerPath": "/usr/bin/clang",
-            "compilerArgs": ["_DEBUG"],
+            "compilerArgs": [
+                "_DEBUG"
+            ],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "macos-clang-arm64"
+            "intelliSenseMode": "macos-clang-arm64",
         }
     ],
     "version": 4

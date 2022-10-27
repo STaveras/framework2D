@@ -11,12 +11,12 @@
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
             "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug"],
-            "stopAtEntry": false,
+            "stopAtEntry": false, // Seems to do absolutely nothing with lldb+clang
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "C/C++: clang++ build active file",
+            "preLaunchTask": "C/C++: clang++ build active file (debug)",
             "targetArchitecture":"arm64"
         },
         {

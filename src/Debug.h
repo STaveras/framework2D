@@ -1,8 +1,6 @@
 #pragma once
 
-//There needs to a boundary between your work and your personal life.
-//Don't put your 'self' in your work.
-//Put work in your 'self'.
+#define DEBUG
 
 namespace Debug
 {
@@ -17,7 +15,8 @@ namespace Debug
 
         static void enable(void) { _bDebug = true; }
         static void disable(void) { _bDebug = false; }
-    }Mode;
+        
+    } Mode;
 
     static bool dbgMouse = false;
     static bool dbgObjects = false;

@@ -18,6 +18,12 @@
 
 namespace FileSystem
 {
+    static void SetWorkingDirectory(const std::string& path)
+    {
+#if defined(__APPLE__)
+        chdir(path.c_str());
+#endif
+    }
 
     static std::string GetWorkingDirectory(void)
     {

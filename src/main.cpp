@@ -18,7 +18,7 @@
 
 // Ultimately, I want the executable to just be able to support running games without having to statically build a game
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
-// load assets, levels, and other miscellaneous data. Like a more modern MUGEN
+// load assets, levels, and other miscellaneous data. Like a more modern MUGEN 
 
 #ifdef _WIN32
 
@@ -37,21 +37,25 @@ int main(int argc, char **argv)
    
    std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl; 
 #endif
-   
+
    System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
 
-#endif
+#if _DEBUG
 
    if (Debug::Mode.isEnabled()) {
       // Check for game data
       FileSystem::ScoutDirectory(System::GlobalDataPath());
    }
 
+#endif
+
+#endif
+
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::Version());
 
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
-
+   
 #ifdef _WIN32
    if (!System::checkArgumentsForVulkan(argc, argv)) {
       window.Initialize(hInstance, lpCmdLine);
@@ -63,7 +67,7 @@ int main(int argc, char **argv)
    {
       window.Initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window);
+      pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window); 
    }
 
    pRenderer->setFullScreen(System::checkArgumentsForFullscreen(argc, argv));
@@ -79,9 +83,8 @@ int main(int argc, char **argv)
    {
       window.Update();
       engine->Update();
-
 #ifdef _DEBUG
-   static unsigned int lastFPS = 0;
+      static unsigned int lastFPS = 0;
       if (DEBUGGING) {
          if (engine->getTimer()->GetElapsedTime() >= 1.0f) {
             std::cout << "FPS: " << (lastFPS + engine->getTimer()->GetFPS()) / 2 << std::endl;
@@ -101,4 +104,3 @@ int main(int argc, char **argv)
 
    return 0;
 }
-// Stan Taveras
