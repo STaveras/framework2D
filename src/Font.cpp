@@ -3,10 +3,8 @@
 
 #include "ITexture.h"
 
-font::font(void):
+Font::Font(void):
 	Renderable(RENDERABLE_TYPE_FONT),
-	m_pTexture(NULL),
-	m_fScale(1.0f)
-{
+	m_pTexture(NULL) {
 	ZeroMemory(m_cWidths, 256);
 }

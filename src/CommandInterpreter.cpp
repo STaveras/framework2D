@@ -191,8 +191,7 @@ VirtualButton* CommandInterpreter::_ButtonInBuffer(char* szButtonID, size_t dwSt
 {
 	for (int i = (int)dwStartIndex; i < (int)m_vButtons.size(); i++)
 	{
-		if(!strcmp(szButtonID, m_vButtons[i].GetButtonID().c_str()))
-		{
+		if(!strcmp(szButtonID, m_vButtons[i].GetButtonID().c_str())) {
 			return &m_vButtons[i];
 		}
 	}

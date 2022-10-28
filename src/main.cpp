@@ -59,7 +59,7 @@ int main(int argc, char **argv)
    // Check for game data
    FileSystem::ScoutDirectory(System::GlobalDataPath());
 
-   Window window = Window(320, 460, "Flap a Turd");
+   Window window = Window(320, 460, "framework");
 
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
    while (!window.HasQuit() && !engine->HasQuit())
    {
       window.Update();
-      engine->Update();
+      engine->Update(); // Should we spawn other threads from here?
    }
 
    engine->Shutdown();

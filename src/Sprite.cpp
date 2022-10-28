@@ -3,11 +3,12 @@
 #include "FileSystem.h"
 #include <fstream>
 
+// TODO: Replace saving and loading of "sprite data" using JSON
+// TODO: Support pallette swapping
+
 void Sprite::Save(const char* filePath)
 {
 	std::ofstream ofl(filePath, std::ios_base::binary);
-
-	// TODO : Actually save the image data and pallette info
 
 	if(ofl.good())
 	{

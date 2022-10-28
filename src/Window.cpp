@@ -178,8 +178,8 @@ void Window::_resize(int width, int height)
 		diff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
 		diff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
 
-		SetWidth(m_nWidth + diff.x);
-		SetHeight(m_nHeight + diff.y);
+		m_nWidth = m_nWidth + diff.x;
+		m_nHeight = m_nHeight + diff.y;
 
 		// resize the client area
 		MoveWindow(m_hWnd, rcWindow.left, rcWindow.top, m_nWidth, m_nHeight, TRUE);
