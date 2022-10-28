@@ -1,12 +1,90 @@
 // System.h
 // Information regarding the underlying system -- e.g. operating system, CPU, GPU, etc.
 
-#include "Types.h"
-
 #pragma once
+
+#include "Types.h"
 
 namespace System
 {
+    static const char* checkArgumentsForDataPath(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--dataPath") || !strcmp(argv[i], "-d")) {
+                    return argv[i + 1]; // What if it's empty?
+                }
+            }
+        }
+        return DEFAULT_DATA_PATH;
+    }
+
+    static bool checkArgumentsForDebugMode(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--debug") || !strcmp(argv[i], "-D")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static bool checkArgumentsForFullscreen(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--fullscreen") || !strcmp(argv[i], "-f")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static bool checkArgumentsForWindowed(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--windowed") || !strcmp(argv[i], "-w")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static bool checkArgumentsForVSync(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--vsync") || !strcmp(argv[i], "-v")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static bool checkArgumentsForVulkan(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--vulkan") || !strcmp(argv[i], "-vk")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Get the current operating system.
     const char* GetOperatingSystem();
     

@@ -1,4 +1,5 @@
 // File: Engine2D.h
+// Mostly a nexus point of subsystems that support an object graph and a collection of "operators" to apply effects to the graph (e.g. physics, rendering, etc.)) 
 #pragma once
 #include "Types.h"
 #include "ISingleton.h"
@@ -44,5 +45,6 @@ public:
 
    // Pause? We should be able to "fast forward" and "rewind" as well... Should this be implemented by the 'game' (application)?
    static void Quit(void) { Engine2D::getInstance()->_hasQuit = true; }
+   static const char* Version(void) { return FRAMEWORK_VERSION; }
 };
 // Author: Stanley Taveras

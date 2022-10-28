@@ -10,13 +10,13 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": ["--dataPath", "${workspaceFolder}/data"],
-            "stopAtEntry": false,
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug"],
+            "stopAtEntry": false, // Seems to do absolutely nothing with lldb+clang
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "C/C++: clang++ build active file",
+            "preLaunchTask": "C/C++: clang++ build active file (debug)",
             "targetArchitecture":"arm64"
         },
         {
@@ -25,7 +25,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": ["--dataPath", "${workspaceFolder}/data"],
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],

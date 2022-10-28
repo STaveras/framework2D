@@ -12,6 +12,7 @@ enc_temp_folder/
 *.o
 *.d
 **/.DS_Store
+**/*.log
 bin/*.dll
 bin/*.exe
 bin/*.dSYM/**

@@ -8,7 +8,7 @@ class Sprite : public Image // Should probably just contain an image
 
 public:
   Sprite(void) :Image(), _CollideInfo(NULL) {}
-  Sprite(const char* filename, color clearKeyColor = 0, RECT* srcRect = NULL) :Image(filename, clearKeyColor, srcRect) {}
+  Sprite(const char* filename, Color clearKeyColor = 0, RECT* srcRect = NULL) :Image(filename, clearKeyColor, srcRect) {}
 
   Collidable* getCollisionInfo(void) const { return _CollideInfo; }
   void setCollisionInfo(Collidable* collisionObject) { _CollideInfo = collisionObject; }

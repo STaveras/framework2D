@@ -6,7 +6,13 @@
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
 
+// Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
+#define FRAMEWORK_VERSION "0.01"
+
 #define DEFAULT_DATA_PATH "./data/"
+
+#define GLOBAL_WIDTH  640
+#define GLOBAL_HEIGHT 480
 
 #ifndef _CUSTOM_STREAM_OBJECT
 #include <fstream>
@@ -55,6 +61,7 @@ typedef std::ofstream ofpstream;
 #define GLFW_BUILD_UNIVERSAL
 #define GLFW_USE_MENUBAR
 
+#define sprintf_s printf
 #define strtok_s strtok_r
 #define _strdup strdup
 #define INFINITE INFINITY
@@ -78,9 +85,7 @@ struct vector2 : public glm::vec2 {
    operator D3DXVECTOR2() const { return D3DXVECTOR2(this->x, this->y); }
 };
 #else
-#define vector2 glm::vec2
-#define vector4 glm::vec4
-#define matrix4x4 glm::mat4
+#include "Maths.h"
 #endif
 
 #else
@@ -98,7 +103,7 @@ struct vector2 : public glm::vec2 {
 
 #endif
 
-#include "color.h"
+#include "_color.h"
 
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"

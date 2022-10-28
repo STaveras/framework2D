@@ -97,6 +97,9 @@
         "memory_resource": "cpp",
         "stop_token": "cpp",
         "cinttypes": "cpp",
-        "source_location": "cpp"
+        "source_location": "cpp",
+        "material": "c",
+        "color.h": "c",
+        "filesystem": "cpp"
     }
 }

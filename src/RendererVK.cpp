@@ -13,6 +13,8 @@
 #include "FileSystem.h"
 #include "System.h"
 
+#include "Vertex.h"
+
 // NOTE: We should try and decouple the ide of a "window" from this, considering we may want to use this to render off-screen
 #include <iostream>
 #include <set>
@@ -253,15 +255,20 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
     return (verticalSync) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR; // these two modes are definitely available
 }
 
-VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow *window) {
+VkExtent2D currentExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
 
-    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max() || 
+        capabilities.currentExtent.height != std::numeric_limits<uint32_t>::max() ) {
         return capabilities.currentExtent;
     }
 
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
+    return VkExtent2D();
+}
 
+VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow *window) {
+
+    int width, height; glfwGetFramebufferSize(window, &width, &height);
+    
     VkExtent2D actualExtent = {
         static_cast<uint32_t>(width),
         static_cast<uint32_t>(height)};
@@ -920,9 +927,7 @@ void RendererVK::OnWindowResized(const Event &e)
     if (window) 
     {
         int width = 0, height = 0;
-
         glfwGetFramebufferSize(window, &width, &height);
-
         // This is not the right way to handle this, especially when we network this engine
         // We'll need to spawn a render thread seperately from the rest of the framework
         
@@ -939,6 +944,11 @@ void RendererVK::OnWindowResized(const Event &e)
 
 void RendererVK::Initialize(void)
 {
+    m_bStaticBG = false;
+    // std::vector<vertex> _vertices = {{{0.0f, 0.0f, 0.0f}, {1.0f, 0.5f, 0.0f}}};
+
+    // Vertex vertex{{0,0,0},{0,0,0}};
+
     if (Renderer::window) {
 
         GLFWwindow *window = Renderer::window->getUnderlyingWindow();
@@ -1101,6 +1111,17 @@ void RendererVK::Shutdown(void)
 
 void RendererVK::Render(void)
 {
+    m_bStaticBG = false;
+
+    // Vertex _vertex = {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}};
+    // vector3 position{0.0f, -0.5f, 0.0f};
+    // glm::vec3 pos{0.0f, -0.5f, 0.0f};
+    // const std::vector<Vertex> vertices = {
+    //     {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+    //     {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+    //     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+    // };
+
     IRenderer::Render();
 
     if (_device == VK_NULL_HANDLE)
@@ -1163,8 +1184,11 @@ void RendererVK::Render(void)
 
     presentInfo.pImageIndices = &imageIndex;
 
-    switch(vkQueuePresentKHR(_presentQueue, &presentInfo))
+    result = vkQueuePresentKHR(_presentQueue, &presentInfo);
+
+    switch(result)
     {
+    case VK_SUBOPTIMAL_KHR:
     case VK_ERROR_OUT_OF_DATE_KHR:
         return recreateSwapChain();
     case VK_SUCCESS:
@@ -1174,7 +1198,7 @@ void RendererVK::Render(void)
     };
 }
 
-ITexture *RendererVK::CreateTexture(const char *szFilename, color colorKey)
+ITexture *RendererVK::CreateTexture(const char *szFilename, Color colorKey)
 {
     ITexture *texture = NULL;
 

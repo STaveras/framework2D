@@ -18,54 +18,46 @@
 
 // Ultimately, I want the executable to just be able to support running games without having to statically build a game
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
-// load assets, levels, and other miscellaneous data. Like a more modern MUGEN
-
-const char* checkArgumentsForDataPath(int argc, char** argv) 
-{
-   if (argc > 1) {
-
-      for (int i = 0; i < argc; i++) {
-         if (!strcmp(argv[i], "--dataPath") || !strcmp(argv[i], "-D")) {
-            return argv[i + 1]; // What if it's empty?
-         }
-      }
-   }
-   return DEFAULT_DATA_PATH;
-}
+// load assets, levels, and other miscellaneous data. Like a more modern MUGEN 
 
 #ifdef _WIN32
 
 //#include <vld.h>
 
-bool checkForVKCommand(const char* lpCmdLine) {
-
-   if (strstr(lpCmdLine, "-vk")) {
-      return true;
-   }
-   return false;
-}
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-   // TODO: Process lpCmdLine for data path and/or other flags
+   int argc = 0;
+   LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+
 #else
 int main(int argc, char **argv)
 {
-   std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
+#if _DEBUG
+   (System::checkArgumentsForDebugMode(argc, argv)) ? Debug::Mode.enable() : Debug::Mode.disable(); // ONLY TIME WE CHECK FOR THIS
+   
+   std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl; 
+#endif
 
-   System::GlobalDataPath(checkArgumentsForDataPath(argc, argv));
+   System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
+
+#if _DEBUG
+
+   if (Debug::Mode.isEnabled()) {
+      // Check for game data
+      FileSystem::ScoutDirectory(System::GlobalDataPath());
+   }
 
 #endif
-   // Check for game data
-   FileSystem::ScoutDirectory(System::GlobalDataPath());
 
-   Window window = Window(320, 460, "framework");
+#endif
+
+   Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::Version());
 
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
-
+   
 #ifdef _WIN32
-   if (!checkForVKCommand(lpCmdLine)) {
+   if (!System::checkArgumentsForVulkan(argc, argv)) {
       window.Initialize(hInstance, lpCmdLine);
       pInput = (DirectInput*)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
       pRenderer = (RendererDX*)Renderer::CreateDXRenderer(window.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
@@ -75,8 +67,11 @@ int main(int argc, char **argv)
    {
       window.Initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window);
+      pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window); 
    }
+
+   pRenderer->setFullScreen(System::checkArgumentsForFullscreen(argc, argv));
+   pRenderer->setVerticalSync(System::checkArgumentsForVSync(argc, argv));
 
    Engine2D *engine = Engine2D::getInstance();
    engine->SetInputInterface(pInput);
@@ -87,7 +82,17 @@ int main(int argc, char **argv)
    while (!window.HasQuit() && !engine->HasQuit())
    {
       window.Update();
-      engine->Update(); // Should we spawn other threads from here?
+      engine->Update();
+#ifdef _DEBUG
+      static unsigned int lastFPS = 0;
+      if (DEBUGGING) {
+         if (engine->getTimer()->GetElapsedTime() >= 1.0f) {
+            std::cout << "FPS: " << (lastFPS + engine->getTimer()->GetFPS()) / 2 << std::endl;
+            lastFPS = engine->getTimer()->GetFPS();
+            engine->getTimer()->Reset();
+         }
+      }
+#endif
    }
 
    engine->Shutdown();
@@ -99,4 +104,3 @@ int main(int argc, char **argv)
 
    return 0;
 }
-// Stan Taveras
