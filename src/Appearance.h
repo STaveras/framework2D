@@ -16,8 +16,8 @@ class Appearance : public Renderable
 {
 	bool m_bIsFlashing;
 	float m_fAlpha;
-	color m_Flash;
-	color m_Tint;
+	Color m_Flash;
+	Color m_Tint;
 	Animation* m_pAnimation;
 	std::list<Image*> m_lsSprites;
 
@@ -27,15 +27,15 @@ public:
 
 	bool IsFlashing(void) const { return m_bIsFlashing; }
 	float GetAlpha(void) const { return m_fAlpha; }
-	color GetFlashColor(void) const { return m_Flash; }
-	color GetTint(void) const { return m_Tint; }
+	Color GetFlashColor(void) const { return m_Flash; }
+	Color GetTint(void) const { return m_Tint; }
 	Animation* GetAnimation(void) { return m_pAnimation; }
 	const std::list<Image*>& GetSprites(void) const { return m_lsSprites; }
 
 	void SetIsFlashing(bool bFlash) { m_bIsFlashing = bFlash; }
 	void SetAlpha(float fAlpha) { m_fAlpha = fAlpha; }
-	void SetFlashColor(color color) { m_Flash = color; }
-	void SetTint(color color) { m_Tint = color; }
+	void SetFlashColor(Color color) { m_Flash = color; }
+	void SetTint(Color color) { m_Tint = color; }
 	void SetAnimation(Animation* pAnimation) { m_pAnimation = pAnimation; }
 	void setPosition(vector2 position);
 

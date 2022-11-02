@@ -35,6 +35,7 @@ typedef std::ofstream ofpstream;
 #define NOMINMAX
 
 #include <windows.h>
+#include <shellapi.h>
 
 #include <direct.h>
 
@@ -90,6 +91,8 @@ struct vector2 : public glm::vec2 {
 
 #else
 
+#include "Color.h"
+
 // TODO: Remove any direct references to D3DXVECTOR2 and related functions
 // TODO: Write your own wrapper for the DirectX math classes...
 
@@ -102,9 +105,6 @@ struct vector2 : public glm::vec2 {
 // ---------------------------------------------------------------------------------------------------------------------
 
 #endif
-
-#include "_color.h"
-
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"
 

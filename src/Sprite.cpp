@@ -13,12 +13,12 @@ void Sprite::Save(const char* filePath)
 	if(ofl.good())
 	{
 		size_t uiStrLength = strlen(m_pTexture->GetFilename()) + 1;
-		color clrColor = m_pTexture->GetKeyColor();
+		Color clrColor = m_pTexture->GetKeyColor();
 
 		ofl.write((char*)&uiStrLength, sizeof(size_t));
 		ofl.write(m_pTexture->GetFilename(), uiStrLength);
 		ofl.write((char*)&m_SrcRect, sizeof(RECT));
-		ofl.write((char*)&clrColor, sizeof(color));
+		ofl.write((char*)&clrColor, sizeof(Color));
 		ofl.write((char*)&m_Center, sizeof(vector2));
 	}
 
@@ -38,13 +38,13 @@ Sprite* Sprite::Load(const char* filePath)
 			size_t uiStrLength;
 			char szPath[MAX_PATH];
 			RECT srcRect;
-			color clrColor;
+			Color clrColor;
 			vector2 center;
 
 			ifl.read((char*)&uiStrLength, sizeof(size_t));
 			ifl.read(szPath, uiStrLength);
 			ifl.read((char*)&srcRect, sizeof(srcRect));
-			ifl.read((char*)&clrColor, sizeof(color));
+			ifl.read((char*)&clrColor, sizeof(Color));
 			ifl.read((char*)&center, sizeof(vector2));
 
 			Image::Load(szPath, clrColor, &srcRect);

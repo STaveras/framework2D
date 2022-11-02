@@ -55,7 +55,7 @@ void DIMouse::Update(void) {
          char buffer[128];
          sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
          OutputDebugString(buffer);
-         timer.ResetElapsed();
+         timer.Reset();
       }
    }
 #endif

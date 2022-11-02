@@ -53,9 +53,6 @@
     <ClCompile Include="src\ProgramStack.cpp">
       <Filter>engine2Dbase\System</Filter>
     </ClCompile>
-    <ClCompile Include="src\CFont.cpp">
-      <Filter>engine2Dbase\UI</Filter>
-    </ClCompile>
     <ClCompile Include="src\Menu.cpp">
       <Filter>engine2Dbase\UI</Filter>
     </ClCompile>
