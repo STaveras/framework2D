@@ -14,6 +14,8 @@ IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool b
 }
 #endif
 
+
+// We should probably do as above, and allow dimensions and other settings to be specified from the get go, instead of just being inferred from the window properties...?
 IRenderer* Renderer::CreateVKRenderer(Window* window)
 {
 	Renderer::window = window;

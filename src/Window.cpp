@@ -60,7 +60,7 @@ void Window::Initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 
 	RegisterClassEx(&wcex);
 	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW, m_szWindowClassName, m_szWindowTitle, WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
-	_resize();
+	Resize();
 
 	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
 }

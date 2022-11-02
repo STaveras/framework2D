@@ -59,7 +59,7 @@ RendererDX::~RendererDX(void)
 // }
 
 // Why do we have offset? Center is already an offset...
-void RendererDX::_DrawImage(Image *image, color tint, D3DXVECTOR2 offset)
+void RendererDX::_DrawImage(Image *image, Color tint, D3DXVECTOR2 offset)
 {
    D3DXMATRIX transform;
    D3DXMatrixTransformation2D(&transform, &image->GetRectCenter(), 0.0f, &image->GetScale(), &image->GetCenter(), image->GetRotation(), NULL);
@@ -79,7 +79,7 @@ void RendererDX::_DrawImage(Image *image, color tint, D3DXVECTOR2 offset)
 
 //}
 
-ITexture *RendererDX::CreateTexture(const char *szFilename, color colorKey)
+ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
 {
    ITexture* pTexture = _TextureExists(szFilename);
 

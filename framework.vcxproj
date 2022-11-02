@@ -50,12 +50,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\bin\</OutDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)Lib\x86;$(VK_SDK_PATH)\Lib</LibraryPath>
+    <LibraryPath>$(VK_SDK_PATH)\Lib32;$(DXSDK_DIR)Lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnabled>true</VcpkgEnabled>
     <VcpkgAutoLink>true</VcpkgAutoLink>
     <VcpkgEnableManifest>false</VcpkgEnableManifest>
+    <VcpkgManifestInstall>false</VcpkgManifestInstall>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <VcpkgConfiguration>Debug</VcpkgConfiguration>
+    <VcpkgUseStatic>false</VcpkgUseStatic>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <VcpkgConfiguration>Release</VcpkgConfiguration>
+    <VcpkgUseStatic>false</VcpkgUseStatic>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -97,7 +106,6 @@
     <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\Appearance.cpp" />
     <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\CFont.cpp" />
     <ClCompile Include="src\Circle.cpp" />
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\Command.cpp" />
@@ -159,7 +167,6 @@
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\EventSystem.h" />
-    <ClInclude Include="src\EverTale.h" />
     <ClInclude Include="src\FlappyTurd.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\IInput.h" />

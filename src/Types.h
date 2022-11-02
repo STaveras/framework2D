@@ -11,6 +11,7 @@
 
 #define DEFAULT_DATA_PATH "./data/"
 
+// TODO: Query the device for the bare minimum usable resolution
 #define GLOBAL_WIDTH  640
 #define GLOBAL_HEIGHT 480
 
@@ -35,6 +36,7 @@ typedef std::ofstream ofpstream;
 #define NOMINMAX
 
 #include <windows.h>
+#include <shellapi.h>
 
 #include <direct.h>
 
@@ -90,21 +92,21 @@ struct vector2 : public glm::vec2 {
 
 #else
 
+#include "Color.h"
+
 // TODO: Remove any direct references to D3DXVECTOR2 and related functions
 // TODO: Write your own wrapper for the DirectX math classes...
 
 // Windows
 #if !defined(GLM) // We're going to have to check this at run time if we want to swap between DX and VK on the fly
 #define vector2 D3DXVECTOR2 // TODO: As above, write the wrapper so you don't have to use raw d3d math calls in your code...
+#define vector3 D3DXVECTOR3
 #define vector4 D3DXVECTOR4
-#define matrix4x4 D3DXMATRIX
+#define matrix4x4 D3DXMATRIX // i leik trucks :]
 #endif
 // ---------------------------------------------------------------------------------------------------------------------
 
 #endif
-
-#include "_color.h"
-
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"
 

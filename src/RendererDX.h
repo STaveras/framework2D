@@ -13,7 +13,7 @@ class RendererDX : public IRenderer
    LPD3DXSPRITE		m_pD3DSprite;
 
    void _DrawAppearance(Appearance* pAppearance);
-   void _DrawImage(Image* pSprite, color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
+   void _DrawImage(Image* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
 
 public:
    RendererDX(void);
@@ -33,7 +33,7 @@ public:
 
 private:
    void CreateShader(const char* file, int*);
-   ITexture* CreateTexture(const char* szFilename, color colorKey = 0);
+   ITexture* CreateTexture(const char* szFilename, Color colorKey = 0);
 
    void Initialize(void);
    void Shutdown(void);

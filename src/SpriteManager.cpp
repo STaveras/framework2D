@@ -12,7 +12,7 @@ void SpriteManager::SetVisibility(bool isVisible)
 }
 
 // HACK: Change this bologna
-Sprite* SpriteManager::CreateSprite(const char* szFilename, color clearColor, const RECT* srcRect)
+Sprite* SpriteManager::CreateSprite(const char* szFilename, Color clearColor, const RECT* srcRect)
 {
    Sprite* sprite = this->Create();
    (dynamic_cast<Image*>(sprite))->Load(szFilename, clearColor, srcRect);

@@ -47,9 +47,10 @@ double Timer::_Timer(void) const
 void Timer::_Tock(void)
 { 
 #ifdef _WIN32
-	QueryPerformanceCounter(&m_liTimer); 
-#endif
+	QueryPerformanceCounter(&m_liTimer);
+#else
 	m_tpTime = std::chrono::high_resolution_clock::now();
+#endif
 }
 
 void Timer::_Tick(void)
@@ -124,18 +125,22 @@ void Timer::Reset(void) {
 #endif
 }
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 std::string Timer::GetTimeStamp(void) const
 {
 	time_t t = time(0);
-	struct tm * now = localtime(&t);
+	struct tm now;
+	//localtime(&t);
+	localtime_s(&now, &t);
 
 	std::stringstream ss;
-	ss << (now->tm_year + 1900) << '-'
-		<< (now->tm_mon + 1) << '-'
-		<< now->tm_mday << '_'
-		<< now->tm_hour << '-'
-		<< now->tm_min << '-'
-		<< now->tm_sec;
+	ss << (now.tm_year + 1900) << '-'
+		<< (now.tm_mon + 1) << '-'
+		<< now.tm_mday << '_'
+		<< now.tm_hour << '-'
+		<< now.tm_min << '-'
+		<< now.tm_sec;
 
 	return ss.str();
 }
