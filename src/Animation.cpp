@@ -138,7 +138,7 @@ bool Animation::operator==(const Animation& a) const
 
 Animation* Animation::loadAnimationsFrom(const char* szFilename)
 {
-   throw "Animation::loadAnimationFrame unimplemented;";
+   throw std::runtime_error("Animation::loadAnimationFrame unimplemented");
 }
 
 //void Animation::removeFrameData(void)

@@ -4,7 +4,7 @@
 
 void Game::Begin(void)
 {
-   throw "Game::Begin() unimplemented.";
+   throw std::runtime_error("Game::Begin() unimplemented.");
 }
 
 void Game::Update(Timer* timer)

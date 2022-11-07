@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
    if (Debug::Mode.isEnabled()) {
       // Check for game data
-      FileSystem::ScoutDirectory(System::GlobalDataPath());
+      FileSystem::ListDirectoryContents(System::GlobalDataPath());
    }
 #endif
 
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
          static unsigned int lastFPS = 0;
          if (DEBUGGING) {
             if (engine->getTimer()->GetElapsedTime() >= 1.0f) {
-               std::cout << "FPS: " << (lastFPS + engine->getTimer()->GetFPS()) / 2 << std::endl;
+               std::cout << "FPS: " << std::to_string((lastFPS + engine->getTimer()->GetFPS()) / 2) << std::endl;
                lastFPS = engine->getTimer()->GetFPS();
                engine->getTimer()->Reset();
             }
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
       }
    }
    catch (std::exception& e) {
-      std::cout << e.what() << std::endl;
+      std::cout << Engine2D::getTimer()->GetTimeStamp() << ": " << e.what() << std::endl;
 
 #ifdef _WIN32
       MessageBoxA(NULL, e.what(), "Error", MB_OK);

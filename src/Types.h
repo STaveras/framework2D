@@ -63,6 +63,8 @@ typedef std::ofstream ofpstream;
 #define GLFW_BUILD_UNIVERSAL
 #define GLFW_USE_MENUBAR
 
+#define localtime_s(n, ts) localtime_r(ts, n)
+
 #define sprintf_s printf
 #define strtok_s strtok_r
 #define _strdup strdup
@@ -92,8 +94,6 @@ struct vector2 : public glm::vec2 {
 
 #else
 
-#include "Color.h"
-
 // TODO: Remove any direct references to D3DXVECTOR2 and related functions
 // TODO: Write your own wrapper for the DirectX math classes...
 
@@ -107,6 +107,9 @@ struct vector2 : public glm::vec2 {
 // ---------------------------------------------------------------------------------------------------------------------
 
 #endif
+
+#include "Color.h"
+
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"
 

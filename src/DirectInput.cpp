@@ -14,7 +14,7 @@ DirectInput::DirectInput(HINSTANCE hInstance, HWND hWnd) :
    _mouse = new DIMouse();
 
    if (FAILED(DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDirectInput, NULL)))
-      throw "Failed to create DirectInput COM interface";
+      throw std::runtime_error("Failed to create DirectInput COM interface");
 }
 
 DirectInput::~DirectInput(void) {
@@ -42,10 +42,10 @@ void DirectInput::Initialize(void)
    if (m_lpDirectInput)
    {
 	   if (_keyboard && !((DIKeyboard*)_keyboard)->Acquire(m_lpDirectInput, m_hWnd))
-         throw "Failed to create the keyboard";
+         throw std::runtime_error("Failed to create the keyboard");
 
       if (_mouse && !((DIMouse*)_mouse)->Acquire(m_lpDirectInput, m_hWnd))
-         throw "Failed to create the mouse";
+         throw std::runtime_error("Failed to create the mouse");
    }
 }
 
