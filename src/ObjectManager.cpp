@@ -14,7 +14,7 @@
 // SYSTEM EVENTS: The backend, mechanical stuff that glues the ''engine'' together (out/in)
 // SIMULATION EVENTS: Pertinent only to the objects, and their interactions with one another. (in/out)
 
-void ObjectManager::Update(float fTime)
+void ObjectManager::update(float fTime)
 {
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 
@@ -26,6 +26,9 @@ void ObjectManager::Update(float fTime)
 
       object->update(fTime);
 
+      // TODO: Rethink Object Operators?
+      //////////////////////////////////////////////////
+      // For operators that only do so once...?
       std::list<ObjectOperator*> removalList;
 
       // This is to apply operators on an object
@@ -43,9 +46,12 @@ void ObjectManager::Update(float fTime)
          m_lsObjOperators.remove(objOp);
          removalList.pop_front();
 
-         // TODO: Check if this is used somewhere?
-         Engine2D::getEventSystem()->sendEvent("OBJ_OP_REMOVED", objOp);
+         // TODO: Is this used somewhere?
+         Engine2D::getEventSystem()->sendEvent(EVENT_OBJ_OPERATOR_REMOVED, objOp);
       }
+      //////////////////////////////////////////////////
+      // Object Operators End
+      // --
 
       // Now lets check for collisions
       std::map<std::string, GameObject*>::iterator itr_two = m_mObjects.begin();
@@ -53,7 +59,7 @@ void ObjectManager::Update(float fTime)
          if (itr->second == object)
             continue;
 
-         ObjectState *objectState = (ObjectState*)object->GetCurrentState();
+         ObjectState *objectState = (ObjectState*)object->getState();
 
          if (objectState) {
 
@@ -64,13 +70,13 @@ void ObjectManager::Update(float fTime)
 
             if (collisionObject) {
 
-               ObjectState *secondState = (ObjectState*)itr->second->GetCurrentState();
+               ObjectState *secondState = (ObjectState*)itr->second->getState();
 
                if (secondState) {
 
-                  Collidable *secondColObj = secondState->getCollidable();
+                  Collidable *otherObject = secondState->getCollidable();
 
-                  if (secondColObj && collisionObject->Check(secondColObj))
+                  if (otherObject && collisionObject->collidesWith(otherObject))
                      Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, itr->second));
                }
             }
@@ -81,22 +87,49 @@ void ObjectManager::Update(float fTime)
    }
 }
 
+void ObjectManager::removeObject(GameObject* object)
+{
+   std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
+   for (; itr != m_mObjects.end(); itr++) {
+      if (itr->second == object) {
+
+         if (object)
+         {
+            object->shutdown();
+
+            m_mObjects.erase(itr);
+
+            Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_REMOVED, object);
+         }
+      }
+   }
+}
+
 void ObjectManager::removeObject(const char* name)
 {
    GameObject *object = NULL;
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
    for (; itr != m_mObjects.end(); itr++) {
       if (itr->first == name) {
-         object = itr->second; ((GameObject*)itr->second)->Shutdown(); m_mObjects.erase(itr); return;
+         object = itr->second;
+
+         if (object)
+         {
+            object->shutdown();
+
+            m_mObjects.erase(itr);
+            
+            Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_REMOVED, object);
+         }
       }
    }
-   if (object)
-      Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_REMOVED", object);
 }
 
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
-   m_mObjects[name] = object; object->initialize(); Engine2D::getEventSystem()->sendEvent("EVT_OBJECT_ADDED", object);
+   m_mObjects[name] = object; object->initialize();
+   
+   Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_ADDED, object);
 }
 
 // NOTE: Maybe use a map instead and add/remove the operators by name?
@@ -121,6 +154,6 @@ void ObjectManager::SendEvent(Event::event_key key, void* sender)
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 
    for (; itr != m_mObjects.end(); itr++) {
-      itr->second->SendInput(key, sender);
+      itr->second->sendInput(key, sender);
    }
 }

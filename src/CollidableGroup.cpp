@@ -4,13 +4,13 @@
 // Modified: 2/20/2010
 #include "CollidableGroup.h"
 
-bool CollidableGroup::Check(const Collidable* colObj)
+bool CollidableGroup::collidesWith(const Collidable* colObj)
 {
    std::list<Collidable*>::iterator itr = this->begin();
 
    while (itr != this->end()) {
 
-      if ((*itr)->Check(colObj))
+      if ((*itr)->collidesWith(colObj))
          return true;
 
       itr++;

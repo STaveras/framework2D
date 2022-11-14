@@ -12,19 +12,19 @@ void SpriteManager::SetVisibility(bool isVisible)
 }
 
 // HACK: Change this bologna
-Sprite* SpriteManager::CreateSprite(const char* szFilename, Color clearColor, const RECT* srcRect)
+Sprite* SpriteManager::CreateSprite(const char* szFilename, Color clearColor, const RECT& srcRect)
 {
    Sprite* sprite = this->Create();
-   (dynamic_cast<Image*>(sprite))->Load(szFilename, clearColor, srcRect);
+   sprite->load(szFilename, clearColor, srcRect);
 
    return sprite;
 }
 
 void SpriteManager::DestroySprite(Sprite* pSprite)
 {
-   for (IRenderer::RenderList::iterator o = _RenderList->begin(); o != _RenderList->end(); o++)
-      if ((*o) == pSprite)
-         _RenderList->erase(o);
+   //for (IRenderer::RenderList::iterator o = _RenderList->begin(); o != _RenderList->end(); o++)
+   //   if ((*o) == pSprite)
+   //      _RenderList->erase(o);
 
    this->Destroy(pSprite);
 }

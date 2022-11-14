@@ -12,7 +12,7 @@ class CollidableGroup : public Collidable, public std::list<Collidable*>
 public:
 	CollidableGroup(void):Collidable(COL_OBJ_GROUP){}
 
-	bool Check(const Collidable* colObj);
+	bool collidesWith(const Collidable* colObj);
 };
 
 #endif  //_COLLISIONGROUP_H

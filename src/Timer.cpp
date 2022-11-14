@@ -98,7 +98,7 @@ void Timer::LimitFrameRate(unsigned int uiFrameRate)
 	}
 }
 
-void Timer::Update(void)
+void Timer::update(void)
 {
 	_Tick();
 

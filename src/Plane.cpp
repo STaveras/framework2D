@@ -9,7 +9,7 @@
 //bool WithPlane(const Plane* plane);
 //bool WithSquare(const Square* square);
 
-bool Plane::Check(const Collidable* c) {
+bool Plane::collidesWith(const Collidable* c) {
 
 	 switch (c->getType()) {
 	 case COL_OBJ_PLANE:

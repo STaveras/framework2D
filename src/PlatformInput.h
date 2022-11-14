@@ -16,9 +16,9 @@ public:
     PlatformInput(Window *window);
     ~PlatformInput(void);
 
-    void Initialize(void);
-    void Update(void);
-    void Shutdown(void);
+    void initialize(void);
+    void update(void);
+    void shutdown(void);
 };
 
 #endif

@@ -27,9 +27,9 @@ protected:
 
       if (_object == object) {
 
-         if (_state == _object->GetCurrentState()) {
+         if (_state == _object->getState()) {
 
-            _timer.Update();
+            _timer.update();
 
             float scalar = 1.0f - (_timer.GetDeltaTime() / _degradeTime);
 

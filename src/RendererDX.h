@@ -4,7 +4,7 @@
 #define _RENDERERD3D_H
 #include "IRenderer.h"
 class Appearance;
-class Image;
+class Sprite;
 class RendererDX : public IRenderer
 {
    HWND              m_hWnd;
@@ -12,31 +12,26 @@ class RendererDX : public IRenderer
    LPDIRECT3DDEVICE9	m_pD3DDevice;
    LPD3DXSPRITE		m_pD3DSprite;
 
-   void _DrawAppearance(Appearance* pAppearance);
-   void _DrawImage(Image* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
+   void _DrawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
 
 public:
    RendererDX(void);
    RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen = false, bool bVsync = false);
    ~RendererDX(void);
 
-   HWND GetHWND(void) const { return m_hWnd; }
+   HWND getHWND(void) const { return m_hWnd; }
    LPDIRECT3D9 GetD3D(void) const { return m_pD3D; }
    LPDIRECT3DDEVICE9 GetD3DDevice(void) const { return m_pD3DDevice; }
    LPD3DXSPRITE GetD3DXSprite(void) const { return m_pD3DSprite; }
 
-   enum ENUM
-   {
-      PIXEL_SHADER,
-      VERTEX_SHADER
-   };
-
 private:
-   void CreateShader(const char* file, int*);
    ITexture* CreateTexture(const char* szFilename, Color colorKey = 0);
+   void DestroyTexture(ITexture* texture);
 
-   void Initialize(void);
-   void Shutdown(void);
+   //void CreateShader(const char* file, int*);
+
+   void initialize(void);
+   void shutdown(void);
    void Render(void);
 };
 #endif //_RENDERER_H

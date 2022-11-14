@@ -64,7 +64,7 @@ bool Stage::LoadFromFile(const char* filepath)
    return false;
 }
 
-void Stage::Update(float fTime)
+void Stage::update(float fTime)
 {
    // TODO : This will be for adding special background items
 }

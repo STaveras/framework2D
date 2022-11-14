@@ -38,7 +38,7 @@ public:
       }
    }
 
-   virtual void Update(void)
+   virtual void update(void)
    {
       if (m_bDeviceLost) {
          if (m_lpDevice) {
@@ -59,9 +59,9 @@ public:
    DirectInput(HINSTANCE hInstance, HWND hWnd);
    ~DirectInput(void);
 
-	void Initialize(void);
-	void Update(void);
-	void Shutdown(void);
+	void initialize(void);
+	void update(void);
+	void shutdown(void);
 };
 
 #endif

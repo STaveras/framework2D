@@ -11,22 +11,31 @@
 #include <string.h>
 
 StateMachine::StateMachine(void) :
-   m_bBuffered(false),
-   m_fTransitionFrequency(1.0f),
-   m_pStartState(NULL),
-   m_pState(NULL)
-{}
+   _isBuffered(false),
+   _transitionFrequency(0.0f),
+   _transitionTimer(0.0f) ,
+   _state(NULL) {
+
+}
 
 StateMachine::~StateMachine(void) {
    // Innecessary but for completeness' sake
    m_mTransitionTable.clear();
-   _states.Clear();
 }
 
-State* StateMachine::_GetNextState(const StateMachineEvent& evt)
+// ...I want to decouple this
+void StateMachine::OnEvent(const StateMachineEvent& evt)
+{
+   if (_isBuffered)
+      m_qEvents.push(evt);
+   else
+      _transitionTo(_nextState(evt));
+}
+
+State* StateMachine::_nextState(const StateMachineEvent& evt)
 {
    std::pair<std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator,
-             std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(m_pState);
+             std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(_state);
 
    std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator itr = range.first;
 
@@ -38,121 +47,104 @@ State* StateMachine::_GetNextState(const StateMachineEvent& evt)
    return NULL;
 }
 
-void StateMachine::_Transition(State* pNextState)
+void StateMachine::_transitionTo(State* nextState)
 {
-   if (pNextState) {
+   if (nextState) {
 
-      if (m_pState)
-         m_pState->onExit(pNextState);
+      if (_state) {
+         _state->onExit(nextState);
+      }
 
-      pNextState->onEnter(m_pState);
+      nextState->onEnter(_state);
 
-      m_pState = pNextState;
+      _state = nextState;
    }
 }
 
-State* StateMachine::GetState(const char* szName)
+State* StateMachine::getState(const char* szName)
 {
-   Factory<State>::const_factory_iterator itr = _states.Begin();
+   Factory<State>::const_factory_iterator itr = this->Begin();
 
-   for (; itr != _states.End(); itr++) {
-      if (!strcmp(szName, (*itr)->GetName()))
+   for (; itr != this->End(); itr++) {
+      if (!strcmp(szName, (*itr)->getName()))
          return (*itr);
    }
 
    return NULL;
 }
 
-State* StateMachine::AddState(const char* name)
+State* StateMachine::addState(const char* name)
 {
-   State* state = _states.Create();
-   state->SetName(name);
+   State* state = this->Create();
+   state->setName(name);
 
    return state;
 }
 
 void StateMachine::addTransition(const char* condition, const char* nextState)
 {
-   registerTransition(_states.At(_states.Size() - 1)->GetName(), condition, nextState);
+   registerTransition(this->At(this->Size() - 1)->getName(), condition, nextState);
 }
 
-void StateMachine::registerTransition(State* pState, const StateMachineEvent& evt, State* pStateResult)
+void StateMachine::registerTransition(State* state, const StateMachineEvent& evt, State* resultingState)
 {
-   m_mTransitionTable.insert(std::make_pair(pState, std::make_pair(evt, pStateResult)));
+   m_mTransitionTable.insert(std::make_pair(state, std::make_pair(evt, resultingState)));
 }
 
-void StateMachine::registerTransition(const char* szStateName, const char* szCondition, const char* szResultState)
+void StateMachine::registerTransition(const char* stateName, const char* condition, const char* resultingState, void* sender)
 {
-   State* pState = GetState(szStateName);
-   State* pStateResult = GetState(szResultState);
+   State* state = getState(stateName);
+   State* nextState = getState(resultingState);
 
-   if (pState && pStateResult)
-   {
-      StateMachineEvent evt(szCondition, NULL);
-      m_mTransitionTable.insert(std::make_pair(pState, std::make_pair(evt, pStateResult)));
+   if (state && nextState) {
+      m_mTransitionTable.insert(std::make_pair(state, std::make_pair(StateMachineEvent(condition, sender), nextState)));
    }
 }
 
 void StateMachine::initialize(void)
 {
-   if (!m_pStartState && _states.Size() > 0)
-      m_pStartState = _states.At(0);
-
-   if (m_pStartState) {
-      m_pState = m_pStartState;
-      m_pState->onEnter(NULL); // Should this even really be done...?
-   }
+   if (this->Empty())
+      return;
+   
+   _transitionTo(this->At(0));
 }
 
 void StateMachine::reset(void)
 {
-   if (m_pState)
-      m_pState->onExit(m_pStartState);
-
-   if (m_pStartState) {
-      m_pState = m_pStartState;
-      //m_pState->onEnter(NULL);
-   }
+	if (!this->Empty())
+		_transitionTo(this->At(0));
    
    while (!m_qEvents.empty())
       m_qEvents.pop();
 }
 
-void StateMachine::OnEvent(const StateMachineEvent& evt)
-{
-   if (m_bBuffered)
-      m_qEvents.push(evt);
-   else
-      _Transition(_GetNextState(evt));
-}
-
-void StateMachine::SendInput(const char* szCondition, void* pSender)
+void StateMachine::sendInput(const char* szCondition, void* pSender)
 {
    this->OnEvent(StateMachineEvent(szCondition, pSender));
 }
 
 void StateMachine::update(float fTime)
 {
-   if (m_pState && !m_pState->onExecute(fTime) && m_pStartState)
-      SetState(m_pStartState);
-
-   if (m_bBuffered && !m_qEvents.empty())
+   if (_state && !_state->onExecute(fTime)) {
+      this->sendInput(EVT_STATE_END, this); // An internal condition...
+   }
+   else if (_isBuffered && !m_qEvents.empty())
    {
-      static float fTransitionTimer = 0.0f;
-      fTransitionTimer += fTime;
+      _transitionTimer += fTime;
 
-      if (fTransitionTimer >= m_fTransitionFrequency)
+      if (_transitionTimer >= _transitionFrequency)
       {
-         _Transition(_GetNextState(m_qEvents.front()));
-         m_qEvents.pop();
+         _transitionTo(_nextState(m_qEvents.front()));
 
-         fTransitionTimer = 0.0f;
+         _transitionTimer = 0.0f;
+
+         m_qEvents.pop();
       }
    }
 }
 
-// This is before I knew JSON was a thing
-bool StateMachine::LoadTransitionTableFromFile(const char* szFilename)
+// This was before I knew JSON is a thing
+bool StateMachine::loadTransitionTableFromFile(const char* szFilename)
 {
    std::ifstream ifl(szFilename);
 
@@ -187,11 +179,12 @@ bool StateMachine::LoadTransitionTableFromFile(const char* szFilename)
                   char* szStateName = strtrlws(szBuffer);
                   strsubst(szStateName, '\0', ",");
 
-                  if (!GetState(szStateName) && !STR_EQUALS(szStateName, ""))
-                     _states.Create(State(szStateName));
+                  if (!this->getState(szStateName) && !STR_EQUALS(szStateName, ""))
+                     this->Create(State(szStateName));
 
-                  if (!m_pStartState && GetState(szStateName))
-                     m_pStartState = GetState(szStateName);
+                  // We used to be able to explicitly set the initial state... 
+                  //if (!m_pStartState && GetState(szStateName))
+                  //   m_pStartState = GetState(szStateName);
                }
             }
          } // States
@@ -212,7 +205,7 @@ bool StateMachine::LoadTransitionTableFromFile(const char* szFilename)
 
                   std::string strStateName = strtrlws(szBuffer);
 
-                  State* pState = GetState(strStateName.c_str());
+                  State* pState = getState(strStateName.c_str());
 
                   if (pState)
                   {

@@ -99,8 +99,8 @@ class RendererVK : public IRenderer
 
 public:
 
-    void Initialize(void);
-    void Shutdown(void);
+    void initialize(void);
+    void shutdown(void);
     void Render(void);
 
     ITexture *CreateTexture(const char *szFilename, Color colorKey = 0);

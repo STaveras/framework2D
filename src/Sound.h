@@ -15,8 +15,8 @@ class Sound
 	const char* m_szFilename;
 
 public:
-	void Play(void);
-	void Stop(void);
+	void play(void);
+	void stop(void);
 	void Reset(void);
 };
 

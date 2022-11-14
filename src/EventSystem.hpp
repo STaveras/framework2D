@@ -4,9 +4,9 @@
 #include "EventSystem_defines.h"
 
 template<class T>
-void EventSystem::RegisterCallback(Event::event_key evtKey, T* p, void (T::*fn)(const Event&))
+void EventSystem::registerCallback(Event::event_key evtKey, T* p, void (T::*fn)(const Event&))
 {
-	if(!IsRegistered(evtKey, p, fn))
+	if(!isRegistered(evtKey, p, fn))
 	{
 		Event::event_delegate evtDel;
 		evtDel.bind(p, fn);
@@ -15,7 +15,7 @@ void EventSystem::RegisterCallback(Event::event_key evtKey, T* p, void (T::*fn)(
 }
 
 template<class T>
-bool EventSystem::IsRegistered(Event::event_key evtKey, T* p, void (T::*fn)(const Event&)) const
+bool EventSystem::isRegistered(Event::event_key evtKey, T* p, void (T::*fn)(const Event&)) const
 {
 	Event::event_delegate evtDel;
 	evtDel.bind(p, fn);
@@ -35,7 +35,7 @@ bool EventSystem::IsRegistered(Event::event_key evtKey, T* p, void (T::*fn)(cons
 }
 
 template<class T>
-void EventSystem::Unregister(Event::event_key evtKey, T* p, void (T::*fn)(const Event&))
+void EventSystem::unregister(Event::event_key evtKey, T* p, void (T::*fn)(const Event&))
 {
 	Event::event_delegate evtDel;
 	evtDel.bind(p, fn);
@@ -56,7 +56,7 @@ void EventSystem::Unregister(Event::event_key evtKey, T* p, void (T::*fn)(const 
 }
 
 template<class T>
-void EventSystem::UnregisterAll(T* p, void (T::*fn)(const Event&))
+void EventSystem::unregisterAll(T* p, void (T::*fn)(const Event&))
 {
 	Event::event_delegate evtDel;
 	evtDel.bind(p, fn);
@@ -91,12 +91,12 @@ void EventSystem::sendEvent(const T& e, void* pSender, Event::event_priority_lev
 		return;
 
 	Event* pEvent = m_EventFactory.CreateDerived<T>(e);
-	pEvent->m_pSender = pSender;
-	pEvent->m_ePriority = ePriority;
+	pEvent->_sender = pSender;
+	pEvent->_priorityLevel = ePriority;
 
-	if(pEvent->m_ePriority == Event::event_priority_immediate)
+	if(pEvent->_priorityLevel == Event::event_priority_immediate)
 	{
-		QuerySubscribers((*pEvent));
+		_querySubscribers((*pEvent));
 		m_EventFactory.Destroy(pEvent);
 	}
 	else

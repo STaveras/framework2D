@@ -22,7 +22,7 @@ public:
 	vector2 GetNormal(void) const { return m_Normal; }
 	void SetNormal(const vector2& normal) { m_Normal = normal; }
 
-	bool Check(const Collidable* colObject);
+	bool collidesWith(const Collidable* colObject);
 };
 
 #endif  //_PLANE_H

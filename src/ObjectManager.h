@@ -8,6 +8,10 @@
 
 #include "Event.h"
 
+#define EVENT_OBJECT_ADDED "EVT_OBJECT_ADDED"
+#define EVENT_OBJECT_REMOVED "EVT_OBJECT_REMOVED"
+#define EVENT_OBJ_OPERATOR_REMOVED "OBJ_OP_REMOVED"
+
 class GameObject;
 class ObjectOperator;
 
@@ -29,10 +33,11 @@ public:
 		return "";
 	}
 
-	void Update(float fTime);
+	void update(float fTime);
 
-	 void addObject(const char* name, GameObject* object);
-	 void removeObject(const char* name);
+	void addObject(const char* name, GameObject* object);
+	void removeObject(GameObject* object);
+	void removeObject(const char* name);
 
 	void pushOperator(ObjectOperator* objOperation);
 	void popOperator(void);

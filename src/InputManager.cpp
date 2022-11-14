@@ -3,7 +3,7 @@
 #include "EventSystem.h"
 #include "InputEvent.h"
 #include "Types.h"
-#include "VirtualGamePad.h"
+#include "Controller.h"
 
 InputManager::InputManager(void):
 m_pEventSystem(NULL),
@@ -12,44 +12,44 @@ m_pEventSystem(NULL),
 
 InputManager::~InputManager(void){}
 
-VirtualGamePad* InputManager::CreateGamePad(void)
+Controller* InputManager::CreateController(void)
 {
-	VirtualGamePad* pGamePad = m_GamePads.Create();	
-	pGamePad->SetPadNumber((int)(m_GamePads.Size() - 1));
+	Controller* pGamePad = m_Controllers.Create();	
+	pGamePad->setPadNumber((int)(m_Controllers.Size() - 1));
 
 	return pGamePad;
 }
 
-void InputManager::Update(float fTime)
+void InputManager::update(float fTime)
 {
 	m_fElapsed += fTime;
 
 	if (!m_pInput)
 		return;
 
-	for(Factory<VirtualGamePad>::const_factory_iterator vpad_itr = m_GamePads.Begin(); vpad_itr != m_GamePads.End(); vpad_itr++)
+	for(Factory<Controller>::const_factory_iterator vpad_itr = m_Controllers.Begin(); vpad_itr != m_Controllers.End(); vpad_itr++)
 	{
-		std::list<VirtualButton>::iterator itr = (*vpad_itr)->GetButtons().begin();
+		std::list<Action>::iterator itr = (*vpad_itr)->getActions().begin();
 
-		for(; itr != (*vpad_itr)->GetButtons().end(); itr++)
+		for(; itr != (*vpad_itr)->getActions().end(); itr++)
 		{
-			std::list<KEYBOARD_KEYS>::const_iterator citr = itr->GetAssignments().begin();
+			std::list<KEYBOARD_KEYS>::const_iterator citr = itr->getAssignments().begin();
 
-			for(; citr != itr->GetAssignments().end(); citr++)
+			for(; citr != itr->getAssignments().end(); citr++)
 			{
             if (m_pInput->GetKeyboard()) {
 
                if (m_pInput->GetKeyboard()->KeyPressed((*citr)))
                {
                   if (m_pEventSystem)
-                     m_pEventSystem->sendEvent<InputEvent>(InputEvent("EVT_KEYPRESSED", this, (*vpad_itr), m_fElapsed, itr->GetButtonID()));
+                     m_pEventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYPRESS, this, (*vpad_itr), m_fElapsed, itr->getActionName()));
 
                   break;
                }
                else if (m_pInput->GetKeyboard()->KeyReleased((*citr)))
                {
                   if (m_pEventSystem)
-                     m_pEventSystem->sendEvent<InputEvent>(InputEvent("EVT_KEYRELEASED", this, (*vpad_itr), m_fElapsed, itr->GetButtonID()));
+                     m_pEventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYRELEASE, this, (*vpad_itr), m_fElapsed, itr->getActionName()));
 
                   break;
                }
@@ -59,7 +59,7 @@ void InputManager::Update(float fTime)
 	}
 }
 
-void InputManager::Shutdown(void)
+void InputManager::shutdown(void)
 {
 	if (m_pEventSystem)
 		m_pEventSystem = NULL;

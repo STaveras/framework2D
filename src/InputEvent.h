@@ -6,18 +6,21 @@
 #pragma once
 
 #include "Event.h"
-#include "VirtualGamePad.h"
+#include "Controller.h"
+
+#define EVT_KEYPRESS   "EVT_KEYPRESSED"
+#define EVT_KEYRELEASE "EVT_KEYRELEASED"
 
 class InputEvent : public Event
 {
-	float m_fTime;
-	VirtualGamePad* m_pGamePad;
-	ButtonID m_ButtonID;
+	float _timeStamp;
+	Controller* _controller;
+	ActionName _actionName;
 
 public:
-	InputEvent(Event::event_key evtKey, void* pSender, VirtualGamePad* pGamePad, float fTime, ButtonID btnID);
+	InputEvent(Event::event_key evtKey, void* pSender, Controller* controller, float time, ActionName actionName);
 
-	float GetTimeStamp(void) const { return m_fTime; }
-	VirtualGamePad* GetGamePad(void) const { return m_pGamePad; }
-	ButtonID GetButtonID(void) const { return m_ButtonID; }
+	float GetTimeStamp(void) const { return _timeStamp; }
+	Controller* GetGamePad(void) const { return _controller; }
+	ActionName setActionName(void) const { return _actionName; }
 };

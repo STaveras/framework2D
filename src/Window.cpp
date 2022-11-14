@@ -19,7 +19,9 @@ Window::Window(void) :
 	m_nHeight(GLOBAL_HEIGHT),
 	m_szWindowTitle(""),
 	m_szWindowClassName("_ENGINE_2D_WINDOW"),
-	_window(NULL) {}
+	_window(NULL) {
+
+}
 
 Window::Window(int nWidth, int nHeight, const char* szWindowTitle, const char* szWindowClassName) :
 	m_bHasQuit(false),
@@ -27,7 +29,9 @@ Window::Window(int nWidth, int nHeight, const char* szWindowTitle, const char* s
 	m_nHeight(nHeight),
 	m_szWindowTitle(szWindowTitle),
 	m_szWindowClassName((!strcmp(szWindowClassName, "")) ? "_ENGINE_2D_WINDOW" : szWindowClassName),
-	_window(NULL) {}
+	_window(NULL) {
+
+}
 
 #ifdef _WIN32
 LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -46,7 +50,7 @@ LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-void Window::Initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
+void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 {
 	m_hInstance = hInstance;
 	m_lpCmdLine = lpCmdLine;
@@ -60,13 +64,13 @@ void Window::Initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 
 	RegisterClassEx(&wcex);
 	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW, m_szWindowClassName, m_szWindowTitle, WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
-	Resize();
+	resize();
 
 	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
 }
 #endif
 
-void Window::Initialize(void) {
+void Window::initialize(void) {
 
 #if __APPLE__
 	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_TRUE);
@@ -92,12 +96,15 @@ void Window::Initialize(void) {
 	}
 	
 	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
+
 		// this is le gross, because it means we won't be able to (easily) render to multiple windows in this manner...
 
 		Window *_window = Renderer::window;
+
 		if (_window->getUnderlyingWindow() == window) {
-			_window->SetWidth(width);
-			_window->SetHeight(height);
+
+			_window->setWidth(width);
+			_window->setHeight(height);
 			
 			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
 		}
@@ -107,7 +114,7 @@ void Window::Initialize(void) {
 	glfwMakeContextCurrent(_window);
 }
 
-void Window::Update(void)
+void Window::update(void)
 {
 	if (_window) {
 		/* Loop until the user closes the window */
@@ -132,7 +139,7 @@ void Window::Update(void)
 #endif
 }
 
-void Window::Shutdown(void)
+void Window::shutdown(void)
 {
 	if (_window) {
 		glfwDestroyWindow(_window);
@@ -146,7 +153,7 @@ void Window::Shutdown(void)
 #endif
 }
 
-void Window::SetWindowTitle(const char* szWindowTitle) 
+void Window::setWindowTitle(const char* szWindowTitle) 
 { 
 	m_szWindowTitle = szWindowTitle; 
 
@@ -160,21 +167,25 @@ void Window::SetWindowTitle(const char* szWindowTitle)
 #endif
 }
 
-void Window::SetWidth(int nWidth)
+void Window::setWidth(int nWidth)
 {
 	if (m_nWidth != nWidth) {
 		m_nWidth = nWidth;
 	}
+
+	Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, this);
 }
 
-void Window::SetHeight(int nHeight)
+void Window::setHeight(int nHeight)
 {
 	if (m_nHeight != nHeight) {
 		m_nHeight = nHeight;
 	}
+	
+	Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, this);
 }
 
-void Window::Resize(void)
+void Window::resize(void)
 {
 	if (_window) {
 
@@ -182,7 +193,7 @@ void Window::Resize(void)
 		glfwGetWindowSize(_window, &width, &height);
 
 		if (m_nWidth != width || m_nHeight != height) {
-		glfwSetWindowSize(_window, m_nWidth, m_nHeight);
+			glfwSetWindowSize(_window, m_nWidth, m_nHeight);
 		}
 	}
 #ifdef _WIN32
@@ -200,11 +211,8 @@ void Window::Resize(void)
 		diff.x = (rcWindow.right - rcWindow.left) - rcClient.right;
 		diff.y = (rcWindow.bottom - rcWindow.top) - rcClient.bottom;
 
-		m_nWidth = m_nWidth + diff.x;
-		m_nHeight = m_nHeight + diff.y;
-
 		// resize the client area
-		MoveWindow(m_hWnd, rcWindow.left, rcWindow.top, m_nWidth, m_nHeight, TRUE);
+		MoveWindow(m_hWnd, rcWindow.left, rcWindow.top, (m_nWidth + diff.x), (m_nHeight + diff.y), TRUE);
 	}
 #endif
 }

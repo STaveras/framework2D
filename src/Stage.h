@@ -5,7 +5,7 @@
 // Notes: Stages are to provide layered, full-image backgrounds to provide a setting for game objects
 #if !defined(_STAGE_H)
 #define _STAGE_H
-#include "Image.h"
+#include "Sprite.h"
 #include "GameObject.h"
 #include "Types.h"
 #include "Plane.h"
@@ -19,7 +19,7 @@ class Stage
 public:
 	 struct Layer
 	 {
-		  Image* m_pImage;
+		  Image* m_pImage; // Use Texture instead?
 		  vector2 m_Position;
 
 		  Layer(Image* pImage, vector2 position) :m_pImage(pImage), m_Position(position) {}
@@ -46,7 +46,7 @@ public:
 	 void PopLayer(void);
 	 void Move(vector2 amount);
 	 bool LoadFromFile(const char* filepath);
-	 void Update(float fTime);
+	 void update(float fTime);
 	 void Reset(void);
 };
 

@@ -25,26 +25,26 @@ public:
    Engine2D(void);
    ~Engine2D(void) {}
 
-   static bool HasQuit(void) { return Engine2D::getInstance()->_hasQuit; }
+   static bool hasQuit(void) { return Engine2D::getInstance()->_hasQuit; }
 
-   static Game* GetGame(void) { return Engine2D::getInstance()->_pGame; }
-   static void SetGame(Game* game) { Engine2D::getInstance()->_pGame = game; }
+   static Game* getGame(void) { return Engine2D::getInstance()->_pGame; }
+   static void setGame(Game* game) { Engine2D::getInstance()->_pGame = game; }
 
    static EventSystem* getEventSystem(void);
    static Timer* getTimer(void);
 
-   static IRenderer* GetRenderer(void);
-   static void SetRenderer(IRenderer* renderer) { Engine2D::getInstance()->_pRenderer = renderer; }
+   static IRenderer* getRenderer(void);
+   static void setRenderer(IRenderer* renderer) { Engine2D::getInstance()->_pRenderer = renderer; }
 
-   static IInput* GetInput(void) { return Engine2D::getInstance()->_pInput; } // Add support for multiple devices...?
-   static void SetInputInterface(IInput* pInput) { Engine2D::getInstance()->_pInput = pInput; }
+   static IInput* getInput(void) { return Engine2D::getInstance()->_pInput; } // Add support for multiple devices...?
+   static void setInputInterface(IInput* pInput) { Engine2D::getInstance()->_pInput = pInput; }
 
-   void Initialize(void);
-   void Update(void);
-   void Shutdown(void);
+   void initialize(void);
+   void update(void);
+   void shutdown(void);
 
-   // Pause? We should be able to "fast forward" and "rewind" as well... Should this be implemented by the 'game' (application)?
-   static void Quit(void) { Engine2D::getInstance()->_hasQuit = true; }
-   static const char* Version(void) { return FRAMEWORK_VERSION; }
+   // pause? We should be able to "fast forward" and "rewind" as well... Should this be implemented by the 'game' (application)?
+   static void quit(void) { Engine2D::getInstance()->_hasQuit = true; }
+   static const char* version(void) { return FRAMEWORK_VERSION; }
 };
 // Author: Stanley Taveras

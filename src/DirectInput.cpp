@@ -36,7 +36,7 @@ DirectInput::~DirectInput(void) {
    // }
 }
 
-void DirectInput::Initialize(void)
+void DirectInput::initialize(void)
 {
    // We should honestly just do all this stuff in the constructor
    if (m_lpDirectInput)
@@ -49,16 +49,16 @@ void DirectInput::Initialize(void)
    }
 }
 
-void DirectInput::Update(void)
+void DirectInput::update(void)
 {
    if (_keyboard)
-      ((DIKeyboard*)_keyboard)->Update();
+      ((DIKeyboard*)_keyboard)->update();
 
    if (_mouse)
-      ((DIMouse*)_mouse)->Update();
+      ((DIMouse*)_mouse)->update();
 }
 
-void DirectInput::Shutdown(void)
+void DirectInput::shutdown(void)
 {
    if (m_lpDirectInput)
    {

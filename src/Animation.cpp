@@ -1,13 +1,13 @@
 // File: Animation.cpp
 #include "Animation.h"
 #include "Frame.h"
-#include "Image.h"
+#include "Sprite.h"
 Animation::Animation(void):
 	Renderable(RENDERABLE_TYPE_ANIMATION),
 	m_bForward(true),
 	m_bPlaying(false),
 	_frameIndex(0),
-	m_eMode(ANIMATION_MODE_LOOP),
+	m_eMode(eOnce),
 	m_fSpeed(1.0f),
 	m_fTimer(0.0f),
 	m_szName("")
@@ -18,50 +18,50 @@ Animation::Animation(const char* szName):
 	m_bForward(true),
 	m_bPlaying(false),
 	_frameIndex(0),
-	m_eMode(ANIMATION_MODE_LOOP),
+	m_eMode(eOnce),
 	m_fSpeed(1.0f),
 	m_fTimer(0.0f),
 	m_szName(szName)
 {}
 
-void Animation::_AdvanceFrame(void)
+void Animation::_advanceFrame(void)
 {
 	if (m_bForward)
 	{
 		if (_frameIndex == m_Frames.Size() - 1)
-			_LastFrame();
+			_lastFrame();
 		else
 			_frameIndex++;
 	}
 	else
 	{
 		if (_frameIndex == 0)
-			_LastFrame();		
+			_lastFrame();		
 		else
 			_frameIndex--;
 	}
 }
 
-void Animation::_LastFrame(void)
+void Animation::_lastFrame(void)
 {
 	switch(m_eMode)
 	{
-	case ANIMATION_MODE_ONCE:
+	case eOnce:
 		m_bPlaying = false;
 		break;
 
-	case ANIMATION_MODE_OSCILLATE:
+	case eOscillate:
 		m_bForward = !m_bForward;
-		_Reset();
+		_reset();
 		break;
 
-	case ANIMATION_MODE_LOOP:
-		_Reset();
+	case eLoop:
+		_reset();
 		break;
 	}
 }
 
-void ::Animation::_Reset(void)
+void ::Animation::_reset(void)
 {
 	if (m_bForward)
 		_frameIndex = 0;
@@ -76,28 +76,30 @@ void Animation::setPosition(vector2 position)
 		(*i)->GetSprite()->setPosition(position);
 }
 
-void Animation::Mirror(bool bHorizontal, bool bVertical)
+void Animation::mirror(bool horizontal, bool vertical)
 {
+	Renderable::mirror(horizontal, vertical);
+
 	Factory<Frame>::factory_iterator i = m_Frames.Begin();
 	for (; i != m_Frames.End(); i++)
-		(*i)->GetSprite()->Mirror(bHorizontal,bVertical);
+		(*i)->GetSprite()->mirror(horizontal, vertical);
 }
 
-//Frame* Animation::AddFrame(Sprite* sprite)
+//Frame* Animation::addFrame(Sprite* sprite)
 //{
-//	return AddFrame(sprite, 0.0f);
+//	return addFrame(sprite, 0.0f);
 //}
 
-Frame* Animation::AddFrame(Sprite* sprite, float duration)
+Frame* Animation::createFrame(Sprite* sprite, float duration)
 {
 	Frame* frame = m_Frames.Create();
 	frame->SetSprite(sprite);
 	frame->SetDuration(duration);
-	_Reset();
+	_reset();
 	return frame;
 }
 
-void Animation::RemoveFrame(Frame* frame)
+void Animation::removeFrame(Frame* frame)
 {
 	Factory<Frame>::factory_iterator itr = m_Frames.Begin();
 
@@ -113,19 +115,19 @@ void Animation::RemoveFrame(Frame* frame)
 
 bool Animation::update(float fTime)
 {
-	if (!m_bPlaying)
+	if (!m_bPlaying || !m_Frames.Size())
 		return false;
 
 	if (m_fTimer < m_Frames[_frameIndex]->GetDuration() && m_Frames[_frameIndex]->GetDuration() > 0)
 	{
-		m_Frames[_frameIndex]->Update(fTime);
+		m_Frames[_frameIndex]->update(fTime);
 		m_fTimer += fTime * m_fSpeed;
 	}
 	else
 	{
 		m_fTimer = 0.0f;
 		m_Frames[_frameIndex]->Reset();
-		_AdvanceFrame();
+		_advanceFrame();
 	}
 
 	return m_bPlaying;
@@ -135,15 +137,5 @@ bool Animation::operator==(const Animation& a) const
 {
 	return (m_eMode == a.m_eMode && m_bForward == a.m_bForward && m_fSpeed == a.m_fSpeed && m_szName == a.m_szName && m_Frames == a.m_Frames);
 }
-
-Animation* Animation::loadAnimationsFrom(const char* szFilename)
-{
-   throw "Animation::loadAnimationFrame unimplemented;";
-}
-
-//void Animation::removeFrameData(void)
-//{
-//   
-//}
 
 // Author: Stanley Taveras

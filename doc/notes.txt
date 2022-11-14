@@ -1,0 +1,1 @@
+Managers are like Controllers from the MVC design pattern; the objects they manager are ModelViews

@@ -22,6 +22,6 @@ public:
 	XAudio(void);
 	~XAudio(void);
 
-	void Initialize(void);
-	void Shutdown(void);
+	void initialize(void);
+	void shutdown(void);
 };

@@ -7,7 +7,7 @@ PlatformKeyboard::PlatformKeyboard(Window *window)
 {
     // This is hideous but...
     auto func = [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        InputInterface *input = Engine2D::GetInput();
+        InputInterface *input = Engine2D::getInput();
         PlatformKeyboard *keyboard = (PlatformKeyboard*)input->GetKeyboard();
         keyboard->_onKeyEventHandler(window, key, scancode, action, mods);
     };

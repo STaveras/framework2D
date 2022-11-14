@@ -31,29 +31,29 @@ public:
    {
       inline bool operator()(Event* lhs, Event* rhs) const
       {
-         return ((int)lhs->m_ePriority > (int)rhs->m_ePriority);
+         return ((int)lhs->_priorityLevel > (int)rhs->_priorityLevel);
       }
 
       inline bool operator()(const Event& lhs, const Event& rhs) const
       {
-         return ((int)lhs.m_ePriority > (int)rhs.m_ePriority);
+         return ((int)lhs._priorityLevel > (int)rhs._priorityLevel);
       }
    } event_compare;
 
 protected:
-   event_priority_level	m_ePriority;
-   event_key            m_EventID;
-   void*                m_pSender;
+   event_priority_level	_priorityLevel;
+   event_key            _eventKey;
+   void*                _sender;
    // void*                m_pData;
 
 public:
-   Event(void) :m_ePriority(event_priority_normal), m_EventID(""), m_pSender(NULL) {}
-   Event(event_key eventID, void* sender, event_priority_level ePriority = event_priority_normal) :m_ePriority(ePriority), m_EventID(eventID), m_pSender(sender) {}
+   Event(void) :_priorityLevel(event_priority_normal), _eventKey(""), _sender(NULL) {}
+   Event(event_key eventKey, void* sender, event_priority_level priorityLevel = event_priority_normal) :_priorityLevel(priorityLevel), _eventKey(eventKey), _sender(sender) {}
    virtual ~Event(void) {}
 
-   event_key GetEventID(void) const { return m_EventID; }
-   void*     GetSender(void) const { return m_pSender; }
+   event_key getEventID(void) const { return _eventKey; }
+   void*     getSender(void) const { return _sender; }
 
-   bool operator==(const Event& rhs) const { return (!strcmp(m_EventID, rhs.m_EventID) && m_ePriority == rhs.m_ePriority && m_pSender == rhs.m_pSender); }
-   bool operator==(const event_key e) { return (bool)(!strcmp(m_EventID, e)); }
+   bool operator==(const Event& rhs) const { return (!strcmp(_eventKey, rhs._eventKey) && _priorityLevel == rhs._priorityLevel && _sender == rhs._sender); }
+   bool operator==(const event_key e) { return (bool)(!strcmp(_eventKey, e)); }
 };

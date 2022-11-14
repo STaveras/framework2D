@@ -9,10 +9,10 @@ Type* Factory<Type>::At(unsigned int index)
 	typename std::list<Type *>::iterator itr = m_lsItems.begin();
 	for(unsigned int i = 0; itr != m_lsItems.end(); itr++, i++)
 	{
-		if(i == index)
+		if (i == index)
 			return (*itr);
 	}
-	throw "Not in range or not found.";
+
 	return NULL;
 }
 
@@ -55,8 +55,7 @@ void Factory<Type>::Clear()
 {
 	typename std::list<Type*>::iterator itr = m_lsItems.begin();
 
-	for(;itr != m_lsItems.end(); itr++)
-	{
+	for(;itr != m_lsItems.end(); itr++) {
 		delete (*itr);
 	}
 

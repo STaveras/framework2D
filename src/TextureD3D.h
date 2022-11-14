@@ -10,19 +10,19 @@ class TextureD3D : public ITexture
 {
 	friend class RendererDX;
 
-	IDirect3DTexture9*	m_pTexture;
-	D3DXIMAGE_INFO		m_tImageInfo;
+	IDirect3DTexture9*	_texture;
+	D3DXIMAGE_INFO		_imageInfo{};
 
 public:
-	TextureD3D(const char* szFilename):ITexture(szFilename), m_pTexture(NULL){}
+	TextureD3D(const char* szFilename): ITexture(szFilename), _texture(NULL) {}
 	~TextureD3D(void)
 	{
-		if(m_pTexture)
-			m_pTexture->Release();
+		if(_texture)
+			_texture->Release();
 	}
 
-	IDirect3DTexture9* getTexture(void) { return m_pTexture; }
-	unsigned int GetWidth(void) const { return m_tImageInfo.Width; }
-	unsigned int GetHeight(void) const { return m_tImageInfo.Height; }
+	IDirect3DTexture9* getTexture(void) { return _texture; }
+	unsigned int getWidth(void) const { return _imageInfo.Width; }
+	unsigned int getHeight(void) const { return _imageInfo.Height; }
 };
 #endif

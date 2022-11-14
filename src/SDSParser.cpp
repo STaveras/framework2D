@@ -38,7 +38,7 @@ SDSNode* SDSParser::_NodeExists(const char* szName, SDSNodeData::SDSNodeType eTy
 		pNode = q.front();
 		q.pop();
 
-		if(pNode->getData().GetType() == eType && !strcmp(pNode->getData().GetName(), szName))
+		if(pNode->getData().GetType() == eType && !strcmp(pNode->getData().getName(), szName))
 		{
 			if(!mq.empty())
 				*pMetaNode = mq.front();
@@ -115,7 +115,7 @@ SDSParser::SDS_ERROR SDSParser::open(const char* szFilename)
 
 					pCurrent = pMetaCurr->getData().pSDSNode = new SDSNode(SDSNodeData(), pCurrent);
 					pCurrent->getData().SetType(SDSNodeData::SDS_SCOPE);
-					pCurrent->getData().SetName(buffer.c_str());
+					pCurrent->getData().setName(buffer.c_str());
 				}
 				else
 					pCurrent = pResult;
@@ -142,7 +142,7 @@ SDSParser::SDS_ERROR SDSParser::open(const char* szFilename)
 				{
 					pCurrent = new SDSNode(pCurrent->getData(), pCurrent);
 					pCurrent->getData().SetType(SDSNodeData::SDS_PROPERTY);
-					pCurrent->getData().SetName(buffer.c_str());
+					pCurrent->getData().setName(buffer.c_str());
 				}
 				else
 					pCurrent = pResult;
@@ -175,7 +175,7 @@ SDSParser::SDS_ERROR SDSParser::open(const char* szFilename)
 
 					//	pCurrent = new SDSNode(pCurrent->getData(), pCurrent);
 					//	pCurrent->getData().SetType(SDSNodeData::SDS_PROPERTY);
-					//	pCurrent->getData().SetName(scratch);
+					//	pCurrent->getData().setName(scratch);
 					//}
 
 					if(buffer != "" && pCurrent->getData().GetType() == SDSNodeData::SDS_PROPERTY)
@@ -256,7 +256,7 @@ bool SDSParser::setProperty(const char* szName, const char* szValue)
 const char* SDSParser::getScope(void) const
 {
 	if(m_pScope)
-		return m_pScope->getData().GetName();
+		return m_pScope->getData().getName();
 
 	return "";
 }

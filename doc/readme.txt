@@ -1,18 +1,7 @@
-- Flap a Turd
- - Dodge barriers by pressing a button to ascend
-  - Turd
-   - Moves forward
-   - Affected by gravity
-   - Can flap (ascend)
-  - Barriers
-   - Stationary
-   - Varying heights
-   - Varying distances from each other
- - Count the flaps
-
-Build dependencies:
--------------------
+Build Dependencies:
+===================
 - GLM
 - GLFW
 - Vulkan (additionally, MoltenVK for Mac)
 - TinyXML2
+- FastDelegate

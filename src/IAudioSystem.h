@@ -8,6 +8,6 @@
 class IAudioSystem
 {
 public:
-	void Initialize(void);
-	void Shutdown(void);
+	void initialize(void);
+	void shutdown(void);
 };

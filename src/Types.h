@@ -7,7 +7,7 @@
 #define _TYPES_H_
 
 // Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
-#define FRAMEWORK_VERSION "0.01"
+#define FRAMEWORK_VERSION "0.02"
 
 #define DEFAULT_DATA_PATH "./data/"
 

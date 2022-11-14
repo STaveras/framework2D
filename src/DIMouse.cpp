@@ -30,9 +30,9 @@ bool DIMouse::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
    return false;
 }
 
-void DIMouse::Update(void) {
+void DIMouse::update(void) {
 
-   IDIDeviceComm::Update();
+   IDIDeviceComm::update();
 
    if (m_lpDevice) {
       memcpy_s(&_mouseStateOld, sizeof(DIMOUSESTATE2), &_mouseState, sizeof(DIMOUSESTATE2));
@@ -49,7 +49,7 @@ void DIMouse::Update(void) {
 #ifdef _DEBUG
    if (Debug::dbgMouse) {
       static Timer timer;
-      timer.Update();
+      timer.update();
 
       if (timer.GetElapsedTime() > 1) {
          char buffer[128];

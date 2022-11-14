@@ -59,14 +59,14 @@ class FlappyTurd : public Game
             falling->setDirection(vector2(0.1f, 1.0f));
             falling->setForce(FALL_FORCE);
             falling->setRenderable(new Sprite("./data/images/turd0.png", 0xFFFF00FF));
-            ((Image*)falling->getRenderable())->center();
+            ((Sprite*)falling->getRenderable())->center();
 
             GameObjectState* rising = this->addState("Rising");
             rising->setExecuteTime(0.27);
             rising->setDirection(vector2(0.1f, -1.0f));
             rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
             rising->setRenderable(new Sprite("./data/images/turd1.png", 0xFFFF00FF));
-            ((Image*)rising->getRenderable())->center();
+            ((Sprite*)rising->getRenderable())->center();
 
             registerTransition("Falling", "BUTTON_PRESSED", "Rising");
             registerTransition("Rising", "BUTTON_PRESSED", "Rising");   // lets you chain together flaps
@@ -85,19 +85,19 @@ class FlappyTurd : public Game
       {
          GameState::onEnter();
          
-         Renderer::window->SetWindowTitle("Flappy Turd");
-         Renderer::window->SetWidth(GLOBAL_WIDTH/2);
-         Renderer::window->SetHeight(GLOBAL_HEIGHT-20);
-         Renderer::window->Resize();
+         Renderer::window->setWindowTitle("Flappy Turd");
+         Renderer::window->setWidth(GLOBAL_WIDTH/2);
+         Renderer::window->setHeight(GLOBAL_HEIGHT-20);
+         Renderer::window->resize();
 
-         //_background = new Image("./data/images/bg.png");
+         _background = new Image("./data/images/bg.png");
 
          _objectManager.addObject("Camera", _camera);
 
          _updateBackground.useRenderList(_renderList);
          _updateBackground.setCamera(_camera);
          _updateBackground.setBackground(_background);
-         _updateBackground.setMode(Background::Mode::Mirror);
+         _updateBackground.setMode(Background::Mode::mirror);
 
          //Animations::addToRenderList(Animations::fromXML("./data/objects/turd/turd.ani"), _renderList);
 
@@ -112,9 +112,9 @@ class FlappyTurd : public Game
          _objectManager.pushOperator(&_updateRenderable);
          _objectManager.pushOperator(&_attachCamera);
 
-         _player->setup();
-         _player->setGamePad(_inputManager.CreateGamePad());
-         _player->getGamePad()->addButton(VirtualButton("BUTTON", KBK_SPACE));
+         _player->start();
+         _player->setController(_inputManager.CreateController());
+         _player->getController()->addAction(Action("BUTTON", KBK_SPACE));
          _player->setGameObject(_objectManager.getGameObject("Turd"));
 
          _objectManager.addObject("Camera", _camera);
@@ -124,7 +124,7 @@ class FlappyTurd : public Game
          _attachCamera.setSource(_camera);
          _attachCamera.follow(_objectManager.getGameObject("Turd"), true, false);
 
-         Engine2D::GetRenderer()->SetCamera(_camera);
+         Engine2D::getRenderer()->SetCamera(_camera);
       }
       void onExecute(float time)
       {
@@ -132,46 +132,11 @@ class FlappyTurd : public Game
             GameState::onExecute(time);
          }
          else {// Push on 'GameOverState'
-            ((FlappyTurd*)Engine2D::GetGame())->GameOver();
+            ((FlappyTurd*)Engine2D::getGame())->GameOver();
          }
 
-#if _DEBUG
-			static float timer = 0.0f;
-			timer += time;
-
-			if (timer >= 1.0f) {
-
-				if (Debug::dbgObjects) {
-
-					char debugBuffer[255];
-
-               // OutputDebugString("\nObjects:\n-------\n");
-
-               // Debug::Log << "\nObjects:\n-------\n";
-               Debug::Log->write("\nObjects:\n-------\n");
-
-					for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
-                  GameObject* debugObject = _objectManager[i];
-						sprintf_s(debugBuffer, "(%s) pos: (%fx, %fy)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
-						// OutputDebugString(debugBuffer);
-                  Debug::Log->write(debugBuffer);
-					}
-				}
-
-            if (_camera) {
-               if (!_camera->OnScreen(_player->getGameObject())) {
-                  //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
-                  // OutputDebugString("GameObject off screen\n\n");
-                  Debug::Log->write("GameObject off screen\n\n");
-               }
-            }
-
-				timer = 0.0f;
-			}
-#endif
-
-         if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {
-            Engine2D::Quit();
+         if (Engine2D::getInput()->GetKeyboard()->KeyPressed(KBK_ESCAPE)) {
+            Engine2D::quit();
          }
       }
 
@@ -208,14 +173,14 @@ class FlappyTurd : public Game
 
          _gameOver = new Image("./data/images/game_over.png");
          _gameOver->center();
-         _gameOver->setPosition(Engine2D::GetRenderer()->GetCamera()->getPosition());
+         _gameOver->setPosition(Engine2D::getRenderer()->GetCamera()->getPosition());
 
          _renderList->push_back(_gameOver);
       }
 
       void onExecute(float time) {
-         if (Engine2D::GetInput()->GetKeyboard()->KeyPressed(KBK_SPACE)) {
-            ((FlappyTurd*)Engine2D::GetGame())->Reset();
+         if (Engine2D::getInput()->GetKeyboard()->KeyPressed(KBK_SPACE)) {
+            ((FlappyTurd*)Engine2D::getGame())->Reset();
          }
       }
 

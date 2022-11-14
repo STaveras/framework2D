@@ -55,6 +55,6 @@ public:
 	void LimitFrameRate(unsigned int uiFrameRate);
 	std::string GetTimeStamp(void) const;
 
-	void Update(void);
+	void update(void);
 	void Reset(void);
 };

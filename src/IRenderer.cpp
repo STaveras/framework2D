@@ -13,16 +13,18 @@ IRenderer::~IRenderer() {
 	m_Textures.Clear();
 }
 
+// NOTE: Initial test demo
+#if _DEBUG
 void IRenderer::_BackgroundColorShift(void)
 {
 	if (!m_bStaticBG)
-    {
+	{
 		// static Timer timer;
-		Timer *timer = Engine2D::getTimer();
+		Timer* timer = Engine2D::getTimer();
 
-        static bool bReverse = false;
-        static short nStage = 0;
-        static float fAccum = 0.0f;
+		static bool bReverse = false;
+		static short nStage = 0;
+		static float fAccum = 0.0f;
 
 		Color colors[] = {
 			0xFF000000, // Black
@@ -34,51 +36,52 @@ void IRenderer::_BackgroundColorShift(void)
 			0xFFFFFFFF, // White
 			m_ClearColor
 		};
-        
-		colors[7].r = (byte)(colors[nStage].r + fAccum * (colors[nStage+1].r - colors[nStage].r));
-		colors[7].g = (byte)(colors[nStage].g + fAccum * (colors[nStage+1].g - colors[nStage].g));
-		colors[7].b = (byte)(colors[nStage].b + fAccum * (colors[nStage+1].b - colors[nStage].b));
-		colors[7].a = (byte)(colors[nStage].a + fAccum * (colors[nStage+1].a - colors[nStage].a));
+
+		colors[7].r = (byte)(colors[nStage].r + fAccum * (colors[nStage + 1].r - colors[nStage].r));
+		colors[7].g = (byte)(colors[nStage].g + fAccum * (colors[nStage + 1].g - colors[nStage].g));
+		colors[7].b = (byte)(colors[nStage].b + fAccum * (colors[nStage + 1].b - colors[nStage].b));
+		colors[7].a = (byte)(colors[nStage].a + fAccum * (colors[nStage + 1].a - colors[nStage].a));
 
 		fAccum += (float)(bReverse ? -(timer->GetDeltaTime()) : timer->GetDeltaTime());
 
-        if (fAccum >= 1.0f)
-        {
-            nStage++;
+		if (fAccum >= 1.0f)
+		{
+			nStage++;
 
-            if (nStage >= 6)
-            {
-                nStage = 6;
-                bReverse = !bReverse;
-            }
+			if (nStage >= 6)
+			{
+				nStage = 6;
+				bReverse = !bReverse;
+			}
 
-            fAccum = 0.0f;
-        }
-        else if (fAccum <= 0.0f)
-        {
-            fAccum = 1.0f;
+			fAccum = 0.0f;
+		}
+		else if (fAccum <= 0.0f)
+		{
+			fAccum = 1.0f;
 
-            if (nStage <= 0)
-            {
-                nStage = 0;
-                bReverse = !bReverse;
-            }
+			if (nStage <= 0)
+			{
+				nStage = 0;
+				bReverse = !bReverse;
+			}
 
-            nStage--;
-        }
+			nStage--;
+		}
 
-        m_ClearColor = colors[7];
-		// timer.Update();
-    }
+		m_ClearColor = colors[7];
+		// timer.update();
+	}
 }
+#endif
 
 ITexture* IRenderer::_TextureExists(const char* szFilename)
 {
 	Factory<ITexture>::const_factory_iterator itr = m_Textures.Begin();
 
-	for(; itr != m_Textures.End(); itr++)
+	for (; itr != m_Textures.End(); itr++)
 	{
-		if(!strcmp((*itr)->GetFilename(), szFilename))
+		if(!strcmp((*itr)->getFilename(), szFilename))
 			return (*itr);
 	}
 
@@ -100,7 +103,7 @@ void IRenderer::SetCamera(Camera* pCamera)
 
 bool IRenderer::DestroyTexture(const ITexture* pTexture)
 {
-	if(pTexture)
+	if (pTexture)
 	{
 		Factory<ITexture>::const_factory_iterator itr = m_Textures.Begin();
 
@@ -118,5 +121,9 @@ bool IRenderer::DestroyTexture(const ITexture* pTexture)
 }
 
 void IRenderer::Render(void) {
+#if _DEBUG
 	_BackgroundColorShift();
+#else
+	throw std::runtime_error("RenderingInterface::Render() unimplemented");
+#endif
 }

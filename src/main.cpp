@@ -14,7 +14,7 @@
 #include <iostream>
 
 // TODO: Put this in a DLL and have loader functions to search for "game" library files
-#include "FlappyTurd.h"
+#include "FantasySideScroller.h"
 
 // Ultimately, I want the executable to just be able to support running games without having to statically build a game
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
    }
 #endif
 
-   Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::Version());
+   Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::version());
 
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
@@ -73,14 +73,14 @@ int main(int argc, char **argv)
 
       Renderer::window = &window;
 
-      window.Initialize(hInstance, lpCmdLine);
-      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.GetHWND(), hInstance);
-      pRenderer = (RendererDX*)Renderer::CreateDXRenderer(window.GetHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
+      window.initialize(hInstance, lpCmdLine);
+      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance);
+      pRenderer = (RendererDX*)Renderer::CreateDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
    else
 #endif 
    {
-      window.Initialize();
+      window.initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
       pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window); 
    }
@@ -89,31 +89,46 @@ int main(int argc, char **argv)
    pRenderer->setVerticalSync(System::checkArgumentsForVSync(argc, argv));
 
    Engine2D *engine = Engine2D::getInstance();
-   engine->SetInputInterface(pInput);
-   engine->SetRenderer(pRenderer);
-   engine->SetGame(&game);
-   engine->Initialize();
+   engine->setInputInterface(pInput);
+   engine->setRenderer(pRenderer);
+   engine->setGame(&game);
+   engine->initialize();
 
    try {
-      while (!window.HasQuit() && !engine->HasQuit())
+      while (!window.hasQuit() && !engine->hasQuit())
       {
          // Eventually just have the engine handle this like:
          // engine->Run(); 
-         window.Update();
-         engine->Update();
+         window.update();
+         engine->update();
+
    #ifdef _DEBUG
          static unsigned int lastFPS = 0;
          if (DEBUGGING) {
             if (engine->getTimer()->GetElapsedTime() >= 1.0f) {
-               std::cout << "FPS: " << (lastFPS + engine->getTimer()->GetFPS()) / 2 << std::endl;
+
+               std::string framesPerSecond = "FPS: " + std::to_string(/*(lastFPS + */engine->getTimer()->GetFPS()/* / 2)*/) + "\n";
+               std::cout << framesPerSecond.c_str();
                lastFPS = engine->getTimer()->GetFPS();
                engine->getTimer()->Reset();
+
+               static std::string windowTitle = window.getWindowTitle();
+               
+               size_t semiColonIndex = windowTitle.find_first_of(';');
+
+               std::string windowTitleSansFPS = windowTitle.substr(0, (semiColonIndex != -1) ? semiColonIndex : windowTitle.size());
+               
+               windowTitle = windowTitleSansFPS + "; " + framesPerSecond;
+
+               window.setWindowTitle(windowTitle.c_str());
+
             }
          }
    #endif
       }
    }
    catch (std::exception& e) {
+
       std::cout << e.what() << std::endl;
 
 #ifdef _WIN32
@@ -123,16 +138,16 @@ int main(int argc, char **argv)
 #endif
    }
 
-   engine->Shutdown();
+   engine->shutdown();
    
    Input::DestroyInputInterface(pInput);
    Renderer::DestroyRenderer(pRenderer);
 
-   window.Shutdown();
+   window.shutdown();
 
 #if _WIN32
    for (int i = 0; i < argc; i++) {
-      delete argv[i];
+      delete [] argv[i];
    }
    delete [] argv;
 #endif

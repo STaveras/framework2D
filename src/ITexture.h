@@ -12,21 +12,21 @@
 
 typedef class ITexture
 {
-	Color m_ClrColor; // transparent color
-	std::string m_strFilename;
+	Color _clearKeyColor; // transparent color
+	std::string _fileName;
 
 public:
-	ITexture(void): m_ClrColor(0) {}
-	ITexture(const char* szFilename): m_strFilename(szFilename), m_ClrColor(0) {}
+	ITexture(void): _clearKeyColor(0) {}
+	ITexture(const char* szFilename): _fileName(szFilename), _clearKeyColor(0) {}
 	virtual ~ITexture(void){ }
 
-	const char* GetFilename(void) const { return m_strFilename.c_str(); }
-	Color GetKeyColor(void) const { return m_ClrColor; }
-	virtual unsigned int GetWidth(void) const = 0;
-	virtual unsigned int GetHeight(void) const = 0;
+	const char* getFilename(void) const { return _fileName.c_str(); }
+	Color getKeyColor(void) const { return _clearKeyColor; }
+	virtual unsigned int getWidth(void) const = 0;
+	virtual unsigned int getHeight(void) const = 0;
 
-	void SetFilename(const char* szFilename) { m_strFilename = szFilename; }
-	void SetKeyColor(Color clrColor) { m_ClrColor = clrColor; }
+	void SetFilename(const char* szFilename) { _fileName = szFilename; }
+	void SetKeyColor(Color clrColor) { _clearKeyColor = clrColor; }
 	
 }Texture;
 
