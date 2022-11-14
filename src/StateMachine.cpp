@@ -115,9 +115,9 @@ void StateMachine::reset(void)
       _events.pop();
 }
 
-void StateMachine::sendInput(const char* szCondition, void* pSender)
+void StateMachine::sendInput(const char* condition, void* sender)
 {
-   this->OnEvent(StateMachineEvent(szCondition, pSender));
+   this->OnEvent(StateMachineEvent(condition, sender));
 }
 
 void StateMachine::update(float fTime)

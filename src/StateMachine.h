@@ -58,7 +58,7 @@ public:
 
 	virtual void update(float fTime);
 
-	void sendInput(const char* szCondition, void* pSender = NULL);
+	void sendInput(const char* condition, void* sender = NULL);
 
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class

@@ -68,7 +68,7 @@ class FantasySideScroller : public Game
 				rising->setDirection(vector2(0.0f, -1.0f));
 				rising->setForce(FALL_FORCE * FLAP_MULTIPLIER);
 				rising->setPreserveMirroring(true);
-				rising->setExecuteTime(0.33);
+				rising->setExecuteTime(0.42);
 
 				Animation* risingAnimation = _animationManager.Create();
 
@@ -153,7 +153,6 @@ class FantasySideScroller : public Game
 				registerTransition("RunningLeft", "RIGHT_PRESSED", "RunningRight");
 				registerTransition("RunningRight", "RIGHT_RELEASED", "Idle");
 				registerTransition("RunningRight", "LEFT_PRESSED", "RunningLeft");
-				registerTransition("RunningRight", "JUMP_PRESSED", "RisingRight");
 				registerTransition("RunningLeft", "JUMP_PRESSED", "Rising");
 				registerTransition("RunningRight", "JUMP_PRESSED", "Rising");
 
