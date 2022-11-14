@@ -42,7 +42,7 @@ void IRenderer::_BackgroundColorShift(void)
 		colors[7].b = (byte)(colors[nStage].b + fAccum * (colors[nStage + 1].b - colors[nStage].b));
 		colors[7].a = (byte)(colors[nStage].a + fAccum * (colors[nStage + 1].a - colors[nStage].a));
 
-		fAccum += (float)(bReverse ? -(timer->GetDeltaTime()) : timer->GetDeltaTime());
+		fAccum += (float)(bReverse ? -(timer->getDeltaTime()) : timer->getDeltaTime());
 
 		if (fAccum >= 1.0f)
 		{

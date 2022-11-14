@@ -16,7 +16,7 @@ public:
 	Command(const Command& c);
 	~Command(void) { if(m_szCommand) free(m_szCommand); }
 
-	float GetTimeStamp(void) const { return m_fTimeStamp; }
+	float getTimeStamp(void) const { return m_fTimeStamp; }
 	char* GetCommandString(void) { return m_szCommand; }
 
 	void SetTimeStamp(float fTime) { m_fTimeStamp = fTime; }

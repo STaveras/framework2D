@@ -15,7 +15,7 @@ void Sound::stop()
 
 }
 
-void Sound::Reset()
+void Sound::reset()
 {
 
 }

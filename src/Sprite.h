@@ -12,9 +12,6 @@ typedef class Sprite : public Renderable
 {
 	 const ITexture* _texture;
 	 RECT _sourceRect;
-	 vector2 _center;
-	 vector2 _scale;
-	 float _rotation; // (no. of dimensions - 1)
 
 public:
 	 Sprite(void);
@@ -25,21 +22,13 @@ public:
 
 	 const ITexture* getTexture(void) const { return _texture; }
 	 const RECT& getSourceRect(void) const { return _sourceRect; }
-	 float getRotation(void) const { return _rotation; }
-	 vector2 getCenter(void) const { return _center; }
-	 vector2 getScale(void) const { return _scale; }
 	 vector2 getRectCenter(void) const;
 
 	 float getWidth(void) const;
 	 float getHeight(void) const;
 
 	 void setTexture(ITexture* pTexture) { _texture = pTexture; }
-	 void setRotation(float fRotation) { _rotation = fRotation; }
-	 void setCenter(vector2 center) { _center = center; }
-	 void setScale(vector2 scale) { _scale = scale; }
 	 void setSourceRect(const RECT& srcRect) { _sourceRect = srcRect; }
-
-	 void mirror(bool horizontal, bool vertical);
 
 	 void center(void);
 

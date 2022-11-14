@@ -12,7 +12,7 @@ void Game::update(Timer* timer)
    if (!this->empty()) {
 
       if (timer) {
-         this->top()->onExecute((float)timer->GetDeltaTime());
+         this->top()->onExecute((float)timer->getDeltaTime());
       }
       else
          this->top()->onExecute();

@@ -20,7 +20,7 @@ class InputEvent : public Event
 public:
 	InputEvent(Event::event_key evtKey, void* pSender, Controller* controller, float time, ActionName actionName);
 
-	float GetTimeStamp(void) const { return _timeStamp; }
+	float getTimeStamp(void) const { return _timeStamp; }
 	Controller* GetGamePad(void) const { return _controller; }
 	ActionName setActionName(void) const { return _actionName; }
 };

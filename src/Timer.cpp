@@ -10,9 +10,11 @@ using namespace std::chrono;
 
 using ms = duration<double, std::milli>;
 
-Timer::Timer(void) : m_dDelta(0.0f),
-					 m_dFrameCap(0.0f),
-					 m_uiTicks(0) {
+Timer::Timer(void) : _delta(0.0),
+					 _frameCap(0.0),
+					 _framesPerSecond(0),
+					 _timeMultiplier(1.0),
+					 _ticks(0) {
 #ifdef _WIN32
 	QueryPerformanceFrequency(&m_liFrequency);
 	QueryPerformanceCounter(&m_liDelta);
@@ -55,18 +57,18 @@ void Timer::_Tock(void)
 
 void Timer::_Tick(void)
 {
-	m_uiTicks++;
+	_ticks++;
 
 	if (_Timer() >= 1.0f)
 	{
-		m_uiCurrentFPS = m_uiTicks;
-		m_uiTicks = 0;
+		_framesPerSecond = _ticks;
+		_ticks = 0;
 
 		_Tock();
 	}
 }
 
-double Timer::GetElapsedTime(void) const
+double Timer::getElapsedTime(void) const
 {
 #ifdef _WIN32
 	LARGE_INTEGER liCurrent;
@@ -79,13 +81,13 @@ double Timer::GetElapsedTime(void) const
 	return -1;
 }
 
-void Timer::LimitFrameRate(unsigned int uiFrameRate)
+void Timer::limitFrameRate(unsigned int uiFrameRate)
 {
 	if (!uiFrameRate)
 		return;
 
 	double dFrameTime = 1.0 / uiFrameRate;
-	double dSleepTime = (m_dFrameCap += dFrameTime) - m_dDelta;
+	double dSleepTime = (_frameCap += dFrameTime) - _delta;
 
 	if (dSleepTime > 0.0)
 	{
@@ -94,7 +96,7 @@ void Timer::LimitFrameRate(unsigned int uiFrameRate)
 #else
 		sleep((unsigned int)(dSleepTime * 1000));
 #endif
-		m_dFrameCap = m_dDelta;
+		_frameCap = _delta;
 	}
 }
 
@@ -106,17 +108,17 @@ void Timer::update(void)
 	LARGE_INTEGER liCurrent;
 	QueryPerformanceCounter(&liCurrent);
 
-	m_dDelta = (double)(liCurrent.QuadPart - m_liDelta.QuadPart) / (double)m_liFrequency.QuadPart;
+	_delta = (double)(liCurrent.QuadPart - m_liDelta.QuadPart) / (double)m_liFrequency.QuadPart;
 
 	m_liDelta = liCurrent;
 #else
-	m_dDelta = _Seconds() - m_dNow;
+	_delta = _Seconds() - m_dNow;
 	m_dNow = _Seconds();
-	m_dElapsed += m_dDelta;
+	m_dElapsed += _delta;
 #endif
 }
 
-void Timer::Reset(void) { 
+void Timer::reset(void) { 
 #ifdef _WIN32
 		QueryPerformanceCounter(&m_liElapsed);
 #else
@@ -127,11 +129,11 @@ void Timer::Reset(void) {
 
 #define _CRT_SECURE_NO_WARNINGS 1
 
-std::string Timer::GetTimeStamp(void) const
+std::string Timer::getTimeStamp(void)
 {
 	time_t t = time(0);
 	struct tm now;
-	//localtime(&t);
+
 	localtime_s(&now, &t);
 
 	std::stringstream ss;

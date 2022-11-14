@@ -45,25 +45,29 @@ GameObject::GameObjectState* GameObject::addState(const char* name)
 	return state;
 }
 
-void GameObject::GameObjectState::onEnter(State* prev)
+void GameObject::GameObjectState::onEnter(State* prevState)
 {
+	State::onEnter(prevState);
+
 	_runTime = 0;
 
 	if (_renderable) {
 
 		if (_preserveMirror) {
 
-			if (prev && !((ObjectState*)prev)->isPreservingMirroring()) {
+			if (prevState) {
 
-				Renderable* prevRenderable = ((ObjectState*)prev)->getRenderable();
+				Renderable* prevRenderable = ((ObjectState*)prevState)->getRenderable();
 
-				if (_renderable->_appearance._flipHorizontalAxis != prevRenderable->_appearance._flipHorizontalAxis || 
-					_renderable->_appearance._flipVerticalAxis != prevRenderable->_appearance._flipVerticalAxis) {
+				if (prevRenderable && (_renderable->getScale() != prevRenderable->getScale())) {
+					
+					this->getRenderable()->setScale(prevRenderable->getScale());
 
-					_renderable->mirror(prevRenderable->_appearance._flipHorizontalAxis, 
-										prevRenderable->_appearance._flipVerticalAxis);
+					vector2 oldCenter = this->getRenderable()->getCenter();
+					vector2 newCenter(oldCenter.x * this->getRenderable()->getScale().x,
+									  oldCenter.y * this->getRenderable()->getScale().y);
 
-					_renderable->center();
+					this->getRenderable()->setCenter(newCenter);
 				}
 			}
 		}
@@ -116,7 +120,7 @@ bool GameObject::GameObjectState::onExecute(float time)
 	return finalCheck;
 }
 
-void GameObject::GameObjectState::onExit(State* next)
+void GameObject::GameObjectState::onExit(State* nextState)
 {
 	Engine2D::getInstance()->getEventSystem()->sendEvent(EVT_GAMEOBJECT_STATE_EXIT, this);
 
@@ -131,26 +135,8 @@ void GameObject::GameObjectState::onExit(State* next)
 			break;
 		}
 
-		if (!_preserveMirror && ((ObjectState*)next)->isPreservingMirroring()) {
-
-			if (next) {
-
-				Renderable* nextRenderable = ((ObjectState*)next)->getRenderable();
-
-				if (nextRenderable) {
-
-					if (_renderable->_appearance._flipHorizontalAxis != nextRenderable->_appearance._flipHorizontalAxis ||
-						_renderable->_appearance._flipVerticalAxis != nextRenderable->_appearance._flipVerticalAxis) {
-
-						nextRenderable->mirror(_renderable->_appearance._flipHorizontalAxis,
-							                   _renderable->_appearance._flipVerticalAxis);
-
-						nextRenderable->center();
-					}
-				}
-			}
-		}
-
 		_renderable->setVisibility(false);
 	}
+
+	State::onExit(nextState);
 }

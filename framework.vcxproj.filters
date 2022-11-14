@@ -60,7 +60,7 @@
       <Filter>engine2Dbase\Math\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="src\GameState.cpp">
-      <Filter>engine2Dbase\States</Filter>
+      <Filter>engine2Dbase\System\StateMachine</Filter>
     </ClCompile>
     <ClCompile Include="src\GameObject.cpp">
       <Filter>engine2Dbase\Objects</Filter>
@@ -131,9 +131,6 @@
     <ClCompile Include="src\PlatformKeyboard.cpp">
       <Filter>engine2Dbase\Input</Filter>
     </ClCompile>
-    <ClCompile Include="src\StateMachine.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
     <ClCompile Include="src\Timer.cpp">
       <Filter>engine2Dbase\System</Filter>
     </ClCompile>
@@ -145,9 +142,6 @@
     </ClCompile>
     <ClCompile Include="src\Sprite.cpp">
       <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StateMachine.cpp">
-      <Filter>engine2Dbase\States</Filter>
     </ClCompile>
     <ClCompile Include="src\EventSystem.cpp">
       <Filter>engine2Dbase\Events</Filter>
@@ -166,6 +160,12 @@
     </ClCompile>
     <ClCompile Include="src\Action.cpp">
       <Filter>engine2Dbase\Input\Action</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StateMachine.cpp">
+      <Filter>engine2Dbase\System\StateMachine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StateMachine.cpp">
+      <Filter>engine2Dbase\System\StateMachine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -235,9 +235,6 @@
     <Filter Include="engine2Dbase\Sound">
       <UniqueIdentifier>{60cfc33e-b765-48dc-8af7-12016c3f132c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine2Dbase\States">
-      <UniqueIdentifier>{d53de2ea-e266-4324-bab6-f438d3ea87e8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="engine2Dbase\Physics">
       <UniqueIdentifier>{6f828a00-3edd-4adb-b8b3-acc4907450cb}</UniqueIdentifier>
     </Filter>
@@ -246,6 +243,9 @@
     </Filter>
     <Filter Include="engine2Dbase\Input\Action">
       <UniqueIdentifier>{b4da0706-73cf-480d-a243-8a4184ad8cfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine2Dbase\System\StateMachine">
+      <UniqueIdentifier>{d53de2ea-e266-4324-bab6-f438d3ea87e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -301,9 +301,6 @@
       <Filter>engine2Dbase\Objects\operators</Filter>
     </ClInclude>
     <ClInclude Include="src\UpdateRenderableOperator.h" />
-    <ClInclude Include="src\FlappyTurd.h">
-      <Filter>Games</Filter>
-    </ClInclude>
     <ClInclude Include="src\System.h">
       <Filter>engine2Dbase\System</Filter>
     </ClInclude>
@@ -323,7 +320,7 @@
       <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
     </ClInclude>
     <ClInclude Include="src\State.h">
-      <Filter>engine2Dbase\States</Filter>
+      <Filter>engine2Dbase\System\StateMachine</Filter>
     </ClInclude>
     <ClInclude Include="src\EventSystem.h">
       <Filter>engine2Dbase\Events</Filter>
@@ -335,7 +332,7 @@
       <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
     </ClInclude>
     <ClInclude Include="src\ProgramState.h">
-      <Filter>engine2Dbase\States</Filter>
+      <Filter>engine2Dbase\System\StateMachine</Filter>
     </ClInclude>
     <ClInclude Include="src\Animation.h">
       <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>

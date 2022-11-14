@@ -170,7 +170,6 @@
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\EventSystem.h" />
     <ClInclude Include="src\FantasySideScroller.h" />
-    <ClInclude Include="src\FlappyTurd.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\IInput.h" />
     <ClInclude Include="src\IProgramState.h" />

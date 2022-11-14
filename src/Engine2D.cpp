@@ -13,7 +13,7 @@ Engine2D::Engine2D(void) :
 
 void Engine2D::initialize(void)
 {
-	Engine2D::getTimer()->Reset();
+	Engine2D::getTimer()->reset();
 	Engine2D::getEventSystem()->initialize(INFINITE);
 
 #ifdef _WIN32

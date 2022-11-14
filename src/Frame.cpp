@@ -25,12 +25,12 @@ void Frame::update(float fTime)
 		(*itr)();
 }
 
-void Frame::Reset(void)
+void Frame::reset(void)
 {
 	std::list<Trigger>::iterator itr = m_lsTriggers.begin();
 
 	for(; itr != m_lsTriggers.end(); itr++)
-		(*itr).Reset();
+		(*itr).reset();
 }
 
 bool Frame::RemoveTrigger(const Trigger& desc)

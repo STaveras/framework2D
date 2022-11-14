@@ -47,7 +47,7 @@ void Trigger::Activate()
 	{
 	case ALWAYS:
 		_Trigger();
-		Reset();
+		reset();
 		break;
 	case ONCE:
 		_Trigger();
@@ -55,7 +55,7 @@ void Trigger::Activate()
 	}
 }
 
-void Trigger::Reset()
+void Trigger::reset()
 {
 	_bTriggered = false;
 }

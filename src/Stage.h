@@ -47,7 +47,7 @@ public:
 	 void Move(vector2 amount);
 	 bool LoadFromFile(const char* filepath);
 	 void update(float fTime);
-	 void Reset(void);
+	 void reset(void);
 };
 
 #endif  //_STAGE_H

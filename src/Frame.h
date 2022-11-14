@@ -19,15 +19,6 @@ class Frame
 	Sprite* m_pSprite;
 	std::list<Trigger> m_lsTriggers;
 
-public:
-	// "Appearances" are intended to facilitate special effects 
-	struct Appearance {
-		float opacity; // alpha
-		Color _flashColor; // applied to the "flashed" frames
-		Color _tintColor; // always applied
-		bool isFlashing;
-	}appearance{};
-
 protected:
 	friend class IRenderer;
 
@@ -53,7 +44,7 @@ public:
 	void update(float fTime);
 
 	// Resets all triggers for this frame.
-	void Reset(void);
+	void reset(void);
 
 	bool operator==(const Frame& rhs) const;
 };

@@ -10,10 +10,7 @@
 
 Sprite::Sprite(void):
 	Renderable(RENDERABLE_TYPE_SPRITE),
-	_texture(NULL), 
-	_rotation(0.0f),
-	_center(vector2(0,0)),
-	_scale(vector2(1.0f,1.0f)),
+	_texture(NULL),
 	_sourceRect({ -1, -1, -1, -1 }) {
 
 }
@@ -22,9 +19,6 @@ Sprite::Sprite(void):
 Sprite::Sprite(const Sprite& image) :
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(image.getTexture()),
-	_rotation(0.0f),
-	_center(vector2(0, 0)),
-	_scale(vector2(1.0f, 1.0f)),
 	_sourceRect(image._sourceRect) {
 
 }
@@ -32,19 +26,13 @@ Sprite::Sprite(const Sprite& image) :
 Sprite::Sprite(ITexture* pImage, const RECT& srcRect):
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(pImage),
-	_rotation(0.0f),
-	_center(vector2(0,0)),
-	_scale(vector2(1.0f,1.0f)),
 	_sourceRect(srcRect) {
 
 }
 
 Sprite::Sprite(const char* filePath, Color clearColor, const RECT& srcRect):
 	Renderable(RENDERABLE_TYPE_SPRITE),
-	_texture(NULL), 
-	_rotation(0.0f),
-	_center(vector2(0,0)),
-	_scale(vector2(1.0f,1.0f)) {
+	_texture(NULL) {
 	this->load(filePath,clearColor,srcRect);
 }
 
@@ -73,20 +61,6 @@ float Sprite::getWidth(void) const
 float Sprite::getHeight(void) const
 {
    return (float)getTexture()->getHeight();
-}
-
-void Sprite::mirror(bool horizontal, bool vertical)
-{
-	if (horizontal)
-	{
-		_scale.x = -_scale.x;
-		_center.x = -_center.x;
-	}
-	if (vertical)
-	{
-		_scale.y = -_scale.y;
-		_center.y = -_center.y;
-	}
 }
 
 void Sprite::center(void)

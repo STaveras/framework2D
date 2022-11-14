@@ -20,14 +20,14 @@ StateMachine::StateMachine(void) :
 
 StateMachine::~StateMachine(void) {
    // Innecessary but for completeness' sake
-   m_mTransitionTable.clear();
+   _transitionTable.clear();
 }
 
 // ...I want to decouple this
 void StateMachine::OnEvent(const StateMachineEvent& evt)
 {
    if (_isBuffered)
-      m_qEvents.push(evt);
+      _events.push(evt);
    else
       _transitionTo(_nextState(evt));
 }
@@ -35,7 +35,7 @@ void StateMachine::OnEvent(const StateMachineEvent& evt)
 State* StateMachine::_nextState(const StateMachineEvent& evt)
 {
    std::pair<std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator,
-             std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = m_mTransitionTable.equal_range(_state);
+             std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator> range = _transitionTable.equal_range(_state);
 
    std::multimap<State*, std::pair<StateMachineEvent, State*>>::iterator itr = range.first;
 
@@ -88,7 +88,7 @@ void StateMachine::addTransition(const char* condition, const char* nextState)
 
 void StateMachine::registerTransition(State* state, const StateMachineEvent& evt, State* resultingState)
 {
-   m_mTransitionTable.insert(std::make_pair(state, std::make_pair(evt, resultingState)));
+   _transitionTable.insert(std::make_pair(state, std::make_pair(evt, resultingState)));
 }
 
 void StateMachine::registerTransition(const char* stateName, const char* condition, const char* resultingState, void* sender)
@@ -97,25 +97,22 @@ void StateMachine::registerTransition(const char* stateName, const char* conditi
    State* nextState = getState(resultingState);
 
    if (state && nextState) {
-      m_mTransitionTable.insert(std::make_pair(state, std::make_pair(StateMachineEvent(condition, sender), nextState)));
+      _transitionTable.insert(std::make_pair(state, std::make_pair(StateMachineEvent(condition, sender), nextState)));
    }
 }
 
 void StateMachine::initialize(void)
 {
-   if (this->Empty())
-      return;
-   
-   _transitionTo(this->At(0));
+   if (!this->Empty())
+       this->_transitionTo(this->At(0));
 }
 
 void StateMachine::reset(void)
 {
-	if (!this->Empty())
-		_transitionTo(this->At(0));
+   this->initialize();
    
-   while (!m_qEvents.empty())
-      m_qEvents.pop();
+   while (!_events.empty())
+      _events.pop();
 }
 
 void StateMachine::sendInput(const char* szCondition, void* pSender)
@@ -128,17 +125,17 @@ void StateMachine::update(float fTime)
    if (_state && !_state->onExecute(fTime)) {
       this->sendInput(EVT_STATE_END, this); // An internal condition...
    }
-   else if (_isBuffered && !m_qEvents.empty())
+   else if (_isBuffered && !_events.empty())
    {
       _transitionTimer += fTime;
 
       if (_transitionTimer >= _transitionFrequency)
       {
-         _transitionTo(_nextState(m_qEvents.front()));
+         _transitionTo(_nextState(_events.front()));
 
          _transitionTimer = 0.0f;
 
-         m_qEvents.pop();
+         _events.pop();
       }
    }
 }

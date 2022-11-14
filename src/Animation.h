@@ -72,6 +72,20 @@ public:
 
    void mirror(bool horizontal, bool vertical);
 
+   void setScale(vector2 scale) {
+       Renderable::setScale(scale);
+       for (unsigned int i = 0; i < m_Frames.Size(); i++) {
+           m_Frames[i]->GetSprite()->setScale(scale);
+       }
+   }
+
+   void setTint(Color color) {
+       Renderable::setTint(color);
+       for (unsigned int i = 0; i < m_Frames.Size(); i++) {
+           m_Frames[i]->GetSprite()->setTint(color);
+       }
+   }
+
    void center(void) {
       for (unsigned int i = 0; i < m_Frames.Size(); i++) {
          m_Frames[i]->GetSprite()->center();

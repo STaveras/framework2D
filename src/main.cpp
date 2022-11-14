@@ -105,12 +105,12 @@ int main(int argc, char **argv)
    #ifdef _DEBUG
          static unsigned int lastFPS = 0;
          if (DEBUGGING) {
-            if (engine->getTimer()->GetElapsedTime() >= 1.0f) {
+            if (engine->getTimer()->getElapsedTime() >= 1.0f) {
 
-               std::string framesPerSecond = "FPS: " + std::to_string(/*(lastFPS + */engine->getTimer()->GetFPS()/* / 2)*/) + "\n";
+               std::string framesPerSecond = "FPS: " + std::to_string(/*(lastFPS + */engine->getTimer()->getFPS()/* / 2)*/) + "\n";
                std::cout << framesPerSecond.c_str();
-               lastFPS = engine->getTimer()->GetFPS();
-               engine->getTimer()->Reset();
+               lastFPS = engine->getTimer()->getFPS();
+               engine->getTimer()->reset();
 
                static std::string windowTitle = window.getWindowTitle();
                

@@ -1,7 +1,9 @@
 // File: Animation.cpp
+
 #include "Animation.h"
 #include "Frame.h"
 #include "Sprite.h"
+
 Animation::Animation(void):
 	Renderable(RENDERABLE_TYPE_ANIMATION),
 	m_bForward(true),
@@ -95,7 +97,11 @@ Frame* Animation::createFrame(Sprite* sprite, float duration)
 	Frame* frame = m_Frames.Create();
 	frame->SetSprite(sprite);
 	frame->SetDuration(duration);
+
+	sprite->_appearance = this->_appearance;
+
 	_reset();
+
 	return frame;
 }
 
@@ -126,7 +132,7 @@ bool Animation::update(float fTime)
 	else
 	{
 		m_fTimer = 0.0f;
-		m_Frames[_frameIndex]->Reset();
+		m_Frames[_frameIndex]->reset();
 		_advanceFrame();
 	}
 

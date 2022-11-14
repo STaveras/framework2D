@@ -27,12 +27,12 @@ class StateMachine : public Factory<State>
 	void OnEvent(const StateMachineEvent& evt);
 
 protected:
-	std::queue<StateMachineEvent> m_qEvents;
-	std::multimap<State*, std::pair<StateMachineEvent, State*>> m_mTransitionTable;
-
-	State* _nextState(const StateMachineEvent& evt);
+	std::multimap<State*, std::pair<StateMachineEvent, State*>> _transitionTable;
+	std::queue<StateMachineEvent> _events;
 
 	void _transitionTo(State* nextState);
+
+	State* _nextState(const StateMachineEvent& evt);
 
 public:
 	StateMachine(void);

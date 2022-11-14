@@ -17,7 +17,7 @@ class Sound
 public:
 	void play(void);
 	void stop(void);
-	void Reset(void);
+	void reset(void);
 };
 
 typedef Sound Music;

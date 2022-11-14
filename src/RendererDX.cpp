@@ -204,20 +204,25 @@ void RendererDX::Render(void)
                   // We should be making *absolutely* sure that nothing that makes it here is NULL to begin with
                   if ((*o)) 
                   {
-                     if ((*o)->IsVisible())
+                     if ((*o)->isVisible())
                      {
                         switch ((*o)->getRenderableType())
                         {
                         case RENDERABLE_TYPE_SPRITE:
-                           _DrawImage((Sprite*)(*o));
-                           break;
-
+                        {
+                            Image* image = (Image*)(*o);
+                            _DrawImage(image,
+                                       image->getTintColor(),
+                                       image->getOffset());
+                        }
+                        break;
                         case RENDERABLE_TYPE_ANIMATION:
                         {
                            Animation* animation = (Animation*)(*o);
                            if (animation->getFrameCount()) {
                               _DrawImage(animation->getCurrentFrame()->GetSprite(), 
-                                         animation->getCurrentFrame()->appearance._tintColor);
+                                         animation->getCurrentFrame()->GetSprite()->_appearance._tintColor,
+                                         animation->getOffset());
                            }
                         }
                         break;

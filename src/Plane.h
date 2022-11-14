@@ -16,8 +16,10 @@ class Plane : public Collidable
 {
 	vector2 m_Normal;
 
+	// I want to change this to be v3 for 2D, and v4 for 3D
+
 public:
-	 Plane(void);
+	Plane(void):m_Normal(0,0){ }
 
 	vector2 GetNormal(void) const { return m_Normal; }
 	void SetNormal(const vector2& normal) { m_Normal = normal; }

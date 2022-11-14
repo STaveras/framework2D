@@ -19,7 +19,7 @@ public:
       _object = targetObject;
       _state = targetObject->getState();
       _force = _state->getForce();
-      _timer.Reset();
+      _timer.reset();
    }
 
 protected:
@@ -31,11 +31,11 @@ protected:
 
             _timer.update();
 
-            float scalar = 1.0f - (_timer.GetDeltaTime() / _degradeTime);
+            float scalar = 1.0f - (_timer.getDeltaTime() / _degradeTime);
 
             _state->setForce(_force * scalar);
 
-            if (_timer.GetElapsedTime() >= _degradeTime)
+            if (_timer.getElapsedTime() >= _degradeTime)
             {
                // Original force; should we just set to 0, instead...?
                _object->getState()->setForce(_force);
@@ -44,7 +44,7 @@ protected:
             }
          }
          else
-            _timer.Reset();
+            _timer.reset();
       }
       return true;
    }

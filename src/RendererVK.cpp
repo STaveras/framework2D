@@ -831,7 +831,7 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	// 			{
 	// 				for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
 	// 				{
-	// 					if ((*o)->IsVisible())
+	// 					if ((*o)->isVisible())
 	// 					{
 	// 						switch ((*o)->getRenderableType())
 	// 						{

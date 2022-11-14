@@ -69,7 +69,7 @@ void Stage::update(float fTime)
    // TODO : This will be for adding special background items
 }
 
-void Stage::Reset()
+void Stage::reset()
 {
    std::list<Layer>::iterator itr = m_lsBackgroundLayers.begin();
 

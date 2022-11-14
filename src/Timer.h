@@ -18,11 +18,13 @@
 
 class Timer
 {
-	double			m_dDelta;
-	double			m_dFrameCap;
+	double _timeMultiplier;
 
-	unsigned int	m_uiTicks;
-	unsigned int	m_uiCurrentFPS;
+	double			_delta;
+	double			_frameCap;
+
+	unsigned int	_ticks;
+	unsigned int	_framesPerSecond; // moar like ticks per second m i rite??? :(
 
 private:
 	// Internal timer
@@ -48,13 +50,17 @@ public:
 	Timer(void);
 	~Timer(void) {}
 
-	unsigned int GetFPS(void) const { return m_uiCurrentFPS; }
-	double GetDeltaTime(void) const { return m_dDelta; }
-	double GetElapsedTime(void) const;
+	double getTimeMultiplier(void) const { return _timeMultiplier; }
+	unsigned int getFPS(void) const { return _framesPerSecond; }
+	double getDeltaTime(void) const { return _delta * _timeMultiplier; }
+	double getElapsedTime(void) const;
 
-	void LimitFrameRate(unsigned int uiFrameRate);
-	std::string GetTimeStamp(void) const;
+	void limitFrameRate(unsigned int uiFrameRate);
+
+	void setTimeMultiplier(double timeMultiplier) { _timeMultiplier = timeMultiplier; }
 
 	void update(void);
-	void Reset(void);
+	void reset(void);
+
+	static std::string getTimeStamp(void);
 };

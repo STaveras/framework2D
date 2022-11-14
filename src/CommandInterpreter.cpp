@@ -103,7 +103,7 @@ bool CommandInterpreter::_ProcessCommand(char* szCommand)
 				{
 					pAction = _ButtonInBuffer(szButton, dwBtnIndex);
 
-					if(pAction && (!pPrevAction || pAction->simultaneous(*pPrevAction))) //fabsf(pAction->GetTimeStamp() - pPrevAction->GetTimeStamp()) <= COMMAND_SIMULTANEOUS
+					if(pAction && (!pPrevAction || pAction->simultaneous(*pPrevAction))) //fabsf(pAction->getTimeStamp() - pPrevAction->getTimeStamp()) <= COMMAND_SIMULTANEOUS
 					{
 						bPass = true;
 						dwBtnIndex++;
