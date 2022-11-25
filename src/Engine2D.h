@@ -17,9 +17,9 @@ class Engine2D : public ISingleton<Engine2D>
    friend ISingleton<Engine2D>;
 
    bool _hasQuit;
-   Game* _pGame;
-   IInput* _pInput;
-   IRenderer* _pRenderer;
+   Game* _game;
+   IInput* _input;
+   IRenderer* _renderer;
 
 public:
    Engine2D(void);
@@ -27,17 +27,17 @@ public:
 
    static bool hasQuit(void) { return Engine2D::getInstance()->_hasQuit; }
 
-   static Game* getGame(void) { return Engine2D::getInstance()->_pGame; }
-   static void setGame(Game* game) { Engine2D::getInstance()->_pGame = game; }
+   static Game* getGame(void) { return Engine2D::getInstance()->_game; }
+   static void setGame(Game* game) { Engine2D::getInstance()->_game = game; }
 
    static EventSystem* getEventSystem(void);
    static Timer* getTimer(void);
 
    static IRenderer* getRenderer(void);
-   static void setRenderer(IRenderer* renderer) { Engine2D::getInstance()->_pRenderer = renderer; }
+   static void setRenderer(IRenderer* renderer) { Engine2D::getInstance()->_renderer = renderer; }
 
-   static IInput* getInput(void) { return Engine2D::getInstance()->_pInput; } // Add support for multiple devices...?
-   static void setInputInterface(IInput* pInput) { Engine2D::getInstance()->_pInput = pInput; }
+   static IInput* getInput(void) { return Engine2D::getInstance()->_input; } // Add support for multiple devices...?
+   static void setInputInterface(IInput* pInput) { Engine2D::getInstance()->_input = pInput; }
 
    void initialize(void);
    void update(void);

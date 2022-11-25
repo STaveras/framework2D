@@ -18,7 +18,7 @@ class InputManager
 {
 	float m_fElapsed;
 	EventSystem* m_pEventSystem;
-	IInput* m_pInput;
+	IInput* _input;
 
 	Factory<Controller> m_Controllers;
 
@@ -26,18 +26,18 @@ public:
 	InputManager(void);
 	~InputManager(void);
 
-	IKeyboard* GetKeyboard(void) { return m_pInput->GetKeyboard(); }
-	IMouse* GetMouse(void) { return m_pInput->GetMouse(); }
+	IKeyboard* getKeyboard(void) { return _input->getKeyboard(); }
+	IMouse* getMouse(void) { return _input->getMouse(); }
 
-	Controller* GetController(unsigned int uiIndex) { return m_Controllers.At(uiIndex); }
+	Controller* getController(unsigned int uiIndex) { return m_Controllers.at(uiIndex); }
 
-	void SetEventSystem(EventSystem* pEventSystem) { m_pEventSystem = pEventSystem; }
-	void setInputInterface(IInput* pInput) { m_pInput = pInput; }
+	void setEventSystem(EventSystem* pEventSystem) { m_pEventSystem = pEventSystem; }
+	void setInputInterface(IInput* pInput) { _input = pInput; }
 
-	Controller* CreateController(void);
-	void DestroyController(Controller* controller) { m_Controllers.Destroy(controller); }
+	Controller* createController(void);
+	void destroyController(Controller* controller) { m_Controllers.destroy(controller); }
 
-	void initialize(EventSystem* pEventSystem, IInput* pInput) { m_pEventSystem = pEventSystem; m_pInput = pInput; }
+	void initialize(EventSystem* pEventSystem, IInput* pInput) { m_pEventSystem = pEventSystem; _input = pInput; }
 	void update(float fTime);
 	void shutdown(void);
 };

@@ -7,6 +7,7 @@
 #define _STATEMACHINE_H
 
 #include "Factory.h"
+#include "Cyclable.h"
 #include "State.h"
 #include "StateMachineEvent.h"
 
@@ -16,7 +17,7 @@
 
 #define EVT_STATE_END "EVT_STATE_END"
 
-class StateMachine : public Factory<State>
+class StateMachine : public Factory<State>, Cyclable
 {
 	State* _state;
 
@@ -24,13 +25,11 @@ class StateMachine : public Factory<State>
 	float _transitionFrequency;
 	float _transitionTimer;
 
-	void OnEvent(const StateMachineEvent& evt);
+	void _onEvent(const StateMachineEvent& evt);
 
 protected:
 	std::multimap<State*, std::pair<StateMachineEvent, State*>> _transitionTable;
 	std::queue<StateMachineEvent> _events;
-
-	void _transitionTo(State* nextState);
 
 	State* _nextState(const StateMachineEvent& evt);
 
@@ -49,14 +48,18 @@ public:
 	State* getState(void) const { return _state; }
 	State* getState(const char* szName);
 
+	void setState(State* state);
+	void setState(const char* name) {
+		this->setState(getState(name));
+	}
+
 	void addTransition(const char* condition, const char* nextState);
 	void registerTransition(State* pState, const StateMachineEvent& evt, State* pStateResult);
 	void registerTransition(const char* szStateName, const char* szCondition, const char* szResultState, void* sender = NULL);
 
-	void initialize(void);
-	void reset(void);
-
+	virtual void start(void);
 	virtual void update(float fTime);
+	virtual void finish(void);
 
 	void sendInput(const char* condition, void* sender = NULL);
 

@@ -74,7 +74,7 @@ int main(int argc, char **argv)
       Renderer::window = &window;
 
       window.initialize(hInstance, lpCmdLine);
-      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance);
+      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::CreateDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
    else
@@ -85,8 +85,12 @@ int main(int argc, char **argv)
       pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window); 
    }
 
-   pRenderer->setFullScreen(System::checkArgumentsForFullscreen(argc, argv));
-   pRenderer->setVerticalSync(System::checkArgumentsForVSync(argc, argv));
+   // We need to only call setFullscreen or setVericalSync when the command line argument for either is present
+   if (System::checkArgumentsForFullscreen(argc, argv))
+      pRenderer->setFullScreen(true);
+   
+   if (System::checkArgumentsForVSync(argc, argv))
+      pRenderer->setVerticalSync(true);
 
    Engine2D *engine = Engine2D::getInstance();
    engine->setInputInterface(pInput);

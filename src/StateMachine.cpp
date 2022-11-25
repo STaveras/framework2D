@@ -19,17 +19,17 @@ StateMachine::StateMachine(void) :
 }
 
 StateMachine::~StateMachine(void) {
-   // Innecessary but for completeness' sake
    _transitionTable.clear();
 }
 
 // ...I want to decouple this
-void StateMachine::OnEvent(const StateMachineEvent& evt)
+void StateMachine::_onEvent(const StateMachineEvent& evt)
 {
    if (_isBuffered)
       _events.push(evt);
-   else
-      _transitionTo(_nextState(evt));
+   else if (State* state = _nextState(evt)) { // This is where the NULL check has to appear (:
+      setState(state);      
+   }
 }
 
 State* StateMachine::_nextState(const StateMachineEvent& evt)
@@ -47,25 +47,26 @@ State* StateMachine::_nextState(const StateMachineEvent& evt)
    return NULL;
 }
 
-void StateMachine::_transitionTo(State* nextState)
+void StateMachine::setState(State* state)
 {
-   if (nextState) {
+   if (state) {
 
       if (_state) {
-         _state->onExit(nextState);
+         _state->onExit(state);
       }
 
-      nextState->onEnter(_state);
-
-      _state = nextState;
+      state->onEnter(_state);
    }
+   
+   // We're allowing externally setting of "NULL"
+   _state = state;
 }
 
 State* StateMachine::getState(const char* szName)
 {
-   Factory<State>::const_factory_iterator itr = this->Begin();
+   Factory<State>::const_factory_iterator itr = this->begin();
 
-   for (; itr != this->End(); itr++) {
+   for (; itr != this->end(); itr++) {
       if (!strcmp(szName, (*itr)->getName()))
          return (*itr);
    }
@@ -75,7 +76,7 @@ State* StateMachine::getState(const char* szName)
 
 State* StateMachine::addState(const char* name)
 {
-   State* state = this->Create();
+   State* state = this->create();
    state->setName(name);
 
    return state;
@@ -83,7 +84,7 @@ State* StateMachine::addState(const char* name)
 
 void StateMachine::addTransition(const char* condition, const char* nextState)
 {
-   registerTransition(this->At(this->Size() - 1)->getName(), condition, nextState);
+   registerTransition(this->at(this->size() - 1)->getName(), condition, nextState);
 }
 
 void StateMachine::registerTransition(State* state, const StateMachineEvent& evt, State* resultingState)
@@ -101,23 +102,23 @@ void StateMachine::registerTransition(const char* stateName, const char* conditi
    }
 }
 
-void StateMachine::initialize(void)
+void StateMachine::start(void)
 {
-   if (!this->Empty())
-       this->_transitionTo(this->At(0));
+   if (!_state) {
+      if (!this->empty())
+         this->setState(this->at(0));
+   }
 }
 
-void StateMachine::reset(void)
+void StateMachine::finish(void)
 {
-   this->initialize();
-   
    while (!_events.empty())
       _events.pop();
 }
 
 void StateMachine::sendInput(const char* condition, void* sender)
 {
-   this->OnEvent(StateMachineEvent(condition, sender));
+   this->_onEvent(StateMachineEvent(condition, sender));
 }
 
 void StateMachine::update(float fTime)
@@ -131,7 +132,7 @@ void StateMachine::update(float fTime)
 
       if (_transitionTimer >= _transitionFrequency)
       {
-         _transitionTo(_nextState(_events.front()));
+         setState(_nextState(_events.front()));
 
          _transitionTimer = 0.0f;
 
@@ -177,7 +178,7 @@ bool StateMachine::loadTransitionTableFromFile(const char* szFilename)
                   strsubst(szStateName, '\0', ",");
 
                   if (!this->getState(szStateName) && !STR_EQUALS(szStateName, ""))
-                     this->Create(State(szStateName));
+                     this->create(State(szStateName));
 
                   // We used to be able to explicitly set the initial state... 
                   //if (!m_pStartState && GetState(szStateName))
@@ -237,4 +238,3 @@ bool StateMachine::loadTransitionTableFromFile(const char* szFilename)
 
    return true;
 }
-// Author: Stanley Taveras

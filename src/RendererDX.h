@@ -20,19 +20,19 @@ public:
    ~RendererDX(void);
 
    HWND getHWND(void) const { return m_hWnd; }
-   LPDIRECT3D9 GetD3D(void) const { return m_pD3D; }
-   LPDIRECT3DDEVICE9 GetD3DDevice(void) const { return m_pD3DDevice; }
-   LPD3DXSPRITE GetD3DXSprite(void) const { return m_pD3DSprite; }
+   LPDIRECT3D9 getD3D(void) const { return m_pD3D; }
+   LPDIRECT3DDEVICE9 getD3DDevice(void) const { return m_pD3DDevice; }
+   LPD3DXSPRITE getD3DXSprite(void) const { return m_pD3DSprite; }
 
 private:
-   ITexture* CreateTexture(const char* szFilename, Color colorKey = 0);
-   void DestroyTexture(ITexture* texture);
+   ITexture* createTexture(const char* szFilename, Color colorKey = 0);
+   void destroyTexture(ITexture* texture);
 
    //void CreateShader(const char* file, int*);
 
    void initialize(void);
    void shutdown(void);
-   void Render(void);
+   void render(void);
 };
 #endif //_RENDERER_H
 #endif

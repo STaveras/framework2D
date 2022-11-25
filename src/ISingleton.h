@@ -5,7 +5,6 @@ template<class T>
 class ISingleton
 {
 	ISingleton(const ISingleton& i);
-	ISingleton& operator=(const ISingleton& i);
 
 public:
 	static T* getInstance(void) { static T instance; return &instance; }

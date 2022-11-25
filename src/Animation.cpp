@@ -30,7 +30,7 @@ void Animation::_advanceFrame(void)
 {
 	if (m_bForward)
 	{
-		if (_frameIndex == m_Frames.Size() - 1)
+		if (_frameIndex == m_Frames.size() - 1)
 			_lastFrame();
 		else
 			_frameIndex++;
@@ -68,13 +68,13 @@ void ::Animation::_reset(void)
 	if (m_bForward)
 		_frameIndex = 0;
 	else
-		_frameIndex = (unsigned int)(m_Frames.Size() - 1);
+		_frameIndex = (unsigned int)(m_Frames.size() - 1);
 }
 
 void Animation::setPosition(vector2 position)
 {
-	Factory<Frame>::factory_iterator i = m_Frames.Begin();
-	for (; i != m_Frames.End(); i++)
+	Factory<Frame>::factory_iterator i = m_Frames.begin();
+	for (; i != m_Frames.end(); i++)
 		(*i)->GetSprite()->setPosition(position);
 }
 
@@ -82,8 +82,8 @@ void Animation::mirror(bool horizontal, bool vertical)
 {
 	Renderable::mirror(horizontal, vertical);
 
-	Factory<Frame>::factory_iterator i = m_Frames.Begin();
-	for (; i != m_Frames.End(); i++)
+	Factory<Frame>::factory_iterator i = m_Frames.begin();
+	for (; i != m_Frames.end(); i++)
 		(*i)->GetSprite()->mirror(horizontal, vertical);
 }
 
@@ -94,7 +94,7 @@ void Animation::mirror(bool horizontal, bool vertical)
 
 Frame* Animation::createFrame(Sprite* sprite, float duration)
 {
-	Frame* frame = m_Frames.Create();
+	Frame* frame = m_Frames.create();
 	frame->SetSprite(sprite);
 	frame->SetDuration(duration);
 
@@ -107,13 +107,13 @@ Frame* Animation::createFrame(Sprite* sprite, float duration)
 
 void Animation::removeFrame(Frame* frame)
 {
-	Factory<Frame>::factory_iterator itr = m_Frames.Begin();
+	Factory<Frame>::factory_iterator itr = m_Frames.begin();
 
-	for(; itr != m_Frames.End(); itr++)
+	for(; itr != m_Frames.end(); itr++)
 	{
 		if(frame == (*itr))
 		{
-			m_Frames.Erase(itr);
+			m_Frames.erase(itr);
 			break;
 		}
 	}
@@ -121,7 +121,7 @@ void Animation::removeFrame(Frame* frame)
 
 bool Animation::update(float fTime)
 {
-	if (!m_bPlaying || !m_Frames.Size())
+	if (!m_bPlaying || !m_Frames.size())
 		return false;
 
 	if (m_fTimer < m_Frames[_frameIndex]->GetDuration() && m_Frames[_frameIndex]->GetDuration() > 0)

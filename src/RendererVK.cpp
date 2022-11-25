@@ -825,7 +825,7 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	// 			m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 	// 		}
 
-	// 		if (!_RenderLists.Empty())
+	// 		if (!_RenderLists.empty())
 	// 		{
 	// 			for (unsigned int i = 0; i < _RenderLists.Size(); i++)
 	// 			{
@@ -1108,7 +1108,7 @@ void RendererVK::shutdown(void)
 	}
 }
 
-void RendererVK::Render(void)
+void RendererVK::render(void)
 {
 #if _DEBUG
 	m_bStaticBG = false;
@@ -1123,7 +1123,7 @@ void RendererVK::Render(void)
 	//     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 	// };
 
-	IRenderer::Render();
+	IRenderer::render();
 
 	if (_device == VK_NULL_HANDLE)
 		return;
@@ -1199,7 +1199,7 @@ void RendererVK::Render(void)
 	};
 }
 
-ITexture* RendererVK::CreateTexture(const char* szFilename, Color colorKey)
+ITexture* RendererVK::createTexture(const char* szFilename, Color colorKey)
 {
 	ITexture* texture = NULL;
 

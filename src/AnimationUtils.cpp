@@ -140,13 +140,26 @@ namespace Animations {
    }
 
    // Only works when each Frame have the same dimensions
-   void createFramesForAnimation(Animation* animation, Texture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory)
+   void createFramesForAnimation(Animation* animation, Texture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory, unsigned int startIndex, unsigned int count)
    {
+      if (!animation || !spriteSheet)
+         return;
+
       vector2 frameCounts = { spriteSheet->getWidth() / frameDimensions.x, spriteSheet->getHeight() / frameDimensions.y };
 
-      for (int x = 0; x < frameCounts.x; x++) {
-         for (int y = 0; y < frameCounts.y; y++) {
-            animation->createFrame(spriteFactory.Create(Sprite(spriteSheet, { x * (long)frameDimensions.x, y * (long)frameDimensions.y,
+      if (count == 0) {
+         count = (unsigned int)(frameCounts.x * frameCounts.y);
+      }
+
+      for (int y = 0; y < frameCounts.y; y++) {
+         for (int x = 0; x < frameCounts.x; x++) {
+            if ((unsigned int)((x + 1) * (y + 1)) < startIndex)
+               continue;
+
+            if (count-- == 0)
+               break;
+
+            animation->createFrame(spriteFactory.create(Sprite(spriteSheet, { x * (long)frameDimensions.x, y * (long)frameDimensions.y,
                                                                              (x + 1) * (long)frameDimensions.x, (y + 1) * (long)frameDimensions.y })));
          }
       }

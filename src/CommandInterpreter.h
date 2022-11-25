@@ -20,12 +20,12 @@ class Controller;
 class CommandInterpreter: public Cyclable
 {
 	float m_fResetTimer;
-	EventSystem* m_pEventSystem;
+	EventSystem* _eventSystem;
 	Factory<Command> m_Commands;
 
 	std::vector<Action> m_vButtons;
 	std::vector<Action> m_vHeldButtons;
-	std::map<ActionName, float> m_mHoldTimes;
+	std::map<std::string, float> m_mHoldTimes;
 
 protected:
 	bool _ProcessCommand(char* szCommand);
@@ -39,8 +39,8 @@ public:
 	void AddCommand(const char* szCommand);
 	void RemoveCommand(const char* szCommand);
 
-	void RegisterKeyPress(ActionName btnID, float fTimeStamp);
-	void RegisterKeyRelease(ActionName btnID, float fTimeStamp);
+	void RegisterKeyPress(std::string actionName, float time);
+	void RegisterKeyRelease(std::string actionName, float time);
 
 	void start(EventSystem* pEventSystem, Controller* pGamePad);
 	void update(float fTime);

@@ -4,118 +4,118 @@
 // Modified: 3/29/2010
 
 template<typename Type>
-Type* Factory<Type>::At(unsigned int index)
+Type* Factory<Type>::at(unsigned int index)
 {
-	typename std::list<Type *>::iterator itr = m_lsItems.begin();
-	for(unsigned int i = 0; itr != m_lsItems.end(); itr++, i++)
-	{
+	typename std::list<Type *>::iterator itr = this->begin();
+	for (unsigned int i = 0; itr != this->end(); itr++, i++) {
 		if (i == index)
 			return (*itr);
 	}
-
 	return NULL;
 }
 
 template<typename Type>
-Type* Factory<Type>::Create()
+Type* Factory<Type>::create()
 {
 	Type* item = new Type();
-	m_lsItems.push_back(item);
-
+	this->push_back(item);
 	return item;
 }
 
 template<typename Type>
-Type* Factory<Type>::Create(const Type& rhs)
+Type* Factory<Type>::create(const Type& rhs)
 {
 	Type* item = new Type(rhs);
-	m_lsItems.push_back(item);
-
+	this->push_back(item);
 	return item;
 }
 
 template<typename Type>
-void Factory<Type>::Destroy(Type* item)
+void Factory<Type>::destroy(Type* item)
 {
-	typename std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = this->begin();
 
-	for(;itr != m_lsItems.end(); itr++)
+	for (;itr != this->end(); itr++)
 	{
-		if((*itr) == item)
+		if ((*itr) == item)
 		{
 			delete (*itr);
-			m_lsItems.erase(itr);
+			this->erase(itr);
 			break;
 		}
 	}
 }
 
 template<typename Type>
-void Factory<Type>::Clear()
+void Factory<Type>::clear()
 {
-	typename std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = this->begin();
 
-	for(;itr != m_lsItems.end(); itr++) {
+	for(;itr != this->end(); itr++) {
 		delete (*itr);
 	}
 
-	m_lsItems.clear();
+	std::list<Type*>::clear();
 }
 
 template<typename Type>
-void Factory<Type>::Store(Type* item)
-{	
-	m_lsItems.push_back(item);
-}
-
-template<typename Type>
-void Factory<Type>::Erase(unsigned int index)
+void Factory<Type>::store(Type* item)
 {
-	typename std::list<Type*>::iterator itr = m_lsItems.begin();
+	this->push_back(item);
+}
 
-	for(unsigned int i = 0; itr != m_lsItems.end(); itr++, i++)
+template<typename Type>
+void Factory<Type>::erase(unsigned int index)
+{
+	typename std::list<Type*>::iterator itr = this->begin();
+
+	for (unsigned int i = 0; itr != this->end(); itr++, i++)
 	{
-		if(i == index)
-		{
-			m_lsItems.erase(itr);
+		if (i == index) {
+			this->erase(itr);
 		}
 	}
 }
 
 template<typename Type>
-Type* Factory<Type>::Find(const Type& itemDesc)
+void Factory<Type>::erase(factory_iterator itr) { 
+	std::list<Type*>::erase(itr); 
+}
+
+template<typename Type>
+void Factory<Type>::erase(const_factory_iterator itr) {
+	std::list<Type*>::erase(itr); 
+}
+
+template<typename Type>
+Type* Factory<Type>::find(const Type& itemDesc)
 {
 	Type* pReturn = NULL;
-	typename std::list<Type*>::iterator itr = m_lsItems.begin();
+	typename std::list<Type*>::iterator itr = this->begin();
 
-	for(;itr != m_lsItems.end(); itr++)
-	{
-		if(itemDesc == *(*itr))
-		{
+	for (;itr != this->end(); itr++) {
+		if (itemDesc == *(*itr)) {
 			pReturn = (*itr);
 		}
 	}
-
 	return pReturn;
 }
 
 template<typename Type>
 template<class Derived>
-Derived* Factory<Type>::CreateDerived(void)
+Derived* Factory<Type>::createDerived(void)
 {
 	Derived* item = new Derived();
-	m_lsItems.push_back((Type*)item); // Would using dynamic cast here be safer...?
-
+	this->push_back((Type*)item); // Would using dynamic cast here be safer...?
 	return item;
 }
 
 template<typename Type>
 template<class Derived>
-Derived* Factory<Type>::CreateDerived(const Derived& rhs)
+Derived* Factory<Type>::createDerived(const Derived& rhs)
 {
 	Derived* item = new Derived(rhs);
-	m_lsItems.push_back((Type*)item);
-
+	this->push_back((Type*)item);
 	return item;
 }
 
@@ -128,15 +128,15 @@ bool Factory<Type>::operator==(Factory<Type>& f)
 template<typename Type>
 bool Factory<Type>::operator==(const Factory<Type>& f) const
 {
-	if (this->Size() == f.Size())
+	if (this->size() == f.size())
 	{
-		typename std::list<Type*>::const_iterator i = m_lsItems.begin();
-		typename std::list<Type*>::const_iterator j = f.m_lsItems.begin();
+		typename std::list<Type*>::const_iterator i = this->begin();
+		typename std::list<Type*>::const_iterator j = f.begin();
 
-		for (; i != m_lsItems.end(); i++, j++)
+		for (; i != this->end(); i++, j++)
 			if ((*i) != (*j))
 				return false;
-	}
 
+	}
 	return true;
 }

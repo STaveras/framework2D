@@ -1,13 +1,11 @@
 
 #include "Controller.h"
 
-Action* Controller::getActions(ActionName eKey)
+Action* Controller::getAction(std::string actionName)
 {
 	std::list<Action>::iterator itr = _actions.begin();
-	for (;itr != _actions.end(); itr++)
-	{
-		if (itr->getActionName() == eKey)
-		{
+	for (;itr != _actions.end(); itr++) {
+		if (itr->getActionName() == actionName) {
 			return &(*itr);
 		}
 	}
@@ -20,17 +18,16 @@ void Controller::removeAction(Action action)
 	std::list<Action>::iterator itr = _actions.begin();
 	for (;itr != _actions.end(); itr++)
 	{
-		if(action == (*itr))
-		{
+		if (action == (*itr)) {
 			_actions.erase(itr);
 			break;
 		}
 	}
 }
 
-bool Controller::buttonPressed(ActionName actionName)
+bool Controller::buttonPressed(std::string actionName)
 {
-	if (m_pInput)
+	if (_input)
 	{
 		std::list<Action>::iterator itr = _actions.begin();
 		for (;itr != _actions.end(); itr++)
@@ -41,7 +38,7 @@ bool Controller::buttonPressed(ActionName actionName)
 
 				for (; itr2 != itr->getAssignments().end(); itr2++)
 				{
-					if (m_pInput->GetKeyboard()->KeyPressed((*itr2)))
+					if (_input->getKeyboard()->KeyPressed((*itr2)))
 					{
 						return true;
 					}
@@ -55,9 +52,9 @@ bool Controller::buttonPressed(ActionName actionName)
 	return false;
 }
 
-bool Controller::buttonReleased(ActionName actionName)
+bool Controller::buttonReleased(std::string actionName)
 {
-	if(m_pInput)
+	if(_input)
 	{
 		std::list<Action>::iterator itr = _actions.begin();
 		for(;itr != _actions.end(); itr++)
@@ -68,7 +65,7 @@ bool Controller::buttonReleased(ActionName actionName)
 
 				for(; itr2 != itr->getAssignments().end(); itr2++)
 				{
-					if(m_pInput->GetKeyboard()->KeyReleased((*itr2)))
+					if(_input->getKeyboard()->KeyReleased((*itr2)))
 					{
 						return true;
 					}

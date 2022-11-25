@@ -41,7 +41,7 @@ public:
    float getSpeed(void) const { return m_fSpeed; }
    const char* getName(void) const { return m_szName.c_str(); }
    size_t getCurrentFrameIndex(void) const { return _frameIndex; }
-   size_t getFrameCount(void) { return m_Frames.Size(); }
+   size_t getFrameCount(void) { return m_Frames.size(); }
    Frame* getCurrentFrame(void) { return m_Frames[_frameIndex]; }
    Frame* operator[](unsigned int i) { return m_Frames[i]; }
 
@@ -49,18 +49,19 @@ public:
    void setMode(Mode eMode) { m_eMode = eMode; }
    void setSpeed(float fSpeed) { m_fSpeed = fSpeed; }
    void setName(const char* szName) { m_szName = szName; }
+
    void setPosition(float x, float y) { setPosition(vector2(x, y)); }
    void setPosition(vector2 position);
 
    Frame* createFrame(Sprite* sprite, float duration = 0.0f);
 
-   void addFrame(Frame* frame) { m_Frames.Store(frame); }
+   void addFrame(Frame* frame) { m_Frames.store(frame); }
    void removeFrame(Frame* frame);
 
    // If you've set individual frame durations, this will overwrite them all
    void setFrameRate(int targetFrameRate) {
-      float frameTime = (1.0f / targetFrameRate) * m_Frames.Size();
-      for (unsigned int i = 0; i < m_Frames.Size(); i++) {
+      float frameTime = (1.0f / targetFrameRate) * m_Frames.size();
+      for (unsigned int i = 0; i < m_Frames.size(); i++) {
          m_Frames[i]->SetDuration(frameTime);
       }
    }
@@ -74,20 +75,20 @@ public:
 
    void setScale(vector2 scale) {
        Renderable::setScale(scale);
-       for (unsigned int i = 0; i < m_Frames.Size(); i++) {
+       for (unsigned int i = 0; i < m_Frames.size(); i++) {
            m_Frames[i]->GetSprite()->setScale(scale);
        }
    }
 
    void setTint(Color color) {
        Renderable::setTint(color);
-       for (unsigned int i = 0; i < m_Frames.Size(); i++) {
+       for (unsigned int i = 0; i < m_Frames.size(); i++) {
            m_Frames[i]->GetSprite()->setTint(color);
        }
    }
 
    void center(void) {
-      for (unsigned int i = 0; i < m_Frames.Size(); i++) {
+      for (unsigned int i = 0; i < m_Frames.size(); i++) {
          m_Frames[i]->GetSprite()->center();
       }
    }

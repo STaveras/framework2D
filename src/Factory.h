@@ -12,47 +12,50 @@
 #include <map>
 
 template<class Type>
-class Factory
+class Factory: public std::list<Type*>
 {
-	std::list<Type*> m_lsItems;
-
 public:
 	Factory(void) {}
-	~Factory() { Clear(); }
+	~Factory() { clear(); }
+
+	//using std::list<Type*>::begin;
+	//using std::list<Type*>::end;
 
 	typedef typename std::list<Type*>::iterator factory_iterator;
 	typedef typename std::list<Type*>::const_iterator const_factory_iterator;
 
-	Type* At(unsigned int index);
-	factory_iterator Begin(void) { return m_lsItems.begin(); }
-	const_factory_iterator Begin(void) const { return m_lsItems.begin(); }
-	void Destroy(Type* item);	
-	factory_iterator End(void) { return m_lsItems.end(); }
-	const_factory_iterator End(void) const { return m_lsItems.end(); }
-	bool Empty(void) const { return m_lsItems.empty(); }
-	void Erase(unsigned int index);
-	void Erase(factory_iterator itr) { m_lsItems.erase(itr); }
-	void Erase(const_factory_iterator itr) { m_lsItems.erase(itr); }
-	void Clear(void);
-	void Store(Type* item);
-	size_t Size(void) const { return m_lsItems.size(); }
+	factory_iterator begin(void) { return std::list<Type*>::begin(); }
+	factory_iterator end(void) { return std::list<Type*>::end(); }
 
-   Type* Find(const Type& itemDesc); // BROKEN
+	const_factory_iterator begin(void) const { return std::list<Type*>::begin(); }
+	const_factory_iterator end(void) const { return std::list<Type*>::end(); }
+
+	Type* at(unsigned int index);
+	size_t size(void) const { return std::list<Type*>::size(); }
+	bool empty(void) const { return std::list<Type*>::empty(); }
+	void erase(unsigned int index);
+	void erase(factory_iterator itr); //{ std::list<Type*>::erase(itr); }
+	void erase(const_factory_iterator itr); //{ std::list<Type*>::erase(itr); }
+	void destroy(Type* item); // Do not call destroy on 'stored' items
+	void store(Type* item);
+	void clear(void);
+
+   Type* find(const Type& itemDesc); // BROKEN
    //Type* Factory<Type>::Filter(const char *attribute, const void* value);
 
 	template<class _Pr3>
-	void Sort(_Pr3 _Pred) { m_lsItems.sort(_Pred); }
+	void sort(_Pr3 _Pred) { std::list<Type*>::sort(_Pred); }
 
-	Type* Create(void);
-	Type* Create(const Type& rhs); // Copy-contructor create
-
-	template<class Derived>
-	Derived* CreateDerived(void);
+	Type* create(void); // Items made with create and be destroyed for early clean up
+	Type* create(const Type& rhs); // Copy-contructor create
 
 	template<class Derived>
-	Derived* CreateDerived(const Derived& rhs); // Copy-contructor create
+	Derived* createDerived(void);
 
-	Type* operator[](unsigned int i) { return this->At(i); }
+	template<class Derived>
+	Derived* createDerived(const Derived& rhs); // Copy-contructor create
+
+	Type* operator[](unsigned int i) { return this->at(i); }
 	bool operator==(Factory<Type>& f);
 	bool operator==(const Factory<Type>& f) const;
 };

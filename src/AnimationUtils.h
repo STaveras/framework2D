@@ -20,5 +20,10 @@ namespace Animations
    void destroyAnimation(Animation *animation);
 
    // Only works when each Frame have the same dimensions
-   void createFramesForAnimation(Animation* animation, Texture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory);
+   void createFramesForAnimation(Animation* animation, 
+                                 Texture* spriteSheet, 
+                              vector2 frameDimensions, 
+                       Factory<Sprite>& spriteFactory,
+                              unsigned int startIndex = 0, 
+                              unsigned int count = 0);
 }

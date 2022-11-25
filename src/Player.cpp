@@ -7,8 +7,8 @@ void Player::_OnKeyPress(const Event& e)
 {
    InputEvent* inputEvent = (InputEvent*)&e;
 
-   if (inputEvent->GetGamePad() == this->_pad) {
-      this->_object->sendInput(((std::string)((InputEvent*)&e)->setActionName() + "_PRESSED").c_str(), e.getSender());
+   if (inputEvent->getController() == this->_pad) {
+      this->_object->sendInput(((std::string)((InputEvent*)&e)->getActionName() + "_PRESSED").c_str(), e.getSender());
    }
 }
 
@@ -16,8 +16,8 @@ void Player::_OnKeyRelease(const Event& e)
 {
    InputEvent* inputEvent = (InputEvent*)&e;
 
-   if (inputEvent->GetGamePad() == this->_pad) {
-      this->_object->sendInput(((std::string)((InputEvent*)&e)->setActionName() + "_RELEASED").c_str(), e.getSender());
+   if (inputEvent->getController() == this->_pad) {
+      this->_object->sendInput(((std::string)((InputEvent*)&e)->getActionName() + "_RELEASED").c_str(), e.getSender());
    }
 }
 
@@ -29,11 +29,25 @@ void Player::start(void)
 
 void Player::update(float time)
 { 
-	//if (Engine2D::getInput()->GetKeyboard()->KeyDown())
-	//	_heading += vector2(-1, 0);
+   Controller* controller = this->getController();	
+
+   for (Action action : controller->getActions()) {
+      for (auto key : action.getAssignments()) {
+         if (Engine2D::getInput()->getKeyboard()->KeyDown(key)) {
+            if (this->getGameObject()) {
+               this->getGameObject()->sendInput((action.getActionName() + "_DOWN").c_str(), this);
+            }
+         }
+         else if (Engine2D::getInput()->getKeyboard()->KeyUp(key)) {
+            if (this->getGameObject()) {
+               this->getGameObject()->sendInput((action.getActionName() + "_UP").c_str(), this);
+            }
+         }
+      }
+   }
 }
 
-void Player::shutdown(void)
+void Player::finish(void)
 {
 	 Engine2D::getInstance()->getEventSystem()->unregister<Player>(EVT_KEYRELEASE, this, &Player::_OnKeyRelease);
 	 Engine2D::getInstance()->getEventSystem()->unregister<Player>(EVT_KEYPRESS, this, &Player::_OnKeyPress);

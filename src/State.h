@@ -19,6 +19,13 @@ public:
 
    virtual ~State(void) { if (m_szName) free(m_szName); }
 
+   //State& operator=(const State& state) {
+   //   if (m_szName) {
+   //      free(m_szName);
+   //   }
+   //   m_szName = _strdup(state.m_szName);
+   //}
+
    const char* getName(void) const { return m_szName; }
    void setName(const char* szName) { if (m_szName) free(m_szName); m_szName = _strdup(szName); }
 
@@ -35,6 +42,10 @@ public:
 		  // nextState->onEnter(this);
 	   //}
    }  // EVT_WILL_TRANSITION TO
+
+   virtual bool operator==(const State& state) const {
+      return !strcmp(this->getName(), state.getName());
+   }
 };
 
 #endif  //_STATE_H

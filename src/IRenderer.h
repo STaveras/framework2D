@@ -48,15 +48,15 @@ public:
 		m_ClearColor(0xFFFFFFFF),
 		m_pCamera(NULL)
 	{
-		_RenderLists.Create();
+		_RenderLists.create();
 	} // Comes with one global render list
 
-	IRenderer(int nWidth, int nHeight) :
+	IRenderer(int nWidth, int nHeight, bool fullscreen = false, bool vsync = false) :
 #if _DEBUG
 		m_bStaticBG(false),
 #endif
-		m_bFullScreen(false),
-		m_bVerticalSync(false),
+		m_bFullScreen(fullscreen),
+		m_bVerticalSync(vsync),
 		m_nWidth(nWidth),
 		m_nHeight(nHeight),
 		m_ClearColor(0xFFFFFFFF),
@@ -87,18 +87,18 @@ public:
 	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }
 	virtual void setVerticalSync(bool vsyncEnabled) { m_bVerticalSync = vsyncEnabled; }
 
-	virtual ITexture *CreateTexture(const char *szFilename, Color colorKey = 0) = 0;
-	virtual bool DestroyTexture(const ITexture *pTexture);
+	virtual ITexture *createTexture(const char *szFilename, Color colorKey = 0) = 0;
+	virtual bool destroyTexture(const ITexture *pTexture);
 
-	void PushRenderList(RenderList *pRenderList) { _RenderLists.Store(pRenderList); }
-	void PopRenderList(void) { _RenderLists.Erase(_RenderLists.End()); }
+	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList); }
+	void popRenderList(void) { _RenderLists.erase(_RenderLists.end()); }
 
-	RenderList *CreateRenderList(void) { return _RenderLists.Create(); }
-	void DestroyRenderList(RenderList *list) { _RenderLists.Destroy(list); }
+	RenderList *CreateRenderList(void) { return _RenderLists.create(); }
+	void DestroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
 
 	virtual void initialize(void) = 0;
 	virtual void shutdown(void) = 0;
-	virtual void Render(void) = 0;
+	virtual void render(void) = 0;
 	
 } RenderingInterface;
 

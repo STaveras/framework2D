@@ -32,7 +32,7 @@ void Renderer::DestroyRenderer(IRenderer *pRenderer)
 	}
 }
 
-// void Renderer::Render(Renderable* r)
+// void Renderer::render(Renderable* r)
 //{
 //     // TODO: Improve this massively.
 //     IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();

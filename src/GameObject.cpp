@@ -2,22 +2,27 @@
 #include "Animation.h"
 #include "InputEvent.h"
 
-void GameObject::_OnKeyPressed(const Event& e)
+void GameObject::_OnStateEntered(const Event& e) 
 {
-	this->sendInput(((std::string)((InputEvent*)&e)->setActionName() + "_PRESSED").c_str(), e.getSender());
+	updateComponents();
+
+	GameObjectState* sendingState = (GameObjectState*)e.getSender();
+	if (sendingState) {
+		if (this->find(*sendingState)) { // Let's try and make it impossible for other gameobject's 
+			this->addImpulse(sendingState->getDirection(), sendingState->getForce());
+		}
+	}
 }
 
-void GameObject::_OnKeyReleased(const Event& e)
+void GameObject::_OnStateExited(const Event& e)
 {
-	this->sendInput(((std::string)((InputEvent*)&e)->setActionName() + "_RELEASED").c_str(), e.getSender());
+	GameObjectState* sendingState = (GameObjectState*)e.getSender();
+	if (sendingState) {
+		if (this->find(*sendingState)) { // Let's try and make it impossible for other gameobject's 
+			this->addImpulse(sendingState->getDirection(), -sendingState->getForce());
+		}
+	}
 }
-
-//void GameObject::_OnAnimationStopped(const Event& e)
-//{
-//	for (unsigned int i = 0; i < this->Size(); i++)
-//		if (this->At(i) == (GameObjectState*)e.getSender())
-//			return this->sendInput("ANIMATION_STOPPED");
-//}
 
 void GameObject::_OnCollision(const Event& e) {
 
@@ -28,10 +33,41 @@ void GameObject::_OnCollision(const Event& e) {
 	}
 }
 
+void GameObject::start(void)
+{
+	Engine2D::getEventSystem()->registerCallback<GameObject>(EVENT_COLLISION, this, &GameObject::_OnCollision);
+	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameObject::_OnStateEntered);
+	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameObject::_OnStateExited);
+
+	StateMachine::start();
+}
+
+void GameObject::updateComponents()
+{
+	if (this->getRenderable()) {
+		this->getRenderable()->setPosition(this->getPosition());
+	}
+
+	if (this->getCollidable()) {
+		this->getCollidable()->setPosition(this->getPosition());
+	}
+}
+
 void GameObject::update(float time) // lawl time as a float xfd
 {
 	Physical::update(time);
 	StateMachine::update(time);
+
+	updateComponents();
+}
+
+void GameObject::finish(void)
+{
+	StateMachine::finish();
+
+	Engine2D::getEventSystem()->unregister<GameObject>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameObject::_OnStateExited);
+	Engine2D::getEventSystem()->unregister<GameObject>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameObject::_OnStateEntered);
+	Engine2D::getEventSystem()->unregister<GameObject>(EVENT_COLLISION, this, &GameObject::_OnCollision);
 }
 
 GameObject::GameObjectState* GameObject::addState(const char* name)
@@ -39,7 +75,7 @@ GameObject::GameObjectState* GameObject::addState(const char* name)
 	GameObjectState* state = (GameObjectState*)this->getState(name);
 
 	if (!state) {
-		state = this->CreateDerived<GameObjectState>();
+		state = this->createDerived<GameObjectState>();
 		state->setName(name);
 	}
 	return state;
@@ -53,25 +89,31 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 
 	if (_renderable) {
 
-		if (_preserveMirror) {
+		if (prevState) {
 
-			if (prevState) {
+			Renderable* prevRenderable = ((ObjectState*)prevState)->getRenderable();
 
-				Renderable* prevRenderable = ((ObjectState*)prevState)->getRenderable();
+			if (prevRenderable) {
 
-				if (prevRenderable && (_renderable->getScale() != prevRenderable->getScale())) {
-					
-					this->getRenderable()->setScale(prevRenderable->getScale());
+				if (_preserveScaling) {
 
-					vector2 oldCenter = this->getRenderable()->getCenter();
-					vector2 newCenter(oldCenter.x * this->getRenderable()->getScale().x,
-									  oldCenter.y * this->getRenderable()->getScale().y);
+					// We should just be checking and matching signs
+					if (_renderable->getScale() != prevRenderable->getScale()) {
 
-					this->getRenderable()->setCenter(newCenter);
+						this->getRenderable()->setScale(prevRenderable->getScale());
+
+						vector2 oldCenter = this->getRenderable()->getCenter();
+						vector2 newCenter(oldCenter.x * this->getRenderable()->getScale().x,
+							oldCenter.y * this->getRenderable()->getScale().y);
+
+						this->getRenderable()->setCenter(newCenter);
+					}
 				}
-			}
-		}
 
+				//_renderable->setPosition(prevRenderable->getPosition());
+			}
+
+		}
 		_renderable->setVisibility(true);
 
 		switch (_renderable->getRenderableType())

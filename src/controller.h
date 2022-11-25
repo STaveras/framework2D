@@ -7,30 +7,32 @@
 
 class Controller
 {
-   bool m_bConnected;
+   bool _connected;
    int m_nPadNumber;
-   IInput* m_pInput;
+   IInput* _input;
    std::list<Action> _actions;
 
 public:
-   Controller(void) :m_bConnected(false), m_nPadNumber(-1), m_pInput(NULL) {}
+   Controller(void) : _connected(false), m_nPadNumber(-1), _input(NULL) {}
    ~Controller(void) {}
 
-   bool isConnected(void) const { return m_bConnected; }
+   bool isConnected(void) const { return _connected; }
    int getPadNumber(void) const { return m_nPadNumber; }
-   IInput* getInputInterface(void) { return m_pInput; }
-   std::list<Action>& getActions(void) { return _actions; }
-   Action* getActions(ActionName eKey);
 
-   void setIsConnected(bool bConnected) { m_bConnected = bConnected; }
+   IInput* getInputInterface(void) { return _input; }
+
+   void setIsConnected(bool bConnected) { _connected = bConnected; }
    void setPadNumber(int nPadNumber) { m_nPadNumber = nPadNumber; }
-   void setInputInterface(IInput* pInput) { m_pInput = pInput; }
+   void setInputInterface(IInput* pInput) { _input = pInput; }
 
    void addAction(Action action) { _actions.push_back(action); }
    void removeAction(Action action);
 
-   bool buttonPressed(ActionName actionName);
-   bool buttonReleased(ActionName actionName);
+   bool buttonPressed(std::string actionName);
+   bool buttonReleased(std::string actionName);
+
+   Action* getAction(std::string actionName);
+   std::list<Action>& getActions(void) { return _actions; }
 };
 
 typedef Controller controller;

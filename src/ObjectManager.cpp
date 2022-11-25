@@ -92,10 +92,9 @@ void ObjectManager::removeObject(GameObject* object)
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
    for (; itr != m_mObjects.end(); itr++) {
       if (itr->second == object) {
+         if (object) {
 
-         if (object)
-         {
-            object->shutdown();
+            object->finish();
 
             m_mObjects.erase(itr);
 
@@ -115,7 +114,7 @@ void ObjectManager::removeObject(const char* name)
 
          if (object)
          {
-            object->shutdown();
+            object->finish();
 
             m_mObjects.erase(itr);
             
@@ -127,7 +126,7 @@ void ObjectManager::removeObject(const char* name)
 
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
-   m_mObjects[name] = object; object->initialize();
+   m_mObjects[name] = object; object->start();
    
    Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_ADDED, object);
 }

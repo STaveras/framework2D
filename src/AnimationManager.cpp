@@ -10,9 +10,9 @@
 Animation* AnimationManager::GetAnimation(const char* szName)
 {
    // This is kinda dumb.
-   for (unsigned int i = 0; i < this->Size(); i++) {
-      if (this->At(i)->getName() == szName)
-         return this->At(i);
+   for (unsigned int i = 0; i < this->size(); i++) {
+      if (this->at(i)->getName() == szName)
+         return this->at(i);
    }
    return NULL;
 }
@@ -22,7 +22,7 @@ Animation* AnimationManager::CreateAnimation(const char* szName, std::vector<Spr
    Animation* animation = this->GetAnimation(szName);
 
    if (!animation) {
-      animation = this->Create();
+      animation = this->create();
       animation->setName(szName);
    }
 
@@ -45,21 +45,21 @@ void AnimationManager::DestroyAnimation(Animation* pAnimation)
    //   if ((*i) == pAnimation)
    //      _renderList->erase(i);
 
-   this->Destroy(pAnimation);
+   this->destroy(pAnimation);
 }
 
 void AnimationManager::DestroyAnimation(const char* szName)
 {
-   for (Factory<Animation>::const_factory_iterator itr = this->Begin(); itr != this->End(); itr++)
+   for (Factory<Animation>::const_factory_iterator itr = this->begin(); itr != this->end(); itr++)
       if (!strcmp((*itr)->getName(), szName))
          return DestroyAnimation(*itr);
 }
 
 void AnimationManager::update(float fTime)
 {
-   Factory<Animation>::const_factory_iterator itr = this->Begin();
+   Factory<Animation>::const_factory_iterator itr = this->begin();
 
-   for (; itr != this->End(); itr++) {
+   for (; itr != this->end(); itr++) {
       (*itr)->update(fTime);
    }
 }

@@ -7,8 +7,8 @@
 
 Engine2D::Engine2D(void) :
 	_hasQuit(false),
-	_pInput(NULL),
-	_pRenderer(NULL)
+	_input(NULL),
+	_renderer(NULL)
 {}
 
 void Engine2D::initialize(void)
@@ -23,45 +23,45 @@ void Engine2D::initialize(void)
 
 	// TODO: Separate these sequences to their their own process thread (input thread, game thread, render thread, network thread... etc.)
 
-	if (_pInput)
-		_pInput->initialize();
+	if (_input)
+		_input->initialize();
 
-	if (_pRenderer)
+	if (_renderer)
 	{
-		_pRenderer->initialize();
-		_pRenderer->SetClearColor(NULL);
+		_renderer->initialize();
+		_renderer->SetClearColor(NULL);
 	}
 
-	if (_pGame)
-		_pGame->Begin();
+	if (_game)
+		_game->begin();
 }
 
 void Engine2D::update(void)
 {
 	Engine2D::getEventSystem()->processEvents();
 
-	if (_pInput)
-		_pInput->update();
+	if (_input)
+		_input->update();
 
-	if (_pRenderer)
-		_pRenderer->Render();
+	if (_renderer)
+		_renderer->render();
 
-	if (_pGame)
-		_pGame->update(Engine2D::getTimer());
+	if (_game)
+		_game->update(Engine2D::getTimer());
 
 	Engine2D::getTimer()->update();
 }
 
 void Engine2D::shutdown(void)
 {
-	if (_pGame)
-		_pGame->End();
+	if (_game)
+		_game->end();
 
-	if (_pRenderer)
-		_pRenderer->shutdown();
+	if (_renderer)
+		_renderer->shutdown();
 
-	if (_pInput)
-		_pInput->shutdown();
+	if (_input)
+		_input->shutdown();
 
 	Engine2D::getEventSystem()->shutdown();
 }
@@ -70,8 +70,8 @@ IRenderer* Engine2D::getRenderer(void)
 {
 	Engine2D* engine = Engine2D::getInstance();
 
-	if (engine->_pRenderer)
-		return engine->_pRenderer;
+	if (engine->_renderer)
+		return engine->_renderer;
 	else {
 		// TODO: Return the best suited renderer; send an event somewhere to set up a window for that renderer
 	}

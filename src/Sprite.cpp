@@ -11,6 +11,7 @@
 Sprite::Sprite(void):
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(NULL),
+	_manuallyLoaded(false),
 	_sourceRect({ -1, -1, -1, -1 }) {
 
 }
@@ -19,6 +20,7 @@ Sprite::Sprite(void):
 Sprite::Sprite(const Sprite& image) :
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(image.getTexture()),
+	_manuallyLoaded(false),
 	_sourceRect(image._sourceRect) {
 
 }
@@ -26,19 +28,23 @@ Sprite::Sprite(const Sprite& image) :
 Sprite::Sprite(ITexture* pImage, const RECT& srcRect):
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(pImage),
+	_manuallyLoaded(false),
 	_sourceRect(srcRect) {
 
 }
 
 Sprite::Sprite(const char* filePath, Color clearColor, const RECT& srcRect):
 	Renderable(RENDERABLE_TYPE_SPRITE),
-	_texture(NULL) {
+	_texture(NULL),
+	_manuallyLoaded(true) {
 	this->load(filePath,clearColor,srcRect);
 }
 
 Sprite::~Sprite(void)
 {
-	this->unload();
+	if (_manuallyLoaded) {
+		this->unload();
+	}
 }
 
 vector2 Sprite::getRectCenter(void) const
@@ -74,7 +80,7 @@ Sprite* Sprite::load(const char* filePath, Color clearColor, const RECT& srcRect
 
 	if (renderer)
 	{
-		_texture = renderer->CreateTexture(filePath, clearColor);
+		_texture = renderer->createTexture(filePath, clearColor);
 
 		if (_texture)
 		{
@@ -98,8 +104,9 @@ Sprite* Sprite::load(const char* filePath, Color clearColor, const RECT& srcRect
 
 void Sprite::unload(void)
 {
-	if (_texture)
-		Engine2D::getInstance()->getRenderer()->DestroyTexture(_texture);
+	if (_texture) {
+		Engine2D::getInstance()->getRenderer()->destroyTexture(_texture);
+	}
 }
 
 //void Sprite::Save(const char* filePath)

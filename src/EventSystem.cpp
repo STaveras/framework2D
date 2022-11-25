@@ -95,7 +95,7 @@ void EventSystem::sendEvent(Event::event_key evtKey, void* pSender, Event::event
 	if(m_EventQueue.size() >= m_uiFloodLimit)
 		return;
 
-	Event* pEvent = m_EventFactory.Create();
+	Event* pEvent = m_EventFactory.create();
 	pEvent->_eventKey = evtKey;
 	pEvent->_sender = pSender;
 	pEvent->_priorityLevel = ePriority;
@@ -103,7 +103,7 @@ void EventSystem::sendEvent(Event::event_key evtKey, void* pSender, Event::event
 	if(ePriority == Event::event_priority_immediate)
 	{
 		_querySubscribers((*pEvent));
-		m_EventFactory.Destroy(pEvent);
+		m_EventFactory.destroy(pEvent);
 	}
 	else
 		m_EventQueue.push(pEvent);
@@ -113,7 +113,7 @@ void EventSystem::flushEvents(void)
 {
 	while(!m_EventQueue.empty())
 	{
-		m_EventFactory.Destroy(m_EventQueue.top());
+		m_EventFactory.destroy(m_EventQueue.top());
 		m_EventQueue.pop();
 	}
 }
@@ -123,7 +123,7 @@ void EventSystem::processEvents(void)
 	while(!m_EventQueue.empty())
 	{
 		_querySubscribers((*m_EventQueue.top()));
-		m_EventFactory.Destroy(m_EventQueue.top());
+		m_EventFactory.destroy(m_EventQueue.top());
 		m_EventQueue.pop();
 	}
 }

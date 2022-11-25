@@ -22,8 +22,8 @@ public:
 	IInput(void) : _keyboard(NULL), _mouse(NULL) {}
 	virtual ~IInput(void) = 0;
 
-	virtual IKeyboard* GetKeyboard(void) { return _keyboard; }
-	virtual IMouse* GetMouse(void) { return _mouse; }
+	virtual IKeyboard* getKeyboard(void) { return _keyboard; }
+	virtual IMouse* getMouse(void) { return _mouse; }
 
 	virtual void initialize(void) = 0;
 	virtual void update(void) = 0;

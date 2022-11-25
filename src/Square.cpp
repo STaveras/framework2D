@@ -21,7 +21,7 @@ bool WithPlane(const Square* square, const Plane* plane)
 
 	//// TODO : Remove DirectX-specific code
 	//float fRadius = D3DXVec2Length(&width) / 2;
-	//float fDotResult = D3DXVec2Dot(&toSquare, &plane->GetNormal());
+	//float fDotResult = D3DXVec2Dot(&toSquare, &plane->getNormal());
 
 	// if(fDotResult < fRadius)
 	//	   return true;

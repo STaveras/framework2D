@@ -12,6 +12,7 @@ typedef class Sprite : public Renderable
 {
 	 const ITexture* _texture;
 	 RECT _sourceRect;
+	 bool _manuallyLoaded;
 
 public:
 	 Sprite(void);

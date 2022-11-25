@@ -7,14 +7,14 @@
 
 void SpriteManager::SetVisibility(bool isVisible)
 {
-   for (Factory<Sprite>::factory_iterator i = this->Begin(); i != this->End(); i++)
+   for (Factory<Sprite>::factory_iterator i = this->begin(); i != this->end(); i++)
       (*i)->setVisibility(isVisible);
 }
 
 // HACK: Change this bologna
 Sprite* SpriteManager::CreateSprite(const char* szFilename, Color clearColor, const RECT& srcRect)
 {
-   Sprite* sprite = this->Create();
+   Sprite* sprite = this->create();
    sprite->load(szFilename, clearColor, srcRect);
 
    return sprite;
@@ -26,5 +26,5 @@ void SpriteManager::DestroySprite(Sprite* pSprite)
    //   if ((*o) == pSprite)
    //      _RenderList->erase(o);
 
-   this->Destroy(pSprite);
+   this->destroy(pSprite);
 }

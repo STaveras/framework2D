@@ -7,7 +7,7 @@
 
 CommandInterpreter::CommandInterpreter(void):
 m_fResetTimer(0.0f),
-m_pEventSystem(NULL)
+_eventSystem(NULL)
 {}
 
 bool CommandInterpreter::_ProcessCommand(char* szCommand)
@@ -199,18 +199,18 @@ Action* CommandInterpreter::_ButtonInBuffer(char* szButtonID, size_t dwStartInde
 	return NULL;
 }
 
-void CommandInterpreter::AddCommand(const char* szCommand)
+void CommandInterpreter::AddCommand(const char* command)
 {
-	m_Commands.Create(Command(szCommand));
-	m_Commands.Sort(Command::less());
+	m_Commands.create(Command(command));
+	m_Commands.sort(Command::less());
 }
 
 void CommandInterpreter::RemoveCommand(const char* szCommand)
 {
-	//m_Commands.Destroy(m_Commands.Find(Command(szCommand)));
+	//m_Commands.destroy(m_Commands.find(Command(command)));
 }
 
-void CommandInterpreter::RegisterKeyPress(ActionName btnID, float fTimeStamp)
+void CommandInterpreter::RegisterKeyPress(std::string actionName, float time)
 {
 	m_fResetTimer = 0;
 
@@ -219,15 +219,15 @@ void CommandInterpreter::RegisterKeyPress(ActionName btnID, float fTimeStamp)
 
 	for(size_t i = 0; i < m_vHeldButtons.size(); i++)
 	{
-		if(btnID == m_vHeldButtons[i].getActionName())
+		if(actionName == m_vHeldButtons[i].getActionName())
 		{
 			bExists = true;
-			m_vHeldButtons[i].setActionTime(fTimeStamp);
+			m_vHeldButtons[i].setActionTime(time);
 			continue;
 		}
 
 		btn = Action(m_vHeldButtons[i].getActionName());
-		btn.setActionTime(fTimeStamp);
+		btn.setActionTime(time);
 		m_vButtons.push_back(btn);
 	}
 
@@ -236,45 +236,45 @@ void CommandInterpreter::RegisterKeyPress(ActionName btnID, float fTimeStamp)
 		m_vHeldButtons.push_back(btn);
 	}
 
-	btn = Action(btnID);
-	btn.setActionTime(fTimeStamp);
+	btn = Action(actionName);
+	btn.setActionTime(time);
 	m_vButtons.push_back(btn);
 
-	m_mHoldTimes[btnID] = 0;
+	m_mHoldTimes[actionName] = 0;
 }
 
-void CommandInterpreter::RegisterKeyRelease(ActionName btnID, float fTimeStamp)
+void CommandInterpreter::RegisterKeyRelease(std::string actionName, float time)
 {
 	m_fResetTimer = 0;
 
 	for(std::vector<Action>::iterator itr = m_vHeldButtons.begin(); itr != m_vHeldButtons.end(); itr++)
 	{
-		if(btnID == itr->getActionName())
+		if(actionName == itr->getActionName())
 		{
-			m_mHoldTimes[btnID] = fTimeStamp - itr->getActionTime();
+			m_mHoldTimes[actionName] = time - itr->getActionTime();
 			m_vHeldButtons.erase(itr);
 			break;
 		}
 	}
 
-	Action btn(btnID);
-	btn.setActionTime(fTimeStamp);
+	Action btn(actionName);
+	btn.setActionTime(time);
 
 	m_vButtons.push_back(btn);
 }
 
 void CommandInterpreter::start(EventSystem* pEventSystem, Controller* pGamePad)
 {
-	m_pEventSystem = pEventSystem;
+	_eventSystem = pEventSystem;
 }
 
 void CommandInterpreter::update(float fTime)
 {
 	m_fResetTimer += fTime;
 
-	Factory<Command>::const_factory_iterator command_iter = m_Commands.Begin();
+	Factory<Command>::const_factory_iterator command_iter = m_Commands.begin();
 
-	for(; command_iter != m_Commands.End(); command_iter++)
+	for(; command_iter != m_Commands.end(); command_iter++)
 	{
 		if(m_vButtons.size() + m_vHeldButtons.size() < (*command_iter)->Length())
 			break;
@@ -282,30 +282,28 @@ void CommandInterpreter::update(float fTime)
 		if(_ProcessCommand((*command_iter)->GetCommandString()))
 		{
 			(*command_iter)->SetTimeStamp(m_vButtons[m_vButtons.size()-1].getActionTime());
-			m_pEventSystem->sendEvent<CommandEvent>(CommandEvent((*command_iter), this));
+			_eventSystem->sendEvent<CommandEvent>(CommandEvent((*command_iter), this));
 		}
 	}
 
 	// Update held buttons as necessary; reset the ones that aren't
-	for(std::map<ActionName, float>::iterator itr = m_mHoldTimes.begin(); itr != m_mHoldTimes.end(); itr++)
+	for (std::map<std::string, float>::iterator itr = m_mHoldTimes.begin(); itr != m_mHoldTimes.end(); itr++)
 	{
 		bool bAddTime = false;
 
-		for(size_t i = 0; i < m_vHeldButtons.size(); itr++)
+		for (size_t i = 0; i < m_vHeldButtons.size(); itr++)
 		{
-			if(itr->first == m_vHeldButtons[i].getActionName())
+			if (itr->first == m_vHeldButtons[i].getActionName())
 			{
 				bAddTime = true;
 				break;
 			}
 		}
 
-		if(bAddTime)
-		{
+		if (bAddTime) {
 			itr->second += fTime;
 		}
-		else
-		{
+		else {
 			itr->second = 0;
 		}
 	}
@@ -322,5 +320,5 @@ void CommandInterpreter::finish(void)
 {
 	m_vHeldButtons.clear();
 	m_vButtons.clear();
-	m_Commands.Clear();
+	m_Commands.clear();
 }

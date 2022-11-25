@@ -3,6 +3,10 @@
 // Created: 2/20/2010
 // Modified: 2/28/2010
 
+// TODO: Make a factory for these that get stored in IRenderer instead of RenderLists
+//			then use their "isVisible" property to filter them out; you're storing these
+//			anyway; store them directly where they'll be used...?
+
 #if !defined(_IRENDERABLE_H)
 #define _IRENDERABLE_H
 
@@ -67,6 +71,7 @@ public:
 	virtual void setRotation(float fRotation) { _rotation = fRotation; }
 	virtual void setOffset(vector2 offset) { _offset = offset; }
 	virtual void setCenter(vector2 center) { _center = center; }
+	virtual void setScale(float x, float y) { this->setScale(vector2(x, y)); }
 	virtual void setScale(vector2 scale) { _scale = scale; }
 
 	// Appearance properties

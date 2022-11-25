@@ -90,14 +90,14 @@ void EventSystem::sendEvent(const T& e, void* pSender, Event::event_priority_lev
 	if(m_EventQueue.size() >= m_uiFloodLimit)
 		return;
 
-	Event* pEvent = m_EventFactory.CreateDerived<T>(e);
+	Event* pEvent = m_EventFactory.createDerived<T>(e);
 	pEvent->_sender = pSender;
 	pEvent->_priorityLevel = ePriority;
 
 	if(pEvent->_priorityLevel == Event::event_priority_immediate)
 	{
 		_querySubscribers((*pEvent));
-		m_EventFactory.Destroy(pEvent);
+		m_EventFactory.destroy(pEvent);
 	}
 	else
 		m_EventQueue.push(pEvent);

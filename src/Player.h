@@ -35,5 +35,5 @@ public:
 
 	void start(void);
 	void update(float time);
-	void shutdown(void);
+	void finish(void);
 };

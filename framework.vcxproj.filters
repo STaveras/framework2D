@@ -352,6 +352,12 @@
     <ClInclude Include="src\Action.h">
       <Filter>engine2Dbase\Input\Action</Filter>
     </ClInclude>
+    <ClInclude Include="src\TextureD3D.h">
+      <Filter>engine2Dbase\Rendering\Renderers\DirectX</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Tile.h">
+      <Filter>engine2Dbase\Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="doc\todo.txt">

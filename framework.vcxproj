@@ -190,6 +190,8 @@
     <ClInclude Include="src\Square.h" />
     <ClInclude Include="src\State.h" />
     <ClInclude Include="src\System.h" />
+    <ClInclude Include="src\TextureD3D.h" />
+    <ClInclude Include="src\Tile.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />

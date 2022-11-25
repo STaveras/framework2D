@@ -6,18 +6,30 @@
 #include "ProgramStack.h"
 #include "Player.h"
 #include "Factory.h"
+#include "Engine2D.h"
 
 #include <vector>
 
-class Game : public ProgramStack // A game should probably CONTAIN a program stack and not BE one (?)
+class Game : public ProgramStack
 {
-   friend class Engine2D;
+	friend class Engine2D;
 
 protected:
-   Factory<Player> _players;
+	Factory<Player> _players;
 
 public:
-   virtual void Begin(void) = 0;
-   virtual void update(class Timer* timer);
-   virtual void End(void) = 0;
+	
+	static Factory<Player>* getPlayers(void) { return &(Engine2D::getGame()->_players); }
+
+	static Player* getPlayerWith(GameObject* object) {
+		for (unsigned int i = 0; i < Game::getPlayers()->size(); i++) {
+			if (Game::getPlayers()->at(i)->getGameObject() == object) {
+				return Game::getPlayers()->at(i);
+			}
+		}
+	}
+
+	virtual void begin(void) = 0;
+	virtual void update(class Timer* timer);
+	virtual void end(void) = 0;
 };

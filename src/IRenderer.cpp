@@ -10,7 +10,7 @@
 #include "Engine2D.h"
 
 IRenderer::~IRenderer() {
-	m_Textures.Clear();
+	m_Textures.clear();
 }
 
 // NOTE: Initial test demo
@@ -77,9 +77,9 @@ void IRenderer::_BackgroundColorShift(void)
 
 ITexture* IRenderer::_TextureExists(const char* szFilename)
 {
-	Factory<ITexture>::const_factory_iterator itr = m_Textures.Begin();
+	Factory<ITexture>::const_factory_iterator itr = m_Textures.begin();
 
-	for (; itr != m_Textures.End(); itr++)
+	for (; itr != m_Textures.end(); itr++)
 	{
 		if(!strcmp((*itr)->getFilename(), szFilename))
 			return (*itr);
@@ -101,17 +101,17 @@ void IRenderer::SetCamera(Camera* pCamera)
 	m_pCamera->SetScreenHeight(m_nHeight);
 }
 
-bool IRenderer::DestroyTexture(const ITexture* pTexture)
+bool IRenderer::destroyTexture(const ITexture* pTexture)
 {
 	if (pTexture)
 	{
-		Factory<ITexture>::const_factory_iterator itr = m_Textures.Begin();
+		Factory<ITexture>::const_factory_iterator itr = m_Textures.begin();
 
-		for(;itr != m_Textures.End(); itr++)
+		for(;itr != m_Textures.end(); itr++)
 		{
 			if(pTexture == (*itr))
 			{
-				m_Textures.Erase(itr);
+				m_Textures.erase(itr);
 				return true;
 			}
 		}
@@ -120,10 +120,10 @@ bool IRenderer::DestroyTexture(const ITexture* pTexture)
 	return false;
 }
 
-void IRenderer::Render(void) {
+void IRenderer::render(void) {
 #if _DEBUG
 	_BackgroundColorShift();
 #else
-	throw std::runtime_error("RenderingInterface::Render() unimplemented");
+	throw std::runtime_error("RenderingInterface::render() unimplemented");
 #endif
 }

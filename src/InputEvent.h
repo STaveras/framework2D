@@ -15,12 +15,12 @@ class InputEvent : public Event
 {
 	float _timeStamp;
 	Controller* _controller;
-	ActionName _actionName;
+	std::string _actionName;
 
 public:
-	InputEvent(Event::event_key evtKey, void* pSender, Controller* controller, float time, ActionName actionName);
+	InputEvent(Event::event_key evtKey, void* pSender, Controller* controller, float time, std::string actionName);
 
 	float getTimeStamp(void) const { return _timeStamp; }
-	Controller* GetGamePad(void) const { return _controller; }
-	ActionName setActionName(void) const { return _actionName; }
+	Controller* getController(void) const { return _controller; }
+	std::string getActionName(void) const { return _actionName; }
 };

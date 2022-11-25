@@ -4,7 +4,7 @@
 class Cyclable
 {
 public:
-	virtual void start(void) {}
-	virtual void update(float time) = 0;
-	virtual void finish(void) {} 
+	virtual void start(void) = 0 {}
+	virtual void update(float time) = 0 {}
+	virtual void finish(void) = 0 {}
 };

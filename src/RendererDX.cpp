@@ -30,12 +30,11 @@ RendererDX::RendererDX(void) : IRenderer(),
 
 }
 
-RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight),
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight, bFullscreen, bVsync),
 m_hWnd(hWnd),
 m_pD3D(NULL),
 m_pD3DDevice(NULL),
-m_pD3DSprite(NULL)
-{
+m_pD3DSprite(NULL) {
 
 }
 
@@ -51,8 +50,8 @@ void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
    D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
 
    D3DXVECTOR3 position;
-   position.x = image->getPosition().x + offset.x;
-   position.y = image->getPosition().y + offset.y;
+   position.x = (image->getPosition().x + offset.x) * image->getScale().x;
+   position.y = (image->getPosition().y + offset.y) * image->getScale().y;
    position.z = 0.0f;
 
    m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
@@ -69,7 +68,7 @@ void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
 
 //}
 
-ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
+ITexture *RendererDX::createTexture(const char *szFilename, Color colorKey)
 {
    ITexture* pTexture = _TextureExists(szFilename);
 
@@ -78,7 +77,7 @@ ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
       pTexture = (ITexture*)new TextureD3D(szFilename);
       pTexture->SetKeyColor(colorKey);
 
-      m_Textures.Store(pTexture);
+      m_Textures.store(pTexture);
 
       D3DXCreateTextureFromFileEx(
          m_pD3DDevice,
@@ -88,7 +87,7 @@ ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
          D3DX_DEFAULT,
          0,
          D3DFMT_UNKNOWN,
-         D3DPOOL_MANAGED, // Since this is managed, I haven't worried about a "DestroyTexture" function
+         D3DPOOL_MANAGED, // Since this is managed, I haven't worried about a "destroyTexture" function
          D3DX_FILTER_POINT,
          D3DX_DEFAULT,
          (DWORD)colorKey._color,
@@ -103,11 +102,10 @@ ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
    return pTexture;
 }
 
-void RendererDX::DestroyTexture(ITexture* texture)
+void RendererDX::destroyTexture(ITexture* texture)
 {
-
-    //((TextureD3D*)pTexture)->getTexture()->Release();
-    // TODO: Iterate through stored textures and remove
+   ((TextureD3D*)texture)->getTexture()->Release();
+   IRenderer::destroyTexture(texture);
 }
 
 void RendererDX::initialize(void)
@@ -157,7 +155,7 @@ void RendererDX::shutdown(void)
 	}
 }
 
-void RendererDX::Render(void)
+void RendererDX::render(void)
 {
 	if (!m_pD3DDevice)
 		return;
@@ -195,11 +193,11 @@ void RendererDX::Render(void)
             m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
          }
 
-         if (!_RenderLists.Empty())
+         if (!_RenderLists.empty())
          {
-            for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+            for (unsigned int i = 0; i < _RenderLists.size(); i++)
             {
-               for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+               for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++)
                {
                   // We should be making *absolutely* sure that nothing that makes it here is NULL to begin with
                   if ((*o)) 

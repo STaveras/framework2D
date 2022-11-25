@@ -7,8 +7,10 @@
 
 class GameObject;
 
-class Collidable: public Positionable
+class Collidable : public Positionable
 {
+	Collidable(void) :Positionable(), m_eType(COL_OBJ_VOID) {}
+
 public:
 	enum COL_OBJ_TYPE
 	{
@@ -24,8 +26,7 @@ private:
 
 protected:
 
-	Collidable(void) :Positionable(), m_eType(COL_OBJ_VOID) {}
-	Collidable(COL_OBJ_TYPE type) :Positionable(), m_eType(type) {}
+	explicit Collidable(COL_OBJ_TYPE type) : Positionable(), m_eType(type) {}
 
 	virtual ~Collidable(void) = 0 {}
 
@@ -41,7 +42,7 @@ public:
 #define EVENT_COLLISION "EVT_COLLISION"
 
 // NOTE: Would be nice to have a 'batched' version of this
-struct CollisionEvent: public Event
+struct CollisionEvent : public Event
 {
 	GameObject* involvedObject;
 

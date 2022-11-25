@@ -17,7 +17,7 @@ public:
 
    virtual ~Positionable(void) = 0{ }
 
-   vector2 getPosition(void) const { return _position; }
-   void setPosition(float x, float y) { _position.x = x; _position.y = y; }
-   void setPosition(vector2 position) { _position = position; }
+   virtual vector2 getPosition(void) const { return _position; }
+   virtual void setPosition(float x, float y) { _position.x = x; _position.y = y; }
+   virtual void setPosition(vector2 position) { _position = position; }
 };

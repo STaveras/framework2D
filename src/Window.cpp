@@ -44,6 +44,7 @@ LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 		return 0;
 	case WM_GETMINMAXINFO:
 	case WM_SIZING:
+	case WM_SYSKEYDOWN:
 		return 0;
 	}
 
@@ -57,13 +58,22 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 
 	WNDCLASSEX wcex =
 	{
-		sizeof(WNDCLASSEX), CS_CLASSDC, this->MsgProc, 0L, 0L,
+		sizeof(WNDCLASSEX), CS_OWNDC, this->MsgProc, 0L, 0L,
 		hInstance, NULL, NULL, NULL, NULL,
 		m_szWindowClassName, NULL
 	};
 
 	RegisterClassEx(&wcex);
-	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW, m_szWindowClassName, m_szWindowTitle, WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
+
+	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW,
+									m_szWindowClassName, 
+									m_szWindowTitle,
+									NULL, 
+									CW_USEDEFAULT, 
+									CW_USEDEFAULT, 
+									m_nWidth,
+									m_nHeight,
+									NULL, NULL, hInstance, NULL);
 	resize();
 
 	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
@@ -147,8 +157,8 @@ void Window::shutdown(void)
 	}
 #ifdef _WIN32
 	else {
-	DestroyWindow(m_hWnd);
-	UnregisterClass(m_szWindowClassName, m_hInstance);
+		DestroyWindow(m_hWnd);
+		UnregisterClass(m_szWindowClassName, m_hInstance);
 	}
 #endif
 }

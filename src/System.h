@@ -40,6 +40,8 @@ namespace System
     {
         if (argc > 1) {
 
+           // TODO: Check if the second argument is true or false as to force on or off
+
             for (int i = 0; i < argc; i++) {
                 if (!strcmp(argv[i], "--fullscreen") || !strcmp(argv[i], "-f")) {
                     return true;
@@ -80,7 +82,7 @@ namespace System
         if (argc > 1) {
 
             for (int i = 0; i < argc; i++) {
-                if (!strcmp(argv[i], "--vulkan") || !strcmp(argv[i], "-vk")) {
+                if (!strcmp(argv[i], "--vulkan") || !strcmp(argv[i], "-vk") || !strcmp(argv[i], "-V")) {
                     return true;
                 }
             }
