@@ -18,14 +18,16 @@ class Player : Cyclable
 
 	vector2 _heading;
 
-	Controller* _pad;
-	GameObject* _object;
+	Controller* _pad = NULL;
+	GameObject* _object = NULL;
 
 	void _OnKeyPress(const Event& evt);
 	void _OnKeyRelease(const Event& evt);
 
 public:
+
 	vector2 getHeading(void) const { return _heading; }
+	void getHeading(vector2 heading) { _heading = heading; }
 
 	GameObject* getGameObject(void) const { return _object; }
 	void setGameObject(GameObject* object) { _object = object; }

@@ -40,7 +40,7 @@ m_pD3DSprite(NULL) {
 
 RendererDX::~RendererDX(void)
 {
-   shutdown();
+   this->shutdown();
 }
 
 // Why do we have offset? Center is already an offset...
@@ -52,9 +52,13 @@ void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
    D3DXVECTOR3 position;
    position.x = (image->getPosition().x + offset.x) * image->getScale().x;
    position.y = (image->getPosition().y + offset.y) * image->getScale().y;
-   position.z = 0.0f;
+   position.z = 0.0f; // Will eventually be used for z-effects
 
+   // No mipmaps, and nearest neighbor/point filtering 
+   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
    m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+
    m_pD3DSprite->SetTransform(&transform);
    m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), 
                      &image->getSourceRect(),

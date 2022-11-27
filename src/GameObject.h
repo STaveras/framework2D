@@ -104,7 +104,7 @@ public:
    explicit GameObject(GAME_OBJ_TYPE eType): m_eType(eType) {}
    virtual ~GameObject(void) {}
 
-   GAME_OBJ_TYPE GetType(void) const { return m_eType; }
+   GAME_OBJ_TYPE getType(void) const { return m_eType; }
 
    GameObjectState* addState(const char* name);
    GameObjectState* getState(const char* name) { return (GameObjectState*)StateMachine::getState(name); }

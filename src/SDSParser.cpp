@@ -38,7 +38,7 @@ SDSNode* SDSParser::_NodeExists(const char* szName, SDSNodeData::SDSNodeType eTy
 		pNode = q.front();
 		q.pop();
 
-		if(pNode->getData().GetType() == eType && !strcmp(pNode->getData().getName(), szName))
+		if(pNode->getData().getType() == eType && !strcmp(pNode->getData().getName(), szName))
 		{
 			if(!mq.empty())
 				*pMetaNode = mq.front();
@@ -46,7 +46,7 @@ SDSNode* SDSParser::_NodeExists(const char* szName, SDSNodeData::SDSNodeType eTy
 			return pNode;
 		}
 
-		if(pNode->getData().GetType() == SDSNodeData::SDS_SCOPE)
+		if(pNode->getData().getType() == SDSNodeData::SDS_SCOPE)
 		{
 			if(!mq.empty())
 			{
@@ -178,7 +178,7 @@ SDSParser::SDS_ERROR SDSParser::open(const char* szFilename)
 					//	pCurrent->getData().setName(scratch);
 					//}
 
-					if(buffer != "" && pCurrent->getData().GetType() == SDSNodeData::SDS_PROPERTY)
+					if(buffer != "" && pCurrent->getData().getType() == SDSNodeData::SDS_PROPERTY)
 					{
 						pCurrent->getData().SetValue(buffer.c_str());
 						pCurrent = pCurrent->getParent();
@@ -267,7 +267,7 @@ size_t SDSParser::getNumSubScopes(void) const
 
 	for(size_t i = 0; i < m_pScope->getChildCount(); i++)
 	{
-		if(m_pScope->getChild(i)->getData().GetType() == SDSNodeData::SDS_SCOPE)
+		if(m_pScope->getChild(i)->getData().getType() == SDSNodeData::SDS_SCOPE)
 			uiProps++;
 	}
 
@@ -280,7 +280,7 @@ size_t SDSParser::getNumPropertiesInScope(void) const
 
 	for(size_t i = 0; i < m_pScope->getChildCount(); i++)
 	{
-		if(m_pScope->getChild(i)->getData().GetType() == SDSNodeData::SDS_PROPERTY)
+		if(m_pScope->getChild(i)->getData().getType() == SDSNodeData::SDS_PROPERTY)
 			uiProps++;
 	}
 

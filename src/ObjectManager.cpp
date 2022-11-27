@@ -148,7 +148,7 @@ void ObjectManager::clearOperators(void)
    m_lsObjOperators.clear();
 }
 
-void ObjectManager::SendEvent(Event::event_key key, void* sender)
+void ObjectManager::sendEvent(Event::event_key key, void* sender)
 {
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 

@@ -6,43 +6,30 @@
 
 #define BASE_DIRECTORY "./fantasySideScroller/"
 
-#define RES_MULT 1
-#define GAME_RES_X 336 * RES_MULT
-#define GAME_RES_Y 192 * RES_MULT
+#define WINDOW_SIZE_MULTIPLIER 2
+#define GAME_RES_X 336
+#define GAME_RES_Y 192
 
 #include "Game.h"
 #include "GameObject.h"
 #include "GameState.h"
 
 #include "AnimationUtils.h"
+#include "Tile.h"
 
 #include "Square.h"
 
 #define MOVE_UNITS 150.0f
-#define JUMP_MULTIPLIER 3.33f
+#define JUMP_MULTIPLIER 2.67f
 
 // Game should hold all the managers
 class FantasySideScroller : public Game
 {
-	struct GravityOperator : public ObjectOperator
-	{
-		vector2 _position{ 0.0f, 0.0f };
-
-		bool operator()(GameObject* object) {
-
-			float time = (float)Engine2D::getTimer()->getDeltaTime();
-		}
-	};
 	// States should just queue up operators, potentially stacking up other states
 	class PlayState : public GameState
 	{
 		// (Probably should just go in GameState...?)
-		Image* _background = NULL; // Lights; the set
-
-		// Game rules
-		//FollowObject _attachCamera;
-		//ApplyVelocityOperator _applyVelocity;
-		//UpdateBackgroundOperator _updateBackground;
+		Image* _background = NULL; 
 
 		class Character : public GameObject
 		{
@@ -75,9 +62,9 @@ class FantasySideScroller : public Game
 				/////////////////////////////////////////
 				GameObjectState* rising = this->addState("Rising");
 				rising->setPreserveScaling(true);
-				rising->setExecuteTime(0.2);
-				rising->setDirection(vector2(0.0f, -1.0f));
-				rising->setForce(MOVE_UNITS);
+				rising->setExecuteTime(0.1);
+				//rising->setDirection(vector2(0.0f, -1.0f));
+				//rising->setForce(MOVE_UNITS * (JUMP_MULTIPLIER * 0.1));
 
 				Animation* risingAnimation = _animationManager.create();
 
@@ -98,9 +85,9 @@ class FantasySideScroller : public Game
 
 				GameObjectState* jump = this->addState("Jump");
 				jump->setPreserveScaling(true);
-				jump->setExecuteTime(0.27);
+				jump->setExecuteTime(0.2);
 				jump->setDirection(vector2(0.0f, -1.0f));
-				jump->setForce(MOVE_UNITS * JUMP_MULTIPLIER);
+				jump->setForce(MOVE_UNITS * (JUMP_MULTIPLIER * 0.67));
 
 				Animation* jumpAnimation = _animationManager.create();
 
@@ -270,6 +257,7 @@ class FantasySideScroller : public Game
 
 				this->setState(falling);
 				this->setMass(100);
+				//this->setBuffered(true);
 
 				//collisionEventHandler = [=](const CollisionEvent* e) {
 				//   if (((GameState*)Engine2D::getGame()->top())->getObjectManager()->getObjectName(e->involvedObject) == "GroundTile")
@@ -283,13 +271,14 @@ class FantasySideScroller : public Game
 
 				if (state) {
 
-					if (!strcmp(state->getName(), "Rising") || !strcmp(state->getName(), "Jump") || !strcmp(state->getName(), "Falling")) {
+					if (!strcmp(state->getName(), "Jump") || !strcmp(state->getName(), "Falling")) {
 
 						// We should instead lookup the bound action or instead override "sendEvent" capture the sent events?
 						if (Engine2D::getInput()->getKeyboard()->KeyDown(KBK_LEFT)) {
 							this->setPosition(this->getPosition().x - MOVE_UNITS * time, this->getPosition().y);
 							this->getRenderable()->setScale(-abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
 						}
+
 						if (Engine2D::getInput()->getKeyboard()->KeyDown(KBK_RIGHT)) {
 							this->setPosition(this->getPosition().x + MOVE_UNITS * time, this->getPosition().y);
 							this->getRenderable()->setScale(abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
@@ -327,15 +316,18 @@ class FantasySideScroller : public Game
 			_objectManager.addObject("Hero", playableCharacter);
 			_objectManager.addObject("Camera", _camera);
 
-			//_camera->SetZoom(RES_MULT / 1.0);
-
 			_player->start();
 			_player->setController(_inputManager.createController());
 			_player->getController()->addAction(Action("JUMP", KBK_SPACE));
 			_player->getController()->addAction(Action("LEFT", KBK_LEFT));
 			_player->getController()->addAction(Action("RIGHT", KBK_RIGHT));
 			_player->getController()->addAction(Action("ATTACK", KBK_LCONTROL));
-			_player->setGameObject(_objectManager.getGameObject("Hero"));
+			_player->setGameObject(playableCharacter);
+
+			Texture* tileSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png");
+
+			Tile* leLonelyTile = new Tile(tileSheet, 16, 397, "Ground");
+			_objectManager.addObject("GroundTile", leLonelyTile); // This will change to a "TileGrid" object
 
 			Engine2D::getRenderer()->SetCamera(_camera);
 		}
@@ -358,6 +350,10 @@ class FantasySideScroller : public Game
 
 		void onExit(State* next)
 		{
+			GameObject* groundTile = _objectManager.getGameObject("GroundTile");
+			_objectManager.removeObject(groundTile);
+			delete groundTile;
+
 			_player->finish();
 
 			_objectManager.removeObject("Camera");
@@ -381,9 +377,9 @@ public:
 	{
 		// load options and/or configurations
 
-		Renderer::window->setWindowTitle("\'FantasySideScroller\'");
-		Renderer::window->setWidth(GAME_RES_X);
-		Renderer::window->setHeight(GAME_RES_Y);
+		Renderer::window->setWindowTitle(BASE_DIRECTORY);
+		Renderer::window->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
+		Renderer::window->setHeight(GAME_RES_Y * WINDOW_SIZE_MULTIPLIER);
 
 		Renderer::Get()->setWidth(GAME_RES_X);
 		Renderer::Get()->setHeight(GAME_RES_Y);

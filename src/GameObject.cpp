@@ -44,12 +44,15 @@ void GameObject::start(void)
 
 void GameObject::updateComponents()
 {
-	if (this->getRenderable()) {
-		this->getRenderable()->setPosition(this->getPosition());
-	}
+	if (this->getState()) {
 
-	if (this->getCollidable()) {
-		this->getCollidable()->setPosition(this->getPosition());
+		if (this->getRenderable()) {
+			this->getRenderable()->setPosition(this->getPosition());
+		}
+
+		if (this->getCollidable()) {
+			this->getCollidable()->setPosition(this->getPosition());
+		}
 	}
 }
 
@@ -143,12 +146,7 @@ bool GameObject::GameObjectState::onExecute(float time)
 		switch (_renderable->getRenderableType())
 		{
 		case RENDERABLE_TYPE_ANIMATION: {
-
-			Animation* animation = (Animation*)_renderable;
-
-			if (!animation->update(time) && animation->getMode() == Animation::Mode::eOnce)
-				finalCheck = false;
-
+			finalCheck = ((Animation*)_renderable)->update(time);
 			break;
 		}
 		default:

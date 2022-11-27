@@ -39,7 +39,7 @@ bool GameState::onExecute(float time)
 
          char debugBuffer[255];
 
-         // OutputDebugString("\nObjects:\n-------\n");
+         //OutputDebugString("\nObjects:\n-------\n");
 
          // Debug::Log << "\nObjects:\n-------\n";
          Debug::Log->write("\nObjects:\n-------\n");
@@ -47,7 +47,7 @@ bool GameState::onExecute(float time)
          for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
             GameObject* debugObject = _objectManager[i];
             sprintf_s(debugBuffer, "(%s) pos: (%fx, %fy)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
-            // OutputDebugString(debugBuffer);
+            //OutputDebugString(debugBuffer);
             Debug::Log->write(debugBuffer);
          }
       }
@@ -55,7 +55,7 @@ bool GameState::onExecute(float time)
       if (_camera) {
          if (!_camera->OnScreen(_player->getGameObject())) {
             //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
-            // OutputDebugString("GameObject off screen\n\n");
+            //OutputDebugString("GameObject off screen\n\n");
             Debug::Log->write("GameObject off screen\n\n");
          }
       }
@@ -116,6 +116,7 @@ void GameState::_OnObjectStateExit(const Event& e) {
 
 void GameState::_OnObjectAdded(const Event & e)
 {
+   // probably initialize/start object
    //throw std::runtime_error("GameState::_OnObjectAdded unimplemented");
 }
 

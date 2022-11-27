@@ -34,7 +34,9 @@ public:
    static Timer* getTimer(void);
 
    static IRenderer* getRenderer(void);
-   static void setRenderer(IRenderer* renderer) { Engine2D::getInstance()->_renderer = renderer; }
+   static void setRenderer(IRenderer* renderer) { 
+      Engine2D::getInstance()->_renderer = renderer;
+   }
 
    static IInput* getInput(void) { return Engine2D::getInstance()->_input; } // Add support for multiple devices...?
    static void setInputInterface(IInput* pInput) { Engine2D::getInstance()->_input = pInput; }

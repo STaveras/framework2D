@@ -60,7 +60,7 @@ public:
 		return this->getGameObject(name);
 	}
 
-	void SendEvent(Event::event_key key, void* sender);
+	void sendEvent(Event::event_key key, void* sender);
 };
 #endif  //_OBJECTMANAGER_H
 // Author: Stanley Taveras

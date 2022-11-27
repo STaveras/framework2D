@@ -22,6 +22,8 @@ namespace FileSystem
     {
 #if defined(__APPLE__)
         chdir(path.c_str());
+#else
+       _chdir(path.c_str());
 #endif
     }
 
