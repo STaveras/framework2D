@@ -222,8 +222,8 @@ void RendererDX::render(void)
                         {
                            Animation* animation = (Animation*)(*o);
                            if (animation->getFrameCount()) {
-                              _DrawImage(animation->getCurrentFrame()->GetSprite(), 
-                                         animation->getCurrentFrame()->GetSprite()->_appearance._tintColor,
+                              _DrawImage(animation->getCurrentFrame()->getSprite(), 
+                                         animation->getCurrentFrame()->getSprite()->_appearance._tintColor,
                                          animation->getOffset());
                            }
                         }

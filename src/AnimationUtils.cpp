@@ -67,7 +67,7 @@ namespace Animations {
    void destroyAnimation(Animation *animation) {
       for (unsigned int i = 0; i < animation->getFrameCount(); i++) {
          Frame *frame = (*animation)[i];
-         delete frame->GetSprite();
+         delete frame->getSprite();
          animation->removeFrame(frame);
          delete frame;
       }

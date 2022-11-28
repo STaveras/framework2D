@@ -33,7 +33,7 @@ void Frame::reset(void)
 		(*itr).reset();
 }
 
-bool Frame::RemoveTrigger(const Trigger& desc)
+bool Frame::removeTrigger(const Trigger& desc)
 {
 	std::list<Trigger>::iterator itr = m_lsTriggers.begin();
 
@@ -48,7 +48,7 @@ bool Frame::RemoveTrigger(const Trigger& desc)
 
 void Frame::mirror(bool bHorizontal, bool bVertical)
 {
-	this->GetSprite()->mirror(bHorizontal, bVertical);
+	this->getSprite()->mirror(bHorizontal, bVertical);
 }
 
 bool Frame::operator==(const Frame& rhs) const

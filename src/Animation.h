@@ -62,7 +62,7 @@ public:
    void setFrameRate(int targetFrameRate) {
       float frameTime = (1.0f / targetFrameRate) * m_Frames.size();
       for (unsigned int i = 0; i < m_Frames.size(); i++) {
-         m_Frames[i]->SetDuration(frameTime);
+         m_Frames[i]->setDuration(frameTime);
       }
    }
 
@@ -76,20 +76,20 @@ public:
    void setScale(vector2 scale) {
        Renderable::setScale(scale);
        for (unsigned int i = 0; i < m_Frames.size(); i++) {
-           m_Frames[i]->GetSprite()->setScale(scale);
+           m_Frames[i]->getSprite()->setScale(scale);
        }
    }
 
    void setTint(Color color) {
        Renderable::setTint(color);
        for (unsigned int i = 0; i < m_Frames.size(); i++) {
-           m_Frames[i]->GetSprite()->setTint(color);
+           m_Frames[i]->getSprite()->setTint(color);
        }
    }
 
    void center(void) {
       for (unsigned int i = 0; i < m_Frames.size(); i++) {
-         m_Frames[i]->GetSprite()->center();
+         m_Frames[i]->getSprite()->center();
       }
    }
 

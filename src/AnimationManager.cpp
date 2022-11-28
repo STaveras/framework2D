@@ -130,12 +130,12 @@ void AnimationManager::update(float fTime)
 //							pData = parser.getProperty("Duration");
 //
 //							if(pData)
-//								newFrame.SetDuration((float)pData->GetValueAsDouble());
+//								newFrame.setDuration((float)pData->GetValueAsDouble());
 //
 //							pData = parser.getProperty("Image");
 //
 //							if(pData)
-//								newFrame.SetSprite(_pSpriteManager->LoadSpriteFromFile(pData->GetValue()));
+//								newFrame.setSprite(_pSpriteManager->LoadSpriteFromFile(pData->GetValue()));
 //
 //							sprintf_s(buffer, 256, "Animation:Frames:%d:Anchor", i);
 //
@@ -170,7 +170,7 @@ void AnimationManager::update(float fTime)
 //										Trigger newTrigger;
 //										newTrigger.LoadFromFile(pData->GetValue());
 //
-//										newFrame.AddTrigger(newTrigger);
+//										newFrame.addTrigger(newTrigger);
 //									}
 //								}
 //							} // Trigger

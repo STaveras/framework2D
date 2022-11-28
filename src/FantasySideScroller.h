@@ -54,9 +54,9 @@ class FantasySideScroller : public Game
 				idle->setPreserveScaling(true);
 				idle->setRenderable(idleAnimation);
 
-				//static Square idleHitBox({ 0,0 }, (idleFrameDimensions * 0.8f));
+				//Square idleHitBox({ 0,0 }, (idleFrameDimensions * 0.8f));
 				//for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
-				//   (*idleAnimation)[i]->GetSprite()->SetCollisionInfo(&idleHitBox);
+				//   (*idleAnimation)[i]->getSprite()->setCollisionInfo(&idleHitBox);
 				//}
 
 				/////////////////////////////////////////
@@ -257,12 +257,12 @@ class FantasySideScroller : public Game
 
 				this->setState(falling);
 				this->setMass(100);
-				//this->setBuffered(true);
+				//this->setBuffered(true); // TODO: Buffered inputs don't seem to be working atm...
 
-				//collisionEventHandler = [=](const CollisionEvent* e) {
-				//   if (((GameState*)Engine2D::getGame()->top())->getObjectManager()->getObjectName(e->involvedObject) == "GroundTile")
-				//      this->sendInput("GROUND_COLLISION");
-				//};
+				collisionEventHandler = [=](const CollisionEvent* e) {
+				   if (((GameState*)Engine2D::getGame()->top())->getObjectManager()->getObjectName(e->involvedObject) == "GroundTile")
+				      this->sendInput("GROUND_COLLISION");
+				};
 			}
 
 			void update(float time) {

@@ -75,7 +75,7 @@ void Animation::setPosition(vector2 position)
 {
 	Factory<Frame>::factory_iterator i = m_Frames.begin();
 	for (; i != m_Frames.end(); i++)
-		(*i)->GetSprite()->setPosition(position);
+		(*i)->getSprite()->setPosition(position);
 }
 
 void Animation::mirror(bool horizontal, bool vertical)
@@ -84,7 +84,7 @@ void Animation::mirror(bool horizontal, bool vertical)
 
 	Factory<Frame>::factory_iterator i = m_Frames.begin();
 	for (; i != m_Frames.end(); i++)
-		(*i)->GetSprite()->mirror(horizontal, vertical);
+		(*i)->getSprite()->mirror(horizontal, vertical);
 }
 
 //Frame* Animation::addFrame(Sprite* sprite)
@@ -95,8 +95,8 @@ void Animation::mirror(bool horizontal, bool vertical)
 Frame* Animation::createFrame(Sprite* sprite, float duration)
 {
 	Frame* frame = m_Frames.create();
-	frame->SetSprite(sprite);
-	frame->SetDuration(duration);
+	frame->setSprite(sprite);
+	frame->setDuration(duration);
 
 	sprite->_appearance = this->_appearance;
 
@@ -124,7 +124,7 @@ bool Animation::update(float fTime)
 	if (!m_bPlaying || !m_Frames.size())
 		return false;
 
-	if (m_fTimer < m_Frames[_frameIndex]->GetDuration() && m_Frames[_frameIndex]->GetDuration() > 0)
+	if (m_fTimer < m_Frames[_frameIndex]->getDuration() && m_Frames[_frameIndex]->getDuration() > 0)
 	{
 		m_Frames[_frameIndex]->update(fTime);
 		m_fTimer += fTime * m_fSpeed;

@@ -844,7 +844,7 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	// 							Frame *frame = pAnimation->getCurrentFrame();
 
 	// 							if (frame)
-	// 								_DrawImage(frame->GetSprite(), 0xFFFFFFFF, frame->GetSprite()->getCenter());
+	// 								_DrawImage(frame->getSprite(), 0xFFFFFFFF, frame->getSprite()->getCenter());
 	// 						}
 	// 						break;
 	// 						}

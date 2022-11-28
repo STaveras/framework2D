@@ -27,24 +27,24 @@ public:
 	Frame(Sprite* pSprite, float fDuration);
 	~Frame(void){}
 
-	float GetDuration(void) const { return m_fDuration; }
-	Sprite* GetSprite(void) { return m_pSprite; }
-	
-	void mirror(bool bHorizontal, bool bVertical);
+	Sprite* getSprite(void) { return m_pSprite; }
+	void setSprite(Sprite* pSprite) { m_pSprite = pSprite; }
 
-	void SetDuration(float fDuration) { m_fDuration = fDuration; }
-	void SetSprite(Sprite* pSprite) { m_pSprite = pSprite; }
-	void setPosition(vector2 position) { if (m_pSprite) m_pSprite->setPosition(position); }
+	float getDuration(void) const { return m_fDuration; }
+	void setDuration(float fDuration) { m_fDuration = fDuration; }
 
-	void AddTrigger(Trigger::TYPE type, std::string value, Trigger::MODE mode = Trigger::ONCE){ m_lsTriggers.push_back(Trigger(type,value,mode)); }
-	void AddTrigger(const Trigger& trigger) { m_lsTriggers.push_back(trigger); }
-	bool RemoveTrigger(const Trigger& desc);
+	void addTrigger(Trigger::TYPE type, std::string value, Trigger::MODE mode = Trigger::ONCE){ m_lsTriggers.push_back(Trigger(type,value,mode)); }
+	void addTrigger(const Trigger& trigger) { m_lsTriggers.push_back(trigger); }
+	bool removeTrigger(const Trigger& desc);
 
 	// Goes triggers any associated triggers for this frame...
 	void update(float fTime);
 
 	// Resets all triggers for this frame.
 	void reset(void);
+	
+	// Flips sign of scale and center point on the specified axes 
+	void mirror(bool bHorizontal, bool bVertical);
 
 	bool operator==(const Frame& rhs) const;
 };
