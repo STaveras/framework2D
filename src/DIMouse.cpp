@@ -30,9 +30,9 @@ bool DIMouse::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
    return false;
 }
 
-void DIMouse::Update(void) {
+void DIMouse::update(void) {
 
-   IDIDeviceComm::Update();
+   IDIDeviceComm::update();
 
    if (m_lpDevice) {
       memcpy_s(&_mouseStateOld, sizeof(DIMOUSESTATE2), &_mouseState, sizeof(DIMOUSESTATE2));
@@ -49,13 +49,13 @@ void DIMouse::Update(void) {
 #ifdef _DEBUG
    if (Debug::dbgMouse) {
       static Timer timer;
-      timer.Update();
+      timer.update();
 
-      if (timer.GetElapsedTime() > 1) {
+      if (timer.getElapsedTime() > 1) {
          char buffer[128];
          sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
          OutputDebugString(buffer);
-         timer.Reset();
+         timer.reset();
       }
    }
 #endif

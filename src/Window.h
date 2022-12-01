@@ -9,10 +9,10 @@ class Window
 	int m_nWidth;
 	int m_nHeight;
 #ifdef _WIN32
-	HWND m_hWnd;
-	HDC m_hDC;
-	HINSTANCE m_hInstance;
-	LPSTR m_lpCmdLine;
+	HWND		 m_hWnd = NULL;
+	HDC		 m_hDC = NULL;
+	HINSTANCE m_hInstance = NULL;
+	LPSTR		 m_lpCmdLine = NULL;
 #endif
 	GLFWwindow* _window;
 
@@ -30,30 +30,30 @@ public:
 	~Window(void){}
 
 #ifdef _WIN32
-	HWND GetHWND(void) const { return m_hWnd; }
-	HDC GetHDC(void) const { return m_hDC; }
-	HINSTANCE GetHINSTANCE(void) const { return m_hInstance; }
-	LPSTR GetCmdLineArgs(void) const { return m_lpCmdLine; }
+	HWND getHWND(void) const { return m_hWnd; }
+	HDC getHDC(void) const { return m_hDC; }
+	HINSTANCE getHINSTANCE(void) const { return m_hInstance; }
+	LPSTR getCmdLineArgs(void) const { return m_lpCmdLine; }
 #endif
 	GLFWwindow * getUnderlyingWindow(void) { return _window; }
 
-	bool HasQuit(void) const { return m_bHasQuit; }
-	int GetWidth(void) const { return m_nWidth; }
-	int GetHeight(void) const { return m_nHeight; }
-	const char* GetWindowTitle(void) const { return m_szWindowTitle; }
-	const char* GetWindowClassName(void) const { return m_szWindowClassName; }
+	bool hasQuit(void) const { return m_bHasQuit; }
+	int getWidth(void) const { return m_nWidth; }
+	int getHeight(void) const { return m_nHeight; }
+	const char* getWindowTitle(void) const { return m_szWindowTitle; }
+	const char* getWindowClassName(void) const { return m_szWindowClassName; }
 
 	// Re-implement these so that setting them here actually resizes the window
-	void SetWidth(int nWidth);
-	void SetHeight(int nHeight);
-	void SetWindowTitle(const char* szWindowTitle);
+	void setWidth(int nWidth);
+	void setHeight(int nHeight);
+	void setWindowTitle(const char* szWindowTitle);
 #ifdef _WIN32
-	void Initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
+	void initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
 #endif
-	void Initialize(void);
-	void Update(void);
-	void Shutdown(void);
+	void initialize(void);
+	void update(void);
+	void shutdown(void);
 
-	void Resize(void);
+	void resize(void);
 };
 // Author: Stanley Taveras

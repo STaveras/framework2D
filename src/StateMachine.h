@@ -1,66 +1,71 @@
 // File: StateMachine.h
 // Author: Stanley Taveras
 // Created: 2/20/2010
-// Modified: 6/29/2010
+// Modified: 11/12/2022
 
 #if !defined(_STATEMACHINE_H)
 #define _STATEMACHINE_H
 
 #include "Factory.h"
+#include "Cyclable.h"
 #include "State.h"
 #include "StateMachineEvent.h"
+
 #include <list>
 #include <map>
 #include <queue>
 
-class StateMachine
-{
-	bool m_bBuffered;
-	float m_fTransitionFrequency;
-	State* m_pStartState;
-	State* m_pState;
+#define EVT_STATE_END "EVT_STATE_END"
 
-	void OnEvent(const StateMachineEvent& evt);
+class StateMachine : public Factory<State>, Cyclable
+{
+	State* _state;
+
+	bool  _isBuffered;
+	float _transitionFrequency;
+	float _transitionTimer;
+
+	void _onEvent(const StateMachineEvent& evt);
 
 protected:
-	Factory<State> _states; // TODO: Kinda want to make a StateMachine *be* a State-Factory
-	std::queue<StateMachineEvent> m_qEvents;
-	std::multimap<State*, std::pair<StateMachineEvent, State*>> m_mTransitionTable;
+	std::multimap<State*, std::pair<StateMachineEvent, State*>> _transitionTable;
+	std::queue<StateMachineEvent> _events;
 
-	State* _GetNextState(const StateMachineEvent& evt);
-	void _Transition(State* pNextState);
+	State* _nextState(const StateMachineEvent& evt);
 
 public:
 	StateMachine(void);
 	~StateMachine(void);
 
-	void SetIsBuffered(bool bBuffered) { m_bBuffered = bBuffered; }
-	void SetTransitionFrequency(float fFreq) { m_fTransitionFrequency = fFreq; }
-	void SetStartState(State* pState) { m_pStartState = pState; }
-	void SetState(State* pState) { if(m_pState) m_pState->onExit(pState); pState->onEnter(m_pState); m_pState = pState; } // Should I even allow this?
+	bool isBuffered(void) const { return _isBuffered; }
+	void setBuffered(bool bBuffered) { _isBuffered = bBuffered; }
 
-	bool IsBuffered(void) const { return m_bBuffered; }
-	float GetTransitionFrequency(void) const { return m_fTransitionFrequency; }
-	State* GetCurrentState(void) const { return m_pState; }
-	State* GetStartState(void) const { return m_pStartState; }
-	State* GetState(const char* szName);
-	Factory<State>* GetStateFactory(void) { return &_states; }
+	float getTransitionFrequency(void) const { return _transitionFrequency; }
+	void setTransitionFrequency(float fFreq) { _transitionFrequency = fFreq; }
 
-	State* AddState(const char* name);
+	State* addState(const char* name);
+
+	State* getState(void) const { return _state; }
+	State* getState(const char* szName);
+
+	void setState(State* state);
+	void setState(const char* name) {
+		this->setState(getState(name));
+	}
+
 	void addTransition(const char* condition, const char* nextState);
 	void registerTransition(State* pState, const StateMachineEvent& evt, State* pStateResult);
-	void registerTransition(const char* szStateName, const char* szCondition, const char* szResultState);
+	void registerTransition(const char* szStateName, const char* szCondition, const char* szResultState, void* sender = NULL);
 
-	void initialize(void);
-	void reset(void);
-
+	virtual void start(void);
 	virtual void update(float fTime);
+	virtual void finish(void);
 
-	void SendInput(const char* szCondition, void* pSender = NULL);
+	void sendInput(const char* condition, void* sender = NULL);
 
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class
-	bool LoadTransitionTableFromFile(const char* szFilename);
+	bool loadTransitionTableFromFile(const char* szFilename);
 };
 
 #endif  //_STATEMACHINE_H

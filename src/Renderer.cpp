@@ -4,13 +4,11 @@
 
 Window *Renderer::window = NULL;
 
-IRenderer *Renderer::Get(void) { return Engine2D::GetRenderer(); }
+IRenderer *Renderer::Get(void) { return Engine2D::getRenderer(); }
 
 #if _WIN32
-IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
-{
-	IRenderer *renderer = new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync);
-	return renderer;
+IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) {
+	return ((IRenderer *)new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync));
 }
 #endif
 
@@ -20,8 +18,8 @@ IRenderer* Renderer::CreateVKRenderer(Window* window)
 {
 	Renderer::window = window;
 	IRenderer* renderer = new RendererVK();
-	renderer->SetWidth(window->GetWidth());
-	renderer->SetHeight(window->GetHeight());
+	renderer->setWidth(window->getWidth());
+	renderer->setHeight(window->getHeight());
 	return renderer;
 }
 
@@ -29,12 +27,12 @@ void Renderer::DestroyRenderer(IRenderer *pRenderer)
 {
 	if (pRenderer)
 	{
-		pRenderer->Shutdown();
+		pRenderer->shutdown();
 		delete pRenderer;
 	}
 }
 
-// void Renderer::Render(Renderable* r)
+// void Renderer::render(Renderable* r)
 //{
 //     // TODO: Improve this massively.
 //     IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();

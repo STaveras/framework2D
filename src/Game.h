@@ -3,24 +3,34 @@
 
 #pragma once
 
-#include "ObjectManager.h"
 #include "ProgramStack.h"
 #include "Player.h"
+#include "Factory.h"
+#include "Engine2D.h"
 
-class Game : public ProgramStack // A game should probably CONTAIN a program stack and not BE one (?)
+#include <vector>
+
+class Game : public ProgramStack
 {
-   friend class Engine2D;
+	friend class Engine2D;
 
 protected:
-   Player* _Players;
+	Factory<Player> _players;
 
 public:
-   Player* GetPlayer(unsigned int index) { return &(_Players[index]); }
-   Player* GetPlayers(void) const { return _Players; }
+	
+	static Factory<Player>* getPlayers(void) { return &(Engine2D::getGame()->_players); }
 
-   virtual void Begin(void) = 0;
-   virtual void Update(class Timer* timer);
-   virtual void End(void) = 0;
+	static Player* getPlayerWith(GameObject* object) {
+		for (unsigned int i = 0; i < Game::getPlayers()->size(); i++) {
+			if (Game::getPlayers()->at(i)->getGameObject() == object) {
+				return Game::getPlayers()->at(i);
+			}
+		}
+		return NULL;
+	}
 
-   // virtual ~Game(void) { delete[] _Players; }
+	virtual void begin(void) = 0;
+	virtual void update(class Timer* timer);
+	virtual void end(void) = 0;
 };

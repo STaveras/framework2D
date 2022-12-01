@@ -1,42 +1,72 @@
-// Tile.h
 #pragma once
+
 #include "GameObject.h"
+
+#include <algorithm>
+#include <vector>
+
+//class Tile;
+//
+//class TileSet
+//{
+//
+//};
+
+// Just to get something on the screen...
 class Tile : public GameObject
 {
-    friend class TileSet;
+   std::string _type;
+
+   Texture* _tileSheet;
+
+   unsigned int _tileIndex; // How far in the tileSheet this block is
+   unsigned int _tileSize;  // Square tiles only for now
+
+   vector2 _tileCounts;
+
+   Factory<Image> _tileImages;
+
 
 public:
-    void SetSprite(Sprite* sprite);
-    void SetAnimation(Animation* animation);
-};
 
-class TileSet
-{
-    std::vector<Tile*> _Tiles;
+   std::string getType(void) const { return _type; }
 
-public:
-    void DefineTile(Renderable* renderable, Collidable* collidable = NULL);
-    Tile* operator=(unsigned int i) { return _Tiles[i]; }
-};
+   // tileSize size in pixels // squared 
+   // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
+   // tileType string which describes the tile; doesn't have to be human readable
+   Tile(Texture* tileSheet, unsigned int tileSize, unsigned int tileIndex, std::string tileType) :
+      GameObject(GAME_OBJ_OBJECT),
+      _tileSheet(tileSheet),
+      _tileIndex(tileIndex),
+      _tileSize(tileSize),
+      _type() {
 
-class TileGrid
-{
-    TileSet* _Tiles;
-    Tile*** _Grid;
+      if (_tileSheet) {
 
-public:
-    explicit TileGrid(unsigned horizontal, unsigned vertical)
-    {
-        _Grid = new Tile**[horizontal];
-        
-        for (unsigned x = 0; x < horizontal; x++)
-            _Grid[x] = new Tile*[vertical];
-    }
+         _tileCounts = { (float)(tileSheet->getWidth() / tileSize), (float)(tileSheet->getHeight() / tileSize) };
 
-    void Map(Tile* t, unsigned x, unsigned y)
-    {
+         if (tileIndex < _tileCounts.x * _tileCounts.y) {
 
-    }
+            UINT xPosition = (tileIndex % (UINT)_tileCounts.x) * tileSize;
+            UINT yPosition = (tileIndex / (UINT)_tileCounts.x) * tileSize;
 
-    void Load(const char* path);
+            UINT width = xPosition + tileSize;
+            UINT height = yPosition + tileSize;
+
+            RECT tileRect{
+               (int)xPosition, (int)yPosition, (int)width, (int)height
+            };
+
+            Image* tileImage = _tileImages.create();
+            tileImage->setSourceRect(tileRect);
+            tileImage->setTexture(tileSheet);
+
+            ((GameObjectState*)this->addState("Static"))->setRenderable(tileImage);
+         }
+      }
+   }
+
+   ~Tile(void) {
+      _tileImages.clear();
+   }
 };

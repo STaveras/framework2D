@@ -5,17 +5,17 @@
 
 #include "Sound.h"
 
-void Sound::Play()
+void Sound::play()
 {
 
 }
 
-void Sound::Stop()
+void Sound::stop()
 {
 
 }
 
-void Sound::Reset()
+void Sound::reset()
 {
 
 }

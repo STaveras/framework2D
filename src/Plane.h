@@ -14,15 +14,17 @@ class Square;
 
 class Plane : public Collidable
 {
-	vector2 m_Normal;
+	vector2 _normal;
+
+	// I want to change this to be v3 for 2D, and v4 for 3D
 
 public:
-	 Plane(void);
+	Plane(void): Collidable(COL_OBJ_PLANE), _normal(0,0) { }
 
-	vector2 GetNormal(void) const { return m_Normal; }
-	void SetNormal(const vector2& normal) { m_Normal = normal; }
+	vector2 getNormal(void) const { return _normal; }
+	void setNormal(const vector2& normal) { _normal = normal; }
 
-	bool Check(const Collidable* colObject);
+	bool collidesWith(const Collidable* colObject);
 };
 
 #endif  //_PLANE_H

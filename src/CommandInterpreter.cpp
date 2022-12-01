@@ -3,23 +3,23 @@
 #include "CommandEvent.h"
 #include "EventSystem.h"
 #include "InputEvent.h"
-#include "VirtualGamePad.h"
+#include "Controller.h"
 
 CommandInterpreter::CommandInterpreter(void):
 m_fResetTimer(0.0f),
-m_pEventSystem(NULL)
+_eventSystem(NULL)
 {}
 
 bool CommandInterpreter::_ProcessCommand(char* szCommand)
 {
 	size_t dwBtnIndex = 0;
-	VirtualButton* pPrevButton = NULL;
+	Action* pPrevAction = NULL;
 	char* pCmdItr = szCommand;
 
 	while(pCmdItr)
 	{
 		bool bPass = false;
-		VirtualButton* pButton = NULL;
+		Action* pAction = NULL;
 
 		switch(*pCmdItr)
 		{
@@ -35,16 +35,16 @@ bool CommandInterpreter::_ProcessCommand(char* szCommand)
 
 					for(; dwBtnIndex < m_vButtons.size(); dwBtnIndex++)
 					{
-						pButton = &m_vButtons[dwBtnIndex];
+						pAction = &m_vButtons[dwBtnIndex];
 
-						if(!strcmp(szButton, pButton->GetButtonID().c_str()))
+						if(!strcmp(szButton, pAction->getActionName().c_str()))
 						{
-							if(pPrevButton->GetButtonID() == pButton->GetButtonID() && !bSkipped)
+							if(pPrevAction->getActionName() == pAction->getActionName() && !bSkipped)
 							{
 								bSkipped = true;
 								continue;
 							}
-							else if(fabsf(pButton->GetTimeStamp() - pPrevButton->GetTimeStamp()) <= COMMAND_PERIOD)
+							else if(fabsf(pAction->getActionTime() - pPrevAction->getActionTime()) <= COMMAND_PERIOD)
 							{
 								bPass = true;
 								dwBtnIndex++;
@@ -70,16 +70,16 @@ bool CommandInterpreter::_ProcessCommand(char* szCommand)
 
 					for(; dwBtnIndex < m_vButtons.size(); dwBtnIndex++)
 					{
-						pButton = &m_vButtons[dwBtnIndex];
+						pAction = &m_vButtons[dwBtnIndex];
 
-						if(!strcmp(szButton, pButton->GetButtonID().c_str()))
+						if(!strcmp(szButton, pAction->getActionName().c_str()))
 						{
-							if(pPrevButton->GetButtonID() == pButton->GetButtonID() && !bSkipped)
+							if(pPrevAction->getActionName() == pAction->getActionName() && !bSkipped)
 							{
 								bSkipped = true;
 								continue;
 							}
-							else if(fabsf(pButton->GetTimeStamp() - pPrevButton->GetTimeStamp()) <= COMMAND_LONGPERIOD)
+							else if(fabsf(pAction->getActionTime() - pPrevAction->getActionTime()) <= COMMAND_LONGPERIOD)
 							{
 								bPass = true;
 								dwBtnIndex++;
@@ -101,9 +101,9 @@ bool CommandInterpreter::_ProcessCommand(char* szCommand)
 
 				if(szButton)
 				{
-					pButton = _ButtonInBuffer(szButton, dwBtnIndex);
+					pAction = _ButtonInBuffer(szButton, dwBtnIndex);
 
-					if(pButton && pButton->Simultaneous(*pPrevButton)) //fabsf(pButton->GetTimeStamp() - pPrevButton->GetTimeStamp()) <= COMMAND_SIMULTANEOUS
+					if(pAction && (!pPrevAction || pAction->simultaneous(*pPrevAction))) //fabsf(pAction->getTimeStamp() - pPrevAction->getTimeStamp()) <= COMMAND_SIMULTANEOUS
 					{
 						bPass = true;
 						dwBtnIndex++;
@@ -131,9 +131,9 @@ bool CommandInterpreter::_ProcessCommand(char* szCommand)
 					}
 					else
 					{
-						pButton = _ButtonInBuffer(szButton, dwBtnIndex);
+						pAction = _ButtonInBuffer(szButton, dwBtnIndex);
 
-						if(pButton)
+						if(pAction)
 						{
 							bPass = true;
 							dwBtnIndex++;
@@ -149,8 +149,8 @@ bool CommandInterpreter::_ProcessCommand(char* szCommand)
 		if(!bPass)
 			break;
 
-		if(pPrevButton != pButton)
-			pPrevButton = pButton;
+		if(pPrevAction != pAction)
+			pPrevAction = pAction;
 	} // while
 
 	return true;
@@ -187,11 +187,11 @@ char* CommandInterpreter::_NextCommand(char* pCmdIter)
 	return szReturn;
 }
 
-VirtualButton* CommandInterpreter::_ButtonInBuffer(char* szButtonID, size_t dwStartIndex)
+Action* CommandInterpreter::_ButtonInBuffer(char* szButtonID, size_t dwStartIndex)
 {
 	for (int i = (int)dwStartIndex; i < (int)m_vButtons.size(); i++)
 	{
-		if(!strcmp(szButtonID, m_vButtons[i].GetButtonID().c_str())) {
+		if(!strcmp(szButtonID, m_vButtons[i].getActionName().c_str())) {
 			return &m_vButtons[i];
 		}
 	}
@@ -199,35 +199,35 @@ VirtualButton* CommandInterpreter::_ButtonInBuffer(char* szButtonID, size_t dwSt
 	return NULL;
 }
 
-void CommandInterpreter::AddCommand(const char* szCommand)
+void CommandInterpreter::AddCommand(const char* command)
 {
-	m_Commands.Create(Command(szCommand));
-	m_Commands.Sort(Command::less());
+	m_Commands.create(Command(command));
+	m_Commands.sort(Command::less());
 }
 
 void CommandInterpreter::RemoveCommand(const char* szCommand)
 {
-	//m_Commands.Destroy(m_Commands.Find(Command(szCommand)));
+	//m_Commands.destroy(m_Commands.find(Command(command)));
 }
 
-void CommandInterpreter::RegisterKeyPress(ButtonID btnID, float fTimeStamp)
+void CommandInterpreter::RegisterKeyPress(std::string actionName, float time)
 {
 	m_fResetTimer = 0;
 
 	bool bExists = false;
-	VirtualButton btn;
+	Action btn;
 
 	for(size_t i = 0; i < m_vHeldButtons.size(); i++)
 	{
-		if(btnID == m_vHeldButtons[i].GetButtonID())
+		if(actionName == m_vHeldButtons[i].getActionName())
 		{
 			bExists = true;
-			m_vHeldButtons[i].SetTimeStamp(fTimeStamp);
+			m_vHeldButtons[i].setActionTime(time);
 			continue;
 		}
 
-		btn = VirtualButton(m_vHeldButtons[i].GetButtonID());
-		btn.SetTimeStamp(fTimeStamp);
+		btn = Action(m_vHeldButtons[i].getActionName());
+		btn.setActionTime(time);
 		m_vButtons.push_back(btn);
 	}
 
@@ -236,76 +236,74 @@ void CommandInterpreter::RegisterKeyPress(ButtonID btnID, float fTimeStamp)
 		m_vHeldButtons.push_back(btn);
 	}
 
-	btn = VirtualButton(btnID);
-	btn.SetTimeStamp(fTimeStamp);
+	btn = Action(actionName);
+	btn.setActionTime(time);
 	m_vButtons.push_back(btn);
 
-	m_mHoldTimes[btnID] = 0;
+	m_mHoldTimes[actionName] = 0;
 }
 
-void CommandInterpreter::RegisterKeyRelease(ButtonID btnID, float fTimeStamp)
+void CommandInterpreter::RegisterKeyRelease(std::string actionName, float time)
 {
 	m_fResetTimer = 0;
 
-	for(std::vector<VirtualButton>::iterator itr = m_vHeldButtons.begin(); itr != m_vHeldButtons.end(); itr++)
+	for(std::vector<Action>::iterator itr = m_vHeldButtons.begin(); itr != m_vHeldButtons.end(); itr++)
 	{
-		if(btnID == itr->GetButtonID())
+		if(actionName == itr->getActionName())
 		{
-			m_mHoldTimes[btnID] = fTimeStamp - itr->GetTimeStamp();
+			m_mHoldTimes[actionName] = time - itr->getActionTime();
 			m_vHeldButtons.erase(itr);
 			break;
 		}
 	}
 
-	VirtualButton btn(btnID);
-	btn.SetTimeStamp(fTimeStamp);
+	Action btn(actionName);
+	btn.setActionTime(time);
 
 	m_vButtons.push_back(btn);
 }
 
-void CommandInterpreter::Initialize(EventSystem* pEventSystem, VirtualGamePad* pGamePad)
+void CommandInterpreter::start(EventSystem* pEventSystem, Controller* pGamePad)
 {
-	m_pEventSystem = pEventSystem;
+	_eventSystem = pEventSystem;
 }
 
-void CommandInterpreter::Update(float fTime)
+void CommandInterpreter::update(float fTime)
 {
 	m_fResetTimer += fTime;
 
-	Factory<Command>::const_factory_iterator command_iter = m_Commands.Begin();
+	Factory<Command>::const_factory_iterator command_iter = m_Commands.begin();
 
-	for(; command_iter != m_Commands.End(); command_iter++)
+	for(; command_iter != m_Commands.end(); command_iter++)
 	{
 		if(m_vButtons.size() + m_vHeldButtons.size() < (*command_iter)->Length())
 			break;
 
 		if(_ProcessCommand((*command_iter)->GetCommandString()))
 		{
-			(*command_iter)->SetTimeStamp(m_vButtons[m_vButtons.size()-1].GetTimeStamp());
-			m_pEventSystem->sendEvent<CommandEvent>(CommandEvent((*command_iter), this));
+			(*command_iter)->SetTimeStamp(m_vButtons[m_vButtons.size()-1].getActionTime());
+			_eventSystem->sendEvent<CommandEvent>(CommandEvent((*command_iter), this));
 		}
 	}
 
 	// Update held buttons as necessary; reset the ones that aren't
-	for(std::map<ButtonID, float>::iterator itr = m_mHoldTimes.begin(); itr != m_mHoldTimes.end(); itr++)
+	for (std::map<std::string, float>::iterator itr = m_mHoldTimes.begin(); itr != m_mHoldTimes.end(); itr++)
 	{
 		bool bAddTime = false;
 
-		for(size_t i = 0; i < m_vHeldButtons.size(); itr++)
+		for (size_t i = 0; i < m_vHeldButtons.size(); itr++)
 		{
-			if(itr->first == m_vHeldButtons[i].GetButtonID())
+			if (itr->first == m_vHeldButtons[i].getActionName())
 			{
 				bAddTime = true;
 				break;
 			}
 		}
 
-		if(bAddTime)
-		{
+		if (bAddTime) {
 			itr->second += fTime;
 		}
-		else
-		{
+		else {
 			itr->second = 0;
 		}
 	}
@@ -318,9 +316,9 @@ void CommandInterpreter::Update(float fTime)
 	}
 }
 
-void CommandInterpreter::Shutdown(void)
+void CommandInterpreter::finish(void)
 {
 	m_vHeldButtons.clear();
 	m_vButtons.clear();
-	m_Commands.Clear();
+	m_Commands.clear();
 }

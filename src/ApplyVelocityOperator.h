@@ -8,7 +8,7 @@ class ApplyVelocityOperator: public ObjectOperator
 public:
    bool operator()(GameObject* object)
    {
-      ObjectState* objectState = (ObjectState*)object->GetCurrentState();
+      ObjectState* objectState = (ObjectState*)object->getState();
 
       if (objectState) {
          object->SetVelocity(objectState->getDirection() * (float)objectState->getForce());

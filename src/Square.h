@@ -24,20 +24,20 @@ public:
 
 	//vector2 GetMin(void) const { return _position; }
 	vector2 getMax(void) const { return vector2(this->getPosition().x + _fWidth, this->getPosition().y + _fHeight); }
-	//float GetWidth(void) const { return (m_Max.x - _position.x); }
-	//float GetHeight(void) const { return (m_Max.y - _position.y); }
-	float GetWidth(void) const { return _fWidth; }
-	float GetHeight(void) const { return _fHeight; }
+	//float getWidth(void) const { return (m_Max.x - _position.x); }
+	//float getHeight(void) const { return (m_Max.y - _position.y); }
+	float getWidth(void) const { return _fWidth; }
+	float getHeight(void) const { return _fHeight; }
 
-	void SetWidth(float fWidth) { _fWidth = fWidth; }
-	void SetHeight(float fHeight) { _fHeight = fHeight; }
+	void setWidth(float fWidth) { _fWidth = fWidth; }
+	void setHeight(float fHeight) { _fHeight = fHeight; }
 	//void SetMin(const vector2& min) { _position = min; }
 	//void SetMax(const vector2& max) { m_Max = max; }
-	//void SetWidth(float fWidth) { m_Max.x = _position.x + fWidth; }
-	//void SetHeight(float fHeight) { m_Max.y = _position.y + fHeight; }
+	//void setWidth(float fWidth) { m_Max.x = _position.x + fWidth; }
+	//void setHeight(float fHeight) { m_Max.y = _position.y + fHeight; }
 
-  bool Check(const Collidable * collidable);
-  bool Check(vector2 point);
+  bool collidesWith(const Collidable * collidable);
+  bool collidesWith(vector2 point);
   // TODO: Do this in better way or move to an HPP?
 
   // TODO: Add 

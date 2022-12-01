@@ -33,7 +33,7 @@ public:
 	void LoadFromFile(const char* szFilename);
 
 	void Activate(void);
-	void Reset(void);
+	void reset(void);
 
 	bool operator==(const Trigger& rhs) const { return (Type == rhs.Type && Mode == rhs.Mode && Value == rhs.Value); }
 	void operator()(void) { Activate(); }

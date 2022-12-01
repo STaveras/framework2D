@@ -4,37 +4,42 @@
 
 #include "IInput.h"
 #include "Factory.h"
-#include "VirtualGamePad.h"
+#include "Controller.h"
 #include <vector>
 
 class EventSystem;
 class IKeyboard;
 
+// This is confusing at the moment because originally "VirtualGamePad" was just that... A virtual representation of a game pad or console controller...
+// But what a controller is now is an action-input mapper and the inputmanager updates both controllers and input devices
+// This allows controllers to eventually take input from other sources, such as non-human agents (machine/AI)
+
 class InputManager
 {
 	float m_fElapsed;
 	EventSystem* m_pEventSystem;
-	IInput* m_pInput;
+	IInput* _input;
 
-	Factory<VirtualGamePad> m_GamePads;
+	Factory<Controller> m_Controllers;
 
 public:
 	InputManager(void);
 	~InputManager(void);
 
-	IKeyboard* GetKeyboard(void) { return m_pInput->GetKeyboard(); }
-	IMouse* GetMouse(void) { return m_pInput->GetMouse(); }
-	VirtualGamePad* GetGamepad(unsigned int uiIndex) { return m_GamePads.At(uiIndex); }
+	IKeyboard* getKeyboard(void) { return _input->getKeyboard(); }
+	IMouse* getMouse(void) { return _input->getMouse(); }
 
-	void SetEventSystem(EventSystem* pEventSystem) { m_pEventSystem = pEventSystem; }
-	void SetInputInterface(IInput* pInput) { m_pInput = pInput; }
+	Controller* getController(unsigned int uiIndex) { return m_Controllers.at(uiIndex); }
 
-	VirtualGamePad* CreateGamePad(void);
-	void DestroyGamePad(VirtualGamePad* pGamePad) { m_GamePads.Destroy(pGamePad); }
+	void setEventSystem(EventSystem* pEventSystem) { m_pEventSystem = pEventSystem; }
+	void setInputInterface(IInput* pInput) { _input = pInput; }
 
-	void Initialize(EventSystem* pEventSystem, IInput* pInput) { m_pEventSystem = pEventSystem; m_pInput = pInput; }
-	void Update(float fTime);
-	void Shutdown(void);
+	Controller* createController(void);
+	void destroyController(Controller* controller) { m_Controllers.destroy(controller); }
+
+	void initialize(EventSystem* pEventSystem, IInput* pInput) { m_pEventSystem = pEventSystem; _input = pInput; }
+	void update(float fTime);
+	void shutdown(void);
 };
 #endif
 // Author: Stanley Taveras1

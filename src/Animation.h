@@ -1,65 +1,99 @@
 // File: Animation.h
 #pragma once
 #include "Renderable.h"
-#include "ANIMATION_MODE.h"
 #include "Frame.h"
 #include "SpriteManager.h"
 #include <string>
 #include <vector>
 class Animation : public Renderable
 {
-   ANIMATION_MODE m_eMode;
+public:
+   enum Mode
+   {
+      eOnce = 1,
+      eOscillate,
+      eLoop
+   };
+private:
+
+   Mode m_eMode;
+
+   unsigned int _frameIndex;
    bool m_bForward;
    bool m_bPlaying;
-   unsigned int _frameIndex;
    float m_fSpeed;
    float m_fTimer;
    std::string m_szName;
    Factory<Frame> m_Frames;
 
 protected:
-   void _AdvanceFrame(void);
-   void _LastFrame(void);
-   void _Reset(void);
+   void _advanceFrame(void);
+   void _lastFrame(void);
+   void _reset(void);
 
 public:
    Animation(void);
    Animation(const char* szName);
 
-   ANIMATION_MODE GetMode(void) const { return m_eMode; }
-   bool IsForward(void) const { return m_bForward; }
-   bool IsPlaying(void) const { return m_bPlaying; }
-   float GetSpeed(void) const { return m_fSpeed; }
-   const char* GetName(void) const { return m_szName.c_str(); }
-   size_t GetCurrentFrameIndex(void) const { return _frameIndex; }
-   size_t GetFrameCount(void) { return m_Frames.Size(); }
-   Frame* GetCurrentFrame(void) { return m_Frames[_frameIndex]; }
+   Mode getMode(void) const { return m_eMode; }
+   bool isForward(void) const { return m_bForward; }
+   bool isPlaying(void) const { return m_bPlaying; }
+   float getSpeed(void) const { return m_fSpeed; }
+   const char* getName(void) const { return m_szName.c_str(); }
+   size_t getCurrentFrameIndex(void) const { return _frameIndex; }
+   size_t getFrameCount(void) { return m_Frames.size(); }
+   Frame* getCurrentFrame(void) { return m_Frames[_frameIndex]; }
    Frame* operator[](unsigned int i) { return m_Frames[i]; }
 
-   void SetIsForward(bool bForward) { m_bForward = bForward; }
-   void SetMode(ANIMATION_MODE eMode) { m_eMode = eMode; }
-   void SetSpeed(float fSpeed) { m_fSpeed = fSpeed; }
-   void SetName(const char* szName) { m_szName = szName; }
+   void setIsForward(bool bForward) { m_bForward = bForward; }
+   void setMode(Mode eMode) { m_eMode = eMode; }
+   void setSpeed(float fSpeed) { m_fSpeed = fSpeed; }
+   void setName(const char* szName) { m_szName = szName; }
+
    void setPosition(float x, float y) { setPosition(vector2(x, y)); }
    void setPosition(vector2 position);
 
-   void Mirror(bool bHorizontal, bool bVertical);
+   Frame* createFrame(Sprite* sprite, float duration = 0.0f);
 
-   // TODO: Rewrite to instead take a filename for the sprite
-   //Frame* AddFrame(Sprite* sprite);
-   Frame* AddFrame(Sprite* sprite, float duration = 0.0f);
-   void AddFrame(Frame* frame) { m_Frames.Store(frame); }
-   void RemoveFrame(Frame* frame);
+   void addFrame(Frame* frame) { m_Frames.store(frame); }
+   void removeFrame(Frame* frame);
 
-   void Play(void) { this->_Reset(); m_bPlaying = true; }
-   void Pause(void) { m_bPlaying = false; }
-   void Resume(void) { m_bPlaying = true; }
-   void Stop(void) { _Reset(); m_bPlaying = false; }
+   // If you've set individual frame durations, this will overwrite them all
+   void setFrameRate(int targetFrameRate) {
+      float frameTime = (1.0f / targetFrameRate) * m_Frames.size();
+      for (unsigned int i = 0; i < m_Frames.size(); i++) {
+         m_Frames[i]->setDuration(frameTime);
+      }
+   }
+
+   void play(void) { this->_reset(); m_bPlaying = true; }
+   void pause(void) { m_bPlaying = false; }
+   void resume(void) { m_bPlaying = true; }
+   void stop(void) { _reset(); m_bPlaying = false; }
+
+   void mirror(bool horizontal, bool vertical);
+
+   void setScale(vector2 scale) {
+       Renderable::setScale(scale);
+       for (unsigned int i = 0; i < m_Frames.size(); i++) {
+           m_Frames[i]->getSprite()->setScale(scale);
+       }
+   }
+
+   void setTint(Color color) {
+       Renderable::setTint(color);
+       for (unsigned int i = 0; i < m_Frames.size(); i++) {
+           m_Frames[i]->getSprite()->setTint(color);
+       }
+   }
+
+   void center(void) {
+      for (unsigned int i = 0; i < m_Frames.size(); i++) {
+         m_Frames[i]->getSprite()->center();
+      }
+   }
 
    bool update(float time); // Should we always force the user to use animation managers and not be able to call this?
-   bool operator==(const Animation& a)const;
-
-   // Single animation binary...?
-   static Animation* loadAnimationsFrom(const char* szFilename);
+   bool operator==(const Animation& a) const;
 };
 // Author: Stanley Taveras

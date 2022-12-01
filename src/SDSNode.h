@@ -20,14 +20,14 @@ private:
 public:
 	SDSNodeData(void):Type(SDS_SCOPE){}
 
-	SDSNodeType GetType(void) const { return Type; }
-	const char* GetName(void) const { return Name.c_str(); }
+	SDSNodeType getType(void) const { return Type; }
+	const char* getName(void) const { return Name.c_str(); }
 	const char* GetValue(void) const { return Value.c_str(); }
 	int GetValueAsInt(void) const { return atoi(Value.c_str()); }
 	double GetValueAsDouble(void) const { return atof(Value.c_str()); }
 
 	void SetType(SDSNodeType type) { Type = type; }
-	void SetName(const char* szName) { Name = szName; }
+	void setName(const char* szName) { Name = szName; }
 	void SetValue(const char* szValue) { Value = szValue; }
 };
 

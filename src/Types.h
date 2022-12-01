@@ -7,7 +7,7 @@
 #define _TYPES_H_
 
 // Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
-#define FRAMEWORK_VERSION "0.01"
+#define FRAMEWORK_VERSION "0.02"
 
 #define DEFAULT_DATA_PATH "./data/"
 
@@ -69,6 +69,7 @@ typedef std::ofstream ofpstream;
 #define strtok_s strtok_r
 #define _strdup strdup
 #define INFINITE INFINITY
+#define UINT unsigned int
 
 struct rect {
    int left, top, right, bottom;

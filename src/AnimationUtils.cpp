@@ -45,14 +45,14 @@ namespace Animations {
       return output;
    }
 
-   ANIMATION_MODE animationModeFromString(const char *mode) {
+   Animation::Mode animationModeFromString(const char *mode) {
 
       if (!strcmp(mode, "LOOPING"))
-         return ANIMATION_MODE_LOOP;
+         return Animation::Mode::eLoop;
       else if (!strcmp(mode, "OSCILLATE"))
-         return ANIMATION_MODE_OSCILLATE;
+         return Animation::Mode::eOscillate;
 
-      return ANIMATION_MODE_ONCE;
+      return Animation::Mode::eOnce;
    }
 
    void addToRenderList(std::vector<Animation*>& animations, IRenderer::RenderList *renderList)
@@ -65,10 +65,10 @@ namespace Animations {
    }
 
    void destroyAnimation(Animation *animation) {
-      for (unsigned int i = 0; i < animation->GetFrameCount(); i++) {
+      for (unsigned int i = 0; i < animation->getFrameCount(); i++) {
          Frame *frame = (*animation)[i];
-         delete frame->GetSprite();
-         animation->RemoveFrame(frame);
+         delete frame->getSprite();
+         animation->removeFrame(frame);
          delete frame;
       }
       delete animation;
@@ -76,10 +76,10 @@ namespace Animations {
 
    Animation* fromXMLElement(XMLElement *element, Animation *animation = NULL) {
 
-      animation->SetName(element->Attribute("Name"));
-      animation->SetMode(animationModeFromString(element->Attribute("PlayMode")));
-      animation->SetIsForward(strcmp("False", element->Attribute("Forward")));
-      animation->SetSpeed(element->FloatAttribute("Speed"));
+      animation->setName(element->Attribute("Name"));
+      animation->setMode(animationModeFromString(element->Attribute("PlayMode")));
+      animation->setIsForward(strcmp("False", element->Attribute("Forward")));
+      animation->setSpeed(element->FloatAttribute("Speed"));
 
       return animation;
    }
@@ -114,7 +114,7 @@ namespace Animations {
 
                   const char* frameImagePath = frameElement->FirstChildElement("Filename")->GetText();
 
-                  animation->AddFrame(new Frame(new Sprite(frameImagePath, 0xFFFF00FF, &srcRect), frameElement->FloatAttribute("Duration")));
+                  animation->addFrame(new Frame(new Sprite(frameImagePath, 0xFFFF00FF, srcRect), frameElement->FloatAttribute("Duration")));
 
                } while (frameElement = frameElement->NextSiblingElement("Frame"));
 
@@ -137,5 +137,31 @@ namespace Animations {
       // TODO: Go through a directory, and use the structure of the subdirectories to import animations and their associated images
 
       return animations;
+   }
+
+   // Only works when each Frame have the same dimensions
+   void createFramesForAnimation(Animation* animation, Texture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory, unsigned int startIndex, unsigned int count)
+   {
+      if (!animation || !spriteSheet)
+         return;
+
+      vector2 frameCounts = { spriteSheet->getWidth() / frameDimensions.x, spriteSheet->getHeight() / frameDimensions.y };
+
+      if (count == 0) {
+         count = (unsigned int)(frameCounts.x * frameCounts.y);
+      }
+
+      for (int y = 0; y < frameCounts.y; y++) {
+         for (int x = 0; x < frameCounts.x; x++) {
+            if ((unsigned int)((x + 1) * (y + 1)) < startIndex)
+               continue;
+
+            if (count-- == 0)
+               break;
+
+            animation->createFrame(spriteFactory.create(Sprite(spriteSheet, { (int)(x * frameDimensions.x), (int)(y * frameDimensions.y),
+                                                                              (int)((x + 1) * frameDimensions.x), (int)((y + 1) * frameDimensions.y) })));
+         }
+      }
    }
 }

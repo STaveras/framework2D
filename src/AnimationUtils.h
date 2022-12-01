@@ -3,12 +3,12 @@
 #include "Types.h"
 #include "IRenderer.h"
 
+#include "Sprite.h"
+
 #include <vector>
 
 class Animation;
 class AnimationManager;
-
-#include "ANIMATION_MODE.h"
 
 namespace Animations
 {
@@ -18,4 +18,12 @@ namespace Animations
    
    void addToRenderList(std::vector<Animation*>& animations, IRenderer::RenderList *renderList);
    void destroyAnimation(Animation *animation);
+
+   // Only works when each Frame have the same dimensions
+   void createFramesForAnimation(Animation* animation, 
+                                 Texture* spriteSheet, 
+                              vector2 frameDimensions, 
+                       Factory<Sprite>& spriteFactory,
+                              unsigned int startIndex = 0, 
+                              unsigned int count = 0);
 }

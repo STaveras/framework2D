@@ -1,16 +1,16 @@
 // File: RendererDX.cpp
 // Author: Stanley Taveras
 // Created: 2/24/2010
-// Modified: 1/13/2013
+// Modified: 11/13/2022
+
 #if _WIN32
 
 #include "RendererDX.h"
 #include "Animation.h"
-#include "Appearance.h"
 #include "Camera.h"
 #include "Frame.h"
 #include "Renderable.h"
-#include "Image.h"
+#include "Sprite.h"
 #include "TextureD3D.h"
 
 #pragma comment(lib, "d3d9.lib")
@@ -27,51 +27,44 @@ RendererDX::RendererDX(void) : IRenderer(),
 							   m_pD3D(NULL),
 							   m_pD3DDevice(NULL),
 							   m_pD3DSprite(NULL) {
+
 }
 
-RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight),
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight, bFullscreen, bVsync),
 m_hWnd(hWnd),
 m_pD3D(NULL),
 m_pD3DDevice(NULL),
-m_pD3DSprite(NULL)
-{
+m_pD3DSprite(NULL) {
+
 }
 
 RendererDX::~RendererDX(void)
 {
-   Shutdown();
+   this->shutdown();
 }
 
-// void RendererDX::_DrawAppearance(Appearance* pAppearance)
-//{
-//	// Calculate the tint and
-//	color tint = ((int)(pAppearance->GetAlpha() * 255) << 24) | (pAppearance->GetTint() & 0x00FFFFFF);
-//
-//	std::list<Image*>::const_iterator itr = pAppearance->GetSprites().begin();
-//
-//	for(; itr != pAppearance->GetSprites().end(); itr++)
-//	{
-//		_DrawImage((*itr), tint);
-//	}
-//
-//	if(pAppearance->GetAnimation())
-//		_DrawImage(pAppearance->GetAnimation()->GetCurrentFrame()->GetSprite(), tint, pAppearance->GetAnimation()->GetCurrentFrame()->GetAnchor());
-// }
-
 // Why do we have offset? Center is already an offset...
-void RendererDX::_DrawImage(Image *image, Color tint, D3DXVECTOR2 offset)
+void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
 {
    D3DXMATRIX transform;
-   D3DXMatrixTransformation2D(&transform, &image->GetRectCenter(), 0.0f, &image->GetScale(), &image->GetCenter(), image->GetRotation(), NULL);
+   D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
 
    D3DXVECTOR3 position;
-   position.x = image->getPosition().x + offset.x;
-   position.y = image->getPosition().y + offset.y;
-   position.z = 0.0f;
+   position.x = (image->getPosition().x + offset.x) * image->getScale().x;
+   position.y = (image->getPosition().y + offset.y) * image->getScale().y;
+   position.z = 0.0f; // Will eventually be used for z-effects
 
+   // No mipmaps, and nearest neighbor/point filtering 
+   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
    m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+
    m_pD3DSprite->SetTransform(&transform);
-   m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), &image->GetSourceRect(), &D3DXVECTOR3(image->GetCenter().x * image->GetScale().x, image->GetCenter().y * image->GetScale().y, 0.0f), &position, tint._color);
+   m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), 
+                     &image->getSourceRect(),
+                     &D3DXVECTOR3(image->getCenter().x * image->getScale().x, image->getCenter().y * image->getScale().y, 0.0f),
+                     &position,
+                     tint._color);
 }
 
 // void RendererDX::_DrawFont(Font* pFont)
@@ -79,7 +72,7 @@ void RendererDX::_DrawImage(Image *image, Color tint, D3DXVECTOR2 offset)
 
 //}
 
-ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
+ITexture *RendererDX::createTexture(const char *szFilename, Color colorKey)
 {
    ITexture* pTexture = _TextureExists(szFilename);
 
@@ -88,7 +81,7 @@ ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
       pTexture = (ITexture*)new TextureD3D(szFilename);
       pTexture->SetKeyColor(colorKey);
 
-      m_Textures.Store(pTexture);
+      m_Textures.store(pTexture);
 
       D3DXCreateTextureFromFileEx(
          m_pD3DDevice,
@@ -98,19 +91,28 @@ ITexture *RendererDX::CreateTexture(const char *szFilename, Color colorKey)
          D3DX_DEFAULT,
          0,
          D3DFMT_UNKNOWN,
-         D3DPOOL_MANAGED,
+         D3DPOOL_MANAGED, // Since this is managed, I haven't worried about a "destroyTexture" function
          D3DX_FILTER_POINT,
          D3DX_DEFAULT,
          (DWORD)colorKey._color,
-         &((TextureD3D*)pTexture)->m_tImageInfo,
+         &((TextureD3D*)pTexture)->_imageInfo,
          NULL,
-         &((TextureD3D*)pTexture)->m_pTexture);
+         &((TextureD3D*)pTexture)->_texture);
+   }
+   else {
+       //((TextureD3D*)pTexture)->getTexture()->AddRef();
    }
 
    return pTexture;
 }
 
-void RendererDX::Initialize(void)
+void RendererDX::destroyTexture(ITexture* texture)
+{
+   ((TextureD3D*)texture)->getTexture()->Release();
+   IRenderer::destroyTexture(texture);
+}
+
+void RendererDX::initialize(void)
 {
    m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
 
@@ -136,7 +138,7 @@ void RendererDX::Initialize(void)
    }
 }
 
-void RendererDX::Shutdown(void)
+void RendererDX::shutdown(void)
 {
 	if (m_pD3DSprite)
 	{
@@ -157,10 +159,12 @@ void RendererDX::Shutdown(void)
 	}
 }
 
-void RendererDX::Render(void)
+void RendererDX::render(void)
 {
 	if (!m_pD3DDevice)
 		return;
+
+   // We should only actually render, if there is a change or update from the animations/sprites ergo game/application itself
 
 	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 
@@ -181,9 +185,9 @@ void RendererDX::Render(void)
             D3DXMatrixScaling(&scaleMat, m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
 
             D3DXMATRIX rotationMat;
-            D3DXMatrixRotationZ(&rotationMat, m_pCamera->GetRotation());
+            D3DXMatrixRotationZ(&rotationMat, m_pCamera->getRotation());
 
-            D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->GetCenter();
+            D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->getCenter();
 
             viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1, 0), &position);
             viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0, 1), &position);
@@ -193,29 +197,38 @@ void RendererDX::Render(void)
             m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
          }
 
-         if (!_RenderLists.Empty())
+         if (!_RenderLists.empty())
          {
-            for (unsigned int i = 0; i < _RenderLists.Size(); i++)
+            for (unsigned int i = 0; i < _RenderLists.size(); i++)
             {
-               for (RenderList::iterator o = _RenderLists.At(i)->begin(); o != _RenderLists.At(i)->end(); o++)
+               for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++)
                {
-                  if ((*o)->IsVisible())
+                  // We should be making *absolutely* sure that nothing that makes it here is NULL to begin with
+                  if ((*o)) 
                   {
-                     switch ((*o)->getRenderableType())
+                     if ((*o)->isVisible())
                      {
-                     case RENDERABLE_TYPE_IMAGE:
-                        _DrawImage((Image*)(*o));
-                        break;
-
-                     case RENDERABLE_TYPE_ANIMATION:
-                     {
-                        Frame* frame = ((Animation*)(*o))->GetCurrentFrame();
-
-                        if (frame) {
-                           _DrawImage(frame->GetSprite());
+                        switch ((*o)->getRenderableType())
+                        {
+                        case RENDERABLE_TYPE_SPRITE:
+                        {
+                            Image* image = (Image*)(*o);
+                            _DrawImage(image,
+                                       image->getTintColor(),
+                                       image->getOffset());
                         }
-                     }
-                     break;
+                        break;
+                        case RENDERABLE_TYPE_ANIMATION:
+                        {
+                           Animation* animation = (Animation*)(*o);
+                           if (animation->getFrameCount()) {
+                              _DrawImage(animation->getCurrentFrame()->getSprite(), 
+                                         animation->getCurrentFrame()->getSprite()->_appearance._tintColor,
+                                         animation->getOffset());
+                           }
+                        }
+                        break;
+                        }
                      }
                   }
                }

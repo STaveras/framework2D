@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Image.h"
+#include "Sprite.h"
 
 namespace Background
 {
@@ -26,12 +26,12 @@ namespace Background
     
 //private:
 //   Mode _mode;
-//   std::list<Image*> _images; // should this be a factory?
+//   std::list<Sprite*> _images; // should this be a factory?
 
 //public:
 //   Mode getMode(void) const { return _mode; }
 //   void setMode(Mode mode) { _mode = mode; }
 //
-//   void addImage(Image *image) { _images.push_back(image); }
-//   void removeImage(Image *image) { _images.remove(image); }
+//   void addImage(Sprite *image) { _images.push_back(image); }
+//   void removeImage(Sprite *image) { _images.remove(image); }
 };

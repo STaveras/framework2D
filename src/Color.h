@@ -1,6 +1,7 @@
 // color.h
 #pragma once
 #include "Types.h"
+#define DEFAULT_KEY_COLOR 0xFFFF00FF
 namespace framework {
 	typedef union color
 	{

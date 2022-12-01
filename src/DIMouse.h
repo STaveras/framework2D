@@ -15,11 +15,11 @@ public:
       ZeroMemory(&_mouseState, sizeof(_mouseState));
    }
 
-   bool ButtonPressed(MOUSE_BUTTONS eBtn) {
+   bool buttonPressed(MOUSE_BUTTONS eBtn) {
       return ((bool)_mouseState.rgbButtons[eBtn] && !(bool)_mouseStateOld.rgbButtons[eBtn]);
    }
 
-   bool ButtonReleased(MOUSE_BUTTONS eBtn) {
+   bool buttonReleased(MOUSE_BUTTONS eBtn) {
       return (!(bool)_mouseState.rgbButtons[eBtn] && (bool)_mouseStateOld.rgbButtons[eBtn]);
    }
 
@@ -32,7 +32,7 @@ public:
    }
 
    bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);
-   void Update(void);
+   void update(void);
 };
 
 // NOTE: I'm mimicking how I wrote the DIKeyboard class circa 2010 but this is not the best way to wrap neither

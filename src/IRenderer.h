@@ -21,7 +21,11 @@ public:
 	} RenderList;
 
 protected:
-	bool m_bStaticBG;
+#if _DEBUG
+	void _BackgroundColorShift(void);
+
+	bool m_bStaticBG; // For demoing
+#endif
 	bool m_bFullScreen;
 	bool m_bVerticalSync;
 	int m_nWidth;
@@ -31,60 +35,70 @@ protected:
 	Factory<ITexture> m_Textures;
 	Factory<RenderList> _RenderLists;
 
-	void _BackgroundColorShift(void);
 	ITexture *_TextureExists(const char *szFilename);
 
 public:
-	IRenderer(void) : m_bStaticBG(false),
-					  m_bFullScreen(false),
-					  m_bVerticalSync(false),
-					  m_nWidth(0), m_nHeight(0),
-					  m_ClearColor(0xFFFFFFFF),
-					  m_pCamera(NULL)
+	IRenderer(void) :
+#if _DEBUG
+		m_bStaticBG(false),
+#endif
+		m_bFullScreen(false),
+		m_bVerticalSync(false),
+		m_nWidth(0), m_nHeight(0),
+		m_ClearColor(0xFFFFFFFF),
+		m_pCamera(NULL)
 	{
-		_RenderLists.Create();
+		_RenderLists.create();
 	} // Comes with one global render list
 
-	IRenderer(int nWidth, int nHeight) : m_bStaticBG(false),
-										 m_bFullScreen(false),
-										 m_bVerticalSync(false),
-										 m_nWidth(nWidth),
-										 m_nHeight(nHeight),
-										 m_ClearColor(0xFFFFFFFF),
-										 m_pCamera(NULL) {}
+	IRenderer(int nWidth, int nHeight, bool fullscreen = false, bool vsync = false) :
+#if _DEBUG
+		m_bStaticBG(false),
+#endif
+		m_bFullScreen(fullscreen),
+		m_bVerticalSync(vsync),
+		m_nWidth(nWidth),
+		m_nHeight(nHeight),
+		m_ClearColor(0xFFFFFFFF),
+		m_pCamera(NULL) {}
 
 	virtual ~IRenderer() = 0;
 
+#if _DEBUG
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
+#endif
 	bool isFullScreen(void) const { return m_bFullScreen; }
 	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
-	int GetWidth(void) const { return m_nWidth; }
-	int GetHeight(void) const { return m_nHeight; }
+	int getWidth(void) const { return m_nWidth; }
+	int getHeight(void) const { return m_nHeight; }
 	Color GetClearColor(void) const { return m_ClearColor; }
 	Camera *GetCamera(void) { return m_pCamera; }
 	ITexture *getTexture(const char *szFilename) { return _TextureExists(szFilename); }
 
+
+#if _DEBUG
 	void isBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
-	void SetWidth(int nWidth) { m_nWidth = nWidth; }
-	void SetHeight(int nHeight) { m_nHeight = nHeight; }
+#endif
+	void setWidth(int nWidth) { m_nWidth = nWidth; }
+	void setHeight(int nHeight) { m_nHeight = nHeight; }
 	void SetClearColor(Color clearColor);
 	void SetCamera(Camera *pCamera);
 
 	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }
 	virtual void setVerticalSync(bool vsyncEnabled) { m_bVerticalSync = vsyncEnabled; }
 
-	virtual ITexture *CreateTexture(const char *szFilename, Color colorKey = 0) = 0;
-	virtual bool DestroyTexture(const ITexture *pTexture);
+	virtual ITexture *createTexture(const char *szFilename, Color colorKey = 0) = 0;
+	virtual bool destroyTexture(const ITexture *pTexture);
 
-	void PushRenderList(RenderList *pRenderList) { _RenderLists.Store(pRenderList); }
-	void PopRenderList(void) { _RenderLists.Erase(_RenderLists.End()); }
+	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList); }
+	void popRenderList(void) { _RenderLists.erase(_RenderLists.end()); }
 
-	RenderList *CreateRenderList(void) { return _RenderLists.Create(); }
-	void DestroyRenderList(RenderList *list) { _RenderLists.Destroy(list); }
+	RenderList *CreateRenderList(void) { return _RenderLists.create(); }
+	void DestroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
 
-	virtual void Initialize(void) = 0;
-	virtual void Shutdown(void) = 0;
-	virtual void Render(void) = 0;
+	virtual void initialize(void) = 0;
+	virtual void shutdown(void) = 0;
+	virtual void render(void) = 0;
 	
 } RenderingInterface;
 

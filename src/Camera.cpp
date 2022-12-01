@@ -13,8 +13,12 @@ Camera::Camera(void):
 GameObject(GAME_OBJ_CAMERA),
 m_nScreenWidth(0),
 m_nScreenHeight(0),
-m_fZoom(1.0f)
-{}
+m_fZoom(1.0f) {
+   
+   // TODO: Add different states to the camera so it employs different behaviors
+
+   this->addState("CAMERA_EXISTS");
+}
 
 void Camera::MoveHorizontally(float amount)
 {
@@ -38,12 +42,12 @@ bool Camera::OnScreen(GameObject *object)
                          _position.y - (m_nScreenHeight * 0.5f)),
                          static_cast<float>(m_nScreenWidth), static_cast<float>(m_nScreenHeight));
 
-   ObjectState *objectState = (ObjectState*)object->GetCurrentState();
+   ObjectState *objectState = (ObjectState*)object->getState();
 
    if (objectState) {
       if (objectState->getCollidable()) {
-         return objectState->getCollidable()->Check(&square);
+         return objectState->getCollidable()->collidesWith(&square);
       }
    }
-   return square.Check(object->getPosition());
+   return square.collidesWith(object->getPosition());
 }

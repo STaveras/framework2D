@@ -1,28 +1,41 @@
 #pragma once
 
 #include "Event.h"
-#include "GameObject.h"
+//#include "GameObject.h"
+
+#include "Types.h"
+#include "Cyclable.h"
 
 // I don't think there should be a Player class, anymore :(
+// We should move to the "Controller" paradigm
 
-class VirtualGamePad;
-class Player
+class Controller;
+class GameObject;
+
+class Player : Cyclable
 {
-	 friend class GameState;
+	friend class GameState;
 
-	 VirtualGamePad* _pad;
-	 GameObject* _object;
+	vector2 _heading;
 
-	 void _OnKeyPress(const Event& evt);
-	 void _OnKeyRelease(const Event& evt);
+	Controller* _pad = NULL;
+	GameObject* _object = NULL;
+
+	void _OnKeyPress(const Event& evt);
+	void _OnKeyRelease(const Event& evt);
 
 public:
-	 GameObject* getGameObject(void) const { return _object; }
-	 void setGameObject(GameObject* object) { _object = object; }
 
-	 VirtualGamePad* getGamePad(void) const { return _pad; }
-	 void setGamePad(VirtualGamePad* pad) { _pad = pad; }
+	vector2 getHeading(void) const { return _heading; }
+	void getHeading(vector2 heading) { _heading = heading; }
 
-	 void setup(void);
-	 void shutdown(void);
+	GameObject* getGameObject(void) const { return _object; }
+	void setGameObject(GameObject* object) { _object = object; }
+
+	Controller* getController(void) const { return _pad; } // Could be an AI (e.g. machine) Controller!
+	void setController(Controller* pad) { _pad = pad; }
+
+	void start(void);
+	void update(float time);
+	void finish(void);
 };

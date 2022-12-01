@@ -13,7 +13,7 @@ public:
 
    bool operator()(GameObject *object)
    {
-      vector2 objectVelocity = object->GetVelocity();
+      vector2 objectVelocity = object->getVelocity();
 
 #if defined(GLM) || defined(__APPLE__)
       if (glm::length(objectVelocity) >= _maxSpeed) {
@@ -27,7 +27,7 @@ public:
          vector2 normalizedVel;
          D3DXVec2Normalize(&normalizedVel, &objectVelocity);
 
-         object->SetVelocity(normalizedVel * _maxSpeed);
+         object->setVelocity(normalizedVel * _maxSpeed);
       }
 #endif
       return true;

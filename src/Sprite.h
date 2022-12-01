@@ -1,20 +1,43 @@
+// File: Sprite.h
+#if !defined(_SPRITE_H)
+#define _SPRITE_H
 
-#pragma once
-#include "Image.h"
+#include "Renderable.h"
+#include "Types.h"
 #include "Collidable.h"
-class Sprite : public Image // Should probably just contain an image
+
+class IRenderer;
+class ITexture;
+typedef class Sprite : public Renderable
 {
-  Collidable* _CollideInfo;
+	 const ITexture* _texture;
+	 RECT _sourceRect;
+	 bool _manuallyLoaded;
 
 public:
-  Sprite(void) :Image(), _CollideInfo(NULL) {}
-  Sprite(const char* filename, Color clearKeyColor = 0, RECT* srcRect = NULL) :Image(filename, clearKeyColor, srcRect), _CollideInfo(NULL) {}
+	 Sprite(void);
+	 Sprite(const Sprite& image);
+	 Sprite(ITexture* pImage, const RECT& srcRect = { -1,-1,-1,-1 });
+	 Sprite(const char* filePath, Color clearColor = 0, const RECT& srcRect = {-1,-1,-1,-1});
+	 ~Sprite(void);
 
-  Collidable* getCollisionInfo(void) const { return _CollideInfo; }
-  void setCollisionInfo(Collidable* collisionObject) { _CollideInfo = collisionObject; }
+	 const ITexture* getTexture(void) const { return _texture; }
+	 const RECT& getSourceRect(void) const { return _sourceRect; }
+	 vector2 getRectCenter(void) const;
 
-  //using Image::Load;
+	 float getWidth(void) const;
+	 float getHeight(void) const;
 
-  Sprite* Load(const char* filePath);
-  void Save(const char* filePath);
-};
+	 void setTexture(ITexture* pTexture) { _texture = pTexture; }
+	 void setSourceRect(const RECT& srcRect) { _sourceRect = srcRect; }
+
+	 void center(void);
+
+	 //Sprite* load(const char* filePath);
+	 //void Save(const char* filePath);
+
+	 virtual Sprite* load(const char* filePath, Color clearColor = 0, const RECT& srcRect = {-1,-1,-1,-1});
+	 virtual void unload(void);
+}Image;
+#endif  //_SPRITE_H
+// Author: Stanley Taveras

@@ -6,24 +6,24 @@
 #if !defined(_PROGRAMSTACK_H_)
 #define _PROGRAMSTACK_H_
 
-#include "IProgramState.h"
+#include "ProgramState.h"
+
 #include <stack>
 
-class ProgramStack : private std::stack<IProgramState*>
+class ProgramStack : private std::stack<ProgramState*>
 {
-	typedef std::stack<IProgramState*> _ProgramStack;
+	typedef std::stack<ProgramState*> _ProgramStack;
 
 public:
 	ProgramStack(void) {}
-	~ProgramStack(void) { clear(); }
+	~ProgramStack(void) {}
 
 	using _ProgramStack::empty;
 	using _ProgramStack::size;
 	using _ProgramStack::top;
 
-	void push(IProgramState* state);
+	void push(ProgramState* state);
 	void pop(void);
-	void update(float time);
 	void clear(void);
 };
 

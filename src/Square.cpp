@@ -21,7 +21,7 @@ bool WithPlane(const Square* square, const Plane* plane)
 
 	//// TODO : Remove DirectX-specific code
 	//float fRadius = D3DXVec2Length(&width) / 2;
-	//float fDotResult = D3DXVec2Dot(&toSquare, &plane->GetNormal());
+	//float fDotResult = D3DXVec2Dot(&toSquare, &plane->getNormal());
 
 	// if(fDotResult < fRadius)
 	//	   return true;
@@ -42,7 +42,7 @@ bool WithSquare(const Square* squareA, const Square* squareB)
 	return true;
 }
 
-bool Square::Check(vector2 point)
+bool Square::collidesWith(vector2 point)
 {
 #if _WIN32 && !defined(GLM)
 	// For whatever reason, just using > or < wouldn't work?
@@ -60,12 +60,12 @@ bool Square::Check(vector2 point)
 }
 
 // This function is likely to look the same for all of these objects...
-bool Square::Check(const Collidable* collidable)
+bool Square::collidesWith(const Collidable* collidable)
 {
    switch (collidable->getType()) {
    case COL_OBJ_SQUARE:
       return WithSquare(this, (Square*)collidable);
    default:
-		return this->Check(collidable->getPosition());
+		return this->collidesWith(collidable->getPosition());
    }
 }

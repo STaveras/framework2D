@@ -22,7 +22,7 @@ m_pXAudio2(NULL),
 m_pMasteringVoice(NULL)
 {}
 
-void XAudio::Initialize(void)
+void XAudio::initialize(void)
 {
 	XAudio2Create(&m_pXAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
 
@@ -32,7 +32,7 @@ void XAudio::Initialize(void)
 	}
 }
 
-void XAudio::Shutdown(void)
+void XAudio::shutdown(void)
 {
 
 }

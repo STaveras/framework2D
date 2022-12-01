@@ -21,5 +21,5 @@ public:
 	bool KeyReleased(int nKey) { return (m_lpDevice && m_cBackBuffer[nKey] != m_cKeyBuffer[nKey] && KeyUp(nKey)); }
 
 	bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd);
-	void Update(void); // Think about adding a timer
+	void update(void); // Think about adding a timer
 };

@@ -29,7 +29,7 @@ namespace Renderer
 	IRenderer* CreateVKRenderer(Window* window);
 	
 	void DestroyRenderer(IRenderer* pRenderer);
-  //void Render(Renderable* r); // TODO: You can use it to draw stuff in real-time (kinda slow, but uses less overall memory)
+  //void render(Renderable* r); // TODO: You can use it to draw stuff in real-time (kinda slow, but uses less overall memory)
 }
 
 #endif

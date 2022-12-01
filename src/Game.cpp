@@ -2,31 +2,33 @@
 #include "GameState.h"
 #include "Timer.h"
 
-void Game::Begin(void)
+void Game::begin(void)
 {
    throw std::runtime_error("Game::Begin() unimplemented.");
 }
 
-void Game::Update(Timer* timer)
+void Game::update(Timer* timer)
 {
    if (!this->empty()) {
 
       if (timer) {
-         ProgramStack::update((float)timer->GetDeltaTime());
+
+         for (Player* player : _players) {
+            player->update((float)timer->getDeltaTime());
+         }
+
+         this->top()->onExecute((float)timer->getDeltaTime());
       }
+      else
+         this->top()->onExecute();
    }
    else {
-      Engine2D::Quit();
+      Engine2D::quit();
    }
 }
 
-// Adding a sort of garbage collector
-void Game::End(void)
+// We can't assume that new GameStates are allocated on the heap
+void Game::end(void)
 {
-   while (!this->empty())
-   {
-      void *gameState = this->top();
-      this->pop();
-      delete reinterpret_cast<GameState*>(gameState);
-   }
+   throw std::runtime_error("Game::End() unimplemented.");
 }

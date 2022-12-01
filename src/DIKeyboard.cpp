@@ -18,9 +18,9 @@ bool DIKeyboard::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
    return false;
 }
 
-void DIKeyboard::Update(void)
+void DIKeyboard::update(void)
 {
-   IDIDeviceComm::Update();
+   IDIDeviceComm::update();
 
    if (m_lpDevice) {
 

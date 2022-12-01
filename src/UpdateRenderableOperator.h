@@ -9,7 +9,7 @@ class UpdateRenderableOperator: public ObjectOperator
 {
    bool operator()(GameObject* object) {
 
-      ObjectState* objectState = (ObjectState*)object->GetCurrentState();
+      ObjectState* objectState = (ObjectState*)object->getState();
 
       if (objectState)
          objectState->getRenderable()->setPosition(object->getPosition());

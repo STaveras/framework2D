@@ -10,11 +10,58 @@
 Animation* AnimationManager::GetAnimation(const char* szName)
 {
    // This is kinda dumb.
-   for (unsigned int i = 0; i < this->Size(); i++) {
-      if (this->At(i)->GetName() == szName)
-         return this->At(i);
+   for (unsigned int i = 0; i < this->size(); i++) {
+      if (this->at(i)->getName() == szName)
+         return this->at(i);
    }
    return NULL;
+}
+
+Animation* AnimationManager::CreateAnimation(const char* szName, std::vector<Sprite*>* vSprites, int nTargetFPS)
+{
+   Animation* animation = this->GetAnimation(szName);
+
+   if (!animation) {
+      animation = this->create();
+      animation->setName(szName);
+   }
+
+	if (vSprites && !vSprites->empty()) {
+
+		std::vector<Sprite*>::const_iterator itr = vSprites->begin();
+
+		for (; itr != vSprites->end(); itr++)
+			animation->createFrame((*itr), (float)(nTargetFPS / vSprites->size()));
+	}
+
+   //_renderList->push_back(animation);
+
+   return animation;
+}
+
+void AnimationManager::DestroyAnimation(Animation* pAnimation)
+{
+   //for (IRenderer::RenderList::iterator i = _renderList->begin(); i != _renderList->end(); i++)
+   //   if ((*i) == pAnimation)
+   //      _renderList->erase(i);
+
+   this->destroy(pAnimation);
+}
+
+void AnimationManager::DestroyAnimation(const char* szName)
+{
+   for (Factory<Animation>::const_factory_iterator itr = this->begin(); itr != this->end(); itr++)
+      if (!strcmp((*itr)->getName(), szName))
+         return DestroyAnimation(*itr);
+}
+
+void AnimationManager::update(float fTime)
+{
+   Factory<Animation>::const_factory_iterator itr = this->begin();
+
+   for (; itr != this->end(); itr++) {
+      (*itr)->update(fTime);
+   }
 }
 
 //Animation* AnimationManager::LoadAnimationFromFile(const char* szFilename)
@@ -36,7 +83,7 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //				if(!pAnimation)
 //				{
 //					pAnimation = m_Animations.Create();
-//					pAnimation->SetName(pData->GetValue());
+//					pAnimation->setName(pData->GetValue());
 //				}
 //
 //				pData = parser.getProperty("Mode");
@@ -44,11 +91,11 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //				if(pData)
 //				{
 //					if(streqls(pData->GetValue(), "Loop"))
-//						pAnimation->SetMode(ANIMATION_MODE_LOOP);
+//						pAnimation->setMode(ANIMATION_MODE_LOOP);
 //					else if(streqls(pData->GetValue(), "Once") || pData->GetValueAsInt() == 1)
-//						pAnimation->SetMode(ANIMATION_MODE_ONCE);
+//						pAnimation->setMode(ANIMATION_MODE_ONCE);
 //					else if(streqls(pData->GetValue(), "Oscillate") || pData->GetValueAsInt() >= 2)
-//						pAnimation->SetMode(ANIMATION_MODE_OSCILLATE);
+//						pAnimation->setMode(ANIMATION_MODE_OSCILLATE);
 //				}
 //
 //				pData = parser.getProperty("Forward");
@@ -56,15 +103,15 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //				if(pData)
 //				{
 //					if(streqls(pData->GetValue(), "false"))
-//						pAnimation->SetIsForward(false);
+//						pAnimation->setIsForward(false);
 //					else
-//						pAnimation->SetIsForward(true);
+//						pAnimation->setIsForward(true);
 //				}
 //
 //				pData = parser.getProperty("Speed");
 //
 //				if(pData)
-//					pAnimation->SetSpeed((float)pData->GetValueAsDouble());
+//					pAnimation->setSpeed((float)pData->GetValueAsDouble());
 //
 //				if(parser.setScope("Animation:Frames"))
 //				{
@@ -83,12 +130,12 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //							pData = parser.getProperty("Duration");
 //
 //							if(pData)
-//								newFrame.SetDuration((float)pData->GetValueAsDouble());
+//								newFrame.setDuration((float)pData->GetValueAsDouble());
 //
 //							pData = parser.getProperty("Image");
 //
 //							if(pData)
-//								newFrame.SetSprite(_pSpriteManager->LoadSpriteFromFile(pData->GetValue()));
+//								newFrame.setSprite(_pSpriteManager->LoadSpriteFromFile(pData->GetValue()));
 //
 //							sprintf_s(buffer, 256, "Animation:Frames:%d:Anchor", i);
 //
@@ -123,12 +170,12 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //										Trigger newTrigger;
 //										newTrigger.LoadFromFile(pData->GetValue());
 //
-//										newFrame.AddTrigger(newTrigger);
+//										newFrame.addTrigger(newTrigger);
 //									}
 //								}
 //							} // Trigger
 //
-//							pAnimation->AddFrame(newFrame);
+//							pAnimation->addFrame(newFrame);
 //						} // Frame
 //					} // for
 //				} // Frames
@@ -140,47 +187,3 @@ Animation* AnimationManager::GetAnimation(const char* szName)
 //
 //	return pAnimation;
 //}
-
-Animation* AnimationManager::CreateAnimation(const char* szName, std::vector<Sprite*>* vSprites, int nTargetFPS)
-{
-   Animation* animation = this->GetAnimation(szName);
-
-   if (!animation) {
-      animation = this->Create();
-      animation->SetName(szName);
-   }
-
-   std::vector<Sprite*>::const_iterator itr = vSprites->begin();
-   for (; itr != vSprites->end(); itr++)
-      animation->AddFrame((*itr), (float)(nTargetFPS / vSprites->size()));
-
-   _renderList->push_back(animation);
-
-   return animation;
-}
-
-void AnimationManager::DestroyAnimation(Animation* pAnimation)
-{
-   for (IRenderer::RenderList::iterator i = _renderList->begin(); i != _renderList->end(); i++)
-      if ((*i) == pAnimation)
-         _renderList->erase(i);
-
-   this->Destroy(pAnimation);
-}
-
-void AnimationManager::DestroyAnimation(const char* szName)
-{
-   for (Factory<Animation>::const_factory_iterator itr = this->Begin(); itr != this->End(); itr++)
-      if (!strcmp((*itr)->GetName(), szName))
-         return DestroyAnimation(*itr);
-}
-
-void AnimationManager::Update(float fTime)
-{
-   Factory<Animation>::const_factory_iterator itr = this->Begin();
-
-   for (; itr != this->End(); itr++)
-   {
-      (*itr)->update(fTime);
-   }
-}

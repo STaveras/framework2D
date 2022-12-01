@@ -1,10 +1,11 @@
 
 #pragma once
 
+#include "Cyclable.h"
 #include "Command.h"
 #include "Event.h"
 #include "Factory.h"
-#include "VirtualButton.h"
+#include "Action.h"
 #include <queue>
 #include <vector>
 
@@ -14,23 +15,23 @@
 #define COMMAND_RESETTIME COMMAND_LONGPERIOD + 1
 
 class EventSystem;
-class VirtualGamePad;
+class Controller;
 
-class CommandInterpreter
+class CommandInterpreter: public Cyclable
 {
 	float m_fResetTimer;
-	EventSystem* m_pEventSystem;
+	EventSystem* _eventSystem;
 	Factory<Command> m_Commands;
 
-	std::vector<VirtualButton> m_vButtons;
-	std::vector<VirtualButton> m_vHeldButtons;
-	std::map<ButtonID, float> m_mHoldTimes;
+	std::vector<Action> m_vButtons;
+	std::vector<Action> m_vHeldButtons;
+	std::map<std::string, float> m_mHoldTimes;
 
 protected:
 	bool _ProcessCommand(char* szCommand);
 	float _ParseHoldTime(char* pCmdIter);
 	char* _NextCommand(char* pCmdIter);
-	VirtualButton* _ButtonInBuffer(char* szButtonID, size_t dwStartIndex);
+	Action* _ButtonInBuffer(char* szButtonID, size_t dwStartIndex);
 
 public:
 	CommandInterpreter(void);
@@ -38,10 +39,10 @@ public:
 	void AddCommand(const char* szCommand);
 	void RemoveCommand(const char* szCommand);
 
-	void RegisterKeyPress(ButtonID btnID, float fTimeStamp);
-	void RegisterKeyRelease(ButtonID btnID, float fTimeStamp);
+	void RegisterKeyPress(std::string actionName, float time);
+	void RegisterKeyRelease(std::string actionName, float time);
 
-	void Initialize(EventSystem* pEventSystem, VirtualGamePad* pGamePad);
-	void Update(float fTime);
-	void Shutdown(void);
+	void start(EventSystem* pEventSystem, Controller* pGamePad);
+	void update(float fTime);
+	void finish(void);
 };

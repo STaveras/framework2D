@@ -3,7 +3,7 @@
 #include "Background.h"
 #include "ObjectOperator.h"
 #include "Renderer.h"
-#include "Image.h"
+#include "Sprite.h"
 #include "Factory.h" // should maybe use this for the cache...? 
 
 #include <vector>
@@ -30,36 +30,24 @@ class UpdateBackgroundOperator: public ObjectOperator
 
    Background::Mode _mode;
 
-   void _updatePos(vector2& lastPos, short axis, short flip);
-   void _clearCache(void);
+   //void _updatePos(vector2& lastPos, short axis, short flip);
+   void _resetCache(void);
    void _updateCache(void);
 
 public:
 
    ~UpdateBackgroundOperator() {
-      _clearCache();
+      _resetCache();
    }
 
    Image* getBackground(void) const { return _background; }
 
    void setMode(Background::Mode mode) { _mode = mode; }
-   void setBackground(Image *image) { _background = image; _clearCache(); }
+   void setBackground(Image *image) { _background = image; _resetCache(); }
    void setCamera(Camera *camera) { _camera = camera; }
 
-   void useRenderList(IRenderer::RenderList *renderList) { _renderList = renderList; _clearCache(); }
+   void useRenderList(IRenderer::RenderList *renderList) { _renderList = renderList; _resetCache(); }
 
-   bool operator()(GameObject *object) {
+   bool operator()(GameObject* object);
 
-      _updateCache();
-
-      switch (_mode) {
-      case Background::Mode::Repeat:
-         break;
-      case Background::Mode::Mirror:
-          break;
-      default: // Background::Mode::Still:
-         break; // Do nothing, really
-      }
-      return true;
-   }
 };

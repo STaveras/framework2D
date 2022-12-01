@@ -12,7 +12,7 @@ PlatformInput::~PlatformInput(void) {
    SAFE_DELETE(_keyboard);
 }
 
-void PlatformInput::Initialize(void)
+void PlatformInput::initialize(void)
 {
 //    if (m_lpDirectInput)
 //    {
@@ -24,16 +24,16 @@ void PlatformInput::Initialize(void)
 //    }
 }
 
-void PlatformInput::Update(void)
+void PlatformInput::update(void)
 {
 //    if (_keyboard)
-//       ((DIKeyboard*)_keyboard)->Update();
+//       ((DIKeyboard*)_keyboard)->update();
 
 //    if (_mouse)
-//       ((DIMouse*)_mouse)->Update();
+//       ((DIMouse*)_mouse)->update();
 }
 
-void PlatformInput::Shutdown(void)
+void PlatformInput::shutdown(void)
 {
 //    if (m_lpDirectInput)
 //    {
