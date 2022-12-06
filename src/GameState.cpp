@@ -53,7 +53,7 @@ bool GameState::onExecute(float time)
       }
 
       if (_camera) {
-         if (!_camera->OnScreen(_player->getGameObject())) {
+         if (!_camera->onScreen(_player->getGameObject())) {
             //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
             //OutputDebugString("GameObject off screen\n\n");
             Debug::Log->write("GameObject off screen\n\n");

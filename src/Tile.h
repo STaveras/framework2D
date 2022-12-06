@@ -5,17 +5,10 @@
 #include <algorithm>
 #include <vector>
 
-//class Tile;
-//
-//class TileSet
-//{
-//
-//};
-
 // Just to get something on the screen...
 class Tile : public GameObject
 {
-   std::string _type;
+   //std::string _type;
 
    Texture* _tileSheet;
 
@@ -26,20 +19,19 @@ class Tile : public GameObject
 
    Factory<Image> _tileImages;
 
-
 public:
 
-   std::string getType(void) const { return _type; }
+   //std::string getType(void) const { return _type; }
 
    // tileSize size in pixels // squared 
    // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
    // tileType string which describes the tile; doesn't have to be human readable
-   Tile(Texture* tileSheet, unsigned int tileSize, unsigned int tileIndex, std::string tileType) :
+   Tile(Texture* tileSheet, unsigned int tileSize, unsigned int tileIndex, std::string tileType = "") :
       GameObject(GAME_OBJ_OBJECT),
       _tileSheet(tileSheet),
       _tileIndex(tileIndex),
-      _tileSize(tileSize),
-      _type() {
+      _tileSize(tileSize)
+      /*_type()*/ {
 
       if (_tileSheet) {
 
@@ -68,5 +60,13 @@ public:
 
    ~Tile(void) {
       _tileImages.clear();
+   }
+
+   unsigned int getTileIndex(void) const {
+      return _tileIndex;
+   }
+
+   unsigned int getTileSize(void) const {
+      return _tileSize;
    }
 };

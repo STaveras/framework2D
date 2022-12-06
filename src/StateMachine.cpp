@@ -51,6 +51,9 @@ void StateMachine::setState(State* state)
 {
    if (state) {
 
+      if (state == _state)
+         return;
+
       if (_state) {
          _state->onExit(state);
       }

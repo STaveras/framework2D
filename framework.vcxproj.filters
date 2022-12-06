@@ -313,9 +313,6 @@
     <ClInclude Include="src\PlatformKeyboard.h">
       <Filter>engine2Dbase\Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\FantasySideScroller.h">
-      <Filter>Games</Filter>
-    </ClInclude>
     <ClInclude Include="src\Sprite.h">
       <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
     </ClInclude>
@@ -356,6 +353,12 @@
       <Filter>engine2Dbase\Rendering\Renderers\DirectX</Filter>
     </ClInclude>
     <ClInclude Include="src\Tile.h">
+      <Filter>engine2Dbase\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FantasySideScroller.h">
+      <Filter>Games</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TileMap.h">
       <Filter>engine2Dbase\Objects</Filter>
     </ClInclude>
   </ItemGroup>

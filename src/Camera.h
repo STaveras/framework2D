@@ -8,29 +8,33 @@
 
 #include "GameObject.h"
 
+// TODO: Define frustrum within the camera
+
 class Camera : public GameObject
 {
-	 int m_nScreenWidth;
-	 int m_nScreenHeight;
-	 float m_fZoom;
+	 int _screenWidth;
+	 int _screenHeight;
+	 float _zoom; // NOTE: Actually just a scale -- should be the inverse of scale (i.e. 1.0 - zoom)
 
 public:
 	 Camera(void);
 
-	 int GetScreenWidth(void) const { return m_nScreenWidth; }
-	 int GetScreenHeight(void) const { return m_nScreenHeight; }
-	 float getZoom(void) const { return m_fZoom; }
-	 vector2 getCenter(void) const { return vector2(m_nScreenWidth / 2.0f, m_nScreenHeight / 2.0f); }
+	 // Out 
+	 vector2 getCenter(void) const { return vector2(_screenWidth / 2.0f, _screenHeight / 2.0f); }
 
-	 void SetScreenWidth(unsigned int uiWidth) { m_nScreenWidth = uiWidth; }
-	 void SetScreenHeight(unsigned int uiHeight) { m_nScreenHeight = uiHeight; }
-	 void SetZoom(float fZoom) { m_fZoom = fZoom; }
+	 int getScreenWidth(void) const { return _screenWidth; }
+	 int getScreenHeight(void) const { return _screenHeight; }
+	 float getZoom(void) const { return _zoom; }
 
-	 void MoveHorizontally(float amount);
-	 void MoveVertically(float amount);
-	 void Pan(vector2 direction, float amount);
+	 void setScreenWidth(unsigned int uiWidth) { _screenWidth = uiWidth; }
+	 void setScreenHeight(unsigned int uiHeight) { _screenHeight = uiHeight; }
+	 void setZoom(float fZoom) { _zoom = fZoom; }
 
-	 bool OnScreen(GameObject* object);
+	 void moveHorizontally(float amount);
+	 void moveVertically(float amount);
+	 void pan(vector2 direction, float amount);
+
+	 bool onScreen(GameObject* object);
 };
 
 #endif  //_CAMERA_H

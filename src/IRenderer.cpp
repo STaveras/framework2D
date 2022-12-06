@@ -97,8 +97,8 @@ void IRenderer::SetClearColor(Color clearColor)
 void IRenderer::SetCamera(Camera* pCamera)
 {
 	m_pCamera = pCamera;
-	m_pCamera->SetScreenWidth(m_nWidth);
-	m_pCamera->SetScreenHeight(m_nHeight);
+	m_pCamera->setScreenWidth(m_nWidth);
+	m_pCamera->setScreenHeight(m_nHeight);
 }
 
 bool IRenderer::destroyTexture(const ITexture* pTexture)

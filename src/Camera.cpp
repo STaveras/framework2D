@@ -11,36 +11,35 @@
 
 Camera::Camera(void):
 GameObject(GAME_OBJ_CAMERA),
-m_nScreenWidth(0),
-m_nScreenHeight(0),
-m_fZoom(1.0f) {
+_screenWidth(0),
+_screenHeight(0),
+_zoom(1.0f) {
    
    // TODO: Add different states to the camera so it employs different behaviors
-
-   this->addState("CAMERA_EXISTS");
+   this->addState("Static");
 }
 
-void Camera::MoveHorizontally(float amount)
+void Camera::moveHorizontally(float amount)
 {
 	_position.x += amount;
 }
 
-void Camera::MoveVertically(float amount)
+void Camera::moveVertically(float amount)
 {
 	_position.y += amount;
 }
 
-void Camera::Pan(vector2 direction, float amount)
+void Camera::pan(vector2 direction, float amount)
 {
 	_position += direction * amount;
 }
 
 // Trying to make this as simple as possible...
-bool Camera::OnScreen(GameObject *object)
+bool Camera::onScreen(GameObject *object)
 {
-   Square square(vector2(_position.x - (m_nScreenWidth * 0.5f), 
-                         _position.y - (m_nScreenHeight * 0.5f)),
-                         static_cast<float>(m_nScreenWidth), static_cast<float>(m_nScreenHeight));
+   Square square(vector2(_position.x - (_screenWidth * 0.5f), 
+                         _position.y - (_screenHeight * 0.5f)),
+                         static_cast<float>(_screenWidth), static_cast<float>(_screenHeight));
 
    ObjectState *objectState = (ObjectState*)object->getState();
 

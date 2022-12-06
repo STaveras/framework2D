@@ -101,6 +101,8 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <IntelJCCErratum>true</IntelJCCErratum>
       <StringPooling>true</StringPooling>
+      <CompileAsManaged>false</CompileAsManaged>
+      <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -197,6 +199,7 @@
     <ClInclude Include="src\System.h" />
     <ClInclude Include="src\TextureD3D.h" />
     <ClInclude Include="src\Tile.h" />
+    <ClInclude Include="src\TileMap.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />

@@ -4,13 +4,13 @@
 #include "GameObject.h"
 
 // This is more like "hard attach"
-class FollowObject: public ObjectOperator
+class AttachObjectsOperator: public ObjectOperator
 {
-      GameObject* _source; // the object following
-      GameObject* _object; // the object followed
+      GameObject* _source = NULL; // the object following
+      GameObject* _object = NULL; // the object followed
 
-      vector2 _offset; // TODO
-      bool _horizontally, _vertically;
+      vector2 _offset;
+      bool _horizontally = true, _vertically = true;
 
    public:
 
@@ -31,7 +31,7 @@ class FollowObject: public ObjectOperator
          if (_vertically)
             position.y = object->getPosition().y;
 
-         _source->setPosition(position);
+         _source->setPosition(position + _offset);
 
          return true;
       }

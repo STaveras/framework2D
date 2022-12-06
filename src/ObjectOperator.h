@@ -16,7 +16,7 @@ class ObjectOperator
 public:
 
 	bool isEnabled(void) const { return _enabled; }
-	void setEnabled(bool enable) { _enabled = true; }
+	void setEnabled(bool enable) { _enabled = enable; }
 
 	virtual ~ObjectOperator(void) {}
 

@@ -16,11 +16,15 @@
 
 #include <functional>
 
-   // TODO: GameObjects should maybe have an overload for operator()
-   //       they could take in other objects, and perform collision checks between it and the other object?
-   //       maybe do other things... 
+// TODO: GameObjects should maybe have an overload for operator() ?
+//       they could take in other objects, and perform collision checks between it and the other object?
+//       maybe do other things... 
 
-   // TODO: Make execution time work with physics to scale force -- this 'execution time' should be seen as a MAX
+// TODO: Make execution time work with physics to scale force -- this 'execution time' should be seen as a MAX
+
+// NOTES: So originally I wanted to avoid clichés and not make this your typical game object class... But sometimes, tropes are a good thing
+//        What we have here is something in between a base "object" class and a pseudo "entity" class... Which is why something like the Camera derives from 
+//        So this will change over time a lot until I land on something that is sufficiently generalized enough to cover as many different games 
 
 #define EVT_GAMEOBJECT_STATE_ENTER "EVT_STATE_ENTER"
 #define EVT_GAMEOBJECT_STATE_EXIT  "EVT_STATE_EXIT"

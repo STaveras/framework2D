@@ -17,6 +17,8 @@
 #include "AnimationUtils.h"
 #include "Tile.h"
 
+#include "FollowObjectOperator.h"
+
 #include "Square.h"
 
 #define MOVE_UNITS 150.0f
@@ -30,6 +32,9 @@ class FantasySideScroller : public Game
 	{
 		// (Probably should just go in GameState...?)
 		Image* _background = NULL; 
+
+		AttachObjectsOperator _cameraPlayerAttach;
+		//AttachObjectsOperator _backgroundCameraAttach;
 
 		class Character : public GameObject
 		{
@@ -324,9 +329,15 @@ class FantasySideScroller : public Game
 			_player->getController()->addAction(Action("ATTACK", KBK_LCONTROL));
 			_player->setGameObject(playableCharacter);
 
+			_cameraPlayerAttach.setSource(_camera);
+			_cameraPlayerAttach.follow(_objectManager.getGameObject("Hero"), true, true);
+			_cameraPlayerAttach.setEnabled(false);
+
+			_objectManager.pushOperator(&_cameraPlayerAttach);
+
 			Texture* tileSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png");
 
-			Tile* leLonelyTile = new Tile(tileSheet, 16, 397, "Ground");
+			Tile* leLonelyTile = new Tile(tileSheet, 16, 515, "Ground");
 			_objectManager.addObject("GroundTile", leLonelyTile); // This will change to a "TileGrid" object
 
 			Engine2D::getRenderer()->SetCamera(_camera);

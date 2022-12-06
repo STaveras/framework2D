@@ -35,7 +35,7 @@ void ObjectManager::update(float fTime)
       std::list<ObjectOperator*>::iterator itr2 = m_lsObjOperators.begin();
     
       for (; itr2 != m_lsObjOperators.end(); itr2++) {
-         if (!(**itr2)(object))
+         if ((*itr2)->isEnabled() && !(**itr2)(object))
             removalList.push_back((*itr2));
       }
 
