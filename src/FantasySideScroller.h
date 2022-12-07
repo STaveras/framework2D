@@ -335,9 +335,10 @@ class FantasySideScroller : public Game
 
 			_objectManager.pushOperator(&_cameraPlayerAttach);
 
-			Texture* tileSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png");
+			TileSet tileSet(Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png"), 16);
 
-			Tile* leLonelyTile = new Tile(tileSheet, 16, 515, "Ground");
+			Tile* leLonelyTile = new Tile(515, &tileSet);
+
 			_objectManager.addObject("GroundTile", leLonelyTile); // This will change to a "TileGrid" object
 
 			Engine2D::getRenderer()->SetCamera(_camera);

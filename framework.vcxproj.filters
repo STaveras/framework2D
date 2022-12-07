@@ -361,6 +361,9 @@
     <ClInclude Include="src\TileMap.h">
       <Filter>engine2Dbase\Objects</Filter>
     </ClInclude>
+    <ClInclude Include="src\TileSet.h">
+      <Filter>engine2Dbase\Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="doc\todo.txt">

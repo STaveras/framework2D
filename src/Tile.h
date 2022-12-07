@@ -2,59 +2,37 @@
 
 #include "GameObject.h"
 
+#include "TileSet.h"
+
 #include <algorithm>
 #include <vector>
 
 // Just to get something on the screen...
 class Tile : public GameObject
 {
-   //std::string _type;
+   unsigned int _tileIndex = UINT_MAX; // How far in the tileSheet this block is
 
-   Texture* _tileSheet;
+   TileSet* _tileSet = NULL;
 
-   unsigned int _tileIndex; // How far in the tileSheet this block is
-   unsigned int _tileSize;  // Square tiles only for now
-
-   vector2 _tileCounts;
-
+   // TODO: Move this to TileSet
    Factory<Image> _tileImages;
 
 public:
 
-   //std::string getType(void) const { return _type; }
+   Tile(void) : GameObject(GAME_OBJ_TILE) {
+      this->addState("");
+      this->start();
+   }
 
-   // tileSize size in pixels // squared 
    // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
-   // tileType string which describes the tile; doesn't have to be human readable
-   Tile(Texture* tileSheet, unsigned int tileSize, unsigned int tileIndex, std::string tileType = "") :
-      GameObject(GAME_OBJ_OBJECT),
-      _tileSheet(tileSheet),
-      _tileIndex(tileIndex),
-      _tileSize(tileSize)
-      /*_type()*/ {
+   Tile(unsigned int tileIndex, TileSet* tileSet) :
+      GameObject(GAME_OBJ_TILE),
+      _tileSet(tileSet) {
 
-      if (_tileSheet) {
-
-         _tileCounts = { (float)(tileSheet->getWidth() / tileSize), (float)(tileSheet->getHeight() / tileSize) };
-
-         if (tileIndex < _tileCounts.x * _tileCounts.y) {
-
-            UINT xPosition = (tileIndex % (UINT)_tileCounts.x) * tileSize;
-            UINT yPosition = (tileIndex / (UINT)_tileCounts.x) * tileSize;
-
-            UINT width = xPosition + tileSize;
-            UINT height = yPosition + tileSize;
-
-            RECT tileRect{
-               xPosition, yPosition, width, height
-            };
-
-            Image* tileImage = _tileImages.create();
-            tileImage->setSourceRect(tileRect);
-            tileImage->setTexture(tileSheet);
-
-            ((GameObjectState*)this->addState("Static"))->setRenderable(tileImage);
-         }
+      if (_tileSet) {
+         this->addState("Static"); // Look up the tilename in the tile set
+         this->start();
+         this->setTileIndex(tileIndex);
       }
    }
 
@@ -66,7 +44,51 @@ public:
       return _tileIndex;
    }
 
-   unsigned int getTileSize(void) const {
-      return _tileSize;
+   TileSet* getTileSet(void) const {
+      return _tileSet;
+   }
+
+   void setTileIndex(unsigned int tileIndex) 
+   {
+      _tileIndex = tileIndex;
+
+      if (_tileSet) {
+
+         if (tileIndex < _tileSet->getTileCounts().x * _tileSet->getTileCounts().y) {
+
+            UINT xPosition = (tileIndex % (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
+            UINT yPosition = (tileIndex / (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
+
+            UINT width = xPosition + _tileSet->getTileSize();
+            UINT height = yPosition + _tileSet->getTileSize();
+
+            RECT tileRect{
+               xPosition, yPosition, width, height
+            };
+
+            Image* tileImage = _tileImages.create();
+            tileImage->setSourceRect(tileRect);
+            tileImage->setTexture(_tileSet->getTileSheet());
+
+            ((GameObjectState*)this->getState())->setRenderable(tileImage);
+         }
+      }
+   }
+
+   void setTileSet(TileSet* tileSet) {
+
+      _tileSet = tileSet;
+
+      if (_tileSet) {
+
+         Image* image = (Image*)this->getState()->getRenderable();
+
+         if (image) {
+
+            _tileImages.destroy(image);
+            this->setTileIndex(_tileIndex);
+
+         }
+      }
    }
 };
