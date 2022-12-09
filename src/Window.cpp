@@ -182,8 +182,6 @@ void Window::setWidth(int nWidth)
 	if (m_nWidth != nWidth) {
 		m_nWidth = nWidth;
 	}
-
-	Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, this);
 }
 
 void Window::setHeight(int nHeight)
@@ -191,8 +189,6 @@ void Window::setHeight(int nHeight)
 	if (m_nHeight != nHeight) {
 		m_nHeight = nHeight;
 	}
-	
-	Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, this);
 }
 
 void Window::resize(void)

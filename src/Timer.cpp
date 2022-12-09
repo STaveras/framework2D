@@ -1,5 +1,6 @@
 
 #include "Timer.h"
+#include "Types.h"
 
 #include <sstream>
 

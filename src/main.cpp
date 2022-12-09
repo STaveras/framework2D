@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
    if (Debug::Mode.isEnabled()) {
       // Check for game data
-      FileSystem::ScoutDirectory(System::GlobalDataPath());
+      FileSystem::ListDirectoryContents(System::GlobalDataPath());
    }
 #endif
 
@@ -132,8 +132,7 @@ int main(int argc, char **argv)
       } while (!window.hasQuit() && !engine->hasQuit());
    }
    catch (std::exception& e) {
-
-      std::cout << e.what() << std::endl;
+      std::cout << Engine2D::getTimer()->getTimeStamp() << ": " << e.what() << std::endl;
 
 #ifdef _WIN32
       MessageBoxA(NULL, e.what(), "Error", MB_OK);

@@ -159,8 +159,8 @@ namespace Animations {
             if (count-- == 0)
                break;
 
-            animation->createFrame(spriteFactory.create(Sprite(spriteSheet, { x * (long)frameDimensions.x, y * (long)frameDimensions.y,
-                                                                             (x + 1) * (long)frameDimensions.x, (y + 1) * (long)frameDimensions.y })));
+            animation->createFrame(spriteFactory.create(Sprite(spriteSheet, { (int)(x * frameDimensions.x), (int)(y * frameDimensions.y),
+                                                                              (int)((x + 1) * frameDimensions.x), (int)((y + 1) * frameDimensions.y) })));
          }
       }
    }

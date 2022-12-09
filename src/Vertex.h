@@ -7,5 +7,6 @@
 typedef struct vertex 
 {
     vector3 position;
-    vector3 color;
+    vector2 texCoord;
+    Color color;
 }Vertex;
