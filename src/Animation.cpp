@@ -119,6 +119,12 @@ void Animation::removeFrame(Frame* frame)
 	}
 }
 
+// ???
+//void Animation::removeFrameData(void)
+//{
+//   
+//}
+
 bool Animation::update(float fTime)
 {
 	if (!m_bPlaying || !m_Frames.size())
@@ -144,4 +150,10 @@ bool Animation::operator==(const Animation& a) const
 	return (m_eMode == a.m_eMode && m_bForward == a.m_bForward && m_fSpeed == a.m_fSpeed && m_szName == a.m_szName && m_Frames == a.m_Frames);
 }
 
-// Author: Stanley Taveras
+namespace Animations
+{
+	Animation *loadAnimationsFrom(const char *szFilename)
+	{
+		throw std::runtime_error("Animations::loadAnimationFrame unimplemented");
+	}
+}

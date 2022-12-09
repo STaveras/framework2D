@@ -27,6 +27,7 @@ public:
 				return Game::getPlayers()->at(i);
 			}
 		}
+		return NULL;
 	}
 
 	virtual void begin(void) = 0;

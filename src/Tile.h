@@ -75,7 +75,7 @@ public:
                UINT height = yPosition + _tileSet->getTileSize();
 
                RECT tileRect{
-                  xPosition, yPosition, width, height
+                  (int)xPosition, (int)yPosition, (int)width, (int)height
                };
 
                Image* tileImage = (Image*)state->getRenderable();

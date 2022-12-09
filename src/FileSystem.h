@@ -144,15 +144,19 @@ namespace FileSystem
     }
 
 
-    static void ScoutDirectory(const char *path)
+    static void ListDirectoryContents(const char *path)
 	{
         std::string dataDirectoryPath = path;
         std::vector<std::string> subdirectories = FileSystem::ListAllSubdirectories(dataDirectoryPath.c_str());
 
         for (std::string subdirectory : subdirectories)
         {
-            std::cout << dataDirectoryPath + subdirectory << std::endl;
-            std::vector<std::string> files = FileSystem::ListFiles((dataDirectoryPath + subdirectory).c_str());
+            std::string fullPath = dataDirectoryPath + '/' + subdirectory;
+            std::cout << fullPath << std::endl;
+
+            ListDirectoryContents(fullPath.c_str());
+
+            std::vector<std::string> files = FileSystem::ListFiles(fullPath.c_str());
 
             for (std::string file: files) {
                 std::cout << "Found file: " << file << std::endl;
@@ -171,7 +175,6 @@ namespace FileSystem
 
             // We should just return an empty vector if the file doesn't exist
             if (!file.is_open()) {
-                // throw std::runtime_error("failed to open file!");
                 return std::vector<char>();
             }
 
