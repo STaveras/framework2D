@@ -17,16 +17,19 @@ class TileSet
 
    vector2 _tileCounts;
 
+
    // Meta-information about tilesIndices (what does a particular tile in a tileSheet /mean/?)
    // This makes sense only when a tile is with other tyles
-   std::map<unsigned int, std::string> _tileInfo; 
+   std::map<int, std::string> _tileInfo; 
 
 public:
    explicit TileSet(Texture* tileSheet, unsigned int tileSize) :
       _tileSheet(tileSheet),
       _tileSize(tileSize) {
 
-      _tileCounts = { (float)(tileSheet->getWidth() / tileSize), (float)(tileSheet->getHeight() / tileSize) };
+      if (_tileSheet) {
+         _tileCounts = { (float)(tileSheet->getWidth() / tileSize), (float)(tileSheet->getHeight() / tileSize) };
+      }
    }
 
    unsigned int getTileSize(void) const { return _tileSize; }

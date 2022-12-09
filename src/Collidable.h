@@ -28,18 +28,18 @@ protected:
 
 	explicit Collidable(COL_OBJ_TYPE type) : Positionable(), m_eType(type) {}
 
-	virtual ~Collidable(void) = 0 {}
-
 public:
+
+	COL_OBJ_TYPE getType(void) const { return m_eType; }
 
 	virtual bool collidesWith(vector2 point) { return _position == point; } // issa joke
 	virtual bool collidesWith(const Collidable* collidable) { return this->collidesWith(collidable->getPosition()); }
 
-	COL_OBJ_TYPE getType(void) const { return m_eType; }
+	virtual ~Collidable(void) = 0 {}
 
 };
 
-#define EVENT_COLLISION "EVT_COLLISION"
+#define EVT_COLLISION "EVT_COLLISION"
 
 // NOTE: Would be nice to have a 'batched' version of this
 struct CollisionEvent : public Event
@@ -47,6 +47,6 @@ struct CollisionEvent : public Event
 	GameObject* involvedObject;
 
 	// "object" is the sender
-	CollisionEvent(GameObject* object, GameObject* collidedWith) :Event(EVENT_COLLISION, object), involvedObject(collidedWith) {}
+	CollisionEvent(GameObject* object, GameObject* collidedWith) : Event(EVT_COLLISION, object), involvedObject(collidedWith) {}
 };
 // Author: Stanley Taveras

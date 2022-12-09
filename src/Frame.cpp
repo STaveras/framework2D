@@ -7,39 +7,39 @@
 #include "Sprite.h"
 
 Frame::Frame(void):
-m_fDuration(0.0f),
-m_pSprite(NULL)
+_frameDuration(0.0f),
+_sprite(NULL)
 {}
 
 Frame::Frame(Sprite* sprite, float fDuration):
-m_fDuration(fDuration),
-m_pSprite(sprite)
+_frameDuration(fDuration),
+_sprite(sprite)
 {}
 
 void Frame::update(float fTime)
 {
 	// If flashing, set image color to what's specified in this frame's data
 
-	std::list<Trigger>::iterator itr = m_lsTriggers.begin();
-	for(; itr != m_lsTriggers.end(); itr++)
+	std::list<Trigger>::iterator itr = _triggers.begin();
+	for(; itr != _triggers.end(); itr++)
 		(*itr)();
 }
 
 void Frame::reset(void)
 {
-	std::list<Trigger>::iterator itr = m_lsTriggers.begin();
+	std::list<Trigger>::iterator itr = _triggers.begin();
 
-	for(; itr != m_lsTriggers.end(); itr++)
+	for(; itr != _triggers.end(); itr++)
 		(*itr).reset();
 }
 
 bool Frame::removeTrigger(const Trigger& desc)
 {
-	std::list<Trigger>::iterator itr = m_lsTriggers.begin();
+	std::list<Trigger>::iterator itr = _triggers.begin();
 
-	for (; itr != m_lsTriggers.end(); itr++) {
+	for (; itr != _triggers.end(); itr++) {
 		if ((*itr) == desc) {
-			m_lsTriggers.erase(itr); return true;
+			_triggers.erase(itr); return true;
 		}
 	}
 
@@ -53,5 +53,5 @@ void Frame::mirror(bool bHorizontal, bool bVertical)
 
 bool Frame::operator==(const Frame& rhs) const
 {
-	return (this->m_fDuration == rhs.m_fDuration && this->m_pSprite == rhs.m_pSprite && this->m_lsTriggers == rhs.m_lsTriggers);
+	return (this->_frameDuration == rhs._frameDuration && this->_sprite == rhs._sprite && this->_triggers == rhs._triggers);
 }

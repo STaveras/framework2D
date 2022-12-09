@@ -75,7 +75,7 @@ void IRenderer::_BackgroundColorShift(void)
 }
 #endif
 
-ITexture* IRenderer::_TextureExists(const char* szFilename)
+ITexture* IRenderer::_textureExists(const char* szFilename)
 {
 	Factory<ITexture>::const_factory_iterator itr = m_Textures.begin();
 
@@ -88,13 +88,13 @@ ITexture* IRenderer::_TextureExists(const char* szFilename)
 	return NULL;
 }
 
-void IRenderer::SetClearColor(Color clearColor)
+void IRenderer::setClearColor(Color clearColor)
 {
 	m_ClearColor = clearColor;
 	//m_bStaticBG = true;
 }
 
-void IRenderer::SetCamera(Camera* pCamera)
+void IRenderer::setCamera(Camera* pCamera)
 {
 	m_pCamera = pCamera;
 	m_pCamera->setScreenWidth(m_nWidth);

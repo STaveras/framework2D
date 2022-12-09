@@ -53,12 +53,6 @@
     <ClCompile Include="src\IRenderer.cpp">
       <Filter>engine2Dbase\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="src\Plane.cpp">
-      <Filter>engine2Dbase\Math\Geometry</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Circle.cpp">
-      <Filter>engine2Dbase\Math\Geometry</Filter>
-    </ClCompile>
     <ClCompile Include="src\GameState.cpp">
       <Filter>engine2Dbase\System\StateMachine</Filter>
     </ClCompile>
@@ -79,9 +73,6 @@
     </ClCompile>
     <ClCompile Include="src\Sound.cpp">
       <Filter>engine2Dbase\Sound</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Square.cpp">
-      <Filter>engine2Dbase\Math\Geometry</Filter>
     </ClCompile>
     <ClCompile Include="src\SpriteManager.cpp">
       <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
@@ -167,6 +158,15 @@
     <ClCompile Include="src\StateMachine.cpp">
       <Filter>engine2Dbase\System\StateMachine</Filter>
     </ClCompile>
+    <ClCompile Include="src\Circle.cpp">
+      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Plane.cpp">
+      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Square.cpp">
+      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="engine2Dbase">
@@ -186,9 +186,6 @@
     </Filter>
     <Filter Include="engine2Dbase\Math">
       <UniqueIdentifier>{64739f8f-f848-4de8-a559-9b2616f15e07}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Math\Geometry">
-      <UniqueIdentifier>{3f792264-6bfd-4a38-b8d1-a6cc258e36ef}</UniqueIdentifier>
     </Filter>
     <Filter Include="engine2Dbase\UI">
       <UniqueIdentifier>{f0720cf1-6905-4147-a2e5-7d17cdf9822e}</UniqueIdentifier>
@@ -247,6 +244,12 @@
     <Filter Include="engine2Dbase\System\StateMachine">
       <UniqueIdentifier>{d53de2ea-e266-4324-bab6-f438d3ea87e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="engine2Dbase\Utility">
+      <UniqueIdentifier>{286fe6ff-50c2-4a85-9b3d-bc82c03e9dfd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine2Dbase\Physics\Collision\CollisionObjects">
+      <UniqueIdentifier>{6fdfdbaf-fc17-4139-a17c-bc25a06e42c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ForceDegradation.h">
@@ -284,9 +287,6 @@
     </ClInclude>
     <ClInclude Include="src\Positionable.h">
       <Filter>engine2Dbase\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Square.h">
-      <Filter>engine2Dbase\Math\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="src\Game.h">
       <Filter>engine2Dbase\Application</Filter>
@@ -363,6 +363,21 @@
     </ClInclude>
     <ClInclude Include="src\TileSet.h">
       <Filter>engine2Dbase\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StrUtil.h">
+      <Filter>engine2Dbase\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FileSystem.h">
+      <Filter>engine2Dbase\System</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Collidable.h">
+      <Filter>engine2Dbase\Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollidableGroup.h">
+      <Filter>engine2Dbase\Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Square.h">
+      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

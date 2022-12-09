@@ -15,13 +15,13 @@ class AnimationManager : public Factory<Animation>
 public:
 	AnimationManager(void) /*: _renderList(NULL)*/ {
 		//if (!_renderList) {
-		//	_renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
+		//	_renderList = Engine2D::getInstance()->GetRenderer()->createRenderList();
 		//}
 	}
 
 	~AnimationManager(void) {
 		//if (_renderList) { // Just to be proper *_*
-		//	Engine2D::getInstance()->GetRenderer()->DestroyRenderList(_renderList);
+		//	Engine2D::getInstance()->GetRenderer()->destroyRenderList(_renderList);
 		//}
 	}
 

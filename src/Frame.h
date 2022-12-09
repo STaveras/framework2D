@@ -15,9 +15,10 @@
 
 class Frame
 {
-	float m_fDuration;
-	Sprite* m_pSprite;
-	std::list<Trigger> m_lsTriggers;
+	float _frameDuration;
+	Sprite* _sprite;
+	Collidable* _collidable;
+	std::list<Trigger> _triggers;
 
 protected:
 	friend class IRenderer;
@@ -27,14 +28,17 @@ public:
 	Frame(Sprite* pSprite, float fDuration);
 	~Frame(void){}
 
-	Sprite* getSprite(void) { return m_pSprite; }
-	void setSprite(Sprite* pSprite) { m_pSprite = pSprite; }
+	Sprite* getSprite(void) { return _sprite; }
+	void setSprite(Sprite* pSprite) { _sprite = pSprite; }
 
-	float getDuration(void) const { return m_fDuration; }
-	void setDuration(float fDuration) { m_fDuration = fDuration; }
+	Collidable* getCollidable(void) const { return _collidable; }
+	void setCollidable(Collidable* collidable) { _collidable = collidable; }
 
-	void addTrigger(Trigger::TYPE type, std::string value, Trigger::MODE mode = Trigger::ONCE){ m_lsTriggers.push_back(Trigger(type,value,mode)); }
-	void addTrigger(const Trigger& trigger) { m_lsTriggers.push_back(trigger); }
+	float getDuration(void) const { return _frameDuration; }
+	void setDuration(float fDuration) { _frameDuration = fDuration; }
+
+	void addTrigger(Trigger::TYPE type, std::string value, Trigger::MODE mode = Trigger::ONCE){ _triggers.push_back(Trigger(type,value,mode)); }
+	void addTrigger(const Trigger& trigger) { _triggers.push_back(trigger); }
 	bool removeTrigger(const Trigger& desc);
 
 	// Goes triggers any associated triggers for this frame...

@@ -15,8 +15,8 @@ class SpriteManager : public Factory<Sprite> // Renderable, instead of containin
 	//IRenderer::RenderList* _RenderList;
 
 public:
-	//SpriteManager(void): _RenderList(NULL) {_RenderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList(); }
-	//~SpriteManager(void){ Engine2D::getInstance()->GetRenderer()->DestroyRenderList(_RenderList); }
+	//SpriteManager(void): _RenderList(NULL) {_RenderList = Engine2D::getInstance()->GetRenderer()->createRenderList(); }
+	//~SpriteManager(void){ Engine2D::getInstance()->GetRenderer()->destroyRenderList(_RenderList); }
 
 	Sprite* CreateSprite(const char* szFilename, Color clearColor = 0, const RECT& srcRect = { -1,-1,-1,-1 });
 	void DestroySprite(Sprite* pSprite);

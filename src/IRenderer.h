@@ -35,7 +35,7 @@ protected:
 	Factory<ITexture> m_Textures;
 	Factory<RenderList> _RenderLists;
 
-	ITexture *_TextureExists(const char *szFilename);
+	ITexture *_textureExists(const char *szFilename);
 
 public:
 	IRenderer(void) :
@@ -71,9 +71,9 @@ public:
 	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
 	int getWidth(void) const { return m_nWidth; }
 	int getHeight(void) const { return m_nHeight; }
-	Color GetClearColor(void) const { return m_ClearColor; }
-	Camera *GetCamera(void) { return m_pCamera; }
-	ITexture *getTexture(const char *szFilename) { return _TextureExists(szFilename); }
+	Color getClearColor(void) const { return m_ClearColor; }
+	Camera *getCamera(void) { return m_pCamera; }
+	ITexture *getTexture(const char *szFilename) { return _textureExists(szFilename); }
 
 
 #if _DEBUG
@@ -81,8 +81,8 @@ public:
 #endif
 	void setWidth(int nWidth) { m_nWidth = nWidth; }
 	void setHeight(int nHeight) { m_nHeight = nHeight; }
-	void SetClearColor(Color clearColor);
-	void SetCamera(Camera *pCamera);
+	void setClearColor(Color clearColor);
+	void setCamera(Camera *pCamera);
 
 	virtual void setFullScreen(bool isFullScreen) { m_bFullScreen = isFullScreen; }
 	virtual void setVerticalSync(bool vsyncEnabled) { m_bVerticalSync = vsyncEnabled; }
@@ -93,8 +93,8 @@ public:
 	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList); }
 	void popRenderList(void) { _RenderLists.erase(_RenderLists.end()); }
 
-	RenderList *CreateRenderList(void) { return _RenderLists.create(); }
-	void DestroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
+	RenderList *createRenderList(void) { return _RenderLists.create(); }
+	void destroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
 
 	virtual void initialize(void) = 0;
 	virtual void shutdown(void) = 0;

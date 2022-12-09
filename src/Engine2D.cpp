@@ -29,7 +29,7 @@ void Engine2D::initialize(void)
 	if (_renderer)
 	{
 		_renderer->initialize();
-		_renderer->SetClearColor(NULL);
+		_renderer->setClearColor(NULL);
 	}
 
 	if (_game)

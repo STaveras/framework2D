@@ -99,7 +99,7 @@ int main(int argc, char **argv)
    engine->initialize();
 
    try {
-      while (!window.hasQuit() && !engine->hasQuit())
+      do 
       {
          // Eventually just have the engine handle this like:
          // engine->Run(); 
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
             }
          }
    #endif
-      }
+      } while (!window.hasQuit() && !engine->hasQuit());
    }
    catch (std::exception& e) {
 

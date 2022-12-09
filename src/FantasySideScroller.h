@@ -14,9 +14,10 @@
 #include "GameObject.h"
 #include "GameState.h"
 
-#include "AnimationUtils.h"
 #include "Tile.h"
+#include "TileMap.h"
 
+#include "AnimationUtils.h"
 #include "FollowObjectOperator.h"
 
 #include "Square.h"
@@ -32,6 +33,9 @@ class FantasySideScroller : public Game
 	{
 		// (Probably should just go in GameState...?)
 		Image* _background = NULL; 
+
+		TileSet* _tileSet;
+		TileMap* _tileMap;
 
 		AttachObjectsOperator _cameraPlayerAttach;
 		//AttachObjectsOperator _backgroundCameraAttach;
@@ -59,10 +63,10 @@ class FantasySideScroller : public Game
 				idle->setPreserveScaling(true);
 				idle->setRenderable(idleAnimation);
 
-				//Square idleHitBox({ 0,0 }, (idleFrameDimensions * 0.8f));
-				//for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
-				//   (*idleAnimation)[i]->getSprite()->setCollisionInfo(&idleHitBox);
-				//}
+				static Square idleHitBox({ 0,0 }, (idleFrameDimensions * 0.8f));
+				for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
+				   (*idleAnimation)[i]->setCollidable(&idleHitBox);
+				}
 
 				/////////////////////////////////////////
 				GameObjectState* rising = this->addState("Rising");
@@ -107,6 +111,11 @@ class FantasySideScroller : public Game
 				jumpAnimation->setOffset({ 0.0, -8.0 });
 				jumpAnimation->setFrameRate(60);
 				jumpAnimation->center();
+
+				static Square jumpHitBox({ 0,0 }, (jumpDimensions * 0.8f));
+				for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
+					(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
+				}
 
 				jump->setRenderable(jumpAnimation);
 
@@ -265,8 +274,11 @@ class FantasySideScroller : public Game
 				//this->setBuffered(true); // TODO: Buffered inputs don't seem to be working atm...
 
 				collisionEventHandler = [=](const CollisionEvent* e) {
-				   if (((GameState*)Engine2D::getGame()->top())->getObjectManager()->getObjectName(e->involvedObject) == "GroundTile")
-				      this->sendInput("GROUND_COLLISION");
+
+					GameObject* otherObject = e->involvedObject;
+					if (otherObject->getPosition().y > this->getPosition().y) {
+						this->sendInput("GROUND_COLLISION");
+					}
 				};
 			}
 
@@ -293,9 +305,9 @@ class FantasySideScroller : public Game
 						this->sendInput("DEATH");
 					}
 
-					if (this->getPosition().y > 72) {
-						this->sendInput("GROUND_COLLISION");
-					}
+					//if (this->getPosition().y > 72) {
+					//	this->sendInput("GROUND_COLLISION");
+					//}
 				}
 
 				GameObject::update(time);
@@ -316,7 +328,21 @@ class FantasySideScroller : public Game
 
 			_renderList->push_back(_background);
 
+			_tileSet = new TileSet(Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png"), 16);
+
+			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap_2.csv", _tileSet);
+
+			for (size_t i = 0; i < _tileMap->getTiles().size(); i++) {
+				char buffer[32]{ 0 };
+				sprintf_s(buffer, 32, "t%i", i);
+				_objectManager.addObject(buffer, _tileMap->getTiles()[i]);
+			}
+
+			_tileMap->setPosition(-120, 0);
+			_tileMap->arrangeTiles();
+
 			playableCharacter = new Character;
+			playableCharacter->setPosition(0, -80);
 
 			_objectManager.addObject("Hero", playableCharacter);
 			_objectManager.addObject("Camera", _camera);
@@ -331,17 +357,11 @@ class FantasySideScroller : public Game
 
 			_cameraPlayerAttach.setSource(_camera);
 			_cameraPlayerAttach.follow(_objectManager.getGameObject("Hero"), true, true);
-			_cameraPlayerAttach.setEnabled(false);
+			_cameraPlayerAttach.setEnabled(true);
 
 			_objectManager.pushOperator(&_cameraPlayerAttach);
 
-			TileSet tileSet(Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png"), 16);
-
-			Tile* leLonelyTile = new Tile(515, &tileSet);
-
-			_objectManager.addObject("GroundTile", leLonelyTile); // This will change to a "TileGrid" object
-
-			Engine2D::getRenderer()->SetCamera(_camera);
+			Engine2D::getRenderer()->setCamera(_camera);
 		}
 
 		bool onExecute(float time)
@@ -362,9 +382,9 @@ class FantasySideScroller : public Game
 
 		void onExit(State* next)
 		{
-			GameObject* groundTile = _objectManager.getGameObject("GroundTile");
-			_objectManager.removeObject(groundTile);
-			delete groundTile;
+			//GameObject* groundTile = _objectManager.getGameObject("GroundTile");
+			//_objectManager.removeObject(groundTile);
+			//delete groundTile;
 
 			_player->finish();
 
@@ -373,6 +393,10 @@ class FantasySideScroller : public Game
 
 			if (playableCharacter) {
 				delete playableCharacter;
+			}
+
+			if (_tileSet) {
+				delete _tileSet;
 			}
 
 			if (_background) {
@@ -407,6 +431,15 @@ public:
 			// Do some preloading here
 
 			this->push(_playState);
+		}
+	}
+
+	void update(Timer* timer) {
+		Game::update(timer);
+
+		if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_R)) {
+			this->end();
+			this->begin();
 		}
 	}
 

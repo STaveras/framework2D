@@ -172,11 +172,14 @@
     <ClInclude Include="src\AnimationManager.h" />
     <ClInclude Include="src\AnimationUtils.h" />
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Collidable.h" />
+    <ClInclude Include="src\CollidableGroup.h" />
     <ClInclude Include="src\Cyclable.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\EventSystem.h" />
     <ClInclude Include="src\FantasySideScroller.h" />
+    <ClInclude Include="src\FileSystem.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\IInput.h" />
     <ClInclude Include="src\IProgramState.h" />
@@ -196,6 +199,7 @@
     <ClInclude Include="src\Sprite.h" />
     <ClInclude Include="src\Square.h" />
     <ClInclude Include="src\State.h" />
+    <ClInclude Include="src\StrUtil.h" />
     <ClInclude Include="src\System.h" />
     <ClInclude Include="src\TextureD3D.h" />
     <ClInclude Include="src\Tile.h" />

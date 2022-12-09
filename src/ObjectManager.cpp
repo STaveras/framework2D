@@ -18,6 +18,8 @@ void ObjectManager::update(float fTime)
 {
    std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 
+   std::list<std::pair<GameObject*, GameObject*>> objectPairs;
+
    for (; itr != m_mObjects.end(); itr++)
    {
       GameObject *object = itr->second;
@@ -47,42 +49,45 @@ void ObjectManager::update(float fTime)
          removalList.pop_front();
 
          // TODO: Is this used somewhere?
-         Engine2D::getEventSystem()->sendEvent(EVENT_OBJ_OPERATOR_REMOVED, objOp);
+         Engine2D::getEventSystem()->sendEvent(EVT_OPERATOR_REMOVED, objOp);
       }
       //////////////////////////////////////////////////
       // Object Operators End
       // --
 
-      // Now lets check for collisions
-      std::map<std::string, GameObject*>::iterator itr_two = m_mObjects.begin();
-      for (; itr_two != m_mObjects.end(); itr_two++) {
-         if (itr->second == object)
-            continue;
+      Collidable* collidable = object->getCollidable();
+      if (collidable) {
+         // TODO: Rewrite to broad / narrow phases
+         std::map<std::string, GameObject*>::iterator itr_two = m_mObjects.begin();
+         for (; itr_two != m_mObjects.end(); itr_two++) {
+				if (itr_two->second == object ||
+                itr->second->getType() == itr_two->second->getType() && 
+                itr_two->second->getType() == GameObject::GAME_OBJ_TILE)
+					continue;
 
-         ObjectState *objectState = (ObjectState*)object->getState();
+            GameObject* otherObject = itr_two->second;
 
-         if (objectState) {
+            bool alreadyChecked = false;
 
-            Collidable *collisionObject = objectState->getCollidable();
+            //std::list<std::pair<GameObject*, GameObject*>>::iterator pairItr = objectPairs.begin();
+            //for (; pairItr != objectPairs.end(); pairItr++) {
+            //   if (pairItr->first == object && pairItr->second == otherObject ||
+            //      pairItr->first == otherObject && pairItr->second == object) {
+            //      alreadyChecked = true;
+            //   }
+            //}
 
-            // TODO: We need to make checking collisions happen only once per pair of objects;
-            //       e.g. objA & objB will come up again, as objB & objA; the order of the two shouldn't matter
+            if (!alreadyChecked) {
 
-            if (collisionObject) {
-
-               ObjectState *secondState = (ObjectState*)itr->second->getState();
-
-               if (secondState) {
-
-                  Collidable *otherObject = secondState->getCollidable();
-
-                  if (otherObject && collisionObject->collidesWith(otherObject))
-                     Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, itr->second));
+               if (otherObject->getCollidable()) {
+                  if (collidable->collidesWith(otherObject->getCollidable())) {
+                     Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, otherObject));
+                  }
                }
+
+               //objectPairs.push_back(std::make_pair(object, otherObject));
             }
          }
-         
-         // TODO: Rewrite to broad / narrow phases
       }
    }
 }
@@ -98,7 +103,7 @@ void ObjectManager::removeObject(GameObject* object)
 
             m_mObjects.erase(itr);
 
-            Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_REMOVED, object);
+            Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object);
          }
       }
    }
@@ -118,7 +123,7 @@ void ObjectManager::removeObject(const char* name)
 
             m_mObjects.erase(itr);
             
-            Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_REMOVED, object);
+            Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object);
          }
       }
    }
@@ -128,7 +133,7 @@ void ObjectManager::addObject(const char* name, GameObject* object)
 {
    m_mObjects[name] = object; object->start();
    
-   Engine2D::getEventSystem()->sendEvent(EVENT_OBJECT_ADDED, object);
+   Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_ADDED, object);
 }
 
 // NOTE: Maybe use a map instead and add/remove the operators by name?
@@ -136,6 +141,8 @@ void ObjectManager::addObject(const char* name, GameObject* object)
 void ObjectManager::pushOperator(ObjectOperator* objOperation)
 {
    m_lsObjOperators.push_back(objOperation);
+
+   Engine2D::getEventSystem()->sendEvent(EVT_OPERATOR_ADDED, objOperation);
 }
 
 void ObjectManager::popOperator(void)

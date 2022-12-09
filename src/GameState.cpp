@@ -17,12 +17,12 @@ bool GameState::removeObject(GameObject * object)
 
 void GameState::onEnter(void)
 {
-   _renderList = engine->getRenderer()->CreateRenderList();
+   _renderList = engine->getRenderer()->createRenderList();
 
    engine->getEventSystem()->registerCallback<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
    engine->getEventSystem()->registerCallback<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
-   engine->getEventSystem()->registerCallback<GameState>(EVENT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->registerCallback<GameState>(EVENT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
 
    _inputManager.initialize(engine->getEventSystem(),
                             engine->getInput());
@@ -74,12 +74,12 @@ void GameState::onExit(void)
 {
    _inputManager.shutdown();
 
-   engine->getEventSystem()->unregister<GameState>(EVENT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->unregister<GameState>(EVENT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->unregister<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->unregister<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
 
-   engine->getRenderer()->DestroyRenderList(_renderList);
+   engine->getRenderer()->destroyRenderList(_renderList);
 }
 
 ///
@@ -125,5 +125,3 @@ void GameState::_OnObjectRemoved(const Event & e)
    // Do something
    //throw std::runtime_error("GameState::_OnObjectRemoved unimplemented");
 }
-
-// Author: Stanley Taveras

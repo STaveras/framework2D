@@ -111,3 +111,17 @@ static void strdiv(std::list<std::string>& output, const char* szTarget, const c
 	if(szTemp != "")
 		output.push_back(szTemp);
 }
+
+static std::vector<std::string> split(const std::string& s, char delimiter)
+{
+	std::vector<std::string> tokens;
+	size_t offset = 0, pos = 0;
+
+	while(pos != std::string::npos) {
+		pos = s.find(delimiter, offset);
+		tokens.push_back(s.substr(offset, pos - offset));
+		offset = pos + 1;
+	}
+
+	return tokens;
+}

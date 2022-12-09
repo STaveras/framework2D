@@ -3,6 +3,7 @@
 #include "GameObject.h"
 
 #include "TileSet.h"
+#include "Square.h"
 
 #include <algorithm>
 #include <vector>
@@ -10,7 +11,7 @@
 // Just to get something on the screen...
 class Tile : public GameObject
 {
-   unsigned int _tileIndex = UINT_MAX; // How far in the tileSheet this block is
+   int _tileIndex = -1; // How far in the tileSheet this block is
 
    TileSet* _tileSet = NULL;
 
@@ -18,29 +19,36 @@ class Tile : public GameObject
    Factory<Image> _tileImages;
 
 public:
-
    Tile(void) : GameObject(GAME_OBJ_TILE) {
       this->addState("");
       this->start();
    }
 
    // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
-   Tile(unsigned int tileIndex, TileSet* tileSet) :
+   Tile(int tileIndex, TileSet* tileSet) :
       GameObject(GAME_OBJ_TILE),
       _tileSet(tileSet) {
 
       if (_tileSet) {
-         this->addState("Static"); // Look up the tilename in the tile set
+         this->addState("Static"); // Look up the tilename in the tile set info
          this->start();
          this->setTileIndex(tileIndex);
       }
    }
 
    ~Tile(void) {
+
+      GameObjectState* state = this->getState();
+      Collidable* collidable = state->getCollidable();
+
+      if (collidable) {
+         delete collidable;
+      }
+
       _tileImages.clear();
    }
 
-   unsigned int getTileIndex(void) const {
+   int getTileIndex(void) const {
       return _tileIndex;
    }
 
@@ -48,29 +56,51 @@ public:
       return _tileSet;
    }
 
-   void setTileIndex(unsigned int tileIndex) 
+   void setTileIndex(int tileIndex) 
    {
       _tileIndex = tileIndex;
 
-      if (_tileSet) {
+      if (_tileSet && _tileIndex >= 0) {
 
-         if (tileIndex < _tileSet->getTileCounts().x * _tileSet->getTileCounts().y) {
+         if (_tileIndex < _tileSet->getTileCounts().x * _tileSet->getTileCounts().y) {
 
-            UINT xPosition = (tileIndex % (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
-            UINT yPosition = (tileIndex / (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
+            GameObjectState* state = this->getState();
 
-            UINT width = xPosition + _tileSet->getTileSize();
-            UINT height = yPosition + _tileSet->getTileSize();
+            if (state) {
 
-            RECT tileRect{
-               xPosition, yPosition, width, height
-            };
+               UINT xPosition = (_tileIndex % (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
+               UINT yPosition = (_tileIndex / (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
 
-            Image* tileImage = _tileImages.create();
-            tileImage->setSourceRect(tileRect);
-            tileImage->setTexture(_tileSet->getTileSheet());
+               UINT width = xPosition + _tileSet->getTileSize();
+               UINT height = yPosition + _tileSet->getTileSize();
 
-            ((GameObjectState*)this->getState())->setRenderable(tileImage);
+               RECT tileRect{
+                  xPosition, yPosition, width, height
+               };
+
+               Image* tileImage = (Image*)state->getRenderable();
+
+               if (tileImage) {
+                  _tileImages.destroy(tileImage);
+               }
+               else {
+                  tileImage = _tileImages.create();
+                  tileImage->setSourceRect(tileRect);
+                  tileImage->setTexture(_tileSet->getTileSheet());
+               }
+
+               state->setRenderable(tileImage);
+
+               Square* tileCollidable = (Square*)state->getCollidable();
+
+               if (tileCollidable) {
+                  delete state->getCollidable();
+               }
+               else {
+                  tileCollidable = new Square(vector2(0, 0), (float)_tileSet->getTileSize() * 0.8, (float)_tileSet->getTileSize() * 0.8);
+                  state->setCollidable(tileCollidable);
+               }
+            }
          }
       }
    }
@@ -80,15 +110,7 @@ public:
       _tileSet = tileSet;
 
       if (_tileSet) {
-
-         Image* image = (Image*)this->getState()->getRenderable();
-
-         if (image) {
-
-            _tileImages.destroy(image);
-            this->setTileIndex(_tileIndex);
-
-         }
+         this->setTileIndex(_tileIndex);
       }
    }
 };

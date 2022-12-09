@@ -12,7 +12,7 @@
 #include "IRenderer.h"
 #include <list>
 #include <vector>
-// Forward declarations
+
 class Music;
 class Stage
 {

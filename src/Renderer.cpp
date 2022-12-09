@@ -35,9 +35,9 @@ void Renderer::DestroyRenderer(IRenderer *pRenderer)
 // void Renderer::render(Renderable* r)
 //{
 //     // TODO: Improve this massively.
-//     IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->CreateRenderList();
+//     IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->createRenderList();
 //     renderList->push_back(r);
-//     Engine2D::getInstance()->GetRenderer()->DestroyRenderList(renderList);
+//     Engine2D::getInstance()->GetRenderer()->destroyRenderList(renderList);
 // }
 //
 // void Renderer::AddToRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable) { pRenderList->push_back(pRenderable); }

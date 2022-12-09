@@ -58,7 +58,7 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 
 	WNDCLASSEX wcex =
 	{
-		sizeof(WNDCLASSEX), CS_OWNDC, this->MsgProc, 0L, 0L,
+		sizeof(WNDCLASSEX), CS_OWNDC | CS_DBLCLKS, this->MsgProc, 0L, 0L,
 		hInstance, NULL, NULL, NULL, NULL,
 		m_szWindowClassName, NULL
 	};
@@ -68,7 +68,7 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW,
 									m_szWindowClassName, 
 									m_szWindowTitle,
-									NULL, 
+									WS_SYSMENU,/*For borderless FS: WS_POPUPWINDOW,*/
 									CW_USEDEFAULT, 
 									CW_USEDEFAULT, 
 									m_nWidth,

@@ -74,7 +74,7 @@ void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
 
 ITexture *RendererDX::createTexture(const char *szFilename, Color colorKey)
 {
-   ITexture* pTexture = _TextureExists(szFilename);
+   ITexture* pTexture = _textureExists(szFilename);
 
    if (!pTexture)
    {
@@ -223,7 +223,7 @@ void RendererDX::render(void)
                            Animation* animation = (Animation*)(*o);
                            if (animation->getFrameCount()) {
                               _DrawImage(animation->getCurrentFrame()->getSprite(), 
-                                         animation->getCurrentFrame()->getSprite()->_appearance._tintColor,
+                                         animation->getCurrentFrame()->getSprite()->getTintColor(),
                                          animation->getOffset());
                            }
                         }

@@ -8,7 +8,7 @@ void GameObject::_OnStateEntered(const Event& e)
 
 	GameObjectState* sendingState = (GameObjectState*)e.getSender();
 	if (sendingState) {
-		if (this->find(*sendingState)) { // Let's try and make it impossible for other gameobject's 
+		if (this->find(*sendingState)) { // We need to make sure the state we're entering is from our object only
 			this->addImpulse(sendingState->getDirection(), sendingState->getForce());
 		}
 	}
@@ -18,7 +18,7 @@ void GameObject::_OnStateExited(const Event& e)
 {
 	GameObjectState* sendingState = (GameObjectState*)e.getSender();
 	if (sendingState) {
-		if (this->find(*sendingState)) { // Let's try and make it impossible for other gameobject's 
+		if (this->find(*sendingState)) { 
 			this->addImpulse(sendingState->getDirection(), -sendingState->getForce());
 		}
 	}
@@ -35,7 +35,7 @@ void GameObject::_OnCollision(const Event& e) {
 
 void GameObject::start(void)
 {
-	Engine2D::getEventSystem()->registerCallback<GameObject>(EVENT_COLLISION, this, &GameObject::_OnCollision);
+	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_COLLISION, this, &GameObject::_OnCollision);
 	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameObject::_OnStateEntered);
 	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameObject::_OnStateExited);
 
@@ -48,10 +48,6 @@ void GameObject::updateComponents()
 
 		if (this->getRenderable()) {
 			this->getRenderable()->setPosition(this->getPosition());
-		}
-
-		if (this->getCollidable()) {
-			this->getCollidable()->setPosition(this->getPosition());
 		}
 	}
 }
@@ -70,7 +66,7 @@ void GameObject::finish(void)
 
 	Engine2D::getEventSystem()->unregister<GameObject>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameObject::_OnStateExited);
 	Engine2D::getEventSystem()->unregister<GameObject>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameObject::_OnStateEntered);
-	Engine2D::getEventSystem()->unregister<GameObject>(EVENT_COLLISION, this, &GameObject::_OnCollision);
+	Engine2D::getEventSystem()->unregister<GameObject>(EVT_COLLISION, this, &GameObject::_OnCollision);
 }
 
 GameObject::GameObjectState* GameObject::addState(const char* name)
@@ -146,10 +142,27 @@ bool GameObject::GameObjectState::onExecute(float time)
 		switch (_renderable->getRenderableType())
 		{
 		case RENDERABLE_TYPE_ANIMATION: {
-			finalCheck = ((Animation*)_renderable)->update(time);
+
+			Animation* animation = (Animation*)this->getRenderable();
+
+			finalCheck = animation->update(time);
+
+			Frame* currentFrame = animation->getCurrentFrame();
+
+			Sprite* sprite = currentFrame->getSprite();
+
+			Collidable* collidable = currentFrame->getCollidable();
+
+			if (collidable) {
+				this->setCollidable(collidable);
+				this->getCollidable()->setPosition((sprite->getPosition() + sprite->getOffset()) - sprite->getCenter());
+			}
 			break;
 		}
 		default:
+			if (this->getCollidable()) {
+				this->getCollidable()->setPosition((_renderable->getPosition() + _renderable->getOffset()) - _renderable->getCenter());
+			}
 			break;
 		}
 	}

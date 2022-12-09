@@ -38,12 +38,18 @@ typedef std::ofstream ofpstream;
 #include <windows.h>
 #include <shellapi.h>
 
+// Suppressing warnings from DirectX headers
+#pragma warning(push)
+#pragma warning(disable: 26495)
+
 #include <direct.h>
 
 #include <d3d9.h>
 #include <d3dx9.h>
 
 #include <d3dx9math.h>
+
+#pragma warning(pop)
 
 #include <vulkan/vulkan.h>
 
