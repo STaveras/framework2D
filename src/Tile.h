@@ -97,7 +97,7 @@ public:
                   delete state->getCollidable();
                }
                else {
-                  tileCollidable = new Square(vector2(0, 0), (float)_tileSet->getTileSize() * 0.8, (float)_tileSet->getTileSize() * 0.8);
+                  tileCollidable = new Square(vector2(0, 0), (float)_tileSet->getTileSize(), (float)_tileSet->getTileSize());
                   state->setCollidable(tileCollidable);
                }
             }

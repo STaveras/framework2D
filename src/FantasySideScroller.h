@@ -342,7 +342,7 @@ class FantasySideScroller : public Game
 			_tileMap->arrangeTiles();
 
 			playableCharacter = new Character;
-			playableCharacter->setPosition(0, -80);
+			playableCharacter->setPosition(0, -120);
 
 			_objectManager.addObject("Hero", playableCharacter);
 			_objectManager.addObject("Camera", _camera);
@@ -369,6 +369,11 @@ class FantasySideScroller : public Game
 			GameState::onExecute(time);
 
 			// TODO: Handle enemy spawning, game rules, etc.
+
+			if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_R)) {
+				playableCharacter->setState(playableCharacter->getState("Falling"));
+				playableCharacter->setPosition(0, -120);
+			}
 
 			if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_ESCAPE)) {
 
@@ -431,15 +436,6 @@ public:
 			// Do some preloading here
 
 			this->push(_playState);
-		}
-	}
-
-	void update(Timer* timer) {
-		Game::update(timer);
-
-		if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_R)) {
-			this->end();
-			this->begin();
 		}
 	}
 
