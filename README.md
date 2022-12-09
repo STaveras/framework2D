@@ -3,7 +3,7 @@ An old code base for making 2D games.
 
 Currently a pet project to reacclimate myself with game development. 
 
-# Build dependencies:
+## Build dependencies:
 - DirectX 9 SDK (June 2010)
 - Vulkan SDK
 - GLM
