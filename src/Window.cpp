@@ -4,10 +4,6 @@
 // Modified: 8/23/2022
 // TODO: Rethink how we handle resizing the window
 
-#ifdef _WIN32
-#pragma comment(lib, "glfw3dll.lib")
-#endif
-
 #include "Window.h"
 #include "Engine2D.h"
 
@@ -170,7 +166,7 @@ void Window::setWindowTitle(const char* szWindowTitle)
 	if (_window) {
 		glfwSetWindowTitle(_window, m_szWindowTitle);
 	}
-#if WIN32
+#ifdef _WIN32
 	else {
 		SetWindowTextA(m_hWnd, m_szWindowTitle);
 	}

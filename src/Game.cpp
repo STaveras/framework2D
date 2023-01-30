@@ -27,8 +27,7 @@ void Game::update(Timer* timer)
    }
 }
 
-// We can't assume that new GameStates are allocated on the heap
 void Game::end(void)
 {
-   throw std::runtime_error("Game::End() unimplemented.");
+   this->clear();
 }

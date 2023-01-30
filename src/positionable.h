@@ -2,12 +2,13 @@
 
 #include "Types.h"
 
-class Positionable {
+struct Positionable {
 
-protected:
-   vector2 _position;
+   union{
+      vector2 _position;
+      struct { float _x; float _y; };
+   };
 
-public:
    Positionable(void) :
       _position(vector2(0, 0)) {}
    Positionable(float x, float y) :

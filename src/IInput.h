@@ -7,14 +7,14 @@
 
 #include "Types.h"
 
-#include "IKeyboard.h"
+#include "Keyboard.h"
 #include "IMouse.h"
 
 typedef class IInput
 {
 protected:
-	IKeyboard* _keyboard;
-	IMouse* _mouse;
+	Keyboard* _keyboard;
+	Mouse* _mouse;
 
 	// TODO: Add physical gamepad support
 
@@ -22,8 +22,8 @@ public:
 	IInput(void) : _keyboard(NULL), _mouse(NULL) {}
 	virtual ~IInput(void) = 0;
 
-	virtual IKeyboard* getKeyboard(void) { return _keyboard; }
-	virtual IMouse* getMouse(void) { return _mouse; }
+	virtual Keyboard* getKeyboard(void) { return _keyboard; }
+	virtual Mouse* getMouse(void) { return _mouse; }
 
 	virtual void initialize(void) = 0;
 	virtual void update(void) = 0;

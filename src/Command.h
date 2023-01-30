@@ -23,7 +23,7 @@ public:
 
 	size_t Length(void);
 
-	struct less : public std::binary_function<Command*, Command*, bool>
+	struct less /*: public std::binary_function<Command*, Command*, bool>*/
 	{
 		inline bool operator()(Command* lhs, Command* rhs) const { return (*lhs < *rhs); }
 	};

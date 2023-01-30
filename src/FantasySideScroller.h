@@ -20,12 +20,14 @@
 #include "AnimationUtils.h"
 #include "FollowObjectOperator.h"
 
+#include "CollisionEvent.h"
+
 #include "Square.h"
 
 #define MOVE_UNITS 150.0f
 #define JUMP_MULTIPLIER 2.67f
 
-// Game should hold all the managers
+// Game should hold all the managers?
 class FantasySideScroller : public Game
 {
 	// States should just queue up operators, potentially stacking up other states
@@ -34,7 +36,7 @@ class FantasySideScroller : public Game
 		// (Probably should just go in GameState...?)
 		Image* _background = NULL; 
 
-		TileSet* _tileSet;
+		TileSet* _tileSet = NULL;
 		TileMap* _tileMap;
 
 		AttachObjectsOperator _cameraPlayerAttach;
@@ -63,7 +65,7 @@ class FantasySideScroller : public Game
 				idle->setPreserveScaling(true);
 				idle->setRenderable(idleAnimation);
 
-				static Square idleHitBox({ 0,0 }, (idleFrameDimensions * 0.8f));
+				static Square idleHitBox({ 0, 0 }, {22, 48});
 				for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
 				   (*idleAnimation)[i]->setCollidable(&idleHitBox);
 				}
@@ -90,6 +92,11 @@ class FantasySideScroller : public Game
 
 				rising->setRenderable(risingAnimation);
 
+				static Square risingHitBox({ 0, 0 }, { 22, 38 });
+				for (unsigned int i = 0; i < risingAnimation->getFrameCount(); i++) {
+					(*risingAnimation)[i]->setCollidable(&risingHitBox);
+				}
+
 				/////////////////////////////////////////
 
 				GameObjectState* jump = this->addState("Jump");
@@ -112,7 +119,7 @@ class FantasySideScroller : public Game
 				jumpAnimation->setFrameRate(60);
 				jumpAnimation->center();
 
-				static Square jumpHitBox({ 0,0 }, (jumpDimensions * 0.8f));
+				static Square jumpHitBox({ 0, 0 }, { 22, 38 });
 				for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
 					(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
 				}
@@ -244,13 +251,13 @@ class FantasySideScroller : public Game
 				registerTransition("Idle", "ATTACK_PRESSED", "Attack01");
 				registerTransition("Idle", "DEATH", "Dead");
 
-				registerTransition("Rising", EVT_STATE_END, "Jump");
 				registerTransition("Rising", "JUMP_UP", "Falling"); // stop rising when you let go of the button
-				registerTransition("Rising", "JUMP_RELEASED", "Falling"); // stop rising when you let go of the button
+				registerTransition("Rising", "JUMP_RELEASED", "Falling"); 
+				registerTransition("Rising", EVT_STATE_END, "Jump"); 
 
-				registerTransition("Jump", "JUMP_UP", "Falling"); // stop rising when you let go of the button
-				registerTransition("Jump", "JUMP_RELEASED", "Falling"); // stop rising when you let go of the button
-				registerTransition("Jump", EVT_STATE_END, "Falling"); // stop rising when you let go of the button
+				registerTransition("Jump", "JUMP_UP", "Falling"); 
+				registerTransition("Jump", "JUMP_RELEASED", "Falling"); 
+				registerTransition("Jump", EVT_STATE_END, "Falling"); 
 
 				registerTransition("Falling", "GROUND_COLLISION", "Landing");
 				registerTransition("Landing", EVT_STATE_END, "Idle");
@@ -259,58 +266,97 @@ class FantasySideScroller : public Game
 				registerTransition("RunningLeft", "RIGHT_PRESSED", "RunningRight");
 				registerTransition("RunningLeft", "JUMP_PRESSED", "Rising");
 				registerTransition("RunningLeft", "ATTACK_PRESSED", "Attack01");
+				//registerTransition("RunningLeft", "IN_AIR", "Falling");
 				 
 				registerTransition("RunningRight", "RIGHT_RELEASED", "Idle");
 				registerTransition("RunningRight", "LEFT_PRESSED", "RunningLeft");
 				registerTransition("RunningRight", "JUMP_PRESSED", "Rising");
 				registerTransition("RunningRight", "ATTACK_PRESSED", "Attack01");
+				//registerTransition("RunningRight", "IN_AIR", "Falling");
 
 				registerTransition("Attack01", EVT_STATE_END, "Idle");
 				registerTransition("Attack01", "ATTACK_PRESSED", "Attack02");
 				registerTransition("Attack02", EVT_STATE_END, "Idle");
 
+				this->setBuffered(true);
 				this->setState(falling);
 				this->setMass(100);
-				//this->setBuffered(true); // TODO: Buffered inputs don't seem to be working atm...
 
-				collisionEventHandler = [=](const CollisionEvent* e) {
+				_collisionEventHandler = [=](const Event* e) {
 
-					GameObject* otherObject = e->involvedObject;
-					if (otherObject->getPosition().y > this->getPosition().y) {
-						this->sendInput("GROUND_COLLISION");
+					CollisionEvent* collisionEvent = (CollisionEvent*)e;
+					GameObject* otherObject = collisionEvent->involvedObject;
+					if (otherObject->getType() == GAME_OBJ_TILE) {
+						if (((Tile*)otherObject)->getTileType() == "stoneTile") {
+							this->sendInput("GROUND_COLLISION");
+
+//#if _DEBUG
+//							DEBUG_MSG("GROUND_COLLISION\n");
+//#endif
+						}
 					}
 				};
 			}
 
 			void update(float time) {
-				
+
+				GameObject::update(time);
 				GameObjectState* state = this->getState();
 
 				if (state) {
 
-					if (!strcmp(state->getName(), "Jump") || !strcmp(state->getName(), "Falling")) {
+					if (KEYBOARD) {
 
-						// We should instead lookup the bound action or instead override "sendEvent" capture the sent events?
-						if (Engine2D::getInput()->getKeyboard()->KeyDown(KBK_LEFT)) {
-							this->setPosition(this->getPosition().x - MOVE_UNITS * time, this->getPosition().y);
-							this->getRenderable()->setScale(-abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
+						if (!strcmp(state->getName(), "Jump") || !strcmp(state->getName(), "Falling")) {
+
+							// We should instead lookup the bound action or instead override "sendEvent" capture the sent events?
+							if (keyboard->keyDown(keyboard->getKeys().KBK_LEFT)) {
+								this->setPosition(this->getPosition().x - MOVE_UNITS * time, this->getPosition().y);
+								this->getRenderable()->setScale(-abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
+							}
+
+							if (Engine2D::getInput()->getKeyboard()->keyDown(keyboard->getKeys().KBK_RIGHT)) {
+								this->setPosition(this->getPosition().x + MOVE_UNITS * time, this->getPosition().y);
+								this->getRenderable()->setScale(abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
+							}
 						}
-
-						if (Engine2D::getInput()->getKeyboard()->KeyDown(KBK_RIGHT)) {
-							this->setPosition(this->getPosition().x + MOVE_UNITS * time, this->getPosition().y);
-							this->getRenderable()->setScale(abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
+						else if (!strcmp(state->getName(), "Idle") || !strcmp(state->getName(), "RunningLeft") || !strcmp(state->getName(), "RunningRight") && !this->containsCondition("GROUND_COLLISION")) {
+							this->sendInput("IN_AIR");
+							//#if _DEBUG
+							//    DEBUG_MSG("IN_AIR\n");
+							//#endif
+						}
+						else if (Engine2D::getInput()->getKeyboard()->keyPressed(keyboard->getKeys().KBK_F)) {
+							this->sendInput("DEATH");
 						}
 					}
-					else if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_F)) {
-						this->sendInput("DEATH");
-					}
-
-					//if (this->getPosition().y > 72) {
-					//	this->sendInput("GROUND_COLLISION");
-					//}
 				}
+#if _DEBUG
+				if (DEBUGGING && Debug::dbgObjects) 
+				{
+					char buffer[256];
+					sprintf_s(buffer, "pos{ % f,% f }\n", this->_position.x, this->_position.y);
+					DEBUG_MSG(buffer);
 
-				GameObject::update(time);
+					if (Renderable* renderable = this->getRenderable()) {
+						sprintf_s(buffer, "renderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
+						DEBUG_MSG(buffer);
+					}
+
+					if (Collidable* collidable = this->getCollidable()) {
+						switch (collidable->getType()) {
+						case COL_OBJ_SQUARE: {
+							Square* square = (Square*)this->getCollidable();
+							sprintf_s(buffer, "colSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
+							DEBUG_MSG(buffer);
+							break;
+						}
+						case COL_OBJ_GROUP:
+							break;
+						}
+					}
+				}
+#endif
 			}
 
 			~Character(void) {
@@ -328,7 +374,7 @@ class FantasySideScroller : public Game
 
 			_renderList->push_back(_background);
 
-			_tileSet = new TileSet(Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Assets/Tiles.png"), 16);
+			_tileSet = TileSet::loadFromFile(BASE_DIRECTORY"Assets/fantasyTiles.tsj");
 
 			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap_2.csv", _tileSet);
 
@@ -347,12 +393,14 @@ class FantasySideScroller : public Game
 			_objectManager.addObject("Hero", playableCharacter);
 			_objectManager.addObject("Camera", _camera);
 
+			Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+
 			_player->start();
 			_player->setController(_inputManager.createController());
-			_player->getController()->addAction(Action("JUMP", KBK_SPACE));
-			_player->getController()->addAction(Action("LEFT", KBK_LEFT));
-			_player->getController()->addAction(Action("RIGHT", KBK_RIGHT));
-			_player->getController()->addAction(Action("ATTACK", KBK_LCONTROL));
+			_player->getController()->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
+			_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
+			_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
+			_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
 			_player->setGameObject(playableCharacter);
 
 			_cameraPlayerAttach.setSource(_camera);
@@ -366,23 +414,25 @@ class FantasySideScroller : public Game
 
 		bool onExecute(float time)
 		{
-			GameState::onExecute(time);
+			Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
 			// TODO: Handle enemy spawning, game rules, etc.
 
-			if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_R)) {
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_R)) {
 				playableCharacter->setState(playableCharacter->getState("Falling"));
 				playableCharacter->setPosition(0, -120);
 			}
 
-			if (Engine2D::getInput()->getKeyboard()->KeyPressed(KBK_ESCAPE)) {
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
 
 				// TODO: Bring up a menu (i.e. push a 'MenuState')
 
 				Engine2D::quit();
 			}
 
-			return true;
+			_background->setPosition(_camera->getPosition());
+
+			return GameState::onExecute(time);;
 		}
 
 		void onExit(State* next)
@@ -398,6 +448,10 @@ class FantasySideScroller : public Game
 
 			if (playableCharacter) {
 				delete playableCharacter;
+			}
+
+			if (_tileMap) {
+				delete _tileMap;
 			}
 
 			if (_tileSet) {
@@ -416,7 +470,7 @@ public:
 
 	void begin(void)
 	{
-		// load options and/or configurations
+		//Game::begin();
 
 		Renderer::window->setWindowTitle(BASE_DIRECTORY);
 		Renderer::window->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
@@ -441,6 +495,8 @@ public:
 
 	void end(void)
 	{
+		Game::end();
+
 		if (_playState) {
 			delete _playState;
 		}

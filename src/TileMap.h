@@ -1,6 +1,8 @@
 // TileMap.h
 #pragma once
 
+// TODO: Create a collidable encompassing the map
+
 #include "Tile.h"
 #include "StrUtil.h"
 #include "FileSystem.h"
@@ -10,7 +12,6 @@
 
 class TileMap : public Tile
 {
-	//int** _tileGrid = nullptr;
 	unsigned int _mapWidth;
 	unsigned int _mapHeight;
 
@@ -24,22 +25,9 @@ public:
 		_mapHeight(mapHeight) {
 
 		if (_tileSet) {
-
-			//_tileGrid = new int* [mapWidth];
-
 			for (unsigned int i = 0; i < mapWidth; i++) {
-
-				//_tileGrid[i] = new int[mapHeight];
-
 				for (unsigned int j = 0; j < mapHeight; j++) {
-
-					//_tileGrid[i][j] = -1;
-
-					unsigned int tileSize = _tileSet->getTileSize();
-
-					Tile* tile = _tiles.create();
-					tile->setTileSet(_tileSet);
-					tile->setPosition(this->getPosition() + vector2{ (float)i * tileSize, (float)j * tileSize });
+					_tiles.create()->setTileSet(_tileSet);
 				}
 			}
 		}
@@ -47,12 +35,6 @@ public:
 
 	virtual ~TileMap(void) {
 		_tiles.clear();
-		//if (_tileGrid) {
-		//	for (unsigned int i = 0; i < _mapWidth; i++) {
-		//		delete[] _tileGrid[i];
-		//	}
-		//	delete[] _tileGrid;
-		//}
 	}
 
 	void setTileIndex(unsigned int x, unsigned int y, int tileIndex) {
@@ -82,13 +64,24 @@ public:
 		return NULL;
 	}
 
+	void setMapWidth(unsigned int mapWidth) { _mapWidth = mapWidth; }
+	void setMapHeight(unsigned int mapHeight) { _mapHeight = mapHeight; }
+
 	void arrangeTiles(void) {
 		for (unsigned int x = 0; x < _mapWidth; x++) {
 			for (unsigned int y = 0; y < _mapHeight; y++) {
-				Tile* tile = getTile(x, y);
-				if (tile) {
-					unsigned int tileSize = tile->getTileSet()->getTileSize();
-					tile->setPosition(this->getPosition() + vector2{ (float)x * tileSize, (float)y * tileSize });
+				if (Tile* tile = getTile(x, y)) {
+					unsigned int tileSize = (unsigned int)tile->getTileSet()->getTileSize();
+					tile->setPosition(this->getPosition() + vector2{ round((float)(x * tileSize)), round((float)(y * tileSize)) });
+					tile->update(0);
+#if _DEBUG
+					if (Debug::dbgTiles) {
+						if (Collidable* collidable = tile->getCollidable()) {
+							char buffer[128]; sprintf_s(buffer, "pos{%f, %f}\tcpos{%f, %f}\n", tile->_x, tile->_y, collidable->_position.x, collidable->_position.y);
+							DEBUG_MSG(buffer);
+						}
+					}
+#endif
 				}
 			}
 		}
@@ -105,7 +98,6 @@ public:
 			std::vector<std::vector<int>> lines;
 
 			do {
-				// Read the first line to get the TileMap width
 				std::string line;
 				std::getline(file, line);
 
@@ -126,8 +118,8 @@ public:
 			}
 			while(file.good());
 
-			unsigned int mapHeight = lines.size();
-			unsigned int mapWidth = lines[0].size();
+			unsigned int mapHeight = (unsigned int)lines.size();
+			unsigned int mapWidth = (unsigned int)lines[0].size();
 
 			if (tileSet) {
 				tileMap = new TileMap(mapWidth, mapHeight, tileSet);

@@ -38,14 +38,14 @@ void PlatformInput::shutdown(void)
 //    if (m_lpDirectInput)
 //    {
 //       if (_mouse) {
-//          ((DIMouse*)_mouse)->Release();
+//          ((DIMouse*)_mouse)->release();
 //       }
 
 //       if (_keyboard) {
-//          ((DIKeyboard*)_keyboard)->Release();
+//          ((DIKeyboard*)_keyboard)->release();
 //       }
 
-//       m_lpDirectInput->Release();
+//       m_lpDirectInput->release();
 //       m_lpDirectInput = NULL;
 //    }
 }

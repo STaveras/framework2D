@@ -1,10 +1,12 @@
 // File: Animation.h
 #pragma once
+
 #include "Renderable.h"
 #include "Frame.h"
 #include "SpriteManager.h"
 #include <string>
 #include <vector>
+
 class Animation : public Renderable
 {
 public:
@@ -36,12 +38,13 @@ public:
    Animation(const char* szName);
 
    Mode getMode(void) const { return m_eMode; }
+
    bool isForward(void) const { return m_bForward; }
    bool isPlaying(void) const { return m_bPlaying; }
    float getSpeed(void) const { return m_fSpeed; }
    const char* getName(void) const { return m_szName.c_str(); }
-   size_t getCurrentFrameIndex(void) const { return _frameIndex; }
    size_t getFrameCount(void) { return m_Frames.size(); }
+   size_t getCurrentFrameIndex(void) const { return _frameIndex; }
    Frame* getCurrentFrame(void) { return m_Frames[_frameIndex]; }
    Frame* operator[](unsigned int i) { return m_Frames[i]; }
 
@@ -50,8 +53,15 @@ public:
    void setSpeed(float fSpeed) { m_fSpeed = fSpeed; }
    void setName(const char* szName) { m_szName = szName; }
 
-   void setPosition(float x, float y) { setPosition(vector2(x, y)); }
    void setPosition(vector2 position);
+   void setPosition(float x, float y) { setPosition(vector2(x, y)); }
+
+   void play(void) { this->_reset(); m_bPlaying = true; }
+   void pause(void) { m_bPlaying = false; }
+   void resume(void) { m_bPlaying = true; }
+   void stop(void) { _reset(); m_bPlaying = false; }
+
+   void mirror(bool horizontal, bool vertical);
 
    Frame* createFrame(Sprite* sprite, float duration = 0.0f);
 
@@ -65,13 +75,6 @@ public:
          m_Frames[i]->setDuration(frameTime);
       }
    }
-
-   void play(void) { this->_reset(); m_bPlaying = true; }
-   void pause(void) { m_bPlaying = false; }
-   void resume(void) { m_bPlaying = true; }
-   void stop(void) { _reset(); m_bPlaying = false; }
-
-   void mirror(bool horizontal, bool vertical);
 
    void setScale(vector2 scale) {
        Renderable::setScale(scale);

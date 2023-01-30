@@ -33,12 +33,12 @@ void Player::update(float time)
 
    for (Action action : controller->getActions()) {
       for (auto key : action.getAssignments()) {
-         if (Engine2D::getInput()->getKeyboard()->KeyDown(key)) {
+         if (Engine2D::getInput()->getKeyboard()->keyDown(key)) {
             if (this->getGameObject()) {
                this->getGameObject()->sendInput((action.getActionName() + "_DOWN").c_str(), this);
             }
          }
-         else if (Engine2D::getInput()->getKeyboard()->KeyUp(key)) {
+         else if (Engine2D::getInput()->getKeyboard()->keyUp(key)) {
             if (this->getGameObject()) {
                this->getGameObject()->sendInput((action.getActionName() + "_UP").c_str(), this);
             }

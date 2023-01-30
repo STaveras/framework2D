@@ -27,7 +27,7 @@ public:
 
    typedef const char* event_key;
    typedef fastdelegate::FastDelegate1<const Event&> event_delegate;
-   typedef struct _compare : public std::binary_function<Event, Event, bool>
+   typedef struct _compare /*: public std::binary_function<Event, Event, bool>*/
    {
       inline bool operator()(Event* lhs, Event* rhs) const
       {

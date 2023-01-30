@@ -25,35 +25,31 @@ public:
    }
 
    // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
-   Tile(int tileIndex, TileSet* tileSet) :
+   explicit Tile(int tileIndex, TileSet* tileSet) :
       GameObject(GAME_OBJ_TILE),
       _tileSet(tileSet) {
 
       if (_tileSet) {
-         this->addState("Static"); // Look up the tilename in the tile set info
+         this->addState(_tileSet->getTileInfo(tileIndex)._typeName.c_str()); // Look up the tileType in the tile set info
          this->start();
          this->setTileIndex(tileIndex);
       }
    }
 
    ~Tile(void) {
-
-      GameObjectState* state = this->getState();
-      Collidable* collidable = state->getCollidable();
-
-      if (collidable) {
-         delete collidable;
-      }
-
       _tileImages.clear();
+   }
+
+   TileSet* getTileSet(void) const {
+      return _tileSet;
    }
 
    int getTileIndex(void) const {
       return _tileIndex;
    }
 
-   TileSet* getTileSet(void) const {
-      return _tileSet;
+   std::string getTileType(void) const {
+      return _tileSet->getTileInfo(_tileIndex)._typeName;
    }
 
    void setTileIndex(int tileIndex) 
@@ -68,14 +64,14 @@ public:
 
             if (state) {
 
-               UINT xPosition = (_tileIndex % (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
-               UINT yPosition = (_tileIndex / (UINT)_tileSet->getTileCounts().x) * _tileSet->getTileSize();
+               int xPosition = (int)((_tileIndex % (int)_tileSet->getTileCounts().x) * _tileSet->getTileSize());
+               int yPosition = (int)((_tileIndex / (int)_tileSet->getTileCounts().x) * _tileSet->getTileSize());
 
-               UINT width = xPosition + _tileSet->getTileSize();
-               UINT height = yPosition + _tileSet->getTileSize();
+               int width = (int)(xPosition + _tileSet->getTileSize());
+               int height = (int)(yPosition + _tileSet->getTileSize());
 
                RECT tileRect{
-                  (int)xPosition, (int)yPosition, (int)width, (int)height
+                  xPosition, yPosition, width, height
                };
 
                Image* tileImage = (Image*)state->getRenderable();
@@ -91,15 +87,16 @@ public:
 
                state->setRenderable(tileImage);
 
-               Square* tileCollidable = (Square*)state->getCollidable();
+               TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);
 
-               if (tileCollidable) {
-                  delete state->getCollidable();
+               if (tileInfo._typeName != "") {
+                  state->setName(tileInfo._typeName.c_str());
                }
-               else {
-                  tileCollidable = new Square(vector2(0, 0), (float)_tileSet->getTileSize(), (float)_tileSet->getTileSize());
-                  state->setCollidable(tileCollidable);
+
+               if (tileInfo._collisionInfo != NULL) {
+                  state->setCollidable(_tileSet->getTileInfo(tileIndex)._collisionInfo);
                }
+               // Originally we created new Collision objects here... But now, we entirely rely on the TileSet for these objects
             }
          }
       }
@@ -113,4 +110,24 @@ public:
          this->setTileIndex(_tileIndex);
       }
    }
+
+#ifdef _DEBUG
+   void update(float time) {
+      GameObject::update(time);
+
+      if (Debug::dbgTiles) 
+      {
+         char buffer[128]{ 0 };
+         sprintf_s(buffer, 128, "pos{%f, %f}\n", this->getPosition().x, this->getPosition().y);
+         DEBUG_MSG(buffer);
+
+         if (Collidable* collidable = this->getCollidable()) {
+            sprintf_s(buffer, 128, "cpos{%f, %f}\n", this->getCollidable()->getPosition().x, this->getCollidable()->getPosition().y);
+            DEBUG_MSG(buffer);
+         }
+
+         DEBUG_MSG("\n");
+      }
+   }
+#endif
 };

@@ -2,18 +2,22 @@
 
 #pragma once
 
-#include "IKeyboard.h"
+#include "Keyboard.h"
 #include "PlatformInput.h"
 
 #include <map>
 
-class PlatformKeyboard : public IKeyboard
+// Keyboard input based on GLFW
+class PlatformKeyboard : public Keyboard
 {
     GLFWkeyfun _onKeyEvent;
     // I wanted to carry over the array implementation in DirectInput, 
     // but I'm not sure the same would work on other platforms
-    std::map<KEYBOARD_KEYS, bool> _keyStates;
-    std::map<KEYBOARD_KEYS, bool> _keyStatesLast;
+    std::map<KEY, bool> _keyStates;
+    std::map<KEY, bool> _keyStatesLast;
+
+public:
+   // TODO: Expose key definition
 
 protected:
     void _onKeyEventHandler(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -21,10 +25,10 @@ protected:
 public:
     PlatformKeyboard(Window *window);
 
-    void Release(void) {}
+    void release(void) {}
 
-    bool KeyDown(int key);
-    bool KeyUp(int key);
-    bool KeyPressed(int key);
-    bool KeyReleased(int key);
+    bool keyDown(KEY key);
+    bool keyUp(KEY key);
+    bool keyPressed(KEY key);
+    bool keyReleased(KEY key);
 };

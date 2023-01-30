@@ -18,6 +18,9 @@ class StateMachineEvent : public Event
 public:
 	StateMachineEvent(const char* szCondition, void* pSender):Event(EVT_STATEMACHINE_EVENT, pSender, Event::event_priority_normal), m_szCondition(szCondition){}
 
+	const char* getCondition(void) const { return m_szCondition.c_str(); }
+
+	bool operator==(const char* condition) { return !strcmp(condition, m_szCondition.c_str()); }
 	bool operator==(const StateMachineEvent& rhs) { return (m_szCondition == rhs.m_szCondition); }
 };
 

@@ -10,10 +10,10 @@
 #include "Square.h"
 
 Camera::Camera(void):
-GameObject(GAME_OBJ_CAMERA),
-_screenWidth(0),
-_screenHeight(0),
-_zoom(1.0f) {
+  GameObject(GAME_OBJ_CAMERA),
+   _screenWidth(0),
+   _screenHeight(0),
+   _zoom(1.0f) {
    
    // TODO: Add different states to the camera so it employs different behaviors
    this->addState("Static");
@@ -34,19 +34,29 @@ void Camera::pan(vector2 direction, float amount)
 	_position += direction * amount;
 }
 
+void Camera::update(float time)
+{
+   GameObject::update(time);
+
+   _position.x = roundf(_position.x);
+   _position.y = roundf(_position.y);
+}
+
 // Trying to make this as simple as possible...
 bool Camera::onScreen(GameObject *object)
 {
-   Square square(vector2(_position.x - (_screenWidth * 0.5f), 
-                         _position.y - (_screenHeight * 0.5f)),
-                         static_cast<float>(_screenWidth), static_cast<float>(_screenHeight));
+   if (Collidable* collidable = object->getCollidable())
+   { 
+      vector2 min{ _position.x - (_screenWidth * 0.5f),
+                   _position.y - (_screenHeight * 0.5f) };
 
-   ObjectState *objectState = (ObjectState*)object->getState();
+      vector2 max{ min.x + _screenWidth,
+                   min.y + _screenHeight };
 
-   if (objectState) {
-      if (objectState->getCollidable()) {
-         return objectState->getCollidable()->collidesWith(&square);
-      }
+      Square square(min, max);
+
+      return collidable->collidesWith(&square);
    }
-   return square.collidesWith(object->getPosition());
+
+   return false;
 }

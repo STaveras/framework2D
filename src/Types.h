@@ -7,7 +7,7 @@
 #define _TYPES_H_
 
 // Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
-#define FRAMEWORK_VERSION "0.02"
+#define FRAMEWORK_VERSION "0.05"
 
 #define DEFAULT_DATA_PATH "./data/"
 
@@ -32,8 +32,10 @@ typedef std::ofstream ofpstream;
 #define byte uint8_t
 
 #ifdef _WIN32
-
+#define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+
+#define sleep Sleep
 
 #include <windows.h>
 #include <shellapi.h>
@@ -41,8 +43,12 @@ typedef std::ofstream ofpstream;
 // Suppressing warnings from DirectX headers
 #pragma warning(push)
 #pragma warning(disable: 26495)
+#pragma warning(disable: 28251)
+
+#define DIRECTINPUT_VERSION 0x0800
 
 #include <direct.h>
+#include <dinput.h>
 
 #include <d3d9.h>
 #include <d3dx9.h>
@@ -51,7 +57,8 @@ typedef std::ofstream ofpstream;
 
 #pragma warning(pop)
 
-#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_VULKAN
 
 #define RECT RECT
 
@@ -85,36 +92,19 @@ struct rect {
 
 #endif
 
-#include <GLFW/glfw3.h>
-
 #if defined(GLM) || defined(__APPLE__) || defined(__linux__) || defined(__unix__)
 
 #include <glm/glm.hpp>
 
+#endif
+
+#include <GLFW/glfw3.h>
+
 #ifdef _WIN32
-struct vector2 : public glm::vec2 {
-   operator D3DXVECTOR2() const { return D3DXVECTOR2(this->x, this->y); }
-};
-#else
+#pragma comment(lib, "glfw3.lib")
+#endif
+
 #include "Maths.h"
-#endif
-
-#else
-
-// TODO: Remove any direct references to D3DXVECTOR2 and related functions
-// TODO: Write your own wrapper for the DirectX math classes...
-
-// Windows
-#if !defined(GLM) // We're going to have to check this at run time if we want to swap between DX and VK on the fly
-#define vector2 D3DXVECTOR2 // TODO: As above, write the wrapper so you don't have to use raw d3d math calls in your code...
-#define vector3 D3DXVECTOR3
-#define vector4 D3DXVECTOR4
-#define matrix4x4 D3DXMATRIX // i leik trucks :]
-#endif
-// ---------------------------------------------------------------------------------------------------------------------
-
-#endif
-
 #include "Color.h"
 
 #include "KEYBOARD_KEYS.h"

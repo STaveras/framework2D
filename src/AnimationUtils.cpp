@@ -21,7 +21,8 @@ namespace Animations {
       char *tmp = _strdup(rectDescription);
 
       // tokenize
-      char *first, *second, *value, *seps = "{,}";
+      const char* seps = "{,}";
+      char* first, * second, * value;
       first = strtok_s(tmp, seps, &second);
 
       while (first != NULL) {
@@ -139,13 +140,14 @@ namespace Animations {
       return animations;
    }
 
-   // Only works when each Frame have the same dimensions
+   // Only works when each Frame has the same dimensions
    void createFramesForAnimation(Animation* animation, Texture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory, unsigned int startIndex, unsigned int count)
    {
       if (!animation || !spriteSheet)
          return;
 
-      vector2 frameCounts = { spriteSheet->getWidth() / frameDimensions.x, spriteSheet->getHeight() / frameDimensions.y };
+      vector2 frameCounts = { spriteSheet->getWidth() / frameDimensions.x,
+                              spriteSheet->getHeight() / frameDimensions.y };
 
       if (count == 0) {
          count = (unsigned int)(frameCounts.x * frameCounts.y);

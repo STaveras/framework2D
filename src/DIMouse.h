@@ -3,7 +3,7 @@
 #include "IMouse.h"
 #include "DirectInput.h"
 
-class DIMouse : public IMouse, IDIDeviceComm
+class DIMouse : public IMouse, IDIDevice
 {
    friend class DirectInput;
 
@@ -23,15 +23,15 @@ public:
       return (!(bool)_mouseState.rgbButtons[eBtn] && (bool)_mouseStateOld.rgbButtons[eBtn]);
    }
 
-   bool ButtonDown(MOUSE_BUTTONS eBtn) {
+   bool buttonDown(MOUSE_BUTTONS eBtn) {
       return (bool)_mouseState.rgbButtons[eBtn];
    }
 
-   bool ButtonUp(MOUSE_BUTTONS eBtn) {
+   bool buttonUp(MOUSE_BUTTONS eBtn) {
       return !(bool)_mouseState.rgbButtons[eBtn];
    }
 
-   bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);
+   bool acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);
    void update(void);
 };
 

@@ -22,7 +22,7 @@
 
 // TODO: Make execution time work with physics to scale force -- this 'execution time' should be seen as a MAX
 
-// NOTES: So originally I wanted to avoid clichés and not make this your typical game object class... But sometimes, tropes are a good thing
+// NOTES: So originally I wanted to avoid clichï¿½s and not make this your typical game object class... But sometimes, tropes are a good thing
 //        What we have here is something in between a base "object" class and a pseudo "entity" class... Which is why something like the Camera derives from 
 //        So this will change over time a lot until I land on something that is sufficiently generalized enough to cover as many different games 
 
@@ -31,6 +31,9 @@
 
 class GameObject : public StateMachine, public Physical
 {
+   //bool _isColliding = false;
+   //bool _isRendering = false; 
+
 public:
     enum GAME_OBJ_TYPE
     {
@@ -42,7 +45,7 @@ public:
     };
 
 private:
-   GAME_OBJ_TYPE m_eType = GAME_OBJ_NULL; // I feel like this shouldn't be a thing
+   GAME_OBJ_TYPE _objType = GAME_OBJ_NULL; // I feel like this shouldn't be a thing
 
    // GameObject is a lil' dim
    friend class ObjectOperator;
@@ -50,6 +53,7 @@ private:
 protected:
    Factory<Sprite>     _spriteManager;
    Factory<Animation>  _animationManager;
+   Factory<Collidable> _collisionObjects;
 
 public:
    class GameObjectState : public State
@@ -80,7 +84,7 @@ public:
       Renderable* getRenderable(void) { return _renderable; }
       void setRenderable(Renderable* renderable) { _renderable = renderable; }
 
-      Collidable* getCollidable(void) { return _collidable; }
+      Collidable* getCollidable(void);
       void setCollidable(Collidable* collidable) { _collidable = collidable; }
 
       vector2 getDirection(void) const { return _direction; }
@@ -97,35 +101,45 @@ public:
       virtual void onExit(State* next);
    };
 
+   void setPosition(vector2 position);
+   void setPosition(float x, float y) { this->setPosition(vector2(x, y)); }
+
 protected:
 
    void updateComponents();
 
-   std::function<void(const CollisionEvent* e)> collisionEventHandler = NULL;
+   std::function<void(const Event* e)> _collisionEventHandler = NULL;
 
 public:
    // We should probably forgo "GameObject types"
-   explicit GameObject(GAME_OBJ_TYPE eType): m_eType(eType) {}
-   virtual ~GameObject(void) {}
+   explicit GameObject(GAME_OBJ_TYPE eType): _objType(eType) {}
+   virtual ~GameObject(void) {
+      _collisionObjects.clear();
+      _animationManager.clear();
+      _spriteManager.clear();
+   }
 
-   GAME_OBJ_TYPE getType(void) const { return m_eType; }
+   GAME_OBJ_TYPE getType(void) const { return _objType; }
+
+   //void setIsColliding(bool colliding) { _isColliding = colliding; }
+   //bool isColliding(void) const { _isColliding; }
 
    GameObjectState* addState(const char* name);
    GameObjectState* getState(const char* name) { return (GameObjectState*)StateMachine::getState(name); }
    GameObjectState* getState(void) const { return (GameObjectState*)StateMachine::getState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
 
    Renderable* getRenderable(void) const { return this->getState()->getRenderable(); }
-   Collidable* getCollidable(void) const { return this->getState()->getCollidable(); }
+   Collidable* getCollidable(void);
 
    virtual void start(void);
    virtual void update(float fTime);
    virtual void finish(void);
 
 private:
-    virtual void _OnCollision(const Event& e);
-    virtual void _OnStateEntered(const Event& e);
-    virtual void _OnStateExited(const Event& e);
+    virtual void _onStateEntered(const Event& e);
+    virtual void _onStateExited(const Event& e);
+
+    virtual void _onCollision(const Event& e);
 };
 typedef GameObject::GameObjectState ObjectState;
 #endif
-// Author: Stanley Taveras

@@ -47,12 +47,21 @@ RendererDX::~RendererDX(void)
 void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
 {
    D3DXMATRIX transform;
-   D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
+   //D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
+
+   D3DXVECTOR2 rectCenter = image->getRectCenter();
+   D3DXVECTOR2 scale = image->getScale();
+   D3DXVECTOR2 center = image->getCenter();
+
+   D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
 
    D3DXVECTOR3 position;
    position.x = (image->getPosition().x + offset.x) * image->getScale().x;
    position.y = (image->getPosition().y + offset.y) * image->getScale().y;
    position.z = 0.0f; // Will eventually be used for z-effects
+
+   // Depth for some reason? 
+   D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x * image->getScale().x, image->getCenter().y * image->getScale().y, 0.0f); 
 
    // No mipmaps, and nearest neighbor/point filtering 
    m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
@@ -62,8 +71,7 @@ void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
    m_pD3DSprite->SetTransform(&transform);
    m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), 
                      &image->getSourceRect(),
-                     &D3DXVECTOR3(image->getCenter().x * image->getScale().x, image->getCenter().y * image->getScale().y, 0.0f),
-                     &position,
+                     &center3D, &position,
                      tint._color);
 }
 
@@ -189,8 +197,11 @@ void RendererDX::render(void)
 
             D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->getCenter();
 
-            viewMat._41 = -D3DXVec2Dot(&D3DXVECTOR2(1, 0), &position);
-            viewMat._42 = -D3DXVec2Dot(&D3DXVECTOR2(0, 1), &position);
+            D3DXVECTOR2 xAxis = D3DXVECTOR2(1, 0);
+            D3DXVECTOR2 yAxis = D3DXVECTOR2(0, 1);
+
+            viewMat._41 = -D3DXVec2Dot(&xAxis, &position);
+            viewMat._42 = -D3DXVec2Dot(&yAxis, &position);
 
             viewMat = scaleMat * rotationMat * viewMat;
 
@@ -213,9 +224,8 @@ void RendererDX::render(void)
                         case RENDERABLE_TYPE_SPRITE:
                         {
                             Image* image = (Image*)(*o);
-                            _DrawImage(image,
-                                       image->getTintColor(),
-                                       image->getOffset());
+                            _DrawImage(image, image->getTintColor(),
+                                              image->getOffset());
                         }
                         break;
                         case RENDERABLE_TYPE_ANIMATION:

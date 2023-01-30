@@ -10,6 +10,19 @@
 #include <fstream>
 #include <string.h>
 
+// Originally, I meant for this to subscribe to EVT_STATEMACHINE_EVENT(s) and react to them...
+//void StateMachine::_onEvent(const StateMachineEvent& evt)
+//{
+//   if (_isBuffered) {
+//      if (!containsCondition(evt.getCondition())) {
+//         _events.push(evt);
+//      }
+//   }
+//   else if (State* state = _nextState(evt)) { // This is where the NULL check has to appear (:
+//      setState(state);      
+//   }
+//}
+
 StateMachine::StateMachine(void) :
    _isBuffered(false),
    _transitionFrequency(0.0f),
@@ -20,16 +33,6 @@ StateMachine::StateMachine(void) :
 
 StateMachine::~StateMachine(void) {
    _transitionTable.clear();
-}
-
-// ...I want to decouple this
-void StateMachine::_onEvent(const StateMachineEvent& evt)
-{
-   if (_isBuffered)
-      _events.push(evt);
-   else if (State* state = _nextState(evt)) { // This is where the NULL check has to appear (:
-      setState(state);      
-   }
 }
 
 State* StateMachine::_nextState(const StateMachineEvent& evt)
@@ -43,7 +46,6 @@ State* StateMachine::_nextState(const StateMachineEvent& evt)
       if (itr->second.first == evt)
          return itr->second.second;
    }
-
    return NULL;
 }
 
@@ -57,7 +59,6 @@ void StateMachine::setState(State* state)
       if (_state) {
          _state->onExit(state);
       }
-
       state->onEnter(_state);
    }
    
@@ -68,12 +69,10 @@ void StateMachine::setState(State* state)
 State* StateMachine::getState(const char* szName)
 {
    Factory<State>::const_factory_iterator itr = this->begin();
-
    for (; itr != this->end(); itr++) {
       if (!strcmp(szName, (*itr)->getName()))
          return (*itr);
    }
-
    return NULL;
 }
 
@@ -81,13 +80,12 @@ State* StateMachine::addState(const char* name)
 {
    State* state = this->create();
    state->setName(name);
-
    return state;
 }
 
 void StateMachine::addTransition(const char* condition, const char* nextState)
 {
-   registerTransition(this->at(this->size() - 1)->getName(), condition, nextState);
+   registerTransition(this->at((unsigned int)(this->size() - 1))->getName(), condition, nextState);
 }
 
 void StateMachine::registerTransition(State* state, const StateMachineEvent& evt, State* resultingState)
@@ -121,27 +119,52 @@ void StateMachine::finish(void)
 
 void StateMachine::sendInput(const char* condition, void* sender)
 {
-   this->_onEvent(StateMachineEvent(condition, sender));
+   //this->_onEvent(StateMachineEvent(condition, sender));
+	if (_isBuffered) {
+		if (!containsCondition(condition)) {
+			_events.push(StateMachineEvent(condition, this));
+		}
+	}
+	else if (State* state = _nextState(StateMachineEvent(condition, this))) {
+		setState(state);
+	}
 }
 
 void StateMachine::update(float fTime)
-{
+{   
    if (_state && !_state->onExecute(fTime)) {
       this->sendInput(EVT_STATE_END, this); // An internal condition...
    }
-   else if (_isBuffered && !_events.empty())
-   {
+   if (_isBuffered && !_events.empty()) {
+
       _transitionTimer += fTime;
 
-      if (_transitionTimer >= _transitionFrequency)
-      {
-         setState(_nextState(_events.front()));
+      if (_transitionTimer >= _transitionFrequency) {
+
+         if (State* nextState = _nextState(_events.front())) {
+            setState(nextState);
+         }
 
          _transitionTimer = 0.0f;
-
          _events.pop();
       }
    }
+}
+
+// I'd like to be able to look at the queue and see what's in it
+bool StateMachine::containsCondition(const char* condition)
+{
+   // *should* be a copy by value operation (so it might be potentially slow)
+   std::queue<StateMachineEvent> tempQueue = _events; 
+
+   while (!tempQueue.empty()) {
+      if (!strcmp(tempQueue.front().getCondition(), condition)) {
+         return true;
+      }
+      tempQueue.pop();
+   }
+
+   return false;
 }
 
 // This was before I knew JSON is a thing

@@ -8,7 +8,6 @@
 #include <vector>
 
 class EventSystem;
-class IKeyboard;
 
 // This is confusing at the moment because originally "VirtualGamePad" was just that... A virtual representation of a game pad or console controller...
 // But what a controller is now is an action-input mapper and the inputmanager updates both controllers and input devices
@@ -16,9 +15,10 @@ class IKeyboard;
 
 class InputManager
 {
-	float m_fElapsed;
-	EventSystem* m_pEventSystem;
-	IInput* _input;
+	float _elapsedTime;
+
+	EventSystem* _eventSystem;
+	InputInterface* _input;
 
 	Factory<Controller> m_Controllers;
 
@@ -26,18 +26,18 @@ public:
 	InputManager(void);
 	~InputManager(void);
 
-	IKeyboard* getKeyboard(void) { return _input->getKeyboard(); }
-	IMouse* getMouse(void) { return _input->getMouse(); }
+	Keyboard* getKeyboard(void) { return _input->getKeyboard(); }
+	Mouse* getMouse(void) { return _input->getMouse(); }
 
 	Controller* getController(unsigned int uiIndex) { return m_Controllers.at(uiIndex); }
 
-	void setEventSystem(EventSystem* pEventSystem) { m_pEventSystem = pEventSystem; }
+	void setEventSystem(EventSystem* pEventSystem) { _eventSystem = pEventSystem; }
 	void setInputInterface(IInput* pInput) { _input = pInput; }
 
 	Controller* createController(void);
 	void destroyController(Controller* controller) { m_Controllers.destroy(controller); }
 
-	void initialize(EventSystem* pEventSystem, IInput* pInput) { m_pEventSystem = pEventSystem; _input = pInput; }
+	void initialize(EventSystem* pEventSystem, IInput* pInput) { _eventSystem = pEventSystem; _input = pInput; }
 	void update(float fTime);
 	void shutdown(void);
 };

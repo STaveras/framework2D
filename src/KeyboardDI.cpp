@@ -1,12 +1,12 @@
 
-#include "DIKeyboard.h"
+#include "KeyboardDI.h"
 
-DIKeyboard::DIKeyboard(void)
+KeyboardDI::KeyboardDI(void)
 {
    memset(m_cKeyBuffer, 0, _countof(m_cKeyBuffer));
 }
 
-bool DIKeyboard::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
+bool KeyboardDI::acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
 {
    if (!FAILED(pDI->CreateDevice(GUID_SysKeyboard, &m_lpDevice, NULL))) {
 
@@ -18,9 +18,9 @@ bool DIKeyboard::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
    return false;
 }
 
-void DIKeyboard::update(void)
+void KeyboardDI::update(void)
 {
-   IDIDeviceComm::update();
+   IDIDevice::update();
 
    if (m_lpDevice) {
 

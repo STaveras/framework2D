@@ -988,17 +988,19 @@ void RendererVK::initialize(void)
 		const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 
 		if (enableValidationLayers) {
-
+#if !defined(NDEBUG)
 			VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 			populateDebugMessengerCreateInfo(debugCreateInfo);
-
+#endif
 			if (!checkValidationLayerSupport(validationLayers)) {
 				throw std::runtime_error("Validation layers requested, but not available!");
 			}
 			else {
 				createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 				createInfo.ppEnabledLayerNames = validationLayers.data();
+#if _DEBUG
 				createInfo.pNext = &debugCreateInfo;
+#endif
 			}
 		}
 		else {
@@ -1036,8 +1038,9 @@ void RendererVK::initialize(void)
 			for (const auto& extension : extensionProperties) {
 				std::cout << '\t' << extension.extensionName << '\n';
 			}
-
+#if !defined(NDEBUG)
 			setupDebugMessenger(_instance);
+#endif
 		}
 
 		pickPhysicalDevice(_instance);
@@ -1099,7 +1102,9 @@ void RendererVK::shutdown(void)
 		}
 
 		if (enableValidationLayers) {
+#if !defined(NDEBUG)
 			destroyDebugUtilsMessengerEXT(_instance, nullptr);
+#endif
 		}
 
 		vkDestroyInstance(_instance, nullptr);

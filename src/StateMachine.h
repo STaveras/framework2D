@@ -25,7 +25,7 @@ class StateMachine : public Factory<State>, Cyclable
 	float _transitionFrequency;
 	float _transitionTimer;
 
-	void _onEvent(const StateMachineEvent& evt);
+	//void _onEvent(const StateMachineEvent& evt);
 
 protected:
 	std::multimap<State*, std::pair<StateMachineEvent, State*>> _transitionTable;
@@ -62,6 +62,7 @@ public:
 	virtual void finish(void);
 
 	void sendInput(const char* condition, void* sender = NULL);
+	bool containsCondition(const char* condition);
 
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class
