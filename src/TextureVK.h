@@ -10,8 +10,7 @@ class TextureVK: public ITexture
 
 public:
     TextureVK(const char *path);
-    ~TextureVK();
+    ~TextureVK() {
 
-
-
+    }
 };

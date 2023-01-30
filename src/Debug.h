@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #define DEBUG
 
 namespace Debug
@@ -20,7 +22,12 @@ namespace Debug
 
     static bool dbgMouse = false;
     static bool dbgObjects = false;
+    static bool dbgTiles = false;
+    static bool dbgMemory = false;
+    static bool dbgCollision = true;
 }
+
+#define DEBUG_MSG(msg) std::cout << msg; OutputDebugString(msg);
 
 #define DEBUGGING (Debug::Mode.isEnabled())
 

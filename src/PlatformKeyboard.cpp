@@ -3,7 +3,7 @@
 
 #include "Engine2D.h"
 
-PlatformKeyboard::PlatformKeyboard(Window *window)
+PlatformKeyboard::PlatformKeyboard(Window *window): _onKeyEvent(NULL)
 {
     // This is hideous but...
     auto func = [](GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -18,26 +18,26 @@ PlatformKeyboard::PlatformKeyboard(Window *window)
 
 void PlatformKeyboard::_onKeyEventHandler(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    _keyStatesLast[(KEYBOARD_KEYS)key] = _keyStates[(KEYBOARD_KEYS)key];
-    _keyStates[(KEYBOARD_KEYS)key] = (action == GLFW_RELEASE) ? false : true;
+    _keyStatesLast[(KEY)key] = _keyStates[(KEY)key];
+    _keyStates[(KEY)key] = (action == GLFW_RELEASE) ? false : true;
 }
 
-bool PlatformKeyboard::KeyDown(int key)
+bool PlatformKeyboard::keyDown(KEY key)
 {
-    return _keyStates[(KEYBOARD_KEYS)key];
+    return _keyStates[key];
 }
 
-bool PlatformKeyboard::KeyUp(int key)
+bool PlatformKeyboard::keyUp(KEY key)
 {
-    return !_keyStates[(KEYBOARD_KEYS)key];
+    return !_keyStates[key];
 }
 
-bool PlatformKeyboard::KeyPressed(int key)
+bool PlatformKeyboard::keyPressed(KEY key)
 {
-    return _keyStatesLast[(KEYBOARD_KEYS)key] != _keyStates[(KEYBOARD_KEYS)key] && KeyDown(key);
+    return _keyStatesLast[key] != _keyStates[key] && keyDown(key);
 }
 
-bool PlatformKeyboard::KeyReleased(int key)
+bool PlatformKeyboard::keyReleased(KEY key)
 {
-    return _keyStatesLast[(KEYBOARD_KEYS)key] != _keyStates[(KEYBOARD_KEYS)key] && KeyUp(key);
+    return _keyStatesLast[key] != _keyStates[key] && keyUp(key);
 }

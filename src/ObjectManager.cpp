@@ -9,6 +9,8 @@
 #include "Engine2D.h"
 #include "Collidable.h"
 #include "EventSystem.h"
+#include "CollisionEvent.h"
+#include "Square.h"
 
 // How we should start thinking about events:
 // SYSTEM EVENTS: The backend, mechanical stuff that glues the ''engine'' together (out/in)
@@ -16,17 +18,18 @@
 
 void ObjectManager::update(float fTime)
 {
-   std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
+   std::map<std::string, GameObject*>::iterator objectItr = m_mObjects.begin();
 
    std::list<std::pair<GameObject*, GameObject*>> objectPairs;
 
-   for (; itr != m_mObjects.end(); itr++)
+   for (; objectItr != m_mObjects.end(); objectItr++)
    {
-      GameObject *object = itr->second;
-
-      // NOTE: You should probably be sending nearly ALL events to objects
-
+      GameObject *object = objectItr->second;
       object->update(fTime);
+
+      // I really did not want to have any sort of object-specific checking inside the object manager -- I wanted it to be completely oblivious to whatever objects it's holding
+      if (objectItr->second->getType() == GameObject::GAME_OBJ_TILE)
+         continue;
 
       // TODO: Rethink Object Operators?
       //////////////////////////////////////////////////
@@ -34,17 +37,17 @@ void ObjectManager::update(float fTime)
       std::list<ObjectOperator*> removalList;
 
       // This is to apply operators on an object
-      std::list<ObjectOperator*>::iterator itr2 = m_lsObjOperators.begin();
-    
-      for (; itr2 != m_lsObjOperators.end(); itr2++) {
-         if ((*itr2)->isEnabled() && !(**itr2)(object))
-            removalList.push_back((*itr2));
+      std::list<ObjectOperator*>::iterator operatorItr = m_lsObjOperators.begin();
+
+      for (; operatorItr != m_lsObjOperators.end(); operatorItr++) {
+         if ((*operatorItr)->isEnabled() && !(**operatorItr)(object))
+            removalList.push_back((*operatorItr));
       }
 
       // Remove operator(s)
-      while (!removalList.empty()) 
+      while (!removalList.empty())
       {
-         ObjectOperator *objOp = removalList.front();
+         ObjectOperator* objOp = removalList.front();
          m_lsObjOperators.remove(objOp);
          removalList.pop_front();
 
@@ -55,17 +58,20 @@ void ObjectManager::update(float fTime)
       // Object Operators End
       // --
 
-      Collidable* collidable = object->getCollidable();
-      if (collidable) {
-         // TODO: Rewrite to broad / narrow phases
-         std::map<std::string, GameObject*>::iterator itr_two = m_mObjects.begin();
-         for (; itr_two != m_mObjects.end(); itr_two++) {
-				if (itr_two->second == object ||
-                itr->second->getType() == itr_two->second->getType() && 
-                itr_two->second->getType() == GameObject::GAME_OBJ_TILE)
-					continue;
+      // TODO: Rewrite to broad / narrow phases
+      if (Collidable* collidable = object->getCollidable()) {
 
-            GameObject* otherObject = itr_two->second;
+         std::map<std::string, GameObject*>::iterator otherObjectItr = m_mObjects.begin();
+
+         for (; otherObjectItr != m_mObjects.end(); otherObjectItr++) {
+
+            if (otherObjectItr->second == object ||
+               objectItr->second->getType() == otherObjectItr->second->getType() &&
+               objectItr->second->getType() == GameObject::GAME_OBJ_TILE) {
+               continue;
+            }
+
+            GameObject* otherObject = otherObjectItr->second;
 
             bool alreadyChecked = false;
 
@@ -79,8 +85,28 @@ void ObjectManager::update(float fTime)
 
             if (!alreadyChecked) {
 
-               if (otherObject->getCollidable()) {
-                  if (collidable->collidesWith(otherObject->getCollidable())) {
+               if (Collidable* otherCollidable = otherObject->getCollidable()) {
+
+                  if (collidable->collidesWith(otherCollidable)) {
+#if _DEBUG
+                     if (Debug::dbgCollision) {
+                        char buffer[256]{ 0 };
+                        sprintf_s(buffer, "%s\np1{%f, %f}\nco1{%f,%f,%f,%f}\nr1{%f,%f}\n", objectItr->first.c_str(), object->getPosition().x, object->getPosition().y,
+                                                                      collidable->getPosition().x, collidable->getPosition().y,
+                                                            ((Square*)collidable)->getMax().x, ((Square*)collidable)->getMax().y,
+                                                                      object->getRenderable()->getPosition().x, object->getRenderable()->getPosition().y);
+                        DEBUG_MSG(buffer);
+                        DEBUG_MSG("+\n")
+
+                        sprintf_s(buffer, "%s\np2{%f, %f}\nco2{%f,%f,%f,%f}\nr2{%f,%f}\n", otherObjectItr->first.c_str(), otherObject->getPosition().x, otherObject->getPosition().y,
+                                                                     otherCollidable->getPosition().x, otherCollidable->getPosition().y,
+                                                           ((Square*)otherCollidable)->getMax().x, ((Square*)otherCollidable)->getMax().y, 
+                                                                     otherObject->getRenderable()->getPosition().x, otherObject->getRenderable()->getPosition().y);
+
+                        DEBUG_MSG(buffer);
+                        DEBUG_MSG("\n");
+                     }
+#endif
                      Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, otherObject));
                   }
                }
@@ -104,6 +130,8 @@ void ObjectManager::removeObject(GameObject* object)
             m_mObjects.erase(itr);
 
             Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object);
+
+            break;
          }
       }
    }
@@ -124,6 +152,8 @@ void ObjectManager::removeObject(const char* name)
             m_mObjects.erase(itr);
             
             Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object);
+           
+            break;
          }
       }
    }
@@ -131,7 +161,7 @@ void ObjectManager::removeObject(const char* name)
 
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
-   m_mObjects[name] = object; object->start();
+   m_mObjects[name] = object; 
    
    Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_ADDED, object);
 }
@@ -147,12 +177,15 @@ void ObjectManager::pushOperator(ObjectOperator* objOperation)
 
 void ObjectManager::popOperator(void)
 {
-   m_lsObjOperators.pop_back();
+   ObjectOperator* objOperator = m_lsObjOperators.back(); m_lsObjOperators.pop_back();
+   Engine2D::getEventSystem()->sendEvent(EVT_OPERATOR_REMOVED, objOperator);
 }
 
 void ObjectManager::clearOperators(void)
 {
-   m_lsObjOperators.clear();
+   while (!m_lsObjOperators.empty()) {
+      this->popOperator();
+   }
 }
 
 void ObjectManager::sendEvent(Event::event_key key, void* sender)

@@ -22,7 +22,7 @@ void GameState::onEnter(void)
    engine->getEventSystem()->registerCallback<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
    engine->getEventSystem()->registerCallback<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
 
    _inputManager.initialize(engine->getEventSystem(),
                             engine->getInput());
@@ -30,42 +30,8 @@ void GameState::onEnter(void)
 
 bool GameState::onExecute(float time)
 {
-#if _DEBUG
-   timer += time;
-
-   if (timer >= 1.0f) {
-
-      if (Debug::dbgObjects) {
-
-         char debugBuffer[255];
-
-         //OutputDebugString("\nObjects:\n-------\n");
-
-         // Debug::Log << "\nObjects:\n-------\n";
-         Debug::Log->write("\nObjects:\n-------\n");
-
-         for (unsigned int i = 0; i < _objectManager.numObjects(); i++) {
-            GameObject* debugObject = _objectManager[i];
-            sprintf_s(debugBuffer, "(%s) pos: (%fx, %fy)\n", _objectManager.getObjectName(debugObject).c_str(), debugObject->getPosition().x, debugObject->getPosition().y);
-            //OutputDebugString(debugBuffer);
-            Debug::Log->write(debugBuffer);
-         }
-      }
-
-      if (_camera) {
-         if (!_camera->onScreen(_player->getGameObject())) {
-            //Engine2D::getEventSystem()->sendEvent("EVT_GAME_OVER");
-            //OutputDebugString("GameObject off screen\n\n");
-            Debug::Log->write("GameObject off screen\n\n");
-         }
-      }
-
-      timer = 0.0f;
-   }
-#endif
-
    _inputManager.update(time);
-   _objectManager.update(time); // TODO: Build an object graph 
+   _objectManager.update(time);
 
    return true; // We're still updating!!! ...Right?
 }
@@ -74,8 +40,8 @@ void GameState::onExit(void)
 {
    _inputManager.shutdown();
 
-   engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectAdded);
+   engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
+   engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->unregister<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->unregister<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
 
@@ -96,7 +62,7 @@ void GameState::_OnObjectStateEnter(const Event& e) {
       Renderable* renderable = objectState->getRenderable();
 
       if (renderable) {
-          _renderList->push_back(renderable);
+         _renderList->push_back(renderable);
       }
    }
 }
@@ -116,12 +82,10 @@ void GameState::_OnObjectStateExit(const Event& e) {
 
 void GameState::_OnObjectAdded(const Event & e)
 {
-   // probably initialize/start object
-   //throw std::runtime_error("GameState::_OnObjectAdded unimplemented");
+   ((GameObject*)e.getSender())->start();
 }
 
 void GameState::_OnObjectRemoved(const Event & e)
 {
-   // Do something
-   //throw std::runtime_error("GameState::_OnObjectRemoved unimplemented");
+   ((GameObject*)e.getSender())->finish();
 }

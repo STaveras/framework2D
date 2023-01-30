@@ -43,12 +43,25 @@ namespace System
            // TODO: Check if the second argument is true or false as to force on or off
 
             for (int i = 0; i < argc; i++) {
-                if (!strcmp(argv[i], "--fullscreen") || !strcmp(argv[i], "-f")) {
+                if (!strcmp(argv[i], "--fullscreen") || !strcmp(argv[i], "-F")) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    static bool checkArgumentsForFPSCounter(int argc, char** argv)
+    {
+       if (argc > 1) {
+
+          for (int i = 0; i < argc; i++) {
+             if (!strcmp(argv[i], "--fps") || !strcmp(argv[i], "-f")) {
+                return true;
+             }
+          }
+       }
+       return false;
     }
 
     static bool checkArgumentsForWindowed(int argc, char** argv) 

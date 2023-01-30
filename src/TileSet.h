@@ -2,6 +2,7 @@
 #pragma once
 
 #include "ITexture.h"
+#include "Collidable.h"
 
 #include <map>
 #include <string>
@@ -17,10 +18,16 @@ class TileSet
 
    vector2 _tileCounts;
 
+public:
+   struct TileInfo {
+      std::string _typeName;
+      Collidable* _collisionInfo = NULL;
+   };
 
+protected:
    // Meta-information about tilesIndices (what does a particular tile in a tileSheet /mean/?)
    // This makes sense only when a tile is with other tyles
-   std::map<int, std::string> _tileInfo; 
+   std::map<int, TileInfo> _tileInfo; 
 
 public:
    explicit TileSet(Texture* tileSheet, unsigned int tileSize) :
@@ -32,9 +39,15 @@ public:
       }
    }
 
-   unsigned int getTileSize(void) const { return _tileSize; }
+   float getTileSize(void) const { return (float)_tileSize; }
    vector2 getTileCounts(void) const { return _tileCounts; }
    Texture* getTileSheet(void) const { return _tileSheet; }
+
+   TileInfo getTileInfo(int tileIndex) {
+      return _tileInfo[tileIndex];
+   }
+
+   static TileSet* loadFromFile(const char* fileName);
 };
 
 #endif

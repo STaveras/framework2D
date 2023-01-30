@@ -11,7 +11,7 @@ class EventSystem
 {
 	size_t m_uiFloodLimit;
 
-	Factory<Event> m_EventFactory;
+	Factory<Event> _events;
 
 	std::multimap<Event::event_key, Event::event_delegate> m_CallbackMap;
 	std::priority_queue<Event*, std::deque<Event*>, Event::event_compare> m_EventQueue;

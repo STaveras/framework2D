@@ -73,6 +73,7 @@ void ::Animation::_reset(void)
 
 void Animation::setPosition(vector2 position)
 {
+	Renderable::setPosition(position);
 	Factory<Frame>::factory_iterator i = m_Frames.begin();
 	for (; i != m_Frames.end(); i++)
 		(*i)->getSprite()->setPosition(position);

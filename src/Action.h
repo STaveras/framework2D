@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include "KEYBOARD_KEYS.h"
 #include "Types.h"
+
+#include "Keyboard.h"
 
 #include <list>
 #include <string>
@@ -17,12 +18,12 @@ class Action
 {
     float _actionTime;
     std::string _actionName;
-    std::list<KEYBOARD_KEYS> _inputAssignments; // TODO: This should support any device (like arcade sticks...)
+    std::list<Keyboard::KEY> _inputAssignments; // TODO: This should support any device (like arcade sticks...)
 
 public:
 	Action(void):_actionTime(0),_actionName(""){}
 	Action(std::string actionName):_actionTime(0),_actionName(actionName){}
-	Action(std::string actionName, KEYBOARD_KEYS key):_actionTime(0),_actionName(actionName){_inputAssignments.push_back(key);}
+	Action(std::string actionName, Keyboard::KEY key):_actionTime(0),_actionName(actionName){_inputAssignments.push_back(key);}
 
 			float getActionTime(void) const { return _actionTime; }
 	std::string getActionName(void) const { return _actionName; }
@@ -30,11 +31,11 @@ public:
 	void setActionTime(float fTime) { _actionTime = fTime; }
 	void setActionName(std::string actionName) { _actionName = actionName; }
 
-	std::list<KEYBOARD_KEYS>& getAssignments(void) { return _inputAssignments; }
+	std::list<Keyboard::KEY>& getAssignments(void) { return _inputAssignments; }
 
 	// use 'inputIdentifier' to make a platform independent hash of an input method event 
-	void assign(KEYBOARD_KEYS eKey) { _inputAssignments.push_back(eKey); }
-	void unassign(KEYBOARD_KEYS eKey);
+	void assign(Keyboard::KEY eKey) { _inputAssignments.push_back(eKey); }
+	void unassign(Keyboard::KEY eKey);
 
 	bool before(const Action& rhs);
 	bool after(const Action& rhs);

@@ -49,4 +49,3 @@ public:
    static void quit(void) { Engine2D::getInstance()->_hasQuit = true; }
    static const char* version(void) { return FRAMEWORK_VERSION; }
 };
-// Author: Stanley Taveras

@@ -34,6 +34,8 @@ public:
 	 void moveVertically(float amount);
 	 void pan(vector2 direction, float amount);
 
+	 void update(float time);
+
 	 bool onScreen(GameObject* object);
 };
 

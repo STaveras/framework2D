@@ -31,11 +31,12 @@ public:
 	const_factory_iterator end(void) const { return std::list<Type*>::end(); }
 
 	Type* at(unsigned int index);
+	const Type* at(unsigned int index) const;
 	size_t size(void) const { return std::list<Type*>::size(); }
 	bool empty(void) const { return std::list<Type*>::empty(); }
 	void erase(unsigned int index);
-	void erase(factory_iterator itr); //{ std::list<Type*>::erase(itr); }
-	void erase(const_factory_iterator itr); //{ std::list<Type*>::erase(itr); }
+	void erase(factory_iterator itr);
+	void erase(const_factory_iterator itr);
 	void destroy(Type* item); // Do not call destroy on 'stored' items
 	void store(Type* item);
 	void clear(void);
@@ -55,6 +56,15 @@ public:
 	template<class Derived>
 	Derived* createDerived(const Derived& rhs); // Copy-contructor create
 
+	//const Type* operator[](unsigned int i) const { 
+	//	std::list<Type*>::const_iterator itr = this->begin(); 
+	//	while (i--) {
+	//		itr++; if (itr == this->end();) break; 
+	//	}
+	//	return (*itr);
+	//}
+
+	const Type* operator[](unsigned int i) const { return this->at(i); }
 	Type* operator[](unsigned int i) { return this->at(i); }
 	bool operator==(Factory<Type>& f);
 	bool operator==(const Factory<Type>& f) const;

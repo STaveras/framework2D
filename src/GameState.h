@@ -1,5 +1,7 @@
 // File: GameState.h
+
 #pragma once
+
 #include "ProgramState.h"
 #include "InputManager.h"	
 #include "ObjectManager.h"

@@ -6,7 +6,7 @@
 #include "Controller.h"
 
 InputManager::InputManager(void):
-m_pEventSystem(NULL),
+	_eventSystem(NULL),
 	_input(NULL)
 {}
 
@@ -22,7 +22,7 @@ Controller* InputManager::createController(void)
 
 void InputManager::update(float fTime)
 {
-	m_fElapsed += fTime;
+	_elapsedTime += fTime;
 
 	if (!_input)
 		return;
@@ -33,23 +33,23 @@ void InputManager::update(float fTime)
 
 		for(; itr != (*vpad_itr)->getActions().end(); itr++)
 		{
-			std::list<KEYBOARD_KEYS>::const_iterator citr = itr->getAssignments().begin();
+			std::list<Keyboard::KEY>::const_iterator citr = itr->getAssignments().begin();
 
 			for(; citr != itr->getAssignments().end(); citr++)
 			{
             if (_input->getKeyboard()) {
 
-               if (_input->getKeyboard()->KeyPressed((*citr)))
+               if (_input->getKeyboard()->keyPressed((*citr)))
                {
-                  if (m_pEventSystem)
-                     m_pEventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYPRESS, this, (*vpad_itr), m_fElapsed, itr->getActionName()));
+                  if (_eventSystem)
+                     _eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYPRESS, this, (*vpad_itr), _elapsedTime, itr->getActionName()));
 
                   break;
                }
-               else if (_input->getKeyboard()->KeyReleased((*citr)))
+               else if (_input->getKeyboard()->keyReleased((*citr)))
                {
-                  if (m_pEventSystem)
-                     m_pEventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYRELEASE, this, (*vpad_itr), m_fElapsed, itr->getActionName()));
+                  if (_eventSystem)
+                     _eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYRELEASE, this, (*vpad_itr), _elapsedTime, itr->getActionName()));
 
                   break;
                }
@@ -61,8 +61,8 @@ void InputManager::update(float fTime)
 
 void InputManager::shutdown(void)
 {
-	if (m_pEventSystem)
-		m_pEventSystem = NULL;
+	if (_eventSystem)
+		_eventSystem = NULL;
 
 	if (_input)
 		_input = NULL;

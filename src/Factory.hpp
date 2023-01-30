@@ -1,12 +1,23 @@
 // File: Factory.cpp
 // Author: Stanley Taveras
 // Created: 2/20/2010
-// Modified: 3/29/2010
+// Modified: 1/16/2023
 
 template<typename Type>
 Type* Factory<Type>::at(unsigned int index)
 {
 	typename std::list<Type *>::iterator itr = this->begin();
+	for (unsigned int i = 0; itr != this->end(); itr++, i++) {
+		if (i == index)
+			return (*itr);
+	}
+	return NULL;
+}
+
+template<typename Type>
+const Type* Factory<Type>::at(unsigned int index) const
+{
+	typename std::list<Type*>::const_iterator itr = this->begin();
 	for (unsigned int i = 0; itr != this->end(); itr++, i++) {
 		if (i == index)
 			return (*itr);
@@ -40,7 +51,7 @@ void Factory<Type>::destroy(Type* item)
 		if ((*itr) == item)
 		{
 			delete (*itr);
-			this->erase(itr);
+			std::list<Type*>::erase(itr);
 			break;
 		}
 	}
@@ -78,12 +89,22 @@ void Factory<Type>::erase(unsigned int index)
 }
 
 template<typename Type>
-void Factory<Type>::erase(factory_iterator itr) { 
+void Factory<Type>::erase(factory_iterator itr)
+{
+	Type* item = (*itr);
+	if (item) {
+		delete item;
+	}
 	std::list<Type*>::erase(itr); 
 }
 
 template<typename Type>
-void Factory<Type>::erase(const_factory_iterator itr) {
+void Factory<Type>::erase(const_factory_iterator itr) 
+{
+	Type* item = (*itr);
+	if (item) {
+		delete item;
+	}
 	std::list<Type*>::erase(itr); 
 }
 

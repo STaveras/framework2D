@@ -1,391 +1,539 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Animation.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AnimationManager.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AnimationUtils.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Camera.cpp">
-      <Filter>engine2Dbase\Objects\Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Command.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CommandInterpreter.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CollidableGroup.cpp">
-      <Filter>engine2Dbase\Physics\Collision</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CullObjectOperator.cpp">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DIMouse.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DIKeyboard.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ProgramStack.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ObjectManager.cpp">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Font.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Engine2D.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\InputManager.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\InputEvent.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IRenderer.cpp">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameState.cpp">
-      <Filter>engine2Dbase\System\StateMachine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameObject.cpp">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Frame.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DirectInput.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SDSParser.cpp">
-      <Filter>engine2Dbase\Scripting</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Trigger.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sound.cpp">
-      <Filter>engine2Dbase\Sound</Filter>
-    </ClCompile>
-    <ClCompile Include="src\SpriteManager.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UpdateBackgroundOperator.cpp">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WorldOperator.cpp">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Window.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\XAudio.cpp">
-      <Filter>engine2Dbase\Sound</Filter>
-    </ClCompile>
-    <ClCompile Include="src\XAudioFile.cpp">
-      <Filter>engine2Dbase\Sound</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Stage.cpp">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game.cpp">
-      <Filter>engine2Dbase\Application</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Player.cpp">
-      <Filter>engine2Dbase\Application</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Debug.cpp">
-      <Filter>engine2Dbase\Application</Filter>
-    </ClCompile>
-    <ClCompile Include="src\System.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RendererVK.cpp">
-      <Filter>engine2Dbase\Rendering\Renderers\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RendererDX.cpp">
-      <Filter>engine2Dbase\Rendering\Renderers\DirectX</Filter>
-    </ClCompile>
-    <ClCompile Include="src\IInput.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PlatformInput.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PlatformKeyboard.cpp">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Timer.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Trigger.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Stage.cpp">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sprite.cpp">
-      <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
-    </ClCompile>
-    <ClCompile Include="src\EventSystem.cpp">
-      <Filter>engine2Dbase\Events</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Timer.cpp">
-      <Filter>engine2Dbase\System</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Renderer.cpp">
-      <Filter>engine2Dbase\Rendering\Renderers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Shader.cpp">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Controller.cpp">
-      <Filter>engine2Dbase\Input\Action</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Action.cpp">
-      <Filter>engine2Dbase\Input\Action</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StateMachine.cpp">
-      <Filter>engine2Dbase\System\StateMachine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\StateMachine.cpp">
-      <Filter>engine2Dbase\System\StateMachine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Circle.cpp">
-      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Plane.cpp">
-      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Square.cpp">
-      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="engine2Dbase">
-      <UniqueIdentifier>{80b93f5b-06f2-4067-b310-a318c75f8d98}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Objects">
-      <UniqueIdentifier>{b2c2d59e-5d03-45df-9ec5-f925debb37d4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\System">
-      <UniqueIdentifier>{5e0b2df5-7987-4ade-8a09-432ace82e897}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Objects\operators">
-      <UniqueIdentifier>{bac86428-1ddd-4482-844b-29758ac8d541}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Objects\Camera">
-      <UniqueIdentifier>{13b76ae1-38dd-435f-a04c-33bf433f8685}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Math">
-      <UniqueIdentifier>{64739f8f-f848-4de8-a559-9b2616f15e07}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\UI">
-      <UniqueIdentifier>{f0720cf1-6905-4147-a2e5-7d17cdf9822e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Application">
-      <UniqueIdentifier>{c9a13681-48d5-48ba-994a-fa527d4e2709}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Games">
-      <UniqueIdentifier>{83f74eb2-b7e9-47d4-8769-c059df3d071c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Events">
-      <UniqueIdentifier>{7f8896ff-044c-4c7a-a8cb-c7fc2c6c2577}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Hardware">
-      <UniqueIdentifier>{f01282e1-3d8f-45a9-aed4-2fc7d1fce75e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Input">
-      <UniqueIdentifier>{e5976d01-ff4c-4439-b685-b0b9b95d55d0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering">
-      <UniqueIdentifier>{71dffe58-e876-4651-bcfa-69ac32a59683}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering\Renderables">
-      <UniqueIdentifier>{543cf356-b771-4f90-9d97-58620ae50a73}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering\Renderables\Animations">
-      <UniqueIdentifier>{a2a1d4c0-181d-4c11-bd83-4800e011a8a5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering\Renderables\Sprites">
-      <UniqueIdentifier>{4d8da9cf-44bd-4563-8777-622cc9177ccf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering\Renderers">
-      <UniqueIdentifier>{0d33f555-c238-4761-aa14-caa3e520a5c1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering\Renderers\Vulkan">
-      <UniqueIdentifier>{34581c15-f047-460f-9126-247c0f3da34a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Rendering\Renderers\DirectX">
-      <UniqueIdentifier>{b5f22483-b9a5-4421-8cad-72eb63b44e6b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Scripting">
-      <UniqueIdentifier>{7c81360f-d12e-4474-8991-3ce5bc3f7785}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Sound">
-      <UniqueIdentifier>{60cfc33e-b765-48dc-8af7-12016c3f132c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Physics">
-      <UniqueIdentifier>{6f828a00-3edd-4adb-b8b3-acc4907450cb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Physics\Collision">
-      <UniqueIdentifier>{d3b28eb6-0fdb-4342-b2a2-79d6beaa943a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Input\Action">
-      <UniqueIdentifier>{b4da0706-73cf-480d-a243-8a4184ad8cfb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\System\StateMachine">
-      <UniqueIdentifier>{d53de2ea-e266-4324-bab6-f438d3ea87e8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Utility">
-      <UniqueIdentifier>{286fe6ff-50c2-4a85-9b3d-bc82c03e9dfd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="engine2Dbase\Physics\Collision\CollisionObjects">
-      <UniqueIdentifier>{6fdfdbaf-fc17-4139-a17c-bc25a06e42c1}</UniqueIdentifier>
+    <Filter Include="base">
+      <UniqueIdentifier>{740a476f-6831-48f6-a3b1-fe9ffc948797}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\ForceDegradation.h">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IInput.h">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Types.h">
-      <Filter>engine2Dbase\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AnimationUtils.h">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Camera.h">
-      <Filter>engine2Dbase\Objects\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DIMouse.h">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IProgramState.h">
-      <Filter>engine2Dbase\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IRenderer.h">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Engine2D.h">
-      <Filter>engine2Dbase\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\KEYBOARD_KEYS.h">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\KEYBOARD_KEYS_DI.h">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Positionable.h">
-      <Filter>engine2Dbase\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Game.h">
-      <Filter>engine2Dbase\Application</Filter>
-    </ClInclude>
-    <ClInclude Include="src\UpdateRenderableOperator.h">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\UpdateBackgroundOperator.h">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MaxVelocityOperator.h">
-      <Filter>engine2Dbase\Objects\operators</Filter>
-    </ClInclude>
-    <ClInclude Include="src\UpdateRenderableOperator.h" />
-    <ClInclude Include="src\System.h">
-      <Filter>engine2Dbase\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\RendererVK.h">
-      <Filter>engine2Dbase\Rendering\Renderers\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PlatformInput.h">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PlatformKeyboard.h">
-      <Filter>engine2Dbase\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Sprite.h">
-      <Filter>engine2Dbase\Rendering\Renderables\Sprites</Filter>
-    </ClInclude>
-    <ClInclude Include="src\State.h">
-      <Filter>engine2Dbase\System\StateMachine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\EventSystem.h">
-      <Filter>engine2Dbase\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware.h">
-      <Filter>engine2Dbase\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AnimationManager.h">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ProgramState.h">
-      <Filter>engine2Dbase\System\StateMachine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Animation.h">
-      <Filter>engine2Dbase\Rendering\Renderables\Animations</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ProgramStack.h">
-      <Filter>engine2Dbase\Application</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Shader.h">
-      <Filter>engine2Dbase\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Cyclable.h">
-      <Filter>engine2Dbase\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Physical.h">
-      <Filter>engine2Dbase\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Action.h">
-      <Filter>engine2Dbase\Input\Action</Filter>
-    </ClInclude>
-    <ClInclude Include="src\TextureD3D.h">
-      <Filter>engine2Dbase\Rendering\Renderers\DirectX</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Tile.h">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="src\FantasySideScroller.h">
-      <Filter>Games</Filter>
-    </ClInclude>
-    <ClInclude Include="src\TileMap.h">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="src\TileSet.h">
-      <Filter>engine2Dbase\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="src\StrUtil.h">
-      <Filter>engine2Dbase\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="src\FileSystem.h">
-      <Filter>engine2Dbase\System</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Collidable.h">
-      <Filter>engine2Dbase\Physics\Collision</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CollidableGroup.h">
-      <Filter>engine2Dbase\Physics\Collision</Filter>
+    <ClInclude Include="src\SpriteManager.h">
+      <Filter>base</Filter>
     </ClInclude>
     <ClInclude Include="src\Square.h">
-      <Filter>engine2Dbase\Physics\Collision\CollisionObjects</Filter>
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stage.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\State.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StateMachine.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StateMachineEvent.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\StrUtil.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\System.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Text.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TextureD3D.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TextureVK.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Tile.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TileMap.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TileSet.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Timer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TreeNode.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TreeNode.hpp">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Trigger.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Types.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UpdateBackgroundOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UpdateRenderableOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Vertex.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Window.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WorldOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\XAudio.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\XAudioFile.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\maths\vector3.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Action.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Animation.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimationManager.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimationUtils.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ApplyVelocityOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Background.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Circle.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\COL_OBJ_TYPE.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Collidable.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollidableGroup.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Color.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Command.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommandEvent.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommandInterpreter.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Context.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Controller.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CullObjectOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Cyclable.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Debug.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debugLogger.hpp">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KeyboardDI.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DIMouse.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DirectInput.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Effect.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EffectManager.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine2D.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Event.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EventSystem.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EventSystem.hpp">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EventSystem_defines.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Factory.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Factory.hpp">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FantasySideScroller.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FileSystem.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FollowObjectOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Font.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ForceDegradation.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ForceOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Frame.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FSMTestState.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameObject.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameState.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphic.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Hardware.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IAudioSystem.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IInput.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImageLoaders.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IMouse.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Input.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputEvent.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputManager.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IRenderer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ISingleton.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ITexture.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Keyboard.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KEYBOARD_KEYS.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\KEYBOARD_KEYS_DI.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logger.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Material.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Maths.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MaxVelocityOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MOUSE_BUTTONS.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ObjectManager.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ObjectOperator.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physical.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Plane.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlatformInput.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlatformKeyboard.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Player.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Popup.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Positionable.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ProgramStack.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ProgramState.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderable.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Renderer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RendererDX.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RendererVK.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ScrollBar.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SCROLLBAR_TYPE.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SDSNode.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SDSParser.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Shader.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShaderUtils.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Slider.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sound.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SOUND_PLAYBACK_MODE.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SoundManager.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sprite.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollisionEvent.h">
+      <Filter>base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="doc\todo.txt">
-      <Filter>engine2Dbase</Filter>
-    </Text>
+    <ClCompile Include="src\Square.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Stage.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\StateMachine.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextureVK.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TileSet.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Trigger.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\UpdateBackgroundOperator.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Window.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WorldOperator.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\XAudio.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\XAudioFile.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Action.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Animation.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AnimationManager.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AnimationUtils.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Circle.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CollidableGroup.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Command.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommandInterpreter.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Controller.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CullObjectOperator.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Debug.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\KeyboardDI.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DIMouse.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DirectInput.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine2D.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EventSystem.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Font.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Frame.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameObject.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameState.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IInput.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImageLoaders.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputEvent.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputManager.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IRenderer.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ObjectManager.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Plane.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlatformInput.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlatformKeyboard.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Player.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ProgramStack.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Renderer.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RendererDX.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RendererVK.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SDSParser.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shader.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sound.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sprite.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SpriteManager.cpp">
+      <Filter>base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="src\project.d">
+      <Filter>base</Filter>
+    </None>
   </ItemGroup>
 </Project>

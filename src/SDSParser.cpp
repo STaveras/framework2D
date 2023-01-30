@@ -97,7 +97,7 @@ SDSParser::SDS_ERROR SDSParser::open(const char *szFilename)
 					const int max_size = std::numeric_limits<int>::digits10 + 1 /*sign*/ + 1 /*0-terminator*/;
 					char scratch[max_size] = {0};
 #if _WIN32
-					_itoa_s(pMetaCurr->getData().uiUnnamedScopes, scratch, 256, 10);
+					_itoa_s((int)(pMetaCurr->getData().uiUnnamedScopes), scratch, 256, 10);
 #else
 					// scratch = std::to_string(pMetaCurr->getData().uiUnnamedScopes).c_str();
 					//sprintf(scratch, "%zu", pMetaCurr->getData().uiUnnamedScopes);

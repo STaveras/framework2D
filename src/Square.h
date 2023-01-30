@@ -15,32 +15,30 @@ class Plane;
 // Shouldn't be "Collidable" but instead just a general "Geometry" parent class
 class Square : public Collidable
 {
-	float _fWidth = 0;
-	float _fHeight = 0;
+	float _width = 0;
+	float _height = 0;
   
 public:
-   Square(vector2 position, vector2 max) : Collidable(COL_OBJ_SQUARE), _fWidth(max.x - position.x), _fHeight(max.y - position.y) { _position = position; }
-	Square(vector2 position, float width, float height) : Collidable(COL_OBJ_SQUARE) { _position = position; _fWidth = width; _fHeight = height; }
+	Square(void) : Collidable(COL_OBJ_SQUARE) {}
+   Square(vector2 min, vector2 max) : Collidable(COL_OBJ_SQUARE), _width(max.x - min.x), _height(max.y - min.y) { _position = min; }
+	Square(vector2 position, float width, float height) : Collidable(COL_OBJ_SQUARE) { _position = position; _width = width; _height = height; }
 
-	//vector2 GetMin(void) const { return _position; }
-	vector2 getMax(void) const { return vector2(this->getPosition().x + _fWidth, this->getPosition().y + _fHeight); }
-	//float getWidth(void) const { return (m_Max.x - _position.x); }
-	//float getHeight(void) const { return (m_Max.y - _position.y); }
-	float getWidth(void) const { return _fWidth; }
-	float getHeight(void) const { return _fHeight; }
+	vector2 getMin(void) const { return _position; } // just because???
+	vector2 getMax(void) const { return vector2(this->getPosition().x + _width, this->getPosition().y + _height); }
 
-	void setWidth(float fWidth) { _fWidth = fWidth; }
-	void setHeight(float fHeight) { _fHeight = fHeight; }
-	//void SetMin(const vector2& min) { _position = min; }
-	//void SetMax(const vector2& max) { m_Max = max; }
-	//void setWidth(float fWidth) { m_Max.x = _position.x + fWidth; }
-	//void setHeight(float fHeight) { m_Max.y = _position.y + fHeight; }
+	float getWidth(void) const { return _width; }
+	float getHeight(void) const { return _height; }
+
+	void setWidth(float width) { _width = width; }
+	void setHeight(float height) { _height = height; }
+	void setMin(const vector2& min) { _position = min; }
+	void setMax(const vector2& max) {
+		 _width = max.x - _position.x;
+		_height = max.y - _position.y;
+	}
 
   bool collidesWith(const Collidable * collidable);
   bool collidesWith(vector2 point);
-  // TODO: Do this in better way or move to an HPP?
-
-  // TODO: Add 
 };
 
 #endif  //_SQUARE_H

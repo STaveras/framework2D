@@ -5,3 +5,4 @@ Build Dependencies:
 - Vulkan (additionally, MoltenVK for Mac)
 - TinyXML2
 - FastDelegate
+- SIMDJSON

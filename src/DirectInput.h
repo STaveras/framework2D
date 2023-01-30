@@ -15,7 +15,7 @@
 #include "Timer.h"
 
 // Interface to handle common direct input device tasks
-class IDIDeviceComm
+class IDIDevice
 {
 protected:
    bool m_bDeviceLost = true;
@@ -23,9 +23,9 @@ protected:
 
 public:
 
-   virtual bool Acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL) = 0;
+   virtual bool acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL) = 0;
 
-   virtual void Release(void)
+   virtual void release(void)
    {
       if (m_lpDevice)
       {

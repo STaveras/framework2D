@@ -8,7 +8,8 @@
 Engine2D::Engine2D(void) :
 	_hasQuit(false),
 	_input(NULL),
-	_renderer(NULL)
+	_renderer(NULL),
+	_game(NULL)
 {}
 
 void Engine2D::initialize(void)
@@ -90,6 +91,3 @@ Timer* Engine2D::getTimer(void)
 	static Timer _Timer;
 	return &_Timer; 
 }
-
-
-// Stanley Taveras

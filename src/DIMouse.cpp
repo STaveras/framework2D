@@ -9,7 +9,7 @@
 
 #endif
 
-bool DIMouse::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
+bool DIMouse::acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
 {
    if (!FAILED(pDI->CreateDevice(GUID_SysMouse, &m_lpDevice, NULL))) {
 
@@ -32,14 +32,14 @@ bool DIMouse::Acquire(LPDIRECTINPUT8 pDI, HWND hWnd)
 
 void DIMouse::update(void) {
 
-   IDIDeviceComm::update();
+   IDIDevice::update();
 
    if (m_lpDevice) {
       memcpy_s(&_mouseStateOld, sizeof(DIMOUSESTATE2), &_mouseState, sizeof(DIMOUSESTATE2));
 
       if (SUCCEEDED(m_lpDevice->Poll())) {
          if (m_lpDevice->GetDeviceState(sizeof(DIMOUSESTATE2), &_mouseState) == DI_OK) {
-            this->SetPosition(vector2((float)_mouseState.lX, (float)_mouseState.lY));
+            this->setPosition(vector2((float)_mouseState.lX, (float)_mouseState.lY));
          }
       }
       else
@@ -54,7 +54,7 @@ void DIMouse::update(void) {
       if (timer.getElapsedTime() > 1) {
          char buffer[128];
          sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
-         OutputDebugString(buffer);
+         DEBUG_MSG(buffer);
          timer.reset();
       }
    }

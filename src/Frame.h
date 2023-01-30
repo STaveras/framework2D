@@ -28,6 +28,7 @@ public:
 	Frame(Sprite* pSprite, float fDuration);
 	~Frame(void){}
 
+	const Sprite* getSprite(void) const { return _sprite; }
 	Sprite* getSprite(void) { return _sprite; }
 	void setSprite(Sprite* pSprite) { _sprite = pSprite; }
 
