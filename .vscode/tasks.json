@@ -64,6 +64,7 @@
                 "PlatformKeyboard.cpp",
                 "ImageLoaders.cpp",
                 "Sprite.cpp",
+                "TileSet.cpp",
                 "Debug.cpp", // TODO: remove this somehow for release
                 "-o",
                 "${workspaceFolder}/bin/${workspaceFolderBasename}",
@@ -71,7 +72,8 @@
                 "project.d",
                 "-lglfw",
                 "-lvulkan",
-                "-ltinyxml2"
+                "-ltinyxml2",
+                "-lsimdjson"
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -130,6 +132,7 @@
                 "PlatformKeyboard.cpp",
                 "ImageLoaders.cpp",
                 "Sprite.cpp",
+                "TileSet.cpp",
                 "Debug.cpp",
                 "-o",
                 "${workspaceFolder}/bin/${workspaceFolderBasename}",
@@ -137,7 +140,8 @@
                 "project.d",
                 "-lglfw",
                 "-lvulkan",
-                "-ltinyxml2"
+                "-ltinyxml2",
+                "-lsimdjson"
             ],
             "options": {
                 "cwd": "${fileDirname}"

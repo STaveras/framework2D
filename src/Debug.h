@@ -27,6 +27,10 @@ namespace Debug
     static bool dbgCollision = true;
 }
 
+#ifndef _WIN32
+#define OutputDebugString(m) 
+#endif
+
 #define DEBUG_MSG(msg) std::cout << msg; OutputDebugString(msg);
 
 #define DEBUGGING (Debug::Mode.isEnabled())

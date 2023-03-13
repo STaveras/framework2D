@@ -65,13 +65,14 @@ int main(int argc, char **argv)
    if (Debug::Mode.isEnabled()) {
       // Check for game data
       FileSystem::ListDirectoryContents(System::GlobalDataPath());
-
+#if _WIN32
       if (Debug::dbgMemory) {
          VLDEnable();
       }
       else {
          VLDDisable();
       }
+#endif
    }
    sleep(1000);
 #endif

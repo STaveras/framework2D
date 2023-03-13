@@ -376,7 +376,7 @@ class FantasySideScroller : public Game
 
 			_tileSet = TileSet::loadFromFile(BASE_DIRECTORY"Assets/fantasyTiles.tsj");
 
-			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap_2.csv", _tileSet);
+			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
 
 			for (size_t i = 0; i < _tileMap->getTiles().size(); i++) {
 				char buffer[32]{ 0 };
