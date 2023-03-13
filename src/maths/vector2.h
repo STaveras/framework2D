@@ -12,7 +12,9 @@ typedef struct vector2 :
 #endif
 {
 	vector2(void) {}
-#ifdef __D3DX9MATH_H__
+#ifdef GLM
+	vector2(glm::vec2 v) : glm::vec2(v) {}
+#elif defined(__D3DX9MATH_H__)
 	vector2(D3DXVECTOR2 v) : D3DXVECTOR2(v) {}
 #endif
 	vector2(float x, float y) :
