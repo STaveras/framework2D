@@ -98,7 +98,6 @@ Collidable* GameObject::getCollidable(void)
 		}
 		return collidable;
 	}() : _collisionObjects.front();
-
 	return collidable;
 }
 
@@ -145,27 +144,34 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 
 		if (prevState) {
 
-			Renderable* prevRenderable = ((ObjectState*)prevState)->getRenderable();
-
-			if (prevRenderable) {
+			if (Renderable* prevRenderable = ((ObjectState*)prevState)->getRenderable()) {
 
 				if (_preserveScaling) {
+
+					vector2 oldCenter = _renderable->getCenter();
+					vector2 newCenter(oldCenter.x * prevRenderable->getScale().x,
+											oldCenter.y * prevRenderable->getScale().y);
 
 					// We should just be checking and matching signs
 					if (_renderable->getScale() != prevRenderable->getScale()) {
 
-						_renderable->setScale(prevRenderable->getScale());
-
-						vector2 oldCenter = _renderable->getCenter();
-						vector2 newCenter(oldCenter.x * _renderable->getScale().x,
-												oldCenter.y * _renderable->getScale().y);
+						if (Collidable* collidable = this->getCollidable()) {
+							switch (collidable->getType()) {
+							case COL_OBJ_SQUARE:
+								if (oldCenter != newCenter) {
+									collidable->setPosition(collidable->getPosition() - oldCenter);
+									collidable->setPosition(collidable->getPosition() + newCenter);
+								}
+								break;
+							}
+						}
 
 						_renderable->setCenter(newCenter);
+						_renderable->setScale(prevRenderable->getScale());
 						_renderable->setPosition(prevRenderable->getPosition());
 					}
 				}
 			}
-
 		}
 		_renderable->setVisibility(true);
 

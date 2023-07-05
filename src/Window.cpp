@@ -41,6 +41,10 @@ LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_GETMINMAXINFO:
 	case WM_SIZING:
 	case WM_SYSKEYDOWN:
+		if (wParam == VK_RETURN && (lParam & (1 << 29))) { // Check if ALT key is pressed
+			Renderer::window->toggleFullscreen();
+			return 0;
+		}
 		return 0;
 	}
 
@@ -100,12 +104,12 @@ void Window::initialize(void) {
 	if (!_window) {
 		return glfwTerminate(); // -1 // Maybe throw an exception
 	}
+
+	glfwSetWindowUserPointer(_window, this);
 	
 	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
 
-		// this is le gross, because it means we won't be able to (easily) render to multiple windows in this manner...
-
-		Window *_window = Renderer::window;
+		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 		if (_window->getUnderlyingWindow() == window) {
 
@@ -113,6 +117,54 @@ void Window::initialize(void) {
 			_window->setHeight(height);
 			
 			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
+		}
+	});
+
+	// Register a key callback function
+	glfwSetKeyCallback(_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+		if (key == GLFW_KEY_ENTER && action == GLFW_PRESS && mods == GLFW_MOD_ALT)
+		{
+			// Check if the window is currently fullscreen
+			bool isFullscreen = glfwGetWindowMonitor(window) != nullptr;
+
+			// Get the primary monitor
+			GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+
+			if (isFullscreen) {
+				// Switch back to windowed mode
+				glfwSetWindowMonitor(window, nullptr, 0, 0, _window->getWidth(), _window->getHeight(), GLFW_DONT_CARE);
+			}
+			else {
+				// Switch to fullscreen mode
+				const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+				glfwSetWindowMonitor(window, primaryMonitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+			}
+		}
+	});
+
+	// Add fullscreen handling
+	glfwSetWindowFocusCallback(_window, [](GLFWwindow* window, int focused) {
+
+		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+		if (focused) {
+			// Window gained focus
+			bool isFullscreen = glfwGetWindowMonitor(window) != nullptr;
+			if (isFullscreen) {
+				// Set the window to fullscreen mode
+				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, _window->getWidth(), _window->getHeight(), GLFW_DONT_CARE);
+			}
+			}
+		else {
+			// Window lost focus
+			bool isFullscreen = glfwGetWindowMonitor(window) != nullptr;
+			if (isFullscreen) {
+				// Switch back to windowed mode
+				glfwSetWindowMonitor(window, nullptr, 0, 0, _window->getWidth(), _window->getHeight(), GLFW_DONT_CARE);
+			}
 		}
 	});
 
@@ -217,4 +269,36 @@ void Window::resize(void)
 		MoveWindow(m_hWnd, rcWindow.left, rcWindow.top, (m_nWidth + diff.x), (m_nHeight + diff.y), TRUE);
 	}
 #endif
+}
+
+void Window::toggleFullscreen(void)
+{
+	DWORD dwStyle = GetWindowLong(m_hWnd, GWL_STYLE);
+
+	IRenderer* renderer = Renderer::get();
+
+	if (dwStyle & WS_OVERLAPPEDWINDOW)
+	{
+		MONITORINFO mi = { sizeof(mi) };
+		if (GetWindowPlacement(m_hWnd, &m_wpPrev) && GetMonitorInfo(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTOPRIMARY), &mi))
+		{
+			SetWindowLong(m_hWnd, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
+			SetWindowPos(m_hWnd, HWND_TOP,
+				mi.rcMonitor.left, mi.rcMonitor.top,
+				mi.rcMonitor.right - mi.rcMonitor.left,
+				mi.rcMonitor.bottom - mi.rcMonitor.top,
+				SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+		}
+		renderer->setFullScreen(true);
+	}
+	else
+	{
+		renderer->setFullScreen(false);
+
+		SetWindowLong(m_hWnd, GWL_STYLE, dwStyle | WS_OVERLAPPEDWINDOW);
+		SetWindowPlacement(m_hWnd, &m_wpPrev);
+		SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+			SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+	}
 }

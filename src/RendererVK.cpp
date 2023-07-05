@@ -765,7 +765,7 @@ VkShaderModule RendererVK::createShaderModule(VkDevice device, const std::vector
 	return shaderModule;
 }
 
-// This is going to be equivalent to the DirectX _DrawImage implementation.
+// This is going to be equivalent to the DirectX _drawImage implementation.
 void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo beginInfo{};
@@ -836,7 +836,7 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	// 						switch ((*o)->getRenderableType())
 	// 						{
 	// 						case RENDERABLE_TYPE_IMAGE:
-	// 							_DrawImage((Sprite *)(*o));
+	// 							_drawImage((Sprite *)(*o));
 	// 							break;
 	// 						case RENDERABLE_TYPE_ANIMATION:
 	// 						{
@@ -844,7 +844,7 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	// 							Frame *frame = pAnimation->getCurrentFrame();
 
 	// 							if (frame)
-	// 								_DrawImage(frame->getSprite(), 0xFFFFFFFF, frame->getSprite()->getCenter());
+	// 								_drawImage(frame->getSprite(), 0xFFFFFFFF, frame->getSprite()->getCenter());
 	// 						}
 	// 						break;
 	// 						}

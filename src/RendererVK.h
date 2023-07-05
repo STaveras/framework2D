@@ -77,7 +77,7 @@ class RendererVK : public IRenderer
     bool isDeviceSuitable(VkPhysicalDevice device);
     void pickPhysicalDevice(VkInstance instance);
     void createLogicalDevice(VkPhysicalDevice physicalDevice);
-    void createSwapChain(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window);
+    void createSwapChain(VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow *window); // TODO: Swap to "Window"
     void recreateSwapChain(void);
     void cleanupSwapChain(void);
 

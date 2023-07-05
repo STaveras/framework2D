@@ -17,9 +17,9 @@ Animation::Animation(void):
 
 Animation::Animation(const char* szName):
 	Renderable(RENDERABLE_TYPE_ANIMATION),
+	_frameIndex(0),
 	m_bForward(true),
 	m_bPlaying(false),
-	_frameIndex(0),
 	m_eMode(eOnce),
 	m_fSpeed(1.0f),
 	m_fTimer(0.0f),
@@ -63,12 +63,9 @@ void Animation::_lastFrame(void)
 	}
 }
 
-void ::Animation::_reset(void)
+void ::Animation::_reset(void) 
 {
-	if (m_bForward)
-		_frameIndex = 0;
-	else
-		_frameIndex = (unsigned int)(m_Frames.size() - 1);
+	_frameIndex = m_bForward ? 0 : (unsigned int)(m_Frames.size() - 1);
 }
 
 void Animation::setPosition(vector2 position)

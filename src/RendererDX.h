@@ -12,7 +12,11 @@ class RendererDX : public IRenderer
    LPDIRECT3DDEVICE9	m_pD3DDevice;
    LPD3DXSPRITE		m_pD3DSprite;
 
-   void _DrawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
+   void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f);
+
+   bool _checkDeviceLost(void);
+   HRESULT _attemptDeviceReset(void);
+   D3DPRESENT_PARAMETERS _d3dPresentParams(void);
 
 public:
    RendererDX(void);
@@ -27,8 +31,6 @@ public:
 private:
    ITexture* createTexture(const char* szFilename, Color colorKey = 0);
    void destroyTexture(ITexture* texture);
-
-   //void CreateShader(const char* file, int*);
 
    void initialize(void);
    void shutdown(void);

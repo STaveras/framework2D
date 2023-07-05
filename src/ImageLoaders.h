@@ -1,9 +1,9 @@
 #ifndef _IMAGE_LOADERS_H_
 #define _IMAGE_LOADERS_H_
 
-namespace Renderer
+namespace framework
 {
-	namespace Image
+	namespace FileFormats
 	{
 		// How are we supposed to know the image dimensions prior to opening the file?
 		// Or was the intent here to be able to define the image dimensions?

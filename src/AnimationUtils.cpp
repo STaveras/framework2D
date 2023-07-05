@@ -6,9 +6,6 @@
 #include "FileSystem.h"
 
 #include <string>
-#include <tinyxml2.h>
-
-#pragma comment(lib, "tinyxml2.lib")
 
 using namespace tinyxml2;
 
@@ -46,6 +43,11 @@ namespace Animations {
       return output;
    }
 
+   std::string rectToString(const RECT& rect)
+   {
+      return std::to_string(rect.left) + "," + std::to_string(rect.top) + "," + std::to_string(rect.right) + "," + std::to_string(rect.bottom);
+   }
+
    Animation::Mode animationModeFromString(const char *mode) {
 
       if (!strcmp(mode, "LOOPING"))
@@ -54,6 +56,16 @@ namespace Animations {
          return Animation::Mode::eOscillate;
 
       return Animation::Mode::eOnce;
+   }
+
+   std::string animationModeToString(Animation::Mode mode) {
+      switch (mode) {
+      case Animation::eLoop:
+         return "LOOPING";
+      case Animation::eOscillate:
+         return "OSCILLATE";
+      }
+      return "ONCE";
    }
 
    void addToRenderList(std::vector<Animation*>& animations, IRenderer::RenderList *renderList)
@@ -126,6 +138,83 @@ namespace Animations {
       } 
 
       return animations;
+   }
+
+   std::vector<Animation*> fromJSON(const char* filename, AnimationManager* animationManager)
+   {
+      std::vector<Animation*> animations;
+
+      simdjson::dom::parser parser;
+      simdjson::dom::element document = parser.load(filename);
+
+      for (simdjson::dom::element animationElement : document["AnimationFile"]["Animation"]) {
+
+         Animation* animation = (!animationManager) ? new Animation() : animationManager->CreateAnimation("");
+
+         for (simdjson::dom::element frameElement : animationElement["Frame"]) {
+
+            std::string_view displayRectString = frameElement["DisplayRect"].get_string();
+
+            RECT srcRect = rectFromString(std::string(displayRectString).c_str());
+
+            // TODO: Make key color configurable via a tool
+            // TODO: Collision information
+            // TODO: Add support for triggers (sound, effects, scripts, etc.)
+
+            std::string_view frameImagePath = frameElement["Filename"].get_string();
+
+            animation->addFrame(new Frame(new Sprite(std::string(frameImagePath).c_str(), 0xFFFF00FF, srcRect), (float)frameElement["Duration"].get_double()));
+         }
+
+         animations.push_back(animation);
+      }
+
+      return animations;
+   }
+
+   void toJSON(const std::vector<Animation*>& animations, const char* filename) {
+      std::ofstream file(filename);
+      file << "{\n";
+      file << "  \"AnimationFile\": {\n";
+      file << "    \"Animation\": [\n";
+
+      for (int i = 0; i < animations.size(); ++i) {
+         Animation* animation = animations[i];
+         file << "      {\n";
+         file << "        \"Name\": \"" << animation->getName() << "\",\n";
+         file << "        \"Mode\": \"" << animationModeToString(animation->getMode()) << "\",\n";
+         file << "        \"Forward\": " << std::boolalpha << animation->isForward() << ",\n";
+         file << "        \"Speed\": " << animation->getSpeed() << ",\n";
+         file << "        \"Frame\": [\n";
+
+         for (int j = 0; j < animation->getFrameCount(); ++j) {
+            Frame* frame = (*animation)[j];
+            file << "          {\n";
+            file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
+            file << "            \"Filename\": \"" << frame->getSprite()->getTexture()->getFilename() << "\",\n";
+            file << "            \"Duration\": " << frame->getDuration() << "\n";
+            file << "          }";
+
+            if (j != animation->getFrameCount() - 1) {
+               file << ",";
+            }
+            file << "\n";
+         }
+
+         file << "        ]\n";
+         file << "      }";
+
+         if (i != animations.size() - 1) {
+            file << ",";
+         }
+         file << "\n";
+      }
+
+      file << "    ]\n";
+      file << "  }\n";
+      file << "}\n";
+
+      file.close();
    }
 
    std::vector<Animation*> fromDirectory(const char* directoryPath)
