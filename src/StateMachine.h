@@ -63,6 +63,7 @@ public:
 
 	void sendInput(const char* condition, void* sender = NULL);
 	bool containsCondition(const char* condition);
+	void clearEvents(void) { StateMachine::finish(); }
 
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class

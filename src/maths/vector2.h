@@ -22,15 +22,24 @@ typedef struct vector2 :
 		D3DXVECTOR2(x, y)
 #endif
 	{	}
+
 	vector2& operator=(const vector2& v) { x = v.x; y = v.y; return *this; }
+	//float operator*(const vector2& v) { return x * v.x + y * v.y; }
 
 	float norm(void) const {
 		return x * x + y * y;
 	}
 
-	void normalize(void) {
+	vector2& normalize(void) 
+	{
 		x = x / norm();
 		y = y / norm();
+
+		return *this;
+	}
+
+	float length(void) const {
+		return sqrtf(this->norm());
 	}
 
 #ifdef __D3DX9MATH_H__

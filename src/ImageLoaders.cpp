@@ -28,7 +28,7 @@ int32_t flipEndianness(int32_t value)
 	return flippedValue;
 }
 
-char* Renderer::Image::loadBMP(const char* szFilepath, long& lWidth, long& lHeight, int& nBytesPerPixel)
+char* framework::FileFormats::loadBMP(const char* szFilepath, long& lWidth, long& lHeight, int& nBytesPerPixel)
 {	
 	ifpstream ifl;
 	ifl.open(szFilepath, std::ios_base::in | std::ios_base::binary);
@@ -81,7 +81,7 @@ char* Renderer::Image::loadBMP(const char* szFilepath, long& lWidth, long& lHeig
 }
 
 // char* Renderer::Image::loadPNG(const char* szFilepath, long& lWidth, long& lHeight, int& nBytesPerPixel)
-char* Renderer::Image::loadPNG(const char* szFilepath)
+char* framework::FileFormats::loadPNG(const char* szFilepath)
 {
 	struct {
 		uint32_t width;
@@ -109,6 +109,9 @@ char* Renderer::Image::loadPNG(const char* szFilepath)
 			char szChunkInfo[5] = {0};
 
 			ifl.seekg(4, std::ios_base::cur); // Pass over the rest of the PNG header info
+
+			bool bIDATFound = false;
+			std::vector<char> compressedImageData;
 
 			while(!ifl.eof())
 			{
@@ -146,7 +149,21 @@ char* Renderer::Image::loadPNG(const char* szFilepath)
 					}
 				}
 				else { // Anciallary 
-					ifl.seekg(length, std::ios_base::cur);
+					if (!strcmp(szChunkInfo, "tEXt")) {
+						// skip text chunks
+						ifl.seekg(length, std::ios_base::cur);
+					}
+					else if (!strcmp(szChunkInfo, "zTXt")) {
+						// read compressed text data and decompress
+						char* compressedData = new char[length];
+						ifl.read(compressedData, length);
+						compressedImageData.insert(compressedImageData.end(), compressedData, compressedData + length);
+						delete[] compressedData;
+					}
+					else {
+						// skip other ancillary chunks
+						ifl.seekg(length, std::ios_base::cur);
+					}
 				}
 
 				// Chunk CRC; we should actually use this to verify image integrity... 
@@ -160,7 +177,7 @@ char* Renderer::Image::loadPNG(const char* szFilepath)
 	return chImageData;
 }
 
-char* Renderer::Image::loadTGA(const char* szFilepath, short& sImageWidth, short& sImageHeight, int& nBytesPerPixel)
+char* framework::FileFormats::loadTGA(const char* szFilepath, short& sImageWidth, short& sImageHeight, int& nBytesPerPixel)
 {
 	// TODO: Support different pixel-order TGAs in the future...
 	ifpstream ifl;

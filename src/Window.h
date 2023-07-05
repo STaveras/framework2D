@@ -13,6 +13,7 @@ class Window
 	HDC		 m_hDC = NULL;
 	HINSTANCE m_hInstance = NULL;
 	LPSTR		 m_lpCmdLine = NULL;
+	WINDOWPLACEMENT m_wpPrev;
 #endif
 	GLFWwindow* _window;
 
@@ -40,6 +41,7 @@ public:
 	bool hasQuit(void) const { return m_bHasQuit; }
 	int getWidth(void) const { return m_nWidth; }
 	int getHeight(void) const { return m_nHeight; }
+
 	const char* getWindowTitle(void) const { return m_szWindowTitle; }
 	const char* getWindowClassName(void) const { return m_szWindowClassName; }
 
@@ -55,5 +57,6 @@ public:
 	void shutdown(void);
 
 	void resize(void);
+	void toggleFullscreen(void);
 };
 // Author: Stanley Taveras

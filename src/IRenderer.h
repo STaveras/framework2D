@@ -22,7 +22,7 @@ public:
 
 protected:
 #if _DEBUG
-	void _BackgroundColorShift(void);
+	void _backgroundColorShift(void);
 
 	bool m_bStaticBG; // For demoing
 #endif
@@ -74,7 +74,6 @@ public:
 	Color getClearColor(void) const { return m_ClearColor; }
 	Camera *getCamera(void) { return m_pCamera; }
 	ITexture *getTexture(const char *szFilename) { return _textureExists(szFilename); }
-
 
 #if _DEBUG
 	void isBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }

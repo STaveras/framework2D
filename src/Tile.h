@@ -22,6 +22,7 @@ public:
    Tile(void) : GameObject(GAME_OBJ_TILE) {
       this->addState("");
       this->start();
+      this->setStatic(true);
    }
 
    // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
@@ -33,6 +34,7 @@ public:
          this->addState(_tileSet->getTileInfo(tileIndex)._typeName.c_str()); // Look up the tileType in the tile set info
          this->start();
          this->setTileIndex(tileIndex);
+         this->setStatic(true);
       }
    }
 
@@ -81,7 +83,7 @@ public:
                }
                else {
                   tileImage = _tileImages.create();
-                  tileImage->setSourceRect(tileRect);
+                  tileImage->setSrcRect(tileRect);
                   tileImage->setTexture(_tileSet->getTileSheet());
                }
 

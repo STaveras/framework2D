@@ -85,7 +85,7 @@ Sprite* Sprite::load(const char* filePath, Color clearColor, const RECT& srcRect
 		if (_texture)
 		{
 			if (srcRect.top != -1 && srcRect.right != -1 && srcRect.bottom != -1 && srcRect.left != -1) {
-				this->setSourceRect(srcRect);
+				this->setSrcRect(srcRect);
 			}
 			else
 			{
@@ -94,7 +94,7 @@ Sprite* Sprite::load(const char* filePath, Color clearColor, const RECT& srcRect
 				newSrcRect.top = 0;
 				newSrcRect.right = _texture->getWidth();
 				newSrcRect.bottom = _texture->getHeight();
-				this->setSourceRect(newSrcRect);
+				this->setSrcRect(newSrcRect);
 			}
 			return this;
 		}

@@ -18,17 +18,17 @@ namespace Renderer
 {
 	extern Window *window;
 	
-	IRenderer* Get(void);
+	IRenderer* get(void);
 
 	#ifdef _WIN32
 	// This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
-	IRenderer* CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync);
+	IRenderer* createDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync);
 	#endif
 
 	// Create a Vulkan renderer
-	IRenderer* CreateVKRenderer(Window* window);
+	IRenderer* createVKRenderer(Window* window);
 	
-	void DestroyRenderer(IRenderer* pRenderer);
+	void destroyRenderer(IRenderer* pRenderer);
   //void render(Renderable* r); // TODO: You can use it to draw stuff in real-time (kinda slow, but uses less overall memory)
 }
 

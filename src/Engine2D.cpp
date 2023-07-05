@@ -17,13 +17,6 @@ void Engine2D::initialize(void)
 	Engine2D::getTimer()->reset();
 	Engine2D::getEventSystem()->initialize(INFINITE);
 
-#ifdef _WIN32
-    //DirectInput* pInput = (DirectInput*)Input::CreateDirectInputInterface(rndrWind.GetHWND(), hInstance);
-#else
-#endif
-
-	// TODO: Separate these sequences to their their own process thread (input thread, game thread, render thread, network thread... etc.)
-
 	if (_input)
 		_input->initialize();
 
@@ -80,14 +73,14 @@ IRenderer* Engine2D::getRenderer(void)
 	return NULL;
 }
 
-EventSystem* Engine2D::getEventSystem(void) 
+EventSystem* Engine2D::getEventSystem(void)
 {
 	static EventSystem _EventSystem;
 	return &_EventSystem;
-} 
+}
 
 Timer* Engine2D::getTimer(void)
 {
 	static Timer _Timer;
-	return &_Timer; 
+	return &_Timer;
 }

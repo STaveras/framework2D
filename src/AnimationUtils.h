@@ -14,7 +14,10 @@ namespace Animations
 {
    // If not using an AnimationManager, caller must manually delete memory (Sprites, Frames, and Animations themselves)
    std::vector<Animation*> fromXML(const char *filename, AnimationManager *manager = NULL);
+   std::vector<Animation*> fromJSON(const char* filename, AnimationManager* manager);
    std::vector<Animation*> fromDirectory(const char* directoryPath);
+
+   void toJSON(const std::vector<Animation*>& animations, const char* filename);
    
    void addToRenderList(std::vector<Animation*>& animations, IRenderer::RenderList *renderList);
    void destroyAnimation(Animation *animation);

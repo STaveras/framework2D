@@ -6,12 +6,6 @@
 #include "FileSystem.h"
 #include "Square.h"
 
-#pragma warning(push)
-#pragma warning(disable: 26817)
-#include <simdjson.h>
-#pragma warning(pop)
-#pragma comment(lib, "simdjson.lib")
-
 // I usually hate globals, but this one will only be accessible to TileSets
 // Eventually this might grow too large if we're loading many tilesets and not clearing this
 static Factory<Collidable> collisionObjects; 
@@ -90,16 +84,16 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 			for (int64_t i = 0; i < tileCount; i++)
 			{
-				TileInfo tileInfo = tileSet->getTileInfo(i);
+				TileInfo tileInfo = tileSet->getTileInfo((int)i);
 
 				if (!tileInfo._collisionInfo) {
 					Square* square = collisionObjects.createDerived<Square>();
 					square->setPosition(0, 0);
-					square->setWidth(roundf(tileWidth));
-					square->setHeight(roundf(tileHeight));
+					square->setWidth(roundf((float)tileWidth));
+					square->setHeight(roundf((float)tileHeight));
 					tileInfo._collisionInfo = square;
 
-					tileSet->_tileInfo[i] = tileInfo;
+					tileSet->_tileInfo[(int)i] = tileInfo;
 				}
 				else
 					continue;

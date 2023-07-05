@@ -13,9 +13,12 @@ class Square;
 
 class Circle : public Collidable
 {
-	float m_fRadius;
+	float _radius;
 
-public:
+public:	
+	float getRadius(void) const { return _radius; }
+	void setRadius(float radius) { _radius = radius; }
+
 	bool WithCircle(const Circle* circle);
 	bool WithPlane(const Plane* plane);
 	bool WithSquare(const Square* square);

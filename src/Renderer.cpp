@@ -4,17 +4,16 @@
 
 Window *Renderer::window = NULL;
 
-IRenderer *Renderer::Get(void) { return Engine2D::getRenderer(); }
+IRenderer *Renderer::get(void) { return Engine2D::getRenderer(); }
 
 #if _WIN32
-IRenderer *Renderer::CreateDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) {
+IRenderer *Renderer::createDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) {
 	return ((IRenderer *)new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync));
 }
 #endif
 
-
 // We should probably do as above, and allow dimensions and other settings to be specified from the get go, instead of just being inferred from the window properties...?
-IRenderer* Renderer::CreateVKRenderer(Window* window)
+IRenderer* Renderer::createVKRenderer(Window* window)
 {
 	Renderer::window = window;
 	IRenderer* renderer = new RendererVK();
@@ -23,7 +22,7 @@ IRenderer* Renderer::CreateVKRenderer(Window* window)
 	return renderer;
 }
 
-void Renderer::DestroyRenderer(IRenderer *pRenderer)
+void Renderer::destroyRenderer(IRenderer *pRenderer)
 {
 	if (pRenderer)
 	{

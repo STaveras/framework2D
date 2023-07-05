@@ -15,7 +15,7 @@ IRenderer::~IRenderer() {
 
 // NOTE: Initial test demo
 #if _DEBUG
-void IRenderer::_BackgroundColorShift(void)
+void IRenderer::_backgroundColorShift(void)
 {
 	if (!m_bStaticBG)
 	{
@@ -122,7 +122,7 @@ bool IRenderer::destroyTexture(const ITexture* pTexture)
 
 void IRenderer::render(void) {
 #if _DEBUG
-	_BackgroundColorShift();
+	_backgroundColorShift();
 #else
 	throw std::runtime_error("RenderingInterface::render() unimplemented");
 #endif

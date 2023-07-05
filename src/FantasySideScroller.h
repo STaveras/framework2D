@@ -17,9 +17,9 @@
 #include "Tile.h"
 #include "TileMap.h"
 
-#include "AnimationUtils.h"
 #include "FollowObjectOperator.h"
 
+#include "AnimationUtils.h"
 #include "CollisionEvent.h"
 
 #include "Square.h"
@@ -65,7 +65,7 @@ class FantasySideScroller : public Game
 				idle->setPreserveScaling(true);
 				idle->setRenderable(idleAnimation);
 
-				static Square idleHitBox({ 0, 0 }, {22, 48});
+				static Square idleHitBox({ -10, -16 }, 20, 48);
 				for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
 				   (*idleAnimation)[i]->setCollidable(&idleHitBox);
 				}
@@ -92,7 +92,7 @@ class FantasySideScroller : public Game
 
 				rising->setRenderable(risingAnimation);
 
-				static Square risingHitBox({ 0, 0 }, { 22, 38 });
+				static Square risingHitBox({ -10, -16 }, 20, 38);
 				for (unsigned int i = 0; i < risingAnimation->getFrameCount(); i++) {
 					(*risingAnimation)[i]->setCollidable(&risingHitBox);
 				}
@@ -119,7 +119,7 @@ class FantasySideScroller : public Game
 				jumpAnimation->setFrameRate(60);
 				jumpAnimation->center();
 
-				static Square jumpHitBox({ 0, 0 }, { 22, 38 });
+				static Square jumpHitBox({ -10, -16 }, 20, 38);
 				for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
 					(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
 				}
@@ -326,7 +326,8 @@ class FantasySideScroller : public Game
 							//    DEBUG_MSG("IN_AIR\n");
 							//#endif
 						}
-						else if (Engine2D::getInput()->getKeyboard()->keyPressed(keyboard->getKeys().KBK_F)) {
+						
+						if (Engine2D::getInput()->getKeyboard()->keyPressed(keyboard->getKeys().KBK_F)) {
 							this->sendInput("DEATH");
 						}
 					}
@@ -418,7 +419,9 @@ class FantasySideScroller : public Game
 
 			// TODO: Handle enemy spawning, game rules, etc.
 
-			if (keyboard->keyPressed(keyboard->getKeys().KBK_R)) {
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_R)) 
+			{
+				playableCharacter->clearEvents();
 				playableCharacter->setState(playableCharacter->getState("Falling"));
 				playableCharacter->setPosition(0, -120);
 			}
@@ -432,7 +435,7 @@ class FantasySideScroller : public Game
 
 			_background->setPosition(_camera->getPosition());
 
-			return GameState::onExecute(time);;
+			return GameState::onExecute(time);
 		}
 
 		void onExit(State* next)
@@ -476,12 +479,12 @@ public:
 		Renderer::window->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
 		Renderer::window->setHeight(GAME_RES_Y * WINDOW_SIZE_MULTIPLIER);
 
-		Renderer::Get()->setWidth(GAME_RES_X);
-		Renderer::Get()->setHeight(GAME_RES_Y);
+		Renderer::get()->setWidth(GAME_RES_X);
+		Renderer::get()->setHeight(GAME_RES_Y);
 
-		Renderer::Get()->shutdown();
+		Renderer::get()->shutdown();
 		Renderer::window->resize();
-		Renderer::Get()->initialize();
+		Renderer::get()->initialize();
 
 		if (!_playState)
 		{

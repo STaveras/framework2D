@@ -17,7 +17,7 @@ class PlatformKeyboard : public Keyboard
     std::map<KEY, bool> _keyStatesLast;
 
 public:
-   // TODO: Expose key definition
+   // TODO: Expose key definitions
 
 protected:
     void _onKeyEventHandler(GLFWwindow* window, int key, int scancode, int action, int mods);

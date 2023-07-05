@@ -39,6 +39,8 @@ public:
 
    Mode getMode(void) const { return m_eMode; }
 
+   std::list<Frame*>& getFrames(void) { return m_Frames; }
+
    bool isForward(void) const { return m_bForward; }
    bool isPlaying(void) const { return m_bPlaying; }
    float getSpeed(void) const { return m_fSpeed; }

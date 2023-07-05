@@ -6,8 +6,8 @@
 #include "Types.h"
 #include "Collidable.h"
 
-class IRenderer;
 class ITexture;
+
 typedef class Sprite : public Renderable
 {
 	 const ITexture* _texture;
@@ -22,14 +22,14 @@ public:
 	 ~Sprite(void);
 
 	 const ITexture* getTexture(void) const { return _texture; }
-	 const RECT& getSourceRect(void) const { return _sourceRect; }
+	 const RECT& getSrcRect(void) const { return _sourceRect; }
 	 vector2 getRectCenter(void) const;
 
 	 float getWidth(void) const;
 	 float getHeight(void) const;
 
 	 void setTexture(ITexture* pTexture) { _texture = pTexture; }
-	 void setSourceRect(const RECT& srcRect) { _sourceRect = srcRect; }
+	 void setSrcRect(const RECT& srcRect) { _sourceRect = srcRect; }
 
 	 void center(void);
 

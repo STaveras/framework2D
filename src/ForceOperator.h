@@ -1,14 +1,15 @@
 #pragma once
 
 #include "ObjectOperator.h"
+#include "GameObject.h"
 #include "Event.h"
 #include "Timer.h"
+#include "Maths.h"
 
 #define EVT_FORCE_EVENT "EVT_FORCE_EVENT"
 
 class ForceEvent : public Event
 {
-	Timer _timer;
 	struct ForceOperator* _operator;
 
 public: 
@@ -18,12 +19,17 @@ public:
 
 struct ForceOperator : public ObjectOperator
 {
+	Timer _timer;
+
 	float	_force;
+	float _duration; // if it's a temporarily applied force
 	vector2 _direction;
 
 	bool operator()(GameObject* object) {
 
-		return object->sendInput(ForceEvent(this));
+		_timer.update();
+
+		object->addImpulse(_direction, _force);
 
 	}
 };

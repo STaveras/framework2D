@@ -26,6 +26,17 @@ typedef std::ofstream ofpstream;
 // TODO: Use our own file stream for use with file packing
 #endif
 
+#pragma warning(push)
+#pragma warning(disable: 26817)
+
+#include <simdjson.h>
+#include <tinyxml2.h>
+
+#pragma warning(pop)
+
+#pragma comment(lib, "simdjson.lib")
+#pragma comment(lib, "tinyxml2.lib")
+
 #define SAFE_DELETE(x) if(x) { delete x; x = NULL; }
 #define COUNT_OF(arr) sizeof(arr) / sizeof(arr[0])
 

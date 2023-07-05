@@ -22,10 +22,11 @@
 
 #if defined(_WIN32) & !defined(_DEBUG)
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
    int argc = 0;
    
+   LPCCH defaultChar = NULL;
    LPBOOL usedDefaultChar = nullptr;
    LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
    LPSTR* argv = new LPSTR[argc];
@@ -36,12 +37,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		OutputDebugStringW(L"\n");
 		OutputDebugStringW(argvW[i]);
 #endif
-
 		WideCharToMultiByte(CP_UTF8,
 			WC_NO_BEST_FIT_CHARS | WC_COMPOSITECHECK,
-			argvW[i], -1,
-			argv[i], wcslen(argvW[i]),
-			NULL, usedDefaultChar);
+			argvW[i], -1, argv[i], wcslen(argvW[(int)i]),
+         defaultChar, usedDefaultChar);
 #if _DEBUG
 		OutputDebugStringA(argv[i]);
 #endif
@@ -92,14 +91,14 @@ int main(int argc, char **argv)
 
       window.initialize(hInstance, lpCmdLine);
       pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance); 
-      pRenderer = (RendererDX*)Renderer::CreateDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
+      pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
    else
 #endif 
    {
       window.initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RendererVK*)Renderer::CreateVKRenderer(&window); 
+      pRenderer = (RendererVK*)Renderer::createVKRenderer(&window); 
    }
 
    // We need to only call setFullscreen or setVericalSync when the command line argument for either is present
@@ -127,15 +126,18 @@ int main(int argc, char **argv)
          {
    #ifdef _DEBUG
             static unsigned int lastFPS = 0;
+            static Timer timer; timer.update();
+
+            std::string framesPerSecond = "FPS: ";
 
 				if (DEBUGGING) {
 
-					if (engine->getTimer()->getElapsedTime() >= 1.0f) {
+					if (timer.getElapsedTime() >= 1.0f) {
 
-						std::string framesPerSecond = "FPS: " + std::to_string(/*(lastFPS + */engine->getTimer()->getFPS()/* / 2)*/) + "\n";
-						std::cout << framesPerSecond.c_str();
+						framesPerSecond += std::to_string(/*(lastFPS + */engine->getTimer()->getFPS()/* / 2)*/) + "\n";
+						DEBUG_MSG(framesPerSecond.c_str());
 						lastFPS = engine->getTimer()->getFPS();
-						engine->getTimer()->reset();
+						timer.reset();
 					}
 				}
    #endif
@@ -167,7 +169,7 @@ int main(int argc, char **argv)
    engine->shutdown();
    
    Input::DestroyInputInterface(pInput);
-   Renderer::DestroyRenderer(pRenderer);
+   Renderer::destroyRenderer(pRenderer);
 
    window.shutdown();
 

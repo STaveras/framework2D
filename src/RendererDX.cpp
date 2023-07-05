@@ -1,7 +1,7 @@
 // File: RendererDX.cpp
 // Author: Stanley Taveras
 // Created: 2/24/2010
-// Modified: 11/13/2022
+// Modified: 2/24/2023
 
 #if _WIN32
 
@@ -43,8 +43,63 @@ RendererDX::~RendererDX(void)
    this->shutdown();
 }
 
+// Checks if the device is lost, and attempts to reset it if it is.
+bool RendererDX::_checkDeviceLost()
+{
+   HRESULT hr = m_pD3DDevice->TestCooperativeLevel();
+
+   if (hr == D3DERR_DEVICELOST) {
+      return true;
+   }
+   else if (hr == D3DERR_DEVICENOTRESET) {
+      if (SUCCEEDED(_attemptDeviceReset())) {
+         return false;
+      }
+      else {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+HRESULT RendererDX::_attemptDeviceReset()
+{
+   // Release resources that are tied to the device
+   m_pD3DSprite->OnLostDevice();
+
+   D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
+
+   // Attempt to reset the device
+   HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
+
+   if (SUCCEEDED(hr)) 
+   {
+      // Reinitialize resources tied to the device
+      m_pD3DSprite->OnResetDevice();
+   }
+
+   return hr;
+}
+
+D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
+{
+   D3DPRESENT_PARAMETERS D3DPP;
+   ZeroMemory(&D3DPP, sizeof(D3DPP));
+
+   D3DPP.Windowed = (!m_bFullScreen) ? TRUE : FALSE;
+   D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
+   D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
+   D3DPP.BackBufferWidth = m_nWidth;
+   D3DPP.BackBufferHeight = m_nHeight;
+   D3DPP.PresentationInterval = (m_bVerticalSync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+   D3DPP.hDeviceWindow = m_hWnd;
+
+   return D3DPP;
+}
+
 // Why do we have offset? Center is already an offset...
-void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
+void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue)
 {
    D3DXMATRIX transform;
    //D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
@@ -70,7 +125,7 @@ void RendererDX::_DrawImage(Sprite *image, Color tint, D3DXVECTOR2 offset)
 
    m_pD3DSprite->SetTransform(&transform);
    m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), 
-                     &image->getSourceRect(),
+                     &image->getSrcRect(),
                      &center3D, &position,
                      tint._color);
 }
@@ -92,23 +147,20 @@ ITexture *RendererDX::createTexture(const char *szFilename, Color colorKey)
       m_Textures.store(pTexture);
 
       D3DXCreateTextureFromFileEx(
-         m_pD3DDevice,
-         szFilename,
+         m_pD3DDevice, szFilename,
          D3DX_DEFAULT_NONPOW2,
          D3DX_DEFAULT_NONPOW2,
-         D3DX_DEFAULT,
-         0,
-         D3DFMT_UNKNOWN,
-         D3DPOOL_MANAGED, // Since this is managed, I haven't worried about a "destroyTexture" function
+         D3DX_DEFAULT, 0,
+         D3DFMT_A8R8G8B8,
+         D3DPOOL_MANAGED,
          D3DX_FILTER_POINT,
          D3DX_DEFAULT,
          (DWORD)colorKey._color,
-         &((TextureD3D*)pTexture)->_imageInfo,
-         NULL,
+         &((TextureD3D*)pTexture)->_imageInfo, NULL,
          &((TextureD3D*)pTexture)->_texture);
    }
    else {
-       //((TextureD3D*)pTexture)->getTexture()->AddRef();
+       ((TextureD3D*)pTexture)->getTexture()->AddRef();
    }
 
    return pTexture;
@@ -117,28 +169,57 @@ ITexture *RendererDX::createTexture(const char *szFilename, Color colorKey)
 void RendererDX::destroyTexture(ITexture* texture)
 {
    ((TextureD3D*)texture)->getTexture()->Release();
+
    IRenderer::destroyTexture(texture);
 }
 
 void RendererDX::initialize(void)
 {
-   m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+   bool needsReset = true;
 
-   D3DPRESENT_PARAMETERS D3DPP;
-   ZeroMemory(&D3DPP, sizeof(D3DPP));
+   if (m_pD3D == NULL)
+   {
+      m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+      needsReset = false;
+   }
 
-   D3DPP.Windowed = (!m_bFullScreen ) ? TRUE : FALSE;
-   D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
-   D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
-   D3DPP.BackBufferWidth = m_nWidth;
-   D3DPP.BackBufferHeight = m_nHeight;
-   D3DPP.PresentationInterval = (m_bVerticalSync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+   D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
 
-   m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
+   if (!needsReset) 
+   {
+      if (m_bFullScreen) {
+         D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+      }
+      else {
+         D3DPP.FullScreen_RefreshRateInHz = 0; // find supported refreshrates
+      }
+      m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
+   }
+   else
+   {
+      // Release resources before resetting
+      if (m_pD3DSprite)
+      {
+         m_pD3DSprite->Release();
+         m_pD3DSprite = nullptr;
+      }
+
+      HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
+      if (FAILED(hr))
+      {
+         // Handle error accordingly
+         return;
+      }
+   }
 
    if (m_pD3DDevice)
    {
-      D3DXCreateSprite(m_pD3DDevice, &m_pD3DSprite);
+      HRESULT hr = D3DXCreateSprite(m_pD3DDevice, &m_pD3DSprite);
+      if (FAILED(hr))
+      {
+         // Handle error accordingly
+         return;
+      }
 
       D3DXMATRIX ortho2D;
       D3DXMatrixOrthoLH(&ortho2D, (float)m_nWidth, (float)m_nHeight, 0.0f, 1.0f);
@@ -169,11 +250,10 @@ void RendererDX::shutdown(void)
 
 void RendererDX::render(void)
 {
-	if (!m_pD3DDevice)
+	if (!m_pD3DDevice || this->_checkDeviceLost())
 		return;
 
    // We should only actually render, if there is a change or update from the animations/sprites ergo game/application itself
-
 	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 
 	// Begin drawing the scene
@@ -224,7 +304,7 @@ void RendererDX::render(void)
                         case RENDERABLE_TYPE_SPRITE:
                         {
                             Image* image = (Image*)(*o);
-                            _DrawImage(image, image->getTintColor(),
+                            _drawImage(image, image->getTintColor(),
                                               image->getOffset());
                         }
                         break;
@@ -232,7 +312,7 @@ void RendererDX::render(void)
                         {
                            Animation* animation = (Animation*)(*o);
                            if (animation->getFrameCount()) {
-                              _DrawImage(animation->getCurrentFrame()->getSprite(), 
+                              _drawImage(animation->getCurrentFrame()->getSprite(), 
                                          animation->getCurrentFrame()->getSprite()->getTintColor(),
                                          animation->getOffset());
                            }

@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
+
 #define DEBUG
 
 namespace Debug
@@ -32,3 +35,5 @@ namespace Debug
 #define DEBUGGING (Debug::Mode.isEnabled())
 
 #include "debugLogger.hpp"
+
+#endif

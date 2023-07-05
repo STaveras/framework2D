@@ -19,7 +19,7 @@ class TileMap : public Tile
 	Factory<Tile> _tiles;
 
 public:
-	explicit TileMap(unsigned int mapWidth, unsigned int mapHeight, TileSet* tileSet) :
+	explicit TileMap(unsigned int mapWidth, unsigned int mapHeight, TileSet* tileSet) : Tile(-1, tileSet),
 		_tileSet(tileSet),
 		_mapWidth(mapWidth),
 		_mapHeight(mapHeight) {
@@ -138,6 +138,59 @@ public:
 		file.close();
 
 	   return tileMap;
+	}
+
+	static std::vector<TileMap*> loadFromJSONFile(const char* filePath, TileSet* tileSet)
+	{
+		std::vector<TileMap*> tileMaps;
+
+		simdjson::dom::parser parser;
+		simdjson::dom::element json = parser.load(std::string(filePath));
+
+		if (json.is_object())
+		{
+			int tileWidth = (int)json["tilewidth"].get_int64();
+			int tileHeight = (int)json["tileheight"].get_int64();
+
+			for (auto layer : json["layers"])
+			{
+				int mapWidth = (int)layer["width"].get_int64();
+				int mapHeight = (int)layer["height"].get_int64();
+
+				//int startX = (!layer["startx"].is_null()) ? layer["startx"].get_int64() * tileWidth : 0;
+				//int startY = (!layer["starty"].is_null()) ? layer["starty"].get_int64() * tileHeight: 0;
+
+				if (layer["startx"].is_null()) {
+					//DEBUG_MSG("WTF\n");
+				}
+
+				TileMap* tileMap = new TileMap(mapWidth, mapHeight, tileSet);
+				////tileMap->setPosition(startX, startY);
+
+				//for (auto chunk : layer["chunks"]) 
+				//{
+				//	simdjson::dom::array data = chunk["data"].get_array();
+
+				//	int chunkWidth = chunk["width"].get_int64();
+				//	int chunkHeight = chunk["height"].get_int64();
+				//	int chunkX = chunk["x"].get_int64();
+				//	int chunkY = chunk["y"].get_int64();
+
+				//	int index = 0;
+				//	for (int y = 0; y < chunkHeight; y++) {
+				//		for (int x = 0; x < chunkWidth; x++) {
+				//			tileMap->setTileIndex(x - chunkX, y - chunkY, (data.at(index++).get_int64() - 1));
+				//		}
+				//	}
+
+				//	tileMap->arrangeTiles();
+				//}
+
+				tileMaps.push_back(tileMap);
+			}
+		}
+
+		return tileMaps;
 	}
 };
 
