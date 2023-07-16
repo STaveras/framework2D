@@ -275,7 +275,7 @@ void RendererDX::render(void)
             D3DXMATRIX rotationMat;
             D3DXMatrixRotationZ(&rotationMat, m_pCamera->getRotation());
 
-            D3DXVECTOR2 position = m_pCamera->getPosition() - m_pCamera->getCenter();
+            D3DXVECTOR2 position = vector2(m_pCamera->getPosition() - m_pCamera->getCenter());
 
             D3DXVECTOR2 xAxis = D3DXVECTOR2(1, 0);
             D3DXVECTOR2 yAxis = D3DXVECTOR2(0, 1);
