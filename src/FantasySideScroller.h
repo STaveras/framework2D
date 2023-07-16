@@ -389,8 +389,7 @@ class FantasySideScroller : public Game
 
 			_tileSet = TileSet::loadFromFile(BASE_DIRECTORY"Assets/fantasyTiles.tsj");
 
-			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap_0.csv", _tileSet);
-			//_tileMap = TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).front();
+			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
 
 			for (unsigned int i = 0; i < (unsigned int)_tileMap->getTiles().size(); i++) {
 				char buffer[32]{ 0 }; sprintf_s(buffer, 32, "t%u", i);

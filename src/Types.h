@@ -80,6 +80,7 @@ typedef std::ofstream ofpstream;
 #if __APPLE__
 #include <MoltenVK/mvk_vulkan.h>
 #include <MoltenVK/vk_mvk_moltenvk.h>
+#define GLM
 #else
 #define GLFW_INCLUDE_VULKAN
 #endif
