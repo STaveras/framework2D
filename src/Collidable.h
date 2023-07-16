@@ -35,6 +35,6 @@ public:
 	virtual bool collidesWith(vector2 point) { return _position == point; } // issa joke
 	virtual bool collidesWith(const Collidable* collidable) { return this->collidesWith(collidable->getPosition()); }
 
-	virtual ~Collidable(void) = 0 {}
+	virtual ~Collidable(void) = default;
 
 };
