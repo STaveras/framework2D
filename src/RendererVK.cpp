@@ -251,7 +251,7 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes, bool verticalSync = false) {
 
-    // Check the vailable modes and filter for one of these two below... 
+	// Check the vailable modes and filter for one of these two below... 
 
 	return (verticalSync) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR; // these two modes are definitely available
 }
@@ -1134,14 +1134,11 @@ void RendererVK::render(void)
 	m_bStaticBG = false;
 #endif
 
-	// Vertex _vertex = {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}};
-	// vector3 position{0.0f, -0.5f, 0.0f};
-	// glm::vec3 pos{0.0f, -0.5f, 0.0f};
-	// const std::vector<Vertex> vertices = {
-	//     {{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	//     {{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	//     {{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
-	// };
+	const std::vector<Vertex> vertices = {
+		 {{0.0f, -0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 0.0f}},
+		 {{0.5f, 0.5f, 0.0f}, {0, 0}, {0.0f, 1.0f, 0.0f}},
+		 {{-0.5f, 0.5f, 0.0f}, {0, 0}, {0.0f, 0.0f, 1.0f}}
+	};
 
 	IRenderer::render();
 
