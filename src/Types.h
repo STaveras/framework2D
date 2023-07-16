@@ -103,11 +103,7 @@ struct rect {
 
 #endif
 
-#if defined(GLM) || defined(__APPLE__) || defined(__linux__) || defined(__unix__)
-
 #include <glm/glm.hpp>
-
-#endif
 
 #include <GLFW/glfw3.h>
 

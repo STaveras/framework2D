@@ -49,6 +49,8 @@ class FantasySideScroller : public Game
 			{
 				GameObjectState* idle = this->addState("Idle");
 
+				std::vector<Animation*> animations;
+
 				Animation* idleAnimation = _animationManager.create();
 
 				vector2 idleFrameDimensions{ 64, 80 };
@@ -69,6 +71,10 @@ class FantasySideScroller : public Game
 				for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
 				   (*idleAnimation)[i]->setCollidable(&idleHitBox);
 				}
+
+				animations.push_back(idleAnimation);
+
+				Animations::toJSON(animations, BASE_DIRECTORY"Character/Idle/IdleAnimation.json");
 
 				/////////////////////////////////////////
 				GameObjectState* rising = this->addState("Rising");
@@ -181,6 +187,12 @@ class FantasySideScroller : public Game
 
 				Animations::createFramesForAnimation(runningLeftAnimation, runningSheet, runningDimensions, _spriteManager);
 				Animations::createFramesForAnimation(runningRightAnimation, runningSheet, runningDimensions, _spriteManager);
+
+				//static Square runHitBox({ 27, 17 }, 33, 46);
+				//for (unsigned int i = 0; i < runningRightAnimation->getFrameCount(); i++) {
+				//	(*runningLeftAnimation)[i]->setCollidable(&runHitBox);
+				//	(*runningRightAnimation)[i]->setCollidable(&runHitBox);
+				//}
 
 				runningLeftAnimation->mirror(true, false);
 				runningLeftAnimation->setMode(Animation::Mode::eLoop);
@@ -377,11 +389,11 @@ class FantasySideScroller : public Game
 
 			_tileSet = TileSet::loadFromFile(BASE_DIRECTORY"Assets/fantasyTiles.tsj");
 
-			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap_2.csv", _tileSet);
+			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap_0.csv", _tileSet);
+			//_tileMap = TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).front();
 
-			for (size_t i = 0; i < _tileMap->getTiles().size(); i++) {
-				char buffer[32]{ 0 };
-				sprintf_s(buffer, 32, "t%i", i);
+			for (unsigned int i = 0; i < (unsigned int)_tileMap->getTiles().size(); i++) {
+				char buffer[32]{ 0 }; sprintf_s(buffer, 32, "t%u", i);
 				_objectManager.addObject(buffer, _tileMap->getTiles()[i]);
 			}
 

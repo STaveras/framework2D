@@ -3,21 +3,13 @@
 
 #include "../Maths.h"
 
-typedef struct vector3 : 
-#ifdef GLM
-	public glm::vec3 
-#else
-	public D3DXVECTOR3
-#endif
+typedef struct vector3 : public glm::vec3 
 {
 	vector3(void) {}
-	vector3(float x, float y, float z) : 
-#ifdef GLM
-		glm::vec3(x, y, z) 
-#else
-		D3DXVECTOR3(x,y,z)
-#endif
-	{	}
+	vector3(float x, float y, float z) : glm::vec3(x, y, z) {}
 	vector3& operator=(const vector3& value) { *this = value; return *this; }
 
+#ifdef __D3DX9MATH_H__
+	operator D3DXVECTOR3() const { return D3DXVECTOR3(this->x, this->y, this->z); }
+#endif
 } Vector3;

@@ -38,7 +38,7 @@ bool WithCircle(const Square* square, const Circle* circle)
    for (i = 0; i < 4; i++)
    {
       axis[i] = ((vector2)(p[i] - center)).normalize();
-      p[i] -= center;
+      p[i] = p[i] - center;
    }
 
    axis[4] = vector2(1, 0);
