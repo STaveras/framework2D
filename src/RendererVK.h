@@ -74,6 +74,8 @@ class RendererVK : public IRenderer
 
     VkShaderModule createShaderModule(VkDevice device, const std::vector<char> &code);
 
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
     bool isDeviceSuitable(VkPhysicalDevice device);
     void pickPhysicalDevice(VkInstance instance);
     void createLogicalDevice(VkPhysicalDevice physicalDevice);
@@ -98,10 +100,13 @@ class RendererVK : public IRenderer
     void OnWindowResized(const Event& e);
 
 public:
-
     void initialize(void);
     void shutdown(void);
     void render(void);
 
+    VkDevice getDevice(void) const { return _device; }
+
     ITexture *createTexture(const char *szFilename, Color colorKey = 0);
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 };

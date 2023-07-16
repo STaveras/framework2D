@@ -24,6 +24,8 @@ public:
       Collidable* _collisionInfo = NULL;
    };
 
+   //static Factory<TileSet> _globalTileSets;
+
 protected:
    // Meta-information about tilesIndices (what does a particular tile in a tileSheet /mean/?)
    // This makes sense only when a tile is with other tyles

@@ -55,7 +55,8 @@
                 "${vcpkgRoot}/x64-windows/include",
                 "${vcpkgRoot}/x86-windows/include",
                 "${DXSDK_DIR}/Include",
-                "${VK_SDK_PATH}/Include"
+                "${VK_SDK_PATH}/Include",
+                "${VLD_INCLUDE}"
             ],
             "defines": [
                 "_DEBUG",

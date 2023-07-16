@@ -5,14 +5,9 @@
 #include "Positionable.h"
 #include "Cyclable.h"
 
-const float OVERLAP_ALLOWANCE = 1.0;
-
 // For actually making physics a thing in this "engine" sometime in the future...
 class Physical : public Positionable, public Cyclable
 {
-	//using Cyclable::start;
-	//using Cyclable::finish;
-
 protected:
 
 	bool _static;

@@ -169,23 +169,6 @@
                 "cwd": "${fileDirname}"
             }
         },
-        {
-            "type": "shell",
-            "label": "make",
-            "command": "/usr/bin/make",
-            "args": [
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "Run make in the current directory."
-        }
     ],
     "version": "2.0.0"
 }

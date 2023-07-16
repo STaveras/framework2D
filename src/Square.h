@@ -20,6 +20,7 @@ class Square : public Collidable
   
 public:
 	Square(void) : Collidable(COL_OBJ_SQUARE) {}
+	Square(const Square& s) : Collidable(COL_OBJ_SQUARE), _width(s._width), _height(s._height) { _position = s._position; }
    Square(vector2 min, vector2 max) : Collidable(COL_OBJ_SQUARE), _width(max.x - min.x), _height(max.y - min.y) { _position = min; }
 	Square(vector2 position, float width, float height) : Collidable(COL_OBJ_SQUARE) { _position = position; _width = width; _height = height; }
 

@@ -4,24 +4,12 @@
 
 #include "../Maths.h"
 
-typedef struct vector2 :
-#ifdef GLM
-	public glm::vec2
-#elif defined(__D3DX9MATH_H__)
-	public D3DXVECTOR2
-#endif
+typedef struct vector2 : public glm::vec2
 {
 	vector2(void) {}
-#ifdef __D3DX9MATH_H__
-	vector2(D3DXVECTOR2 v) : D3DXVECTOR2(v) {}
-#endif
-	vector2(float x, float y) :
-#ifdef GLM
-		glm::vec2(x, y)
-#elif defined(__D3DX9MATH_H__)
-		D3DXVECTOR2(x, y)
-#endif
-	{	}
+	vector2(const glm::vec2& v) : glm::vec2(v) {}
+	vector2(const vector2& v) : glm::vec2(v.x, v.y) {}
+	vector2(float x, float y) : glm::vec2(x, y) {}
 
 	vector2& operator=(const vector2& v) { x = v.x; y = v.y; return *this; }
 	//float operator*(const vector2& v) { return x * v.x + y * v.y; }
@@ -30,17 +18,19 @@ typedef struct vector2 :
 		return x * x + y * y;
 	}
 
-	vector2& normalize(void) 
+	vector2& normalize(void)
 	{
-		x = x / norm();
-		y = y / norm();
-
+		float normVal = norm();
+		x /= normVal;
+		y /= normVal;
 		return *this;
 	}
 
 	float length(void) const {
 		return sqrtf(this->norm());
 	}
+
+	operator glm::vec2() const { return glm::vec2(this->x, this->y); }
 
 #ifdef __D3DX9MATH_H__
 	operator D3DXVECTOR2() const { return D3DXVECTOR2(this->x, this->y); }
