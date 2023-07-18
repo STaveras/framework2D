@@ -7,8 +7,11 @@
 #include "State.h"
 #include "StrUtil.h"
 
+#include <iostream>
 #include <fstream>
 #include <string.h>
+
+using namespace FileSystem;
 
 // Originally, I meant for this to subscribe to EVT_STATEMACHINE_EVENT(s) and react to them...
 //void StateMachine::_onEvent(const StateMachineEvent& evt)
@@ -263,4 +266,110 @@ bool StateMachine::loadTransitionTableFromFile(const char* szFilename)
    }
 
    return true;
+}
+
+void StateMachine::toJSON(std::ostream& fileStream)
+{
+   std::string json;
+
+   // Begin JSON object
+   json += "{\n";
+
+   // Serialize isBuffered property
+   json += "\t\"isBuffered\": " + std::string(_isBuffered ? "true" : "false") + ",\n";
+
+   // Serialize transitionFrequency property
+   json += "\t\"transitionFrequency\": " + std::to_string(_transitionFrequency) + ",\n";
+
+   // Serialize transitions
+   if (!_transitionTable.empty())
+   {
+      json += "\t\"transitions\": [\n";
+      for (const auto& transition : _transitionTable) {
+         json += "\t\t{\n";
+         json += "\t\t\t\"state\": \"" + std::string(transition.first->getName()) + "\",\n";
+         json += "\t\t\t\"event\": \"" + std::string(transition.second.first.getCondition()) + "\",\n";
+         json += "\t\t\t\"resultState\": \"" + std::string(transition.second.second->getName()) + "\"\n";
+         json += "\t\t},\n";
+      }
+      json.pop_back(); json.pop_back(); // Remove the last comma
+		json += "\n\t],\n";
+   }
+
+   // Serialize events
+   if (!_events.empty()) 
+   {
+      json += "\t\"events\": [\n";
+      while (!_events.empty()) {
+         json += "\t\t\"" + std::string(_events.front().getCondition()) + "\",\n";
+         _events.pop();
+      }
+
+		json.pop_back(); 
+		json.pop_back(); 
+      json += "\n\t]\n";
+   }
+   else {
+      json.pop_back();
+      json.pop_back();
+      json += "\n";
+   }
+
+   // End JSON object
+   json += "}";
+
+   // Save the JSON string to the file
+   fileStream << json;
+#if _DEBUG
+   std::cout << "State machine information saved to file stream." << std::endl;
+#endif
+}
+
+void StateMachine::toJSON(const std::string& filename)
+{
+   FileStream fileStream = File::Open(filename);
+
+   if (!fileStream.is_open()) {
+      std::cerr << "Failed to open file: " << filename << std::endl;
+      return;
+   }
+
+   toJSON(fileStream);
+
+   fileStream.close();
+}
+
+void StateMachine::fromJSON(std::istream& fileStream) 
+{
+   // Load the contents of the JSON file
+   std::string jsonString((std::istreambuf_iterator<char>(fileStream)), std::istreambuf_iterator<char>());
+
+   // Parse the JSON using simdjson
+   simdjson::dom::parser parser;
+   simdjson::dom::element root = parser.parse(jsonString);
+
+   // Deserialize the StateMachine properties from the JSON
+   _isBuffered = root["isBuffered"].get_bool();
+   _transitionFrequency = root["transitionFrequency"].get_double();
+
+   // Deserialize transitions
+   if (root["transitions"].is_array()) 
+   {
+      for (simdjson::dom::element transition : root["transitions"]) 
+      {
+         std::string stateString(std::string_view(transition["state"].get_string()));
+         std::string eventString(std::string_view(transition["event"].get_string()));
+         std::string resultState(std::string_view(transition["resultState"].get_string()));
+         
+         this->registerTransition(stateString.c_str(), eventString.c_str(), resultState.c_str());
+      }
+   }
+
+   // Deserialize events
+   if (root["events"].is_array()) {
+      for (simdjson::dom::element event : root["events"]) {
+         std::string eventCondition(std::string_view(event.get_string()));
+         this->sendInput(eventCondition.c_str());
+      }
+   }
 }

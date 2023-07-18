@@ -30,7 +30,7 @@ int32_t flipEndianness(int32_t value)
 
 char* framework::FileFormats::loadBMP(const char* szFilepath, long& lWidth, long& lHeight, int& nBytesPerPixel)
 {	
-	ifpstream ifl;
+	FileStream ifl;
 	ifl.open(szFilepath, std::ios_base::in | std::ios_base::binary);
 
 	char* chImageData = NULL;
@@ -93,7 +93,7 @@ char* framework::FileFormats::loadPNG(const char* szFilepath)
 		uint8_t  interlaceMethod;
 	}imageInfo;
 
-	ifpstream ifl;
+	FileStream ifl;
 	ifl.open(szFilepath, std::ios_base::in | std::ios_base::binary);
 
 	char* chImageData = NULL;
@@ -180,7 +180,7 @@ char* framework::FileFormats::loadPNG(const char* szFilepath)
 char* framework::FileFormats::loadTGA(const char* szFilepath, short& sImageWidth, short& sImageHeight, int& nBytesPerPixel)
 {
 	// TODO: Support different pixel-order TGAs in the future...
-	ifpstream ifl;
+	FileStream ifl;
 	ifl.open(szFilepath, std::ios_base::in | std::ios_base::binary);
 
 	char* chImageData = NULL;
