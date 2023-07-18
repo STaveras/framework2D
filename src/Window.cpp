@@ -273,6 +273,7 @@ void Window::resize(void)
 
 void Window::toggleFullscreen(void)
 {
+#ifdef _WIN32
 	DWORD dwStyle = GetWindowLong(m_hWnd, GWL_STYLE);
 
 	IRenderer* renderer = Renderer::get();
@@ -301,4 +302,5 @@ void Window::toggleFullscreen(void)
 			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
 			SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 	}
+#endif
 }

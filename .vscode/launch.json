@@ -17,7 +17,7 @@
             "preLaunchTask": "C/C++: cl.exe build active file",
         },
         {
-            "name": "clang++ - Build and debug active file",
+            "name": "clang++ - Build and debug program",
             // "type": "cppdbg",
             "type": "lldb",
             "request": "launch",
@@ -32,7 +32,7 @@
             "targetArchitecture":"arm64"
         },
         {
-            "name": "clang++ - Debug active file",
+            "name": "clang++ - Debug program",
             // "type": "cppdbg",
             "type": "lldb",
             "request": "launch",
