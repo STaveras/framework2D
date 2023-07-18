@@ -19,7 +19,7 @@ namespace Animations {
 
       // tokenize
       const char* seps = "{,}";
-      char* first, * second, * value;
+      char* first = NULL, * second = NULL, * value = NULL;
       first = strtok_s(tmp, seps, &second);
 
       while (first != NULL) {

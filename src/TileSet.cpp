@@ -45,8 +45,8 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 				TileSet::TileInfo tileInfo;
 
-				if (!tile["class"].is_null() && tile["class"].is_string()) {
-					std::string_view className = tile["class"].get_string();
+				if (!tile["type"].is_null() && tile["type"].is_string()) {
+					std::string_view className = tile["type"].get_string();
 					tileInfo._typeName = std::string(className);
 				}
 
@@ -58,7 +58,7 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 					if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
 
 						for (auto object : objectgroup["objects"]) {
-							std::string_view collisionObjectType = object["class"];
+							std::string_view collisionObjectType = object["type"];
 
 							if (collisionObjectType == "square") {
 								Square* square = collisionObjects.createDerived<Square>();

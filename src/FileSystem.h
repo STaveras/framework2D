@@ -6,6 +6,8 @@
 #ifndef _FILESYSTEM_H_
 #define _FILESYSTEM_H_
 
+#include "Types.h"
+
 #if defined(__APPLE__)
 #include <dirent.h>
 #include <unistd.h>
@@ -233,6 +235,15 @@ namespace FileSystem
 
 	namespace File
 	{
+		typedef std::fstream Stream;
+
+		// Opens a file ofstream for a given filepath
+		static Stream Open(const std::string& filename, bool append = false)
+		{
+			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : 0); // ios::binary	eventually
+			return Stream(filename, modeFlags);
+		}
+
 		// Reads in 
 		static std::vector<char> Read(const std::string& filename)
 		{
@@ -279,7 +290,6 @@ namespace FileSystem
 			// If the separator character was not found, return the original string
 			return path;
 		}
-
 	}
 }
 #endif

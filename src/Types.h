@@ -15,17 +15,6 @@
 #define GLOBAL_WIDTH  640
 #define GLOBAL_HEIGHT 480
 
-#ifndef _CUSTOM_STREAM_OBJECT
-#include <fstream>
-
-// This makes it easy to convert to our own file stream later
-typedef std::fstream fpstream;
-typedef std::ifstream ifpstream;
-typedef std::ofstream ofpstream;
-#else
-// TODO: Use our own file stream for use with file packing
-#endif
-
 #pragma warning(push)
 #pragma warning(disable: 26817)
 
@@ -117,5 +106,9 @@ struct rect {
 
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"
+
+#include "FileSystem.h"
+
+typedef FileSystem::File::Stream FileStream;
 
 #endif

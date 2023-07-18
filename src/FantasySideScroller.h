@@ -10,6 +10,8 @@
 #define GAME_RES_X 336
 #define GAME_RES_Y 192
 
+#include "FileSystem.h"
+
 #include "Game.h"
 #include "GameObject.h"
 #include "GameState.h"
@@ -255,40 +257,52 @@ class FantasySideScroller : public Game
 				// running, press jump, jumping, if previous state running, on end, return to running
 				/////////////////////////////////////////
 
-				registerTransition("Dead", "DEATH", "Idle");
+				const char* transitionsFilePath = BASE_DIRECTORY"Character/Transitions.json";
+				if (FileSystem::FileExists(transitionsFilePath)) 
+				{
+					FileStream fileStream = FileSystem::File::Open(transitionsFilePath, true);
+					this->fromJSON(fileStream);
+					fileStream.close();
+				}
+				else 
+				{
+					registerTransition("Dead", "DEATH", "Idle");
 
-				registerTransition("Idle", "JUMP_PRESSED", "Rising");
-				registerTransition("Idle", "LEFT_DOWN", "RunningLeft");
-				registerTransition("Idle", "RIGHT_DOWN", "RunningRight");
-				registerTransition("Idle", "ATTACK_PRESSED", "Attack01");
-				registerTransition("Idle", "DEATH", "Dead");
+					registerTransition("Idle", "JUMP_PRESSED", "Rising");
+					registerTransition("Idle", "LEFT_DOWN", "RunningLeft");
+					registerTransition("Idle", "RIGHT_DOWN", "RunningRight");
+					registerTransition("Idle", "ATTACK_PRESSED", "Attack01");
+					registerTransition("Idle", "DEATH", "Dead");
 
-				registerTransition("Rising", "JUMP_UP", "Falling"); // stop rising when you let go of the button
-				registerTransition("Rising", "JUMP_RELEASED", "Falling"); 
-				registerTransition("Rising", EVT_STATE_END, "Jump"); 
+					registerTransition("Rising", "JUMP_UP", "Falling"); // stop rising when you let go of the button
+					registerTransition("Rising", "JUMP_RELEASED", "Falling"); 
+					registerTransition("Rising", EVT_STATE_END, "Jump"); 
 
-				registerTransition("Jump", "JUMP_UP", "Falling"); 
-				registerTransition("Jump", "JUMP_RELEASED", "Falling"); 
-				registerTransition("Jump", EVT_STATE_END, "Falling"); 
+					registerTransition("Jump", "JUMP_UP", "Falling"); 
+					registerTransition("Jump", "JUMP_RELEASED", "Falling"); 
+					registerTransition("Jump", EVT_STATE_END, "Falling"); 
 
-				registerTransition("Falling", "GROUND_COLLISION", "Landing");
-				registerTransition("Landing", EVT_STATE_END, "Idle");
+					registerTransition("Falling", "GROUND_COLLISION", "Landing");
+					registerTransition("Landing", EVT_STATE_END, "Idle");
 
-				registerTransition("RunningLeft", "LEFT_RELEASED", "Idle");
-				registerTransition("RunningLeft", "RIGHT_PRESSED", "RunningRight");
-				registerTransition("RunningLeft", "JUMP_PRESSED", "Rising");
-				registerTransition("RunningLeft", "ATTACK_PRESSED", "Attack01");
-				//registerTransition("RunningLeft", "IN_AIR", "Falling");
-				 
-				registerTransition("RunningRight", "RIGHT_RELEASED", "Idle");
-				registerTransition("RunningRight", "LEFT_PRESSED", "RunningLeft");
-				registerTransition("RunningRight", "JUMP_PRESSED", "Rising");
-				registerTransition("RunningRight", "ATTACK_PRESSED", "Attack01");
-				//registerTransition("RunningRight", "IN_AIR", "Falling");
+					registerTransition("RunningLeft", "LEFT_RELEASED", "Idle");
+					registerTransition("RunningLeft", "RIGHT_PRESSED", "RunningRight");
+					registerTransition("RunningLeft", "JUMP_PRESSED", "Rising");
+					registerTransition("RunningLeft", "ATTACK_PRESSED", "Attack01");
+					//registerTransition("RunningLeft", "IN_AIR", "Falling");
+					 
+					registerTransition("RunningRight", "RIGHT_RELEASED", "Idle");
+					registerTransition("RunningRight", "LEFT_PRESSED", "RunningLeft");
+					registerTransition("RunningRight", "JUMP_PRESSED", "Rising");
+					registerTransition("RunningRight", "ATTACK_PRESSED", "Attack01");
+					//registerTransition("RunningRight", "IN_AIR", "Falling");
 
-				registerTransition("Attack01", EVT_STATE_END, "Idle");
-				registerTransition("Attack01", "ATTACK_PRESSED", "Attack02");
-				registerTransition("Attack02", EVT_STATE_END, "Idle");
+					registerTransition("Attack01", EVT_STATE_END, "Idle");
+					registerTransition("Attack01", "ATTACK_PRESSED", "Attack02");
+					registerTransition("Attack02", EVT_STATE_END, "Idle");
+
+					this->toJSON(transitionsFilePath);
+				}
 
 				this->setBuffered(true);
 				this->setState(falling);

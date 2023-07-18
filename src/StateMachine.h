@@ -68,6 +68,11 @@ public:
 	// We should create a templated version of this so clients can initialize states 
 	// using a derived State class
 	bool loadTransitionTableFromFile(const char* szFilename);
+
+	void toJSON(const std::string& filename);
+	void toJSON(std::ostream& fileStream);
+
+	void fromJSON(std::istream& fileStream);
 };
 
 #endif  //_STATEMACHINE_H
