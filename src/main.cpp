@@ -73,7 +73,7 @@ int main(int argc, char **argv)
       }
 #endif
    }
-   sleep(1000);
+   //sleep(1000);
 #endif
 
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::version());

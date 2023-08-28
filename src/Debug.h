@@ -38,6 +38,6 @@ namespace Debug
 
 #define DEBUGGING (Debug::Mode.isEnabled())
 
-#include "debugLogger.hpp"
+#include "DebugLogger.hpp"
 
 #endif

@@ -29,6 +29,9 @@
             "command": "clang++",
             "args": [
                 "-std=c++17","-stdlib=libc++",
+                "-framework", "Metal",
+                "-framework", "Cocoa",
+                "-framework", "QuartzCore",
                 "-fdiagnostics-color=always",
                 "-I",
                 "../ext/**",
@@ -98,6 +101,9 @@
             "args": [
                 "-D","_DEBUG",
                 "-std=c++17","-stdlib=libc++",
+                "-framework", "Metal",
+                "-framework", "Cocoa",
+                "-framework", "QuartzCore",
                 "-fdiagnostics-color=always",
                 "-I",
                 "../ext/**",
