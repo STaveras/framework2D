@@ -315,7 +315,6 @@ class FantasySideScroller : public Game
 					if (otherObject->getType() == GAME_OBJ_TILE) {
 						if (((Tile*)otherObject)->getTileType() == "stoneTile") {
 							this->sendInput("GROUND_COLLISION");
-
 //#if _DEBUG
 //							DEBUG_MSG("GROUND_COLLISION\n");
 //#endif

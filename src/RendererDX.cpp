@@ -101,13 +101,11 @@ D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 // Why do we have offset? Center is already an offset...
 void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue)
 {
-   D3DXMATRIX transform;
-   //D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
-
    D3DXVECTOR2 rectCenter = image->getRectCenter();
    D3DXVECTOR2 scale = image->getScale();
    D3DXVECTOR2 center = image->getCenter();
 
+   D3DXMATRIX transform;
    D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
 
    D3DXVECTOR3 position;

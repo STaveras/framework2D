@@ -22,6 +22,13 @@ IRenderer* Renderer::createVKRenderer(Window* window)
 	return renderer;
 }
 
+IRenderer* createGLRenderer(Window* window)
+{
+	IRenderer* renderer = nullptr;
+	// TODO: Create the OpenGL renderer instance
+	return renderer;
+}
+
 void Renderer::destroyRenderer(IRenderer *pRenderer)
 {
 	if (pRenderer)

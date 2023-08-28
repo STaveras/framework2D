@@ -10,7 +10,7 @@ namespace framework {
 
 		color(void):_color(0xFFFFFFFF){}
 		color(unsigned int value){ _color = value; }
-		color(float red, float green, float blue) { r = (int)(red * 255); g = (int)(green * 255); b = (int)(blue * 255); }
+		color(float red, float green, float blue) { r = (int)(red * 255); g = (int)(green * 255); b = (int)(blue * 255); a = 255; }
 
 	#ifdef D3DCOLOR_DEFINED
 		operator DWORD()

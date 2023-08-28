@@ -327,7 +327,7 @@ void StateMachine::toJSON(std::ostream& fileStream)
 
 void StateMachine::toJSON(const std::string& filename)
 {
-   FileStream fileStream = File::Open(filename);
+   FileStream fileStream(filename, std::ios::out);
 
    if (!fileStream.is_open()) {
       std::cerr << "Failed to open file: " << filename << std::endl;
@@ -350,7 +350,7 @@ void StateMachine::fromJSON(std::istream& fileStream)
 
    // Deserialize the StateMachine properties from the JSON
    _isBuffered = root["isBuffered"].get_bool();
-   _transitionFrequency = root["transitionFrequency"].get_double();
+   _transitionFrequency = (float)root["transitionFrequency"].get_double();
 
    // Deserialize transitions
    if (root["transitions"].is_array()) 

@@ -7,7 +7,7 @@
 #define _TYPES_H_
 
 // Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
-#define FRAMEWORK_VERSION "0.05"
+#define FRAMEWORK_VERSION "0.06"
 
 #define DEFAULT_DATA_PATH "./data/"
 
@@ -60,8 +60,6 @@
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 
-#define RECT RECT
-
 #define getcwd _getcwd
 
 #else
@@ -93,9 +91,19 @@ struct rect {
 
 #endif
 
-#include <glm/glm.hpp>
-
 #include <GLFW/glfw3.h>
+
+//union rekt {
+//   struct {
+//      int32_t left, top, right, bottom;
+//   };
+//   RECT _rect;
+//#ifdef VULKAN_H_
+//   VkRect2D _rect2D;
+//#endif
+//};
+
+#define RECT RECT
 
 #ifdef _WIN32
 #pragma comment(lib, "glfw3.lib")

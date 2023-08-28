@@ -31,8 +31,7 @@
 
 class GameObject : public StateMachine, public Physical
 {
-   //bool _isColliding = false;
-   //bool _isRendering = false; 
+   //Timer _lifeTime; this one makes me sad
 
 public:
     enum GAME_OBJ_TYPE
