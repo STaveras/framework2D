@@ -30,7 +30,7 @@ typedef struct vector2 : public glm::vec2
 		return sqrtf(this->norm());
 	}
 
-	operator glm::vec2() const { return glm::vec2(this->x, this->y); }
+	//operator glm::vec2() const { return glm::vec2(this->x, this->y); }
 
 #ifdef __D3DX9MATH_H__
 	operator D3DXVECTOR2() const { return D3DXVECTOR2(this->x, this->y); }
