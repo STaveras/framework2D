@@ -5,6 +5,9 @@
 
 #include "Types.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "maths/vector2.h"
 #include "maths/vector3.h"
 

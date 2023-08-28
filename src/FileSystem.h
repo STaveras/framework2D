@@ -20,12 +20,12 @@
 
 namespace FileSystem
 {
-	static void SetWorkingDirectory(const std::string& path)
+	static int SetWorkingDirectory(const std::string& path)
 	{
 #if defined(__APPLE__)
-		chdir(path.c_str());
+		return chdir(path.c_str());
 #else
-		_chdir(path.c_str());
+		return _chdir(path.c_str());
 #endif
 	}
 
@@ -244,6 +244,19 @@ namespace FileSystem
 			return Stream(filename, modeFlags);
 		}
 
+		static size_t FileLength(Stream file) 
+		{
+			if (!file.good())
+				return 0;
+
+			std::streampos pos = file.tellg();
+			file.seekg(0, std::ios_base::end);
+			size_t len = (size_t)file.tellg();
+			file.seekg(pos);
+
+			return len;
+		}
+
 		// Reads in 
 		static std::vector<char> Read(const std::string& filename)
 		{
@@ -261,6 +274,7 @@ namespace FileSystem
 			file.read(buffer.data(), fileSize);
 
 			file.close();
+			file.clear(); // Not sure if we should have to do this?
 
 			return buffer;
 		}

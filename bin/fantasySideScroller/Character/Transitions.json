@@ -1,0 +1,131 @@
+{
+	"isBuffered": false,
+	"transitionFrequency": 0.000000,
+	"transitions": [
+		{
+			"state": "Dead",
+			"event": "DEATH",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Attack01",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Attack01",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack02"
+		},
+		{
+			"state": "Attack02",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Jump",
+			"event": "JUMP_UP",
+			"resultState": "Falling"
+		},
+		{
+			"state": "Jump",
+			"event": "JUMP_RELEASED",
+			"resultState": "Falling"
+		},
+		{
+			"state": "Jump",
+			"event": "EVT_STATE_END",
+			"resultState": "Falling"
+		},
+		{
+			"state": "RunningRight",
+			"event": "RIGHT_RELEASED",
+			"resultState": "Idle"
+		},
+		{
+			"state": "RunningRight",
+			"event": "LEFT_PRESSED",
+			"resultState": "RunningLeft"
+		},
+		{
+			"state": "RunningRight",
+			"event": "JUMP_PRESSED",
+			"resultState": "Rising"
+		},
+		{
+			"state": "RunningRight",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack01"
+		},
+		{
+			"state": "Landing",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Idle",
+			"event": "JUMP_PRESSED",
+			"resultState": "Rising"
+		},
+		{
+			"state": "Idle",
+			"event": "LEFT_DOWN",
+			"resultState": "RunningLeft"
+		},
+		{
+			"state": "Idle",
+			"event": "RIGHT_DOWN",
+			"resultState": "RunningRight"
+		},
+		{
+			"state": "Idle",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack01"
+		},
+		{
+			"state": "Idle",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "Rising",
+			"event": "JUMP_UP",
+			"resultState": "Falling"
+		},
+		{
+			"state": "Rising",
+			"event": "JUMP_RELEASED",
+			"resultState": "Falling"
+		},
+		{
+			"state": "Rising",
+			"event": "EVT_STATE_END",
+			"resultState": "Jump"
+		},
+		{
+			"state": "RunningLeft",
+			"event": "LEFT_RELEASED",
+			"resultState": "Idle"
+		},
+		{
+			"state": "RunningLeft",
+			"event": "RIGHT_PRESSED",
+			"resultState": "RunningRight"
+		},
+		{
+			"state": "RunningLeft",
+			"event": "JUMP_PRESSED",
+			"resultState": "Rising"
+		},
+		{
+			"state": "RunningLeft",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack01"
+		},
+		{
+			"state": "Falling",
+			"event": "GROUND_COLLISION",
+			"resultState": "Landing"
+		}
+	]
+}

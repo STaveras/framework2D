@@ -23,7 +23,6 @@ class ObjectManager
 	 std::list<ObjectOperator*> m_lsObjOperators;
 
 public:
-
 	std::string getObjectName(GameObject* object) {
 		std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 		for (; itr != m_mObjects.end(); itr++) {
@@ -34,6 +33,7 @@ public:
 		return "";
 	}
 
+public:
 	void update(float fTime);
 
 	void addObject(const char* name, GameObject* object);

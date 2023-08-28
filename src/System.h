@@ -103,6 +103,19 @@ namespace System
         return false;
     }
 
+    static bool checkArgumentsForOpenGL(int argc, char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--opengl") || !strcmp(argv[i], "-gl")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Get the current operating system.
     const char* GetOperatingSystem();
     
