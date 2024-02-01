@@ -17,7 +17,22 @@
             "preLaunchTask": "C/C++: cl.exe build active file",
         },
         {
-            "name": "clang++ - Build and debug program",
+            "name": "clang++ - Build and debug program (mac, vulkan)",
+            // "type": "cppdbg",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--vulkan"],
+            "stopAtEntry": false, // Seems to do absolutely nothing with lldb+clang
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "C/C++: clang++ build active file (macOS, debug)",
+            "targetArchitecture":"arm64"
+        },
+        {
+            "name": "clang++ - Debug program (mac)",
             // "type": "cppdbg",
             "type": "lldb",
             "request": "launch",
@@ -28,16 +43,15 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "C/C++: clang++ build active file (debug)",
             "targetArchitecture":"arm64"
         },
         {
-            "name": "clang++ - Debug program",
+            "name": "clang++ - Debug program (mac, vulkan)",
             // "type": "cppdbg",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug"],
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--vulkan"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],

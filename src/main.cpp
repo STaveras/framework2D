@@ -78,29 +78,36 @@ int main(int argc, char **argv)
 
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::version());
 
+   Renderer::window = &window;
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
-   
-#ifdef _WIN32
-#if _DEBUG
-   HINSTANCE hInstance = GetModuleHandle(NULL);
-   LPSTR lpCmdLine = GetCommandLine();
+
+#ifndef __linux__   
+   if (System::checkArgumentsForVulkan(argc, argv))
 #endif
-   if (!System::checkArgumentsForVulkan(argc, argv)) {
-
-      Renderer::window = &window;
-
-      window.initialize(hInstance, lpCmdLine);
-      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance); 
-      pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
-   }
-   else
-#endif 
    {
       window.initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
       pRenderer = (RendererVK*)Renderer::createVKRenderer(&window); 
    }
+#ifdef _WIN32
+#if _DEBUG
+   HINSTANCE hInstance = GetModuleHandle(NULL);
+   LPSTR lpCmdLine = GetCommandLine();
+#endif
+   else {
+
+      window.initialize(hInstance, lpCmdLine);
+      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance); 
+      pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
+   }
+#elif __APPLE__
+   else {
+      window.initialize();
+      pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
+      pRenderer = (RendererMTL*)Renderer::createMTLRenderer(&window);
+   }
+#endif
 
    // We need to only call setFullscreen or setVericalSync when the command line argument for either is present
    if (System::checkArgumentsForFullscreen(argc, argv))

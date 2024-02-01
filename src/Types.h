@@ -79,6 +79,9 @@
 
 #define localtime_s(n, ts) localtime_r(ts, n)
 
+#define ZeroMemory(p, sz) memset((p), 0, (sz))
+
+//#define strncpy_s strncpy
 #define sprintf_s printf
 #define strtok_s strtok_r
 #define _strdup strdup

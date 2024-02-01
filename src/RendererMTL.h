@@ -1,12 +1,12 @@
 // File: RendererMTL.h
 #ifdef __APPLE__
 #ifndef _RENDERERMTL_H
-#define _RENDERMTL_H
+#define _RENDERERMTL_H
 
 #include "IRenderer.h"
+#include <Cocoa/Cocoa.h>
 #include <Metal/Metal.h>
 #include <QuartzCore/CAMetalLayer.h>
-#include <Cocoa/Cocoa.h>
 
 class Sprite;
 class TextureMTL;
@@ -20,7 +20,7 @@ class RendererMTL : public IRenderer
    id<CAMetalDrawable> m_drawable;
    id<MTLRenderPipelineState> m_pipelineState;
 
-   void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, float offset[2] = {0, 0}, float zValue = 0.0f);
+   void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, vector2 offset = {0.0f, 0.0f}, float zValue = 0.0f);
 
 public:
    RendererMTL(void);
