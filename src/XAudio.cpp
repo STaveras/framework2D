@@ -1,4 +1,6 @@
 
+#ifdef _WIN32
+
 #include "XAudio.h"
 
 #ifndef _XBOX //Little-Endian
@@ -100,3 +102,5 @@ HRESULT XAudio::ReadChunkData(HANDLE hFile, void * buffer, DWORD buffersize, DWO
         hr = HRESULT_FROM_WIN32( GetLastError() );
     return hr;
 }
+
+#endif

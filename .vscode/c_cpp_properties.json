@@ -3,9 +3,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/System/Library/Frameworks",
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"        
+                "${workspaceFolder}/**"
             ],
             "defines": [],
             "macFrameworkPath": [
@@ -21,16 +19,15 @@
                 "path": [
                     "${workspaceFolder}"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""
-            }
+            },
+            "configurationProvider": "go2sh.cmake-integration"
         },
         {
             "name": "Mac (Debug)",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/System/Library/Frameworks",
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks"        
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG"
@@ -50,9 +47,10 @@
                 "path": [
                     "${workspaceFolder}"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""
-            }
+            },
+            "configurationProvider": "go2sh.cmake-integration"
         },
         {
             "name": "Windows",

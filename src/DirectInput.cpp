@@ -1,4 +1,6 @@
 
+#ifdef _WIN32
+
 #include "DirectInput.h"
 
 #include "KeyboardDI.h"
@@ -76,3 +78,5 @@ void DirectInput::shutdown(void)
       m_lpDirectInput = NULL;
    }
 }
+
+#endif

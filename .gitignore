@@ -1,14 +1,16 @@
-
+.cache/**
+.vs/
 /add/inc/glm
 Debug/
 Release/
 enc_temp_folder/
-.vs/
+/*.zip
 *.iobj
 *.ipdb
 *.vcxproj.user
 *.pdb
 *.ilk
+*.cmake
 *.o
 *.d
 **/.DS_Store
@@ -19,3 +21,4 @@ bin/*.exe
 bin/*.dSYM/**
 bin/data/cache/**
 bin/framework2D
+build/**

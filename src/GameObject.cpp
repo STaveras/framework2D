@@ -163,6 +163,8 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 									collidable->setPosition(collidable->getPosition() + newCenter);
 								}
 								break;
+							default:
+								break;
 							}
 						}
 

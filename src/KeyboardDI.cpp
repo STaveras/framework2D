@@ -1,4 +1,6 @@
 
+#ifdef _WIN32
+
 #include "KeyboardDI.h"
 
 KeyboardDI::KeyboardDI(void)
@@ -30,3 +32,5 @@ void KeyboardDI::update(void)
          m_bDeviceLost = true;
    }
 }
+
+#endif

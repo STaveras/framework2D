@@ -5,6 +5,8 @@
 
 #pragma once
 
+#ifdef _WIN32
+
 #include <xaudio2.h>
 
 class XAudioFile
@@ -19,3 +21,5 @@ public:
 
 	bool Open(const char* szFilename);
 };
+
+#endif

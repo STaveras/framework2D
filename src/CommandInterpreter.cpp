@@ -4,6 +4,7 @@
 #include "EventSystem.h"
 #include "InputEvent.h"
 #include "Controller.h"
+#include "Types.h"
 
 CommandInterpreter::CommandInterpreter(void):
 m_fResetTimer(0.0f),
@@ -180,7 +181,8 @@ char* CommandInterpreter::_NextCommand(char* pCmdIter)
 
 	char* szReturn = new char[dwIndex+1];
 	memset(szReturn, 0, dwIndex+1);
-	strncpy_s(szReturn, sizeof(char) * (dwIndex+1), pCmdIter, dwIndex);
+    // TODO: Fix with a platform-agnostic call to strncpy
+	//strncpy_s(szReturn, sizeof(char) * (dwIndex+1), pCmdIter, dwIndex);
 
 	pCmdIter += dwIndex;
 

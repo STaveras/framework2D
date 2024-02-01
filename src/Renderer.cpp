@@ -10,12 +10,20 @@ IRenderer *Renderer::get(void) { return Engine2D::getRenderer(); }
 IRenderer *Renderer::createDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) {
 	return ((IRenderer *)new RendererDX(hWnd, nWidth, nHeight, bFullscreen, bVsync));
 }
+#elif __APPLE__
+IRenderer *Renderer::createMTLRenderer(Window *window)
+{
+	// NSWindow* _window = window->getUnderlyingWindow();
+	// GLFWWindow* _window = window->getUnderlyingWindow();
+	
+	IRenderer* renderer = new RendererMTL(NULL, window->getWidth(), window->getHeight(), false);
+	return renderer;
+}
 #endif
 
 // We should probably do as above, and allow dimensions and other settings to be specified from the get go, instead of just being inferred from the window properties...?
 IRenderer* Renderer::createVKRenderer(Window* window)
 {
-	Renderer::window = window;
 	IRenderer* renderer = new RendererVK();
 	renderer->setWidth(window->getWidth());
 	renderer->setHeight(window->getHeight());

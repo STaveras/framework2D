@@ -89,3 +89,4 @@ void RendererMTL::render(void)
 }
 
 // Additional private methods (e.g., _drawImage) can be implemented here
+#endif
