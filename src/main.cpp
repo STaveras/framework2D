@@ -53,6 +53,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #endif
 
 int main(int argc, char **argv)
+int main(int argc, const char *argv[])
 {
 #endif
    std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
@@ -88,7 +89,7 @@ int main(int argc, char **argv)
    {
       window.initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RendererVK*)Renderer::createVKRenderer(&window); 
+      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window); 
    }
 #ifdef _WIN32
 #if _DEBUG
@@ -105,7 +106,7 @@ int main(int argc, char **argv)
    else {
       window.initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RendererMTL*)Renderer::createMTLRenderer(&window);
+      pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
 #endif
 

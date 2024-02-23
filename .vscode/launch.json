@@ -17,28 +17,13 @@
             "preLaunchTask": "C/C++: cl.exe build active file",
         },
         {
-            "name": "clang++ - Build and debug program (mac, vulkan)",
-            // "type": "cppdbg",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--vulkan"],
-            "stopAtEntry": false, // Seems to do absolutely nothing with lldb+clang
-            "cwd": "${workspaceFolder}/bin",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "lldb",
-            "preLaunchTask": "C/C++: clang++ build active file (macOS, debug)",
-            "targetArchitecture":"arm64"
-        },
-        {
-            "name": "clang++ - Debug program (mac)",
+            "name": "clang++ - Debug program (mac, metal)",
             // "type": "cppdbg",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
             "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug"],
-            "stopAtEntry": false, // Seems to do absolutely nothing with lldb+clang
+            "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
@@ -54,7 +39,21 @@
             "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--vulkan"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
-            "environment": [],
+            "environment": [{ "name": "config", "value": "Debug" }],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "targetArchitecture":"arm64"
+        },
+        {
+            "name": "clang++ - Debug program (mac, vulkan)",
+            // "type": "cppdbg",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--vulkan"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [{ "name": "config", "value": "Debug" }],
             "externalConsole": false,
             "MIMode": "lldb",
             "targetArchitecture":"arm64"
