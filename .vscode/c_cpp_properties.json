@@ -3,7 +3,11 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/utl",
+                "${env:HOMEBREW_REPOSITORY}/include"
             ],
             "defines": [],
             "macFrameworkPath": [
@@ -27,7 +31,11 @@
         {
             "name": "Mac (Debug)",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/utl",
+                "${env:HOMEBREW_REPOSITORY}/include"
             ],
             "defines": [
                 "_DEBUG"

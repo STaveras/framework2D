@@ -10,7 +10,7 @@ namespace System
    // When we implement a in-game developer console (for issuing commands), \
    // the command line arguments for the executable should eventually use the same parser as the console, \
    // to directly get and set the same variables
-    static const char* checkArgumentsForDataPath(int argc, char** argv) 
+    static const char* checkArgumentsForDataPath(int argc, const char** argv) 
     {
         if (argc > 2) {
 
@@ -24,6 +24,7 @@ namespace System
     }
 
     static bool checkArgumentsForDebugMode(int argc, char** argv) 
+    static bool checkArgumentsForDebugMode(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -36,7 +37,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForFullscreen(int argc, char** argv) 
+    static bool checkArgumentsForFullscreen(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -51,7 +52,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForFPSCounter(int argc, char** argv)
+    static bool checkArgumentsForFPSCounter(int argc, const char** argv)
     {
        if (argc > 1) {
 
@@ -64,7 +65,7 @@ namespace System
        return false;
     }
 
-    static bool checkArgumentsForWindowed(int argc, char** argv) 
+    static bool checkArgumentsForWindowed(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -77,7 +78,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForVSync(int argc, char** argv) // also check for a true or false
+    static bool checkArgumentsForVSync(int argc, const char** argv) // also check for a true or false
     {
         if (argc > 1) {
 
@@ -90,7 +91,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForVulkan(int argc, char** argv) 
+    static bool checkArgumentsForVulkan(int argc, const char** argv) 
     {
         if (argc > 1) {
 
