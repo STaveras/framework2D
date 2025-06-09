@@ -905,7 +905,7 @@ void RendererVK::recreateSwapChain(void)
 
 	cleanupSwapChain();
 
-	createSwapChain(_physicalDevice, _device, Renderer::window->getUnderlyingWindow());
+	createSwapChain(_physicalDevice, _device, Renderer::mainWindow->getUnderlyingWindow());
 	createImageViews(_device);
 	createFramebuffers(_device);
 }
@@ -963,15 +963,15 @@ void RendererVK::initialize(void)
 
 	// Vertex vertex{{0,0,0},{0,0,0}};
 
-	if (Renderer::window) {
+	if (Renderer::mainWindow) {
 
-		GLFWwindow* window = Renderer::window->getUnderlyingWindow();
+		GLFWwindow* window = Renderer::mainWindow->getUnderlyingWindow();
 
 		VkApplicationInfo appInfo{};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = Renderer::window->getWindowTitle();
+		appInfo.pApplicationName = Renderer::mainWindow->getWindowTitle();
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.pEngineName = Renderer::window->getWindowClassName();
+		appInfo.pEngineName = Renderer::mainWindow->getWindowClassName();
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.apiVersion = VK_API_VERSION_1_0;
 

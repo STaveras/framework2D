@@ -2,7 +2,7 @@
 #include "Renderer.h"
 #include "Engine2D.h"
 
-Window *Renderer::window = NULL;
+Window *Renderer::mainWindow = NULL;
 
 IRenderer *Renderer::get(void) { return Engine2D::getRenderer(); }
 
@@ -13,10 +13,9 @@ IRenderer *Renderer::createDXRenderer(HWND hWnd, int nWidth, int nHeight, bool b
 #elif __APPLE__
 IRenderer *Renderer::createMTLRenderer(Window *window)
 {
-	// NSWindow* _window = window->getUnderlyingWindow();
-	// GLFWWindow* _window = window->getUnderlyingWindow();
-	
-	IRenderer* renderer = new RendererMTL(NULL, window->getWidth(), window->getHeight(), false);
+	IRenderer* renderer = new RendererMTL(glfwGetCocoaWindow(window->getUnderlyingWindow()), 
+										  window->getWidth(), window->getHeight(), 
+										  false);
 	return renderer;
 }
 #endif

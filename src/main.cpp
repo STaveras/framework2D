@@ -52,7 +52,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #include <vld.h>
 #endif
 
-int main(int argc, char **argv)
 int main(int argc, const char *argv[])
 {
 #endif
@@ -79,7 +78,8 @@ int main(int argc, const char *argv[])
 
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::version());
 
-   Renderer::window = &window;
+   Renderer::mainWindow = &window;
+
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
 
@@ -106,7 +106,11 @@ int main(int argc, const char *argv[])
    else {
       window.initialize();
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
+
+      // if (System::checkArgumentsForSDL(argc, argv))
+      //    pRenderer = (RenderingInterface*)(RendererSDL*)Renderer::createSDLRenderer(&window);
+      // else
+         pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
 #endif
 

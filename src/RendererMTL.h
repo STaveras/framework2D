@@ -4,9 +4,13 @@
 #define _RENDERERMTL_H
 
 #include "IRenderer.h"
-#include <Cocoa/Cocoa.h>
-#include <Metal/Metal.h>
-#include <QuartzCore/CAMetalLayer.h>
+
+// #include <Foundation/Foundation.hpp>
+// #include <Metal/Metal.hpp>
+// #include <QuartzCore/QuartzCore.hpp>
+// #include <Cocoa/Cocoa.h>
+#include <MetalKit/MTKView.h>
+// #include <QuartzCore/CAMetalLayer.h>
 
 class Sprite;
 class TextureMTL;
@@ -14,9 +18,13 @@ class TextureMTL;
 class RendererMTL : public IRenderer
 {
    NSWindow* m_window;
+
    id<MTLDevice> m_device;
    id<MTLCommandQueue> m_commandQueue;
+   
    CAMetalLayer* m_metalLayer;
+   MTKView* m_view;
+
    id<CAMetalDrawable> m_drawable;
    id<MTLRenderPipelineState> m_pipelineState;
 

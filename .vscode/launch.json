@@ -43,20 +43,6 @@
             "externalConsole": false,
             "MIMode": "lldb",
             "targetArchitecture":"arm64"
-        },
-        {
-            "name": "clang++ - Debug program (mac, vulkan)",
-            // "type": "cppdbg",
-            "type": "lldb",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--vulkan"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin",
-            "environment": [{ "name": "config", "value": "Debug" }],
-            "externalConsole": false,
-            "MIMode": "lldb",
-            "targetArchitecture":"arm64"
         }
     ]
 }

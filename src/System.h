@@ -23,7 +23,19 @@ namespace System
         return DEFAULT_DATA_PATH;
     }
 
-    static bool checkArgumentsForDebugMode(int argc, char** argv) 
+    static bool checkArgumentsForCocoa(int argc, const char** argv) 
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--cocoa")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static bool checkArgumentsForDebugMode(int argc, const char** argv) 
     {
         if (argc > 1) {

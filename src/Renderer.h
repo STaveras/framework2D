@@ -17,7 +17,7 @@
 
 namespace Renderer
 {
-	extern Window *window;
+	extern Window *mainWindow;
 	
 	IRenderer* get(void);
 

@@ -1,8 +1,10 @@
 // color.h
 #pragma once
+
 #include "Types.h"
-#define DEFAULT_KEY_COLOR 0xFFFF00FF
+
 namespace framework {
+	
 	typedef union color
 	{
 		unsigned long _color;
@@ -16,6 +18,11 @@ namespace framework {
 		operator DWORD()
 		{
 			return _color;
+		}
+	#elif defined (__APPLE__)
+		operator MTLClearColor()
+		{
+			return MTLClearColorMake(r/255.0, g/255.0, b/255.0, a/255.0);
 		}
 	#endif
 		const color& operator=(unsigned long value) { _color = value; return *this; }
