@@ -129,11 +129,11 @@ namespace Animations {
 
                   animation->addFrame(new Frame(new Sprite(frameImagePath, 0xFFFF00FF, srcRect), frameElement->FloatAttribute("Duration")));
 
-               } while (frameElement = frameElement->NextSiblingElement("Frame"));
+               } while ((frameElement = frameElement->NextSiblingElement("Frame")));
 
                animations.push_back(animation);
 
-            } while (element = element->NextSiblingElement("Animation"));
+            } while ((element = element->NextSiblingElement("Animation")));
          }
       } 
 

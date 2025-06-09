@@ -1,5 +1,6 @@
 // File: RendererMTL.cpp
 #ifdef __APPLE__
+
 #include "RendererMTL.h"
 #include "TextureMTL.h"
 
@@ -14,6 +15,7 @@ RendererMTL::RendererMTL(void)
 RendererMTL::RendererMTL(NSWindow* window, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
 {
     m_window = window;
+
     // Additional setup based on provided parameters
     initialize();
 }
@@ -28,11 +30,26 @@ RendererMTL::~RendererMTL(void)
 void RendererMTL::initialize(void)
 {
     m_device = MTLCreateSystemDefaultDevice();
-    m_commandQueue = [m_device newCommandQueue];
-    
-    // Set up the Metal layer
-    m_metalLayer = [CAMetalLayer layer];
-    // Additional setup for the Metal layer based on your requirements
+
+    m_view.device = m_device;
+
+    if (m_device) {
+
+      m_commandQueue = [m_device newCommandQueue];
+
+      // Set up the Metal layer
+      m_metalLayer = [CAMetalLayer layer];
+      m_metalLayer.device = m_device;
+      m_metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+
+      m_window.contentView = m_view;
+      // Additional setup for the Metal layer based on your requirements
+      m_window.viewsNeedDisplay = true;
+    }
+    else {
+      NSLog(@"Metal is not supported on this device");
+      return;
+    }
 
     // Additional initialization code here
 }
@@ -61,6 +78,7 @@ void RendererMTL::destroyTexture(ITexture* texture)
 // Shutdown method
 void RendererMTL::shutdown(void)
 {
+    // m_commandQueue.release();
     // Release Metal objects and any other resources
     // Additional cleanup logic based on your requirements
 }
@@ -68,24 +86,31 @@ void RendererMTL::shutdown(void)
 // Render method
 void RendererMTL::render(void)
 {
-    // Obtain a drawable object
-    m_drawable = [m_metalLayer nextDrawable];
-    if(!m_drawable) return; // Return if no drawable available
+    
+    // // Obtain a drawable object
+    // m_drawable = [m_metalLayer nextDrawable];
+    
+    // if (!m_drawable) {
+    //     return; // Return if no drawable available
+    // }
 
-    // Create a command buffer and render pass descriptor
-    id<MTLCommandBuffer> commandBuffer = [m_commandQueue commandBuffer];
-    MTLRenderPassDescriptor* passDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-    // Additional setup for the pass descriptor based on your requirements
+    // // Create a command buffer and render pass descriptor
+    // id<MTLCommandBuffer> commandBuffer = [m_commandQueue commandBuffer];
 
-    // Create a render command encoder
-    id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:passDescriptor];
+    // MTLRenderPassDescriptor* passDescriptor = m_view.currentRenderPassDescriptor;
+    // passDescriptor.colorAttachments[0].clearColor = m_ClearColor;
 
-    // Draw your scene here (e.g., call _drawImage for each sprite)
+    // // Create a render command encoder
+    // id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:passDescriptor];
 
-    // Finalize rendering
-    [renderEncoder endEncoding];
-    [commandBuffer presentDrawable:m_drawable];
-    [commandBuffer commit];
+    // // Draw your scene here (e.g., call _drawImage for each sprite)
+
+    // // Finalize rendering
+    // [renderEncoder endEncoding];
+    // [commandBuffer presentDrawable:m_drawable];
+    // [commandBuffer commit];
+
+    // [m_view draw];
 }
 
 // Additional private methods (e.g., _drawImage) can be implemented here

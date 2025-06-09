@@ -500,15 +500,15 @@ public:
 	{
 		//Game::begin();
 
-		Renderer::window->setWindowTitle(BASE_DIRECTORY);
-		Renderer::window->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
-		Renderer::window->setHeight(GAME_RES_Y * WINDOW_SIZE_MULTIPLIER);
+		Renderer::mainWindow->setWindowTitle(BASE_DIRECTORY);
+		Renderer::mainWindow->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
+		Renderer::mainWindow->setHeight(GAME_RES_Y * WINDOW_SIZE_MULTIPLIER);
 
 		Renderer::get()->setWidth(GAME_RES_X);
 		Renderer::get()->setHeight(GAME_RES_Y);
 
 		Renderer::get()->shutdown();
-		Renderer::window->resize();
+		Renderer::mainWindow->resize();
 		Renderer::get()->initialize();
 
 		if (!_playState)

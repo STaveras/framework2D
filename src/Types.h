@@ -67,9 +67,21 @@
 #else
 
 #if __APPLE__
+
+#define NS_PRIVATE_IMPLEMENTATION
+#define CA_PRIVATE_IMPLEMENTATION
+#define MTL_PRIVATE_IMPLEMENTATION
+
+// #define GLM
+#define GLFW_EXPOSE_NATIVE_COCOA
+
+#include <Metal/Metal.h>
+
+// #include <Metal/Metal.hpp>
+
 #include <MoltenVK/mvk_vulkan.h>
 #include <MoltenVK/vk_mvk_moltenvk.h>
-#define GLM
+
 #else
 #define GLFW_INCLUDE_VULKAN
 #endif
@@ -93,6 +105,7 @@ struct rect {
 };
 
 #define RECT rect
+#define DEFAULT_KEY_COLOR 0xFFFF00FF
 
 #endif
 
@@ -102,6 +115,8 @@ struct rect {
 
 #ifdef _WIN32
 #pragma comment(lib, "glfw3.lib")
+#else
+#include <GLFW/glfw3native.h>
 #endif
 
 #include "Maths.h"

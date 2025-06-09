@@ -47,6 +47,7 @@
             "type": "shell",
             "label": "C/C++: clang++ build project (macOS, debug)",
             "command": "${workspaceFolder}/utl/build-macOS.sh",
+            "args": ["--debug"],
             "group": {
                 "kind": "build",
                 "isDefault": false
@@ -61,21 +62,8 @@
         },
         {
             "type": "shell",
-            "label": "Build (macOS)",
-            "command": "source ./utl/post-build.sh",
-            "group": {
-              "kind": "build",
-              "isDefault": false
-            },
-            "dependsOn": [
-                "C/C++: clang++ build project (macOS)"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
             "label": "Build (macOS, debug)",
-            "command": "source ./utl/post-build.sh",
+            "command": "./utl/post-build.sh",
             "group": {
               "kind": "build",
               "isDefault": true
