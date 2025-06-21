@@ -498,9 +498,8 @@ public:
 
 	void begin(void)
 	{
-		//Game::begin();
+		Game::begin();
 
-		Renderer::mainWindow->setWindowTitle(BASE_DIRECTORY);
 		Renderer::mainWindow->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
 		Renderer::mainWindow->setHeight(GAME_RES_Y * WINDOW_SIZE_MULTIPLIER);
 

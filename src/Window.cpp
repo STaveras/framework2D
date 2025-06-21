@@ -42,7 +42,7 @@ LRESULT WINAPI Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_SIZING:
 	case WM_SYSKEYDOWN:
 		if (wParam == VK_RETURN && (lParam & (1 << 29))) { // Check if ALT key is pressed
-			Renderer::window->toggleFullscreen();
+			Renderer::mainWindow->toggleFullscreen();
 			return 0;
 		}
 		return 0;
