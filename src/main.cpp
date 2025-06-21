@@ -49,9 +49,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #else
 
 #if defined(_WIN32) & defined(_DEBUG )
-#include <vld.h>
-#endif
 
+#include <vld.h>
+
+HINSTANCE hInstance = GetModuleHandle(NULL);
+LPSTR lpCmdLine = GetCommandLine();
+
+#endif
 int main(int argc, const char *argv[])
 {
 #endif
@@ -73,7 +77,7 @@ int main(int argc, const char *argv[])
       }
 #endif
    }
-   //sleep(1000);
+   sleep(1000);
 #endif
 
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::version());
@@ -91,11 +95,7 @@ int main(int argc, const char *argv[])
       pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
       pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window); 
    }
-#ifdef _WIN32
-#if _DEBUG
-   HINSTANCE hInstance = GetModuleHandle(NULL);
-   LPSTR lpCmdLine = GetCommandLine();
-#endif
+#if _WIN32
    else {
 
       window.initialize(hInstance, lpCmdLine);

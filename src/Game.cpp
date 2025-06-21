@@ -4,7 +4,22 @@
 
 void Game::begin(void)
 {
-   throw std::runtime_error("Game::Begin() unimplemented.");
+	namespace fs = std::filesystem;
+	fs::path current = fs::current_path();
+
+	for (auto& p : fs::recursive_directory_iterator(current)) {
+		if (p.is_regular_file() && p.path().filename() == "title") {
+			p.path().parent_path().string();
+
+			// Read title contents
+			std::ifstream titleFile(p.path());
+			std::string titleStr;
+			std::getline(titleFile, titleStr);
+
+			// Set window title
+			Renderer::mainWindow->setWindowTitle(titleStr.c_str());  // Ensure SetTitle is accessible here
+		}
+	}
 }
 
 void Game::update(Timer* timer)
