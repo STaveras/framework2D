@@ -101,6 +101,9 @@
         "material": "c",
         "color.h": "c",
         "filesystem": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "__verbose_abort": "cpp",
+        "charconv": "cpp",
+        "span": "cpp"
     }
 }

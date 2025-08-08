@@ -16,6 +16,7 @@
 
 class Action
 {
+	bool _active = false; // Whether the action is currently active or not
     float _actionTime;
     std::string _actionName;
     std::list<Keyboard::KEY> _inputAssignments; // TODO: This should support any device (like arcade sticks...)
@@ -25,10 +26,13 @@ public:
 	Action(std::string actionName):_actionTime(0),_actionName(actionName){}
 	Action(std::string actionName, Keyboard::KEY key):_actionTime(0),_actionName(actionName){_inputAssignments.push_back(key);}
 
-			float getActionTime(void) const { return _actionTime; }
-	std::string getActionName(void) const { return _actionName; }
+	bool isActive(void) const { return _active; }
+	void setActive(bool active) { _active = active; }
 
+	float getActionTime(void) const { return _actionTime; }
 	void setActionTime(float fTime) { _actionTime = fTime; }
+
+	std::string getActionName(void) const { return _actionName; }
 	void setActionName(std::string actionName) { _actionName = actionName; }
 
 	std::list<Keyboard::KEY>& getAssignments(void) { return _inputAssignments; }

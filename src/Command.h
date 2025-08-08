@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include <functional>
-#include <string>
+#include "Types.h"
 
 class Command
 {

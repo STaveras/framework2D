@@ -8,15 +8,20 @@
 
 #include "Types.h"
 
-#if defined(__APPLE__)
-#include <dirent.h>
-#include <unistd.h>
-#endif
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
+#include <filesystem>
+
+#if defined(_WIN32)
+#define DIR_SEP "\\"
+#include <direct.h>
+#else
+#define DIR_SEP "/"
+#include <unistd.h>
+#include <dirent.h>
+#endif
 
 namespace FileSystem
 {
@@ -31,9 +36,12 @@ namespace FileSystem
 
 	static std::string GetWorkingDirectory(void)
 	{
-		char buffer[1024];
-		getcwd(buffer, 1024);
-		return std::string(buffer);
+		char buffer[1024];//getcwd(buffer, 1024);
+
+		if (getcwd(buffer, sizeof(buffer)) != nullptr)
+			return std::string(buffer);
+		else
+			return "";
 	}
 
 	// Finds at files at the specified path with the given extension
@@ -50,8 +58,7 @@ namespace FileSystem
 				if (ent->d_type == DT_REG)
 				{
 					std::string file = ent->d_name;
-					if (file.find(extension) != std::string::npos)
-					{
+					if (file.size() >= extension.size() && file.compare(file.size() - extension.size(), extension.size(), extension) == 0) {
 						files.push_back(file);
 					}
 				}
@@ -59,7 +66,7 @@ namespace FileSystem
 			closedir(dir);
 		}
 #else
-		std::string search_path = path; search_path += "\\*" + std::string(extension);
+		std::string search_path = path; search_path += std::string(DIR_SEP) + "*" + extension;
 		WIN32_FIND_DATA ffd;
 		HANDLE handle = FindFirstFile(search_path.c_str(), &ffd);
 
@@ -97,7 +104,7 @@ namespace FileSystem
 			closedir(dir);
 		}
 #else
-		std::string search_path = path; search_path += "\\*";
+		std::string search_path = path; search_path += std::string(DIR_SEP) + "*";
 		WIN32_FIND_DATA ffd;
 		HANDLE handle = FindFirstFile(search_path.c_str(), &ffd);
 
@@ -136,7 +143,7 @@ namespace FileSystem
 			closedir(dir);
 		}
 #else
-		std::string search_path = path; search_path += "\\*";
+		std::string search_path = path; search_path += std::string(DIR_SEP) + "*";
 		WIN32_FIND_DATA ffd;
 		HANDLE handle = FindFirstFile(search_path.c_str(), &ffd);
 
@@ -171,9 +178,10 @@ namespace FileSystem
 					if (file != "." && file != "..")
 					{
 						files.push_back(file);
-						std::vector<std::string> subfiles = ListAllSubdirectories((path + file + "/").c_str());
-						for (std::string subfile : subfiles) {
-							files.push_back(file + "/" + subfile);
+						std::string subPath = std::string(path) + DIR_SEP + file;
+						std::vector<std::string> subFiles = = ListAllSubdirectories(subPath.c_str());
+						for (std::string subFile : subFiles) {
+							files.push_back(file + DIR_SEP + subFile);
 						}
 					}
 				}
@@ -181,7 +189,7 @@ namespace FileSystem
 			closedir(dir);
 		}
 #else
-		std::string search_path = path; search_path += "\\*";
+		std::string search_path = path; search_path += std::string(DIR_SEP) + "*";
 		WIN32_FIND_DATA ffd;
 		HANDLE handle = FindFirstFile(search_path.c_str(), &ffd);
 
@@ -191,9 +199,10 @@ namespace FileSystem
 					std::string file = ffd.cFileName;
 					if (file != "." && file != "..") {
 						files.push_back(file);
-						std::vector<std::string> subfiles = ListAllSubdirectories((path + file + "\\").c_str());
-						for (std::string subfile : subfiles) {
-							files.push_back(file + "\\" + subfile);
+						std::string subPath = std::string(path) + DIR_SEP + file;
+						std::vector<std::string> subFiles = ListAllSubdirectories(subPath.c_str());
+						for (std::string subFile : subFiles) {
+							files.push_back(file + DIR_SEP + subFile);
 						}
 					}
 				}
@@ -238,9 +247,9 @@ namespace FileSystem
 		typedef std::fstream Stream;
 
 		// Opens a file ofstream for a given filepath
-		static Stream Open(const std::string& filename, bool append = false)
+		static Stream Open(const std::string& filename, bool append = false, bool overwrite = false)
 		{
-			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : 0); // ios::binary	eventually
+			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : (overwrite ? std::ios::trunc : 0)); // ios::binary	eventually
 			return Stream(filename, modeFlags);
 		}
 

@@ -8,19 +8,19 @@
 			"resultState": "Idle"
 		},
 		{
-			"state": "Attack01",
-			"event": "EVT_STATE_END",
-			"resultState": "Idle"
+			"state": "Rising",
+			"event": "JUMP_UP",
+			"resultState": "Falling"
 		},
 		{
-			"state": "Attack01",
-			"event": "ATTACK_PRESSED",
-			"resultState": "Attack02"
+			"state": "Rising",
+			"event": "JUMP_RELEASED",
+			"resultState": "Falling"
 		},
 		{
-			"state": "Attack02",
+			"state": "Rising",
 			"event": "EVT_STATE_END",
-			"resultState": "Idle"
+			"resultState": "Jump"
 		},
 		{
 			"state": "Jump",
@@ -38,29 +38,9 @@
 			"resultState": "Falling"
 		},
 		{
-			"state": "RunningRight",
-			"event": "RIGHT_RELEASED",
-			"resultState": "Idle"
-		},
-		{
-			"state": "RunningRight",
-			"event": "LEFT_PRESSED",
-			"resultState": "RunningLeft"
-		},
-		{
-			"state": "RunningRight",
-			"event": "JUMP_PRESSED",
-			"resultState": "Rising"
-		},
-		{
-			"state": "RunningRight",
-			"event": "ATTACK_PRESSED",
-			"resultState": "Attack01"
-		},
-		{
-			"state": "Landing",
-			"event": "EVT_STATE_END",
-			"resultState": "Idle"
+			"state": "Jump",
+			"event": "DEATH",
+			"resultState": "Dead"
 		},
 		{
 			"state": "Idle",
@@ -84,23 +64,58 @@
 		},
 		{
 			"state": "Idle",
+			"event": "IN_AIR",
+			"resultState": "Falling"
+		},
+		{
+			"state": "Idle",
 			"event": "DEATH",
 			"resultState": "Dead"
 		},
 		{
-			"state": "Rising",
-			"event": "JUMP_UP",
-			"resultState": "Falling"
-		},
-		{
-			"state": "Rising",
-			"event": "JUMP_RELEASED",
-			"resultState": "Falling"
-		},
-		{
-			"state": "Rising",
+			"state": "Attack01",
 			"event": "EVT_STATE_END",
-			"resultState": "Jump"
+			"resultState": "Idle"
+		},
+		{
+			"state": "Attack01",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack02"
+		},
+		{
+			"state": "Attack01",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "Attack02",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Attack02",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "Falling",
+			"event": "GROUND_COLLISION",
+			"resultState": "Landing"
+		},
+		{
+			"state": "Falling",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "Landing",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Landing",
+			"event": "DEATH",
+			"resultState": "Dead"
 		},
 		{
 			"state": "RunningLeft",
@@ -123,9 +138,44 @@
 			"resultState": "Attack01"
 		},
 		{
-			"state": "Falling",
-			"event": "GROUND_COLLISION",
-			"resultState": "Landing"
+			"state": "RunningLeft",
+			"event": "IN_AIR",
+			"resultState": "Falling"
+		},
+		{
+			"state": "RunningLeft",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "RunningRight",
+			"event": "RIGHT_RELEASED",
+			"resultState": "Idle"
+		},
+		{
+			"state": "RunningRight",
+			"event": "LEFT_PRESSED",
+			"resultState": "RunningLeft"
+		},
+		{
+			"state": "RunningRight",
+			"event": "JUMP_PRESSED",
+			"resultState": "Rising"
+		},
+		{
+			"state": "RunningRight",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack01"
+		},
+		{
+			"state": "RunningRight",
+			"event": "IN_AIR",
+			"resultState": "Falling"
+		},
+		{
+			"state": "RunningRight",
+			"event": "DEATH",
+			"resultState": "Dead"
 		}
 	]
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef _WIN32
 #include "IMouse.h"
 #include "DirectInput.h"
 
@@ -34,5 +35,5 @@ public:
    bool acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);
    void update(void);
 };
-
+#endif
 // NOTE: I'm mimicking how I wrote the DIKeyboard class circa 2010 but this is not the best way to wrap neither

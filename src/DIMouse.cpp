@@ -1,6 +1,8 @@
 
 #include "DIMouse.h"
 
+#ifdef _WIN32
+
 #ifdef _DEBUG
 
 #include "Debug.h"
@@ -60,3 +62,5 @@ void DIMouse::update(void) {
    }
 #endif
 }
+
+#endif

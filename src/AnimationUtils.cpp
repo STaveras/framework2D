@@ -43,9 +43,17 @@ namespace Animations {
       return output;
    }
 
-   std::string rectToString(const RECT& rect)
-   {
-      return std::to_string(rect.left) + "," + std::to_string(rect.top) + "," + std::to_string(rect.right) + "," + std::to_string(rect.bottom);
+   //std::string rectToString(const RECT& rect)
+   //{
+   //   return std::to_string(rect.left) + "," + std::to_string(rect.top) + "," + std::to_string(rect.right) + "," + std::to_string(rect.bottom);
+   //}
+   static std::string rectToString(const RECT& r) {
+      int w = r.right - r.left;
+      int h = r.bottom - r.top;
+      return std::to_string(r.left) + "," +
+             std::to_string(r.top) + "," +
+             std::to_string(w) + "," +
+             std::to_string(h);
    }
 
    Animation::Mode animationModeFromString(const char *mode) {
@@ -85,59 +93,6 @@ namespace Animations {
          delete frame;
       }
       delete animation;
-   }
-
-   Animation* fromXMLElement(XMLElement *element, Animation *animation = NULL) {
-
-      animation->setName(element->Attribute("Name"));
-      animation->setMode(animationModeFromString(element->Attribute("PlayMode")));
-      animation->setIsForward(strcmp("False", element->Attribute("Forward")));
-      animation->setSpeed(element->FloatAttribute("Speed"));
-
-      return animation;
-   }
-
-   std::vector<Animation*> fromXML(const char *filename, AnimationManager *manager)
-   {
-      std::vector<Animation*> animations;
-
-      tinyxml2::XMLDocument doc;
-
-      if (XMLError::XML_SUCCESS == doc.LoadFile(filename)) {
-
-         tinyxml2::XMLElement* element = doc.FirstChildElement("AnimationFile");
-
-         if (element) {
-
-            element = element->FirstChildElement("Animation");
-
-            do {
-               
-               Animation *animation = Animations::fromXMLElement(element, (!manager) ? new Animation() : manager->CreateAnimation(""));
-
-               tinyxml2::XMLElement *frameElement = element->FirstChildElement("Frame");
-
-               do {
-
-                  RECT srcRect = rectFromString(frameElement->FirstChildElement("DisplayRect")->GetText());
-
-                  // TODO: Make key color configurable via a tool
-                  // TODO: Collision information
-                  // TODO: Add support for triggers (sound, effects, scripts, etc.)
-
-                  const char* frameImagePath = frameElement->FirstChildElement("Filename")->GetText();
-
-                  animation->addFrame(new Frame(new Sprite(frameImagePath, 0xFFFF00FF, srcRect), frameElement->FloatAttribute("Duration")));
-
-               } while (frameElement = frameElement->NextSiblingElement("Frame"));
-
-               animations.push_back(animation);
-
-            } while (element = element->NextSiblingElement("Animation"));
-         }
-      } 
-
-      return animations;
    }
 
    std::vector<Animation*> fromJSON(const char* filename, AnimationManager* animationManager)

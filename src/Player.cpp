@@ -3,7 +3,7 @@
 #include "GameObject.h"
 #include "Engine2D.h"
 
-void Player::_OnKeyPress(const Event& e)
+void Player::onButtonPressed(const Event& e)
 {
    InputEvent* inputEvent = (InputEvent*)&e;
 
@@ -12,7 +12,7 @@ void Player::_OnKeyPress(const Event& e)
    }
 }
 
-void Player::_OnKeyRelease(const Event& e)
+void Player::onButtonReleased(const Event& e)
 {
    InputEvent* inputEvent = (InputEvent*)&e;
 
@@ -21,34 +21,35 @@ void Player::_OnKeyRelease(const Event& e)
    }
 }
 
+void Player::onButtonDown(const Event& e)
+{
+   InputEvent* inputEvent = (InputEvent*)&e;
+
+   if (inputEvent->getController() == this->_pad) {
+      this->_object->sendInput(((std::string)((InputEvent*)&e)->getActionName() + "_DOWN").c_str(), e.getSender());
+   }
+}
+
+void Player::onButtonUp(const Event& e)
+{
+   InputEvent* inputEvent = (InputEvent*)&e;
+
+   if (inputEvent->getController() == this->_pad) {
+      this->_object->sendInput(((std::string)((InputEvent*)&e)->getActionName() + "_UP").c_str(), e.getSender());
+   }
+}
+
 void Player::start(void)
 {
-	 Engine2D::getInstance()->getEventSystem()->registerCallback<Player>(EVT_KEYPRESS, this, &Player::_OnKeyPress);
-	 Engine2D::getInstance()->getEventSystem()->registerCallback<Player>(EVT_KEYRELEASE, this, &Player::_OnKeyRelease);
+	Controller::EventListener::start(); // Start the controller event listener
 }
 
 void Player::update(float time)
-{ 
-   Controller* controller = this->getController();	
+{
 
-   for (Action action : controller->getActions()) {
-      for (auto key : action.getAssignments()) {
-         if (Engine2D::getInput()->getKeyboard()->keyDown(key)) {
-            if (this->getGameObject()) {
-               this->getGameObject()->sendInput((action.getActionName() + "_DOWN").c_str(), this);
-            }
-         }
-         else if (Engine2D::getInput()->getKeyboard()->keyUp(key)) {
-            if (this->getGameObject()) {
-               this->getGameObject()->sendInput((action.getActionName() + "_UP").c_str(), this);
-            }
-         }
-      }
-   }
 }
 
 void Player::finish(void)
 {
-	 Engine2D::getInstance()->getEventSystem()->unregister<Player>(EVT_KEYRELEASE, this, &Player::_OnKeyRelease);
-	 Engine2D::getInstance()->getEventSystem()->unregister<Player>(EVT_KEYPRESS, this, &Player::_OnKeyPress);
+	Controller::EventListener::finish(); // Finish the controller event listener
 }

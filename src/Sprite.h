@@ -39,5 +39,5 @@ public:
 	 virtual Sprite* load(const char* filePath, Color clearColor = 0, const RECT& srcRect = {-1,-1,-1,-1});
 	 virtual void unload(void);
 }Image;
-#endif  //_SPRITE_H
-// Author: Stanley Taveras
+#endif  
+//_SPRITE_H

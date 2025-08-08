@@ -54,7 +54,6 @@ public:
 			return;
 
 		this->setPosition(this->getPosition() += _velocity * time);
-
 	}
 
 	virtual void collision(Physical* body) {
@@ -62,13 +61,22 @@ public:
 		if (_static)
 			return;
 
-		//vector2 toBody = body->getPosition() - this->getPosition();
+		vector2 normal = this->getPosition() - body->getPosition();
+		normal.normalize();
+		vector2 relativeVelocity = this->getVelocity() - body->getVelocity();
+		float velAlongNormal = dot(relativeVelocity, normal);
+		if (velAlongNormal > 0) {
+			return;
+		}
+		float e = std::min(this->getRestitution(), body->getRestitution());
+		float j = -(1 + e) * velAlongNormal;
+		j /= 1 / this->getMass() + 1 / body->getMass();
+		vector2 impulse = j * normal;
 
-		//float distance = toBody.length();
-
-		//toBody.normalize();
-
-		//this->setPosition(this->getPosition() - toBody);
-
+		//addImpulse(normal, j);
+		//this->setVelocity(this->getVelocity() + impulse / this->getMass());
+		//this->setPosition(this->getPosition() + normal * OVERLAP_ALLOWANCE);
+		//body->setVelocity(body->getVelocity() - impulse / body->getMass());
+		//body->setPosition(body->getPosition() - normal * OVERLAP_ALLOWANCE);
 	}
 };

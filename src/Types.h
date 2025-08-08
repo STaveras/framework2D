@@ -17,14 +17,15 @@
 
 #pragma warning(push)
 #pragma warning(disable: 26817)
+#pragma warning(disable: 26437)
 
 #include <simdjson.h>
 #include <tinyxml2.h>
 
-#pragma warning(pop)
-
 #pragma comment(lib, "simdjson.lib")
 #pragma comment(lib, "tinyxml2.lib")
+
+#pragma warning(pop)
 
 #define SAFE_DELETE(x) if(x) { delete x; x = NULL; }
 #define COUNT_OF(arr) sizeof(arr) / sizeof(arr[0])
@@ -53,8 +54,6 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
-#include <d3dx9math.h>
-
 #pragma warning(pop)
 
 #define GLFW_INCLUDE_NONE
@@ -65,9 +64,21 @@
 #else
 
 #if __APPLE__
+
+#define NS_PRIVATE_IMPLEMENTATION
+#define CA_PRIVATE_IMPLEMENTATION
+#define MTL_PRIVATE_IMPLEMENTATION
+
+// #define GLM
+#define GLFW_EXPOSE_NATIVE_COCOA
+
+#include <Metal/Metal.h>
+
+// #include <Metal/Metal.hpp>
+
 #include <MoltenVK/mvk_vulkan.h>
 #include <MoltenVK/vk_mvk_moltenvk.h>
-#define GLM
+
 #else
 #define GLFW_INCLUDE_VULKAN
 #endif
@@ -77,6 +88,9 @@
 
 #define localtime_s(n, ts) localtime_r(ts, n)
 
+#define ZeroMemory(p, sz) memset((p), 0, (sz))
+
+//#define strncpy_s strncpy
 #define sprintf_s printf
 #define strtok_s strtok_r
 #define _strdup strdup
@@ -88,8 +102,16 @@ struct rect {
 };
 
 #define RECT rect
+#define DEFAULT_KEY_COLOR 0xFFFF00FF
 
 #endif
+
+#ifndef _DEBUG
+#define DEBUG_MSG(msg) // do nothing
+#endif
+
+#include "Maths.h"
+#include "Color.h"
 
 #include <GLFW/glfw3.h>
 
@@ -107,10 +129,9 @@ struct rect {
 
 #ifdef _WIN32
 #pragma comment(lib, "glfw3.lib")
+#else
+#include <GLFW/glfw3native.h>
 #endif
-
-#include "Maths.h"
-#include "Color.h"
 
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"

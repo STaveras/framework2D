@@ -7,6 +7,8 @@
 
 #include "Types.h"
 
+#include "InputEvent.h"
+
 #include "Keyboard.h"
 #include "IMouse.h"
 

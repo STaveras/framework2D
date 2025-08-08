@@ -600,8 +600,8 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 
 	// We need a shader loader that automatically reads and compiles shaders from files.
 	// auto vertShaderCode = FileSystem::File::Read("./data/cache/shader/tri.v.spv");
-	auto vertShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "cache/shader/tri.v.spv");
-	auto fragShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "cache/shader/tri.f.spv");
+	auto vertShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "/cache/shader/tri.v.spv");
+	auto fragShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "/cache/shader/tri.f.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
@@ -1024,7 +1024,7 @@ void RendererVK::recreateSwapChain(void)
 
 	cleanupSwapChain();
 
-	createSwapChain(_physicalDevice, _device, Renderer::window->getUnderlyingWindow());
+	createSwapChain(_physicalDevice, _device, Renderer::mainWindow->getUnderlyingWindow());
 	createImageViews(_device);
 	createFramebuffers(_device);
 }
@@ -1082,15 +1082,15 @@ void RendererVK::initialize(void)
 
 	// Vertex vertex{{0,0,0},{0,0,0}};
 
-	if (Renderer::window) {
+	if (Renderer::mainWindow) {
 
-		GLFWwindow* window = Renderer::window->getUnderlyingWindow();
+		GLFWwindow* window = Renderer::mainWindow->getUnderlyingWindow();
 
 		VkApplicationInfo appInfo{};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = Renderer::window->getWindowTitle();
+		appInfo.pApplicationName = Renderer::mainWindow->getWindowTitle();
 		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.pEngineName = Renderer::window->getWindowClassName();
+		appInfo.pEngineName = Renderer::mainWindow->getWindowClassName();
 		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 		appInfo.apiVersion = VK_API_VERSION_1_0;
 
@@ -1255,6 +1255,12 @@ void RendererVK::render(void)
 #if _DEBUG
 	m_bStaticBG = false;
 #endif
+
+	const std::vector<Vertex> vertices = {
+		 {{0.0f, -0.5f, 0.0f}, {0, 0}, {1.0f, 1.0f, 0.0f, 0.0f}},
+		 {{0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 1.0f, 0.0f}},
+		 {{-0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 0.0f, 1.0f}}
+	};
 
 	IRenderer::render();
 

@@ -65,6 +65,9 @@ void GameObject::updateComponents()
 		if (Renderable* renderable = state->getRenderable()) {
 			renderable->setPosition(this->getPosition()); 
 		}
+	}
+
+	if (!_collisionObjects.empty()) {
 		_collisionObjects.clear();
 	}
 }
@@ -73,6 +76,8 @@ void GameObject::update(float time) // lawl time as a float xfd
 {
 	Physical::update(time);
 	StateMachine::update(time);
+
+	updateComponents();
 }
 
 void GameObject::finish(void)
@@ -88,13 +93,26 @@ Collidable* GameObject::getCollidable(void)
 {
 	Collidable* collidable = (_collisionObjects.empty()) ? [&]() -> Collidable* {
 		// Use the collision information from the current state
-		if (collidable = this->getState()->getCollidable()) {
-			switch (collidable->getType()) {
-			case COL_OBJ_SQUARE:
-				collidable = _collisionObjects.createDerived<Square>((Square&)*collidable);
-				break;
+        if (GameObjectState* currentState = this->getState()) {
+			if (collidable = this->getState()->getCollidable()) {
+				switch (collidable->getType()) {
+				case COL_OBJ_SQUARE:
+					collidable = _collisionObjects.createDerived<Square>((Square&)*collidable);
+					break;
+
+				// TODO: Add missing cases
+				case COL_OBJ_GROUP:
+				case COL_OBJ_CIRCLE:
+				case COL_OBJ_PLANE:
+				default:
+					// Handle default case if necessary
+					break;
+				}
+				// Collidable information is consumed each frame; this translates local coordinates,
+				// to potentially global coordinates, based on the actual position of this object's renderable
+				// what we get is a shadow of the collidable
+				collidable->setPosition(this->getRenderable()->getPosition() + collidable->getPosition());
 			}
-			collidable->setPosition(this->getRenderable()->getPosition() + collidable->getPosition());
 		}
 		return collidable;
 	}() : _collisionObjects.front();
@@ -117,14 +135,10 @@ Collidable* GameObject::GameObjectState::getCollidable(void)
 	if (_collidable)
 		return _collidable;
 
-	else if (_renderable && _renderable->getRenderableType() == RENDERABLE_TYPE_ANIMATION)
-	{
+	else if (_renderable && _renderable->getRenderableType() == RENDERABLE_TYPE_ANIMATION) {
 		if (Animation* animation = (Animation*)this->getRenderable()) {
-
 			if (Frame* currentFrame = animation->getCurrentFrame()) {
-
 				if (Collidable* collidable = currentFrame->getCollidable()) {
-
 					return (_collidable = collidable);
 				}
 			}
@@ -162,6 +176,8 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 									collidable->setPosition(collidable->getPosition() - oldCenter);
 									collidable->setPosition(collidable->getPosition() + newCenter);
 								}
+								break;
+							default:
 								break;
 							}
 						}

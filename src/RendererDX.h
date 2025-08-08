@@ -5,6 +5,7 @@
 #include "IRenderer.h"
 class Appearance;
 class Sprite;
+class Text;
 class RendererDX : public IRenderer
 {
    HWND              m_hWnd;
@@ -13,6 +14,23 @@ class RendererDX : public IRenderer
    LPD3DXSPRITE		m_pD3DSprite;
 
    void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f);
+   void _drawText(Text* text, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
+
+#ifdef _DEBUG
+   using Collidable = class Collidable;
+
+public:
+	struct CollidableKey {
+		Collidable* _template; 
+	};
+	//std::map<CollidableKey, Collidable*> m_Collidables;
+	std::vector<Collidable*> m_Collidables; // This is just for debugging purposes, to draw the collision shapes
+
+   // Okay so... We're just going to populate this and clear it every frame
+
+private:
+   void _drawCollisionShapeBounds(Collidable*, Color color = 0xFFFF0000);
+#endif
 
    bool _checkDeviceLost(void);
    HRESULT _attemptDeviceReset(void);

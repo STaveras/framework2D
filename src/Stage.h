@@ -27,6 +27,7 @@ public:
 
 	 bool _bVisible;
 	 Plane m_pGroundPlane;
+	 
 	 IRenderer::RenderList* _renderList;
 	 std::vector<Music*> m_lsRoundMusic;
 	 std::list<Layer> m_lsBackgroundLayers;

@@ -1,6 +1,8 @@
 
 #pragma once
 
+#ifdef _WIN32
+
 #include "Keyboard.h"
 #include "DirectInput.h"
 
@@ -175,3 +177,5 @@ public:
 
 	const KEYS& getKeys(void) const { return (*this).keys; }
 };
+
+#endif
