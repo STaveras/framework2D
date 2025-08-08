@@ -73,14 +73,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include;$(VLD_INCLUDE);$(IncludePath)</IncludePath>
-    <LibraryPath>$(VLD_LIB);$(DXSDK_DIR)Lib\x64;$(VK_SDK_PATH)\Lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(VLD_LIB)\Win64;$(DXSDK_DIR)Lib\x64;$(VK_SDK_PATH)\Lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <TargetName>$(ProjectName)_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include;$(VLD_INCLUDE);$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\</OutDir>
-    <LibraryPath>$(VLD_LIB);$(DXSDK_DIR)Lib\x64;$(VK_SDK_PATH)\Lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(VLD_LIB)\Win64;$(DXSDK_DIR)Lib\x64;$(VK_SDK_PATH)\Lib;$(LibraryPath)</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -142,10 +142,12 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <LinkStatus>true</LinkStatus>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>".\utl\compile-shaders.bat"</Command>
+      <Message>Compiles shaders</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -191,13 +193,16 @@
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
     <ClInclude Include="src\Command.h" />
     <ClInclude Include="src\CommandEvent.h" />
-    <ClInclude Include="src\CommandInterpreter.h" />
-    <ClInclude Include="src\Context.h" />
     <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\CullObjectOperator.h" />
     <ClInclude Include="src\Cyclable.h" />
     <ClInclude Include="src\Debug.h" />
     <ClInclude Include="src\debugLogger.hpp" />
+    <ClInclude Include="src\FantasySideScroller\Character.h" />
+    <ClInclude Include="src\FantasySideScroller\Constants.h" />
+    <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h" />
+    <ClInclude Include="src\FantasySideScroller\PlayState.h" />
+    <ClInclude Include="src\FantasySideScroller\Resources.h" />
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\DirectInput.h" />
@@ -210,14 +215,12 @@
     <ClInclude Include="src\EventSystem_defines.h" />
     <ClInclude Include="src\Factory.h" />
     <ClInclude Include="src\Factory.hpp" />
-    <ClInclude Include="src\FantasySideScroller.h" />
     <ClInclude Include="src\FileSystem.h" />
     <ClInclude Include="src\FollowObjectOperator.h" />
     <ClInclude Include="src\Font.h" />
     <ClInclude Include="src\ForceDegradation.h" />
     <ClInclude Include="src\ForceOperator.h" />
     <ClInclude Include="src\Frame.h" />
-    <ClInclude Include="src\FSMTestState.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\GameState.h" />
@@ -239,6 +242,7 @@
     <ClInclude Include="src\logger.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Maths.h" />
+    <ClInclude Include="src\maths\vector2.h" />
     <ClInclude Include="src\maths\vector3.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Mesh.h" />
@@ -305,10 +309,12 @@
     <ClCompile Include="src\Circle.cpp" />
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\Command.cpp" />
-    <ClCompile Include="src\CommandInterpreter.cpp" />
     <ClCompile Include="src\Controller.cpp" />
     <ClCompile Include="src\CullObjectOperator.cpp" />
     <ClCompile Include="src\Debug.cpp" />
+    <ClCompile Include="src\FantasySideScroller\Character.cpp" />
+    <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp" />
+    <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />
     <ClCompile Include="src\DirectInput.cpp" />
@@ -354,6 +360,7 @@
     <ClCompile Include="src\XAudioFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="src\project.d" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -7,17 +7,19 @@
 namespace Input
 {
 #ifdef _WIN32
-	static IInput* CreateDirectInputInterface(HWND hWnd, HINSTANCE hInstance)
+	static IInput* createDirectInputInterface(HWND hWnd, HINSTANCE hInstance)
 	{
 		return (IInput*)(new DirectInput(hInstance, hWnd));
 	}
 #endif
-	static IInput* CreateInputInterface(Window* window)
+	static IInput* createInputInterface(Window* window)
 	{
 		return (IInput*)(new PlatformInput(window));
 	}
+
 	// This shouldn't be a thing
-	static void DestroyInputInterface(IInput* pInput) {
+	static void destroyInputInterface(IInput* pInput) 
+	{
       if (pInput) {
          delete pInput;
       }

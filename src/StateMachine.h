@@ -17,6 +17,7 @@
 
 #define EVT_STATE_END "EVT_STATE_END"
 
+// TODO: Change this to a template class, so that it can be used with any type of State, then specialize a default State type StateMachine template
 class StateMachine : public Factory<State>, Cyclable
 {
 	State* _state;
@@ -64,10 +65,6 @@ public:
 	void sendInput(const char* condition, void* sender = NULL);
 	bool containsCondition(const char* condition);
 	void clearEvents(void) { StateMachine::finish(); }
-
-	// We should create a templated version of this so clients can initialize states 
-	// using a derived State class
-	bool loadTransitionTableFromFile(const char* szFilename);
 
 	void toJSON(const std::string& filename);
 	void toJSON(std::ostream& fileStream);

@@ -7,7 +7,7 @@ namespace framework {
 #ifndef _KEYBOARD_H_
 #define _KEYBOARD_H_
 
-#define KEYBOARD Keyboard* keyboard = Engine2D::getInput()->getKeyboard()
+#define KEYBOARD Engine2D::getInput()->getKeyboard()
 
 	typedef class IKeyboard
 	{

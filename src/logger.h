@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "Types.h"
+
 #include <fstream>
 #include <string>
 
@@ -34,7 +36,7 @@ protected:
 public:
     Logger(void):_isNew(true),_szFilename(""),_pFileStream(NULL){}
     Logger(const char* filename):_isNew(true),_szFilename(filename), _pFileStream(NULL){}
-    ~Logger(void){ if (_pFileStream) { _pFileStream->clear(); delete _pFileStream; } }    
+    ~Logger(void){ if (_pFileStream) { _pFileStream->clear(); delete _pFileStream; } }
 
     void close(void)
     {

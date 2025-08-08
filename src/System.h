@@ -4,26 +4,29 @@
 #pragma once
 
 #include "Types.h"
+#include "Renderer.h"
 
 namespace System
 {
    // When we implement a in-game developer console (for issuing commands), \
    // the command line arguments for the executable should eventually use the same parser as the console, \
    // to directly get and set the same variables
-    static const char* checkArgumentsForDataPath(int argc, char** argv) 
+    const char* checkArgumentsForDataPath(int argc, const char** argv);
+
+    static bool checkArgumentsForCocoa(int argc, const char** argv) 
     {
-        if (argc > 2) {
+        if (argc > 1) {
 
             for (int i = 0; i < argc; i++) {
-                if (!strcmp(argv[i], "--dataPath") || !strcmp(argv[i], "-d")) {
-                    return argv[i + 1]; // What if it's empty?
+                if (!strcmp(argv[i], "--cocoa")) {
+                    return true;
                 }
             }
         }
-        return DEFAULT_DATA_PATH;
+        return false;
     }
 
-    static bool checkArgumentsForDebugMode(int argc, char** argv) 
+    static bool checkArgumentsForDebugMode(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -36,7 +39,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForFullscreen(int argc, char** argv) 
+    static bool checkArgumentsForFullscreen(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -51,7 +54,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForFPSCounter(int argc, char** argv)
+    static bool checkArgumentsForFPSCounter(int argc, const char** argv)
     {
        if (argc > 1) {
 
@@ -64,7 +67,7 @@ namespace System
        return false;
     }
 
-    static bool checkArgumentsForWindowed(int argc, char** argv) 
+    static bool checkArgumentsForWindowed(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -77,7 +80,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForVSync(int argc, char** argv) // also check for a true or false
+    static bool checkArgumentsForVSync(int argc, const char** argv) // also check for a true or false
     {
         if (argc > 1) {
 
@@ -90,7 +93,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForVulkan(int argc, char** argv) 
+    static bool checkArgumentsForVulkan(int argc, const char** argv) 
     {
         if (argc > 1) {
 
@@ -179,7 +182,26 @@ namespace System
     // Additionally we might want to store the environment information like the current working directory, the current user, etc.
     static const char* GlobalDataPath(const char *dataPath = NULL)
     {
-        static std::string path = (dataPath && strcmp(dataPath, "")) ? dataPath : DEFAULT_DATA_PATH;
+        static std::string path;
+
+        if (!path.empty()) return path.c_str();  // Return cached path if already resolved
+
+        if (dataPath && std::strcmp(dataPath, "") != 0) {
+            path = dataPath;
+            return path.c_str();
+        }
+
+        namespace fs = std::filesystem;
+        fs::path current = fs::current_path();
+
+        for (auto& p : fs::recursive_directory_iterator(current)) {
+            if (p.is_regular_file() && p.path().filename() == "title") {
+                path = p.path().parent_path().string();
+                return path.c_str();
+            }
+        }
+
+        path = DEFAULT_DATA_PATH;
         return path.c_str();
     }
 }

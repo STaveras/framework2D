@@ -1,12 +1,16 @@
 // File: RendererMTL.h
 #ifdef __APPLE__
 #ifndef _RENDERERMTL_H
-#define _RENDERMTL_H
+#define _RENDERERMTL_H
 
 #include "IRenderer.h"
-#include <Metal/Metal.h>
-#include <QuartzCore/CAMetalLayer.h>
-#include <Cocoa/Cocoa.h>
+
+// #include <Foundation/Foundation.hpp>
+// #include <Metal/Metal.hpp>
+// #include <QuartzCore/QuartzCore.hpp>
+// #include <Cocoa/Cocoa.h>
+#include <MetalKit/MTKView.h>
+// #include <QuartzCore/CAMetalLayer.h>
 
 class Sprite;
 class TextureMTL;
@@ -14,13 +18,17 @@ class TextureMTL;
 class RendererMTL : public IRenderer
 {
    NSWindow* m_window;
+
    id<MTLDevice> m_device;
    id<MTLCommandQueue> m_commandQueue;
+   
    CAMetalLayer* m_metalLayer;
+   MTKView* m_view;
+
    id<CAMetalDrawable> m_drawable;
    id<MTLRenderPipelineState> m_pipelineState;
 
-   void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, float offset[2] = {0, 0}, float zValue = 0.0f);
+   void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, vector2 offset = {0.0f, 0.0f}, float zValue = 0.0f);
 
 public:
    RendererMTL(void);

@@ -70,7 +70,6 @@ void IRenderer::_backgroundColorShift(void)
 		}
 
 		m_ClearColor = colors[7];
-		// timer.update();
 	}
 }
 #endif

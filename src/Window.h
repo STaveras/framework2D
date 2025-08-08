@@ -17,8 +17,9 @@ class Window
 #endif
 	GLFWwindow* _window;
 
-	const char* m_szWindowTitle;
 	const char* m_szWindowClassName;
+	std::string m_szWindowTitle;
+
 #ifdef _WIN32
 	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
@@ -42,7 +43,7 @@ public:
 	int getWidth(void) const { return m_nWidth; }
 	int getHeight(void) const { return m_nHeight; }
 
-	const char* getWindowTitle(void) const { return m_szWindowTitle; }
+	const char* getWindowTitle(void) const { return m_szWindowTitle.c_str(); }
 	const char* getWindowClassName(void) const { return m_szWindowClassName; }
 
 	// Re-implement these so that setting them here actually resizes the window

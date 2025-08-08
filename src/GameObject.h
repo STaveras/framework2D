@@ -120,9 +120,6 @@ public:
 
    GAME_OBJ_TYPE getType(void) const { return _objType; }
 
-   //void setIsColliding(bool colliding) { _isColliding = colliding; }
-   //bool isColliding(void) const { _isColliding; }
-
    GameObjectState* addState(const char* name);
    GameObjectState* getState(const char* name) { return (GameObjectState*)StateMachine::getState(name); }
    GameObjectState* getState(void) const { return (GameObjectState*)StateMachine::getState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot

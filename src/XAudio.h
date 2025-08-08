@@ -5,6 +5,8 @@
 
 #pragma once
 
+#ifdef _WIN32
+
 #include "IAudioSystem.h"
 
 #include <xaudio2.h>
@@ -25,3 +27,5 @@ public:
 	void initialize(void);
 	void shutdown(void);
 };
+
+#endif

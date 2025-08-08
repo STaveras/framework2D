@@ -1,0 +1,73 @@
+classDiagram
+    %%=== Core Input Stack ===%%
+    class InputManager {
+      +Keyboard* getKeyboard()
+      +Mouse* getMouse()
+      +Controller* createController()
+      +void update(float)
+    }
+    class Controller {
+      - bool _connected
+      - IInput* _input
+      - std::list<Action> _actions
+      +void addAction(Action)
+      +Action* getAction(string)
+      +void update(float)
+      +bool buttonPressed(string)
+      +bool buttonReleased(string)
+      +std::list<Action>& getActions()
+    }
+    class Action {
+      -string _name
+      -list<KEY> _assignments
+      -bool _active
+      +getActionName()
+      +getAssignments()
+      +setActive(bool)
+      +isActive()
+    }
+    class InputEvent {
+      -float _timeStamp
+      -Controller* _controller
+      -string _actionName
+      +getController()
+      +getActionName()
+    }
+
+    %%=== Game-Side Stack ===%%
+    class Player {
+      -Controller* _pad
+      -GameObject* _object
+      +start()
+      +update(float)
+      +finish()
+      +onButtonPressed(Event)
+      +onButtonReleased(Event)
+    }
+    class GameObject
+    class Character {
+      +update(float)
+      +clearEvents()
+      +setState(...)
+    }
+    class PlayState {
+      -InputManager _inputManager
+      -Player* _player
+      -Camera* _camera
+      -Character* _playableCharacter
+      +onEnter(...)
+      +onExecute(float)
+      +onExit(...)
+    }
+
+    %%=== Relationships ===%%
+    InputManager "1" --> "*" Controller        : owns/updates  
+    Controller     "1" --> "*" Action            : owns  
+    Controller     "1" --> "*" InputEvent        : emits (via EventSystem)  
+    Player         "1" --> "1" Controller        : has  
+    Player         "1" --> "1" GameObject        : drives  
+    GameObject     <|-- "1" Character            : is-a  
+    Character      "1" --> "1" Controller        : queries (isActive)  
+    PlayState      "1" --> "1" InputManager      : uses  
+    PlayState      "1" --> "1" Player            : creates & owns  
+    PlayState      "1" --> "1" Character         : creates & owns  

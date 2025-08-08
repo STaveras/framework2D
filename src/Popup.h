@@ -15,8 +15,8 @@ class Popup : public Widget
 	std::list<Widget*> m_lsWidgets;
 
 public:
-	void OnOpen();
-	bool OnClose();
+	void onOpen();
+	bool onClose();
 };
 
 #endif  //_POPUP_H

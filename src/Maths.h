@@ -1,9 +1,13 @@
+// Maths.h
+#pragma once
+
 #ifndef _MATHS_H_
 #define _MATHS_H_
 
-#pragma once // kinda redundant but ay
-
-#include "Types.h"
+#ifdef __D3DX9MATH_H__
+#include <d3dx9math.h>
+#endif
+#include <glm/glm.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,4 +31,4 @@ static float dot(vector2 a, vector2 b) {
 // bool isOdd( int val ) { return (val & 0x01) != 0; }
 #define IS_ODD(val) (val & 0x01) != 0
 
-#endif
+#endif // _MATHS_H_
