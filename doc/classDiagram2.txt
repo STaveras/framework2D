@@ -1,0 +1,80 @@
+classDiagram
+    %%=== Core Input Layer ===%%
+    class InputManager {
+      +Keyboard* getKeyboard()
+      +Mouse* getMouse()
+      +Controller* createController()
+      +void update(float dt)
+    }
+    class Controller {
+      -IInput* _input
+      -std::list<Action> _actions
+      +void addAction(Action)
+      +Action* getAction(string name)
+      +std::list<Action>& getActions()
+      +void update(float dt)
+      +bool buttonPressed(string)
+      +bool buttonReleased(string)
+    }
+    class Action {
+      -string _name
+      -list<KEY> _assignments
+      -bool _active
+      +getActionName()
+      +getAssignments()
+      +setActive(bool)
+      +isActive()
+      +wasActive()
+    }
+    class InputEvent {
+      -string _actionName
+      -float  _timeStamp
+      +getActionName()
+      +getTimeStamp()
+    }
+
+    %%=== Gameplay & Metrics Layer ===%%
+    class Player {
+      -Controller*      _controller
+      -GameObject*      _gameObject
+      -PlayerMetrics    _metrics
+      +start()
+      +update(float dt)
+      +onButtonPressed(InputEvent)
+      +onButtonReleased(InputEvent)
+    }
+    class PlayerMetrics {
+      -int   _jumpCount
+      -float _totalAirTime
+      +recordJump()
+      +recordLanding()
+      +getStats()
+    }
+    class GameObject
+    class Character {
+      +update(float dt)
+      +clearEvents()
+      +setState(string)
+      +isOnGround():bool
+    }
+    class PlayState {
+      -InputManager    _inputMgr
+      -Player*         _player
+      -Character*      _character
+      +onEnter(...)
+      +onExecute(float dt)
+      +onExit(...)
+    }
+
+    %%=== Relationships ===%%
+    InputManager  "1" --> "*" Controller     : owns & updates
+    Controller    "1" --> "*" Action         : owns
+    Controller    "1" --> "*" InputEvent     : emits via event system
+    Player        "1" --> "1" Controller     : listens to
+    Player        "1" --> "1" GameObject     : drives
+    Player        "1" --> "1" PlayerMetrics  : records into
+    Character     <|-- "1" GameObject        : is-a
+    Character     "1" --> "1" Controller     : queries (isActive)
+    PlayState     "1" --> "1" InputManager   : uses
+    PlayState     "1" --> "1" Player         : creates & owns
+    PlayState     "1" --> "1" Character      : creates & owns

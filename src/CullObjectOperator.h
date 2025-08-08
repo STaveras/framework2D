@@ -6,19 +6,22 @@
 #if !defined(_CULLOBJECTOPERATOR_H)
 #define _CULLOBJECTOPERATOR_H
 
+#include "Camera.h"
 #include "ObjectOperator.h"
 
-class Camera;
 class GameObject;
 
-// I don't even... Why does this exist as an operator? Put it in the renderer? I don't want collision code in there but...
+// I realized this is only for not updating an object if it is not on screen, its renderable can still be on screen
 
 class CullObjectOperator : public ObjectOperator
 {
-	Camera* m_pCamera;
+	Camera* _camera = NULL;
 
 public:
 	bool operator()(GameObject* object);
+
+	Camera* getCamera(void) const { return _camera; }
+	void setCamera(Camera* camera) { _camera = camera; }
 };
 
 #endif  //_CULLOBJECTOPERATOR_H

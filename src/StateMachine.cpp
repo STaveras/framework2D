@@ -170,104 +170,6 @@ bool StateMachine::containsCondition(const char* condition)
    return false;
 }
 
-// This was before I knew JSON is a thing
-bool StateMachine::loadTransitionTableFromFile(const char* szFilename)
-{
-   std::ifstream ifl(szFilename);
-
-   if (!ifl.good())
-   {
-      ifl.close();
-      ifl.clear();
-
-      return false;
-   }
-   else
-   {
-      char szBuffer[256];
-
-      while (ifl.good())
-      {
-         ifl.getline(szBuffer, 256);
-
-         if (!strcmp(szBuffer, "States"))
-         {
-            ifl.getline(szBuffer, 256);
-
-            if (STR_EQUALS(szBuffer, "{"))
-            {
-               while (true)
-               {
-                  ifl.getline(szBuffer, 256);
-
-                  if (STR_EQUALS(szBuffer, "}"))
-                     break;
-
-                  char* szStateName = strtrlws(szBuffer);
-                  strsubst(szStateName, '\0', ",");
-
-                  if (!this->getState(szStateName) && !STR_EQUALS(szStateName, ""))
-                     this->create(State(szStateName));
-
-                  // We used to be able to explicitly set the initial state... 
-                  //if (!m_pStartState && GetState(szStateName))
-                  //   m_pStartState = GetState(szStateName);
-               }
-            }
-         } // States
-         else if (!strcmp(szBuffer, "Transitions"))
-         {
-            ifl.getline(szBuffer, 256);
-            char* szBrace = strtrlws(szBuffer);
-
-            if (STR_EQUALS(szBrace, "{"))
-            {
-               while (true)
-               {
-                  ifl.getline(szBuffer, 256);
-                  szBrace = strtrlws(szBuffer);
-
-                  if (STR_EQUALS(szBrace, "}"))
-                     break;
-
-                  std::string strStateName = strtrlws(szBuffer);
-
-                  State* pState = getState(strStateName.c_str());
-
-                  if (pState)
-                  {
-                     ifl.getline(szBuffer, 256);
-                     szBrace = strtrlws(szBuffer);
-
-                     if (STR_EQUALS(szBrace, "{"))
-                     {
-                        while (true)
-                        {
-                           ifl.getline(szBuffer, 256);
-                           szBrace = strtrlws(szBuffer);
-
-                           if (STR_EQUALS(szBrace, "}"))
-                              break;
-
-                           char* szContext = NULL;
-                           char* szCondition = strtok_s(strtrlws(szBuffer), " ,=\n", &szContext);
-                           char* szResultingState = strtok_s(NULL, " ,=\n", &szContext);
-
-                           strsubst(szResultingState, '\0', ",");
-
-                           registerTransition(strStateName.c_str(), szCondition, szResultingState);
-                        }
-                     }
-                  }
-               }
-            }
-         } // Transitions
-      }
-   }
-
-   return true;
-}
-
 void StateMachine::toJSON(std::ostream& fileStream)
 {
    std::string json;
@@ -327,7 +229,7 @@ void StateMachine::toJSON(std::ostream& fileStream)
 
 void StateMachine::toJSON(const std::string& filename)
 {
-   FileStream fileStream = File::Open(filename);
+   FileStream fileStream = File::Open(filename, false, true);
 
    if (!fileStream.is_open()) {
       std::cerr << "Failed to open file: " << filename << std::endl;
@@ -350,7 +252,7 @@ void StateMachine::fromJSON(std::istream& fileStream)
 
    // Deserialize the StateMachine properties from the JSON
    _isBuffered = root["isBuffered"].get_bool();
-   _transitionFrequency = root["transitionFrequency"].get_double();
+   _transitionFrequency = (float)root["transitionFrequency"].get_double();
 
    // Deserialize transitions
    if (root["transitions"].is_array()) 

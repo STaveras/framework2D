@@ -66,7 +66,9 @@ public:
 
 #if _DEBUG
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
+	void setBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
 #endif
+
 	bool isFullScreen(void) const { return m_bFullScreen; }
 	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
 	int getWidth(void) const { return m_nWidth; }
@@ -75,9 +77,6 @@ public:
 	Camera *getCamera(void) { return m_pCamera; }
 	ITexture *getTexture(const char *szFilename) { return _textureExists(szFilename); }
 
-#if _DEBUG
-	void isBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
-#endif
 	void setWidth(int nWidth) { m_nWidth = nWidth; }
 	void setHeight(int nHeight) { m_nHeight = nHeight; }
 	void setClearColor(Color clearColor);

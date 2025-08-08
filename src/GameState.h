@@ -5,8 +5,7 @@
 #include "ProgramState.h"
 #include "InputManager.h"	
 #include "ObjectManager.h"
-#include "Player.h"
-#include "Camera.h"
+
 #include "Game.h"
 
 class GameState : public ProgramState
@@ -22,30 +21,14 @@ protected:
 
 	IRenderer::RenderList* _renderList = NULL;
 
-	Player* _player = NULL; // Action; the actors
-	Camera* _camera = NULL; // Camera
-
 	InputManager     _inputManager;
 	ObjectManager    _objectManager;
 
-#ifdef _DEBUG
-	float timer = 0.0f;
-#endif
-
 public:
-	GameState(void) : ProgramState() {
-
-		_player = Engine2D::getGame()->getPlayers()->create();
-		_camera = new Camera;
-	}
-
-	~GameState(void) {
-
-		delete _camera;
-
-		Engine2D::getGame()->getPlayers()->destroy(_player);
-	}
-
+	GameState(void) : ProgramState() { }
+	~GameState(void) { }
+	
+	InputManager * getInputManager(void) { return &_inputManager; }
 	ObjectManager* getObjectManager(void) { return &_objectManager; }
 
 	// Allow gamestates to reject objects?

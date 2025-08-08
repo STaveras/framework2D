@@ -67,7 +67,7 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 
 	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW,
 									m_szWindowClassName, 
-									m_szWindowTitle,
+									m_szWindowTitle.c_str(),
 									WS_SYSMENU,/*For borderless FS: WS_POPUPWINDOW,*/
 									CW_USEDEFAULT, 
 									CW_USEDEFAULT, 
@@ -100,7 +100,7 @@ void Window::initialize(void) {
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	/* Create a windowed mode window and its OpenGL context */
-	_window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle, NULL, NULL);
+	_window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle.c_str(), NULL, NULL);
 	if (!_window) {
 		return glfwTerminate(); // -1 // Maybe throw an exception
 	}
@@ -157,7 +157,7 @@ void Window::initialize(void) {
 				// Set the window to fullscreen mode
 				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, _window->getWidth(), _window->getHeight(), GLFW_DONT_CARE);
 			}
-			}
+		}
 		else {
 			// Window lost focus
 			bool isFullscreen = glfwGetWindowMonitor(window) != nullptr;
@@ -213,14 +213,18 @@ void Window::shutdown(void)
 
 void Window::setWindowTitle(const char* szWindowTitle) 
 { 
-	m_szWindowTitle = szWindowTitle; 
+	if (m_szWindowTitle == szWindowTitle || !strcmp(szWindowTitle, "")) {
+		return; // No change
+	}
+
+	m_szWindowTitle = szWindowTitle;
 
 	if (_window) {
-		glfwSetWindowTitle(_window, m_szWindowTitle);
+		glfwSetWindowTitle(_window, m_szWindowTitle.c_str());
 	}
 #ifdef _WIN32
 	else {
-		SetWindowTextA(m_hWnd, m_szWindowTitle);
+		SetWindowTextA(m_hWnd, m_szWindowTitle.c_str());
 	}
 #endif
 }

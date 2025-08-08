@@ -13,12 +13,30 @@ class Square;
 class Slider : public Widget
 {
 	Square* m_pSlider;
-	float m_fIncrement;
-	float m_fValue;
+	float _increment;
+	float _value;
 
 public:
-	void Increment();
-	void Decrement();
+	void increment(void)
+	{
+		if (_value == 1.0f) {
+			return; // Don't increment above 1
+		}
+		_value += _increment;
+		if (_value > 1.0f) {
+			_value = 1.0f;
+		}
+	}
+	void decrement(void)
+	{
+		if (_value == 0.0f) {
+			return; // Don't decrement below 0
+		}
+		_value -= _increment;
+		if (_value < 0.0f) {
+			_value = 0.0f;
+		}
+	}
 };
 
 #endif  //_SLIDER_H

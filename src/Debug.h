@@ -27,7 +27,7 @@ namespace Debug
     static bool dbgObjects = false;
     static bool dbgTiles = false;
     static bool dbgMemory = false;
-    static bool dbgCollision = true;
+    static bool dbgCollision = false;
 }
 
 #ifndef _WIN32

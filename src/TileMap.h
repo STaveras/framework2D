@@ -142,51 +142,82 @@ public:
 
 	static std::vector<TileMap*> loadFromJSONFile(const char* filePath, TileSet* tileSet)
 	{
+		if (!FileSystem::FileExists(filePath))
+			return {};
+
 		std::vector<TileMap*> tileMaps;
-
 		simdjson::dom::parser parser;
-		simdjson::dom::element json = parser.load(std::string(filePath));
+		simdjson::dom::element json = parser.load(filePath);
 
-		if (json.is_object())
-		{
-			int tileWidth = (int)json["tilewidth"].get_int64();
-			int tileHeight = (int)json["tileheight"].get_int64();
+		if (!json.is_object()) return tileMaps;
 
-			for (auto layer : json["layers"])
-			{
-				int mapWidth = (int)layer["width"].get_int64();
-				int mapHeight = (int)layer["height"].get_int64();
+		for (auto layer : json["layers"]) {
+			// get the layer type string
+			const char* type = nullptr;
+			if (layer["type"].is_string()) {
+				type = layer["type"].get_c_str();
+			}
 
-				//int startX = (!layer["startx"].is_null()) ? layer["startx"].get_int64() * tileWidth : 0;
-				//int startY = (!layer["starty"].is_null()) ? layer["starty"].get_int64() * tileHeight: 0;
+			if (!type) {
+				// malformed layer--skip it
+				continue;
+			}
 
-				if (layer["startx"].is_null()) {
-					//DEBUG_MSG("WTF\n");
+			if (strcmp(type, "tilelayer") == 0) {
+				// --- TILE LAYER PATH ---
+				if (layer["chunks"].is_null()) {
+					// old-style non-chunked maps could go here
+					continue;
 				}
 
+				int mapWidth = (int)layer["width"].get_int64();
+				int mapHeight = (int)layer["height"].get_int64();
 				TileMap* tileMap = new TileMap(mapWidth, mapHeight, tileSet);
-				////tileMap->setPosition(startX, startY);
 
-				//for (auto chunk : layer["chunks"]) 
-				//{
-				//	simdjson::dom::array data = chunk["data"].get_array();
+				for (auto chunk : layer["chunks"]) {
+					auto data = chunk["data"].get_array();
+					int chunkW = (int)chunk["width"].get_int64();
+					int chunkH = (int)chunk["height"].get_int64();
+					int chunkXoff = (int)chunk["x"].get_int64();
+					int chunkYoff = (int)chunk["y"].get_int64();
+					int index = 0;
 
-				//	int chunkWidth = chunk["width"].get_int64();
-				//	int chunkHeight = chunk["height"].get_int64();
-				//	int chunkX = chunk["x"].get_int64();
-				//	int chunkY = chunk["y"].get_int64();
+					for (int cy = 0; cy < chunkH; ++cy) {
+						for (int cx = 0; cx < chunkW; ++cx, ++index) {
+							if (index >= (int)data.size())
+								break;
 
-				//	int index = 0;
-				//	for (int y = 0; y < chunkHeight; y++) {
-				//		for (int x = 0; x < chunkWidth; x++) {
-				//			tileMap->setTileIndex(x - chunkX, y - chunkY, (data.at(index++).get_int64() - 1));
-				//		}
-				//	}
+							int64_t gid = data.at(index).get_int64();
+							if (gid == 0)
+								continue;
 
-				//	tileMap->arrangeTiles();
-				//}
+							int tileIndex = (int)(gid - 1);
+							int gx = cx + chunkXoff;
+							int gy = cy + chunkYoff;
 
+							if (gx >= 0 && gx < mapWidth && gy >= 0 && gy < mapHeight) {
+								tileMap->setTileIndex(gx, gy, tileIndex);
+							}
+						}
+					}
+				}
+
+				tileMap->arrangeTiles();
 				tileMaps.push_back(tileMap);
+			}
+			else if (strcmp(type, "objectgroup") == 0) {
+				// --- OBJECT GROUP PATH ---
+				// TODO: parse objects later; for now just skip
+				continue;
+			}
+			else if (strcmp(type, "imagelayer") == 0) {
+				// --- IMAGE LAYER PATH ---
+				// TODO: handle background images later; skip for now
+				continue;
+			}
+			else {
+				// unknown layer type--skip
+				continue;
 			}
 		}
 

@@ -1,0 +1,333 @@
+{
+  "AnimationFile": {
+    "Animation": [
+      {
+        "Name": "Idle",
+        "Mode": "OSCILLATE",
+        "Forward": true,
+        "Speed": 1,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,80",
+            "Filename": "./fantasySideScroller/Character/Idle/Idle-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "64,0,64,80",
+            "Filename": "./fantasySideScroller/Character/Idle/Idle-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "128,0,64,80",
+            "Filename": "./fantasySideScroller/Character/Idle/Idle-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,64,80",
+            "Filename": "./fantasySideScroller/Character/Idle/Idle-Sheet.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Rising",
+        "Mode": "ONCE",
+        "Forward": true,
+        "Speed": 1,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-Start/Jump-Start-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "64,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-Start/Jump-Start-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "128,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-Start/Jump-Start-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-Start/Jump-Start-Sheet.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Jump",
+        "Mode": "OSCILLATE",
+        "Forward": true,
+        "Speed": 1,
+        "Frame": [
+          {
+            "DisplayRect": "192,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "256,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "448,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "512,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "576,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "640,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jumlp-All/Jump-All-Sheet.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Landing",
+        "Mode": "ONCE",
+        "Forward": true,
+        "Speed": 2.7,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-End/Jump-End-Sheet.png",
+            "Duration": 0.1
+          },
+          {
+            "DisplayRect": "64,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-End/Jump-End-Sheet.png",
+            "Duration": 0.1
+          },
+          {
+            "DisplayRect": "128,0,64,64",
+            "Filename": "./fantasySideScroller/Character/Jump-End/Jump-End-Sheet.png",
+            "Duration": 0.1
+          }
+        ]
+      },
+      {
+        "Name": "RunningLeft",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.1,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "80,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "160,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "400,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "480,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "560,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "RunningRight",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.1,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "80,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "160,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "400,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "480,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "560,0,80,80",
+            "Filename": "./fantasySideScroller/Character/Run/Run-Sheet.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Attack01",
+        "Mode": "ONCE",
+        "Forward": true,
+        "Speed": 1,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.0833333
+          },
+          {
+            "DisplayRect": "96,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.0833333
+          },
+          {
+            "DisplayRect": "192,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.0833333
+          },
+          {
+            "DisplayRect": "288,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.0833333
+          },
+          {
+            "DisplayRect": "384,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.0833333
+          }
+        ]
+      },
+      {
+        "Name": "Attack02",
+        "Mode": "ONCE",
+        "Forward": true,
+        "Speed": 1,
+        "Frame": [
+          {
+            "DisplayRect": "384,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.1
+          },
+          {
+            "DisplayRect": "480,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.1
+          },
+          {
+            "DisplayRect": "576,0,96,80",
+            "Filename": "./fantasySideScroller/Character/Attack-01/Attack-01-Sheet.png",
+            "Duration": 0.1
+          }
+        ]
+      },
+      {
+        "Name": "Dead",
+        "Mode": "ONCE",
+        "Forward": true,
+        "Speed": 1,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "80,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "160,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "240,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "320,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "400,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "480,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          },
+          {
+            "DisplayRect": "560,0,80,64",
+            "Filename": "./fantasySideScroller/Character/Dead/Dead-Sheet.png",
+            "Duration": 0.266667
+          }
+        ]
+      }
+    ]
+  }
+}

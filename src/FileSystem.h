@@ -25,19 +25,18 @@
 
 namespace FileSystem
 {
-	static void SetWorkingDirectory(const std::string& path)
+	static int SetWorkingDirectory(const std::string& path)
 	{
 #if defined(__APPLE__)
-		chdir(path.c_str());
+		return chdir(path.c_str());
 #else
-		_chdir(path.c_str());
+		return _chdir(path.c_str());
 #endif
 	}
 
 	static std::string GetWorkingDirectory(void)
 	{
-		char buffer[1024];
-		getcwd(buffer, 1024);
+		char buffer[1024];//getcwd(buffer, 1024);
 
 		if (getcwd(buffer, sizeof(buffer)) != nullptr)
 			return std::string(buffer);
@@ -248,9 +247,9 @@ namespace FileSystem
 		typedef std::fstream Stream;
 
 		// Opens a file ofstream for a given filepath
-		static Stream Open(const std::string& filename, bool append = false)
+		static Stream Open(const std::string& filename, bool append = false, bool overwrite = false)
 		{
-			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : 0); // ios::binary	eventually
+			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : (overwrite ? std::ios::trunc : 0)); // ios::binary	eventually
 			return Stream(filename, modeFlags);
 		}
 

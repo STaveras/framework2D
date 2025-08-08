@@ -519,8 +519,8 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 
 	// We need a shader loader that automatically reads and compiles shaders from files.
 	// auto vertShaderCode = FileSystem::File::Read("./data/cache/shader/tri.v.spv");
-	auto vertShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "cache/shader/tri.v.spv");
-	auto fragShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "cache/shader/tri.f.spv");
+	auto vertShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "/cache/shader/tri.v.spv");
+	auto fragShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "/cache/shader/tri.f.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
@@ -1135,9 +1135,9 @@ void RendererVK::render(void)
 #endif
 
 	const std::vector<Vertex> vertices = {
-		 {{0.0f, -0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 0.0f}},
-		 {{0.5f, 0.5f, 0.0f}, {0, 0}, {0.0f, 1.0f, 0.0f}},
-		 {{-0.5f, 0.5f, 0.0f}, {0, 0}, {0.0f, 0.0f, 1.0f}}
+		 {{0.0f, -0.5f, 0.0f}, {0, 0}, {1.0f, 1.0f, 0.0f, 0.0f}},
+		 {{0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 1.0f, 0.0f}},
+		 {{-0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 0.0f, 1.0f}}
 	};
 
 	IRenderer::render();

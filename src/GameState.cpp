@@ -3,6 +3,8 @@
 #include "GameState.h"
 #include "Engine2D.h"
 
+#include "GameObject.h"
+
 Engine2D* engine = Engine2D::getInstance();
 
 bool GameState::addObject(GameObject * object)

@@ -5,14 +5,14 @@
 
 #include "Types.h"
 #include "Cyclable.h"
+#include "Controller.h"
 
 // I don't think there should be a Player class, anymore :(
 // We should move to the "Controller" paradigm
 
-class Controller;
 class GameObject;
 
-class Player : Cyclable
+class Player : public Controller::EventListener
 {
 	friend class GameState;
 
@@ -21,11 +21,12 @@ class Player : Cyclable
 	Controller* _pad = NULL;
 	GameObject* _object = NULL;
 
-	void _OnKeyPress(const Event& evt);
-	void _OnKeyRelease(const Event& evt);
+	void onButtonPressed(const Event& evt);
+	void onButtonReleased(const Event& evt);
+	void onButtonDown(const Event& evt);
+	void onButtonUp(const Event& evt);
 
 public:
-
 	vector2 getHeading(void) const { return _heading; }
 	void getHeading(vector2 heading) { _heading = heading; }
 

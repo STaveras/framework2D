@@ -2,6 +2,9 @@
 
 #include "Types.h"
 
+#ifndef _POSITIONABLE_H_
+#define _POSITIONABLE_H_
+
 struct Positionable {
 
    union{
@@ -22,3 +25,5 @@ struct Positionable {
    virtual void setPosition(float x, float y) { _position.x = x; _position.y = y; }
    virtual void setPosition(vector2 position) { _position = position; }
 };
+
+#endif // _POSITIONABLE_H_

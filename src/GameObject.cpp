@@ -65,6 +65,9 @@ void GameObject::updateComponents()
 		if (Renderable* renderable = state->getRenderable()) {
 			renderable->setPosition(this->getPosition()); 
 		}
+	}
+
+	if (!_collisionObjects.empty()) {
 		_collisionObjects.clear();
 	}
 }
@@ -73,6 +76,8 @@ void GameObject::update(float time) // lawl time as a float xfd
 {
 	Physical::update(time);
 	StateMachine::update(time);
+
+	updateComponents();
 }
 
 void GameObject::finish(void)
@@ -94,12 +99,11 @@ Collidable* GameObject::getCollidable(void)
 				case COL_OBJ_SQUARE:
 					collidable = _collisionObjects.createDerived<Square>((Square&)*collidable);
 					break;
-				// Add missing cases
-				case COL_OBJ_VOID:
+
+				// TODO: Add missing cases
+				case COL_OBJ_GROUP:
 				case COL_OBJ_CIRCLE:
 				case COL_OBJ_PLANE:
-					// Handle these cases if necessary
-					break;
 				default:
 					// Handle default case if necessary
 					break;
@@ -131,14 +135,10 @@ Collidable* GameObject::GameObjectState::getCollidable(void)
 	if (_collidable)
 		return _collidable;
 
-	else if (_renderable && _renderable->getRenderableType() == RENDERABLE_TYPE_ANIMATION)
-	{
+	else if (_renderable && _renderable->getRenderableType() == RENDERABLE_TYPE_ANIMATION) {
 		if (Animation* animation = (Animation*)this->getRenderable()) {
-
 			if (Frame* currentFrame = animation->getCurrentFrame()) {
-
 				if (Collidable* collidable = currentFrame->getCollidable()) {
-
 					return (_collidable = collidable);
 				}
 			}

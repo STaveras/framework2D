@@ -27,21 +27,20 @@ struct pair_hash {
 
 void ObjectManager::update(float fTime)
 {
-	std::map<std::string, GameObject*>::iterator objectItr = m_mObjects.begin();
+	// Use unordered_map for faster iteration if possible
+	auto& objects = m_mObjects;
+	std::unordered_set<uintptr_t> checkedPairs; // Use a hash of pointer pairs for faster lookup
 
-	std::unordered_set<std::pair<GameObject*, GameObject*>, pair_hash> checkedPairs;
-
-	for (; objectItr != m_mObjects.end(); objectItr++)
+	for (auto objectItr = objects.begin(); objectItr != objects.end(); ++objectItr)
 	{
 		GameObject* object = objectItr->second;
 		object->update(fTime);
 
-		// Skip checking for tile objects
 		if (object->getType() == GameObject::GAME_OBJ_TILE)
 			continue;
 
 		// Apply ObjectOperators
-		std::list<ObjectOperator*> removalList;
+		std::vector<ObjectOperator*> removalList;
 		for (ObjectOperator* objOperator : m_lsObjOperators) {
 			if (objOperator->isEnabled() && !(*objOperator)(object))
 				removalList.push_back(objOperator);
@@ -53,23 +52,34 @@ void ObjectManager::update(float fTime)
 			Engine2D::getEventSystem()->sendEvent(EVT_OPERATOR_REMOVED, objOp);
 		}
 
-		// Check for collisions
 		Collidable* collidable = object->getCollidable();
-		if (collidable) {
-			for (auto& otherPair : m_mObjects) {
+		if (collidable && collidable->isActive()) {
+
+#if _DEBUG && (defined(_WIN32) || defined(_WIN64))
+			RendererDX* renderer = dynamic_cast<RendererDX*>(Engine2D::getRenderer());
+			renderer->m_Collidables.push_back(collidable);
+#endif
+			for (auto& otherPair : objects) {
 				GameObject* otherObject = otherPair.second;
 
 				if (otherObject == object ||
-					object->getType() == GameObject::GAME_OBJ_TILE ||
-					checkedPairs.count({ object, otherObject }) ||
-					checkedPairs.count({ otherObject, object }))
+					object->getType() == GameObject::GAME_OBJ_TILE)
+					continue;
+
+				// Use a unique hash for the pair to avoid std::pair overhead
+				uintptr_t pairHash = reinterpret_cast<uintptr_t>(object) ^ reinterpret_cast<uintptr_t>(otherObject);
+				if (checkedPairs.count(pairHash))
 					continue;
 
 				Collidable* otherCollidable = otherObject->getCollidable();
-				if (otherCollidable && collidable->collidesWith(otherCollidable)) {
+				if (otherCollidable && otherCollidable->isActive() && collidable->collidesWith(otherCollidable)) {
+
 					Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, otherObject));
 #if _DEBUG
-					if (Debug::dbgCollision) {
+					if (Debug::dbgObjects) {
+#if (defined(_WIN32) || defined(_WIN64))
+						renderer->m_Collidables.push_back(otherCollidable);
+#endif
 						char buffer[256]{ 0 };
 						sprintf_s(buffer, "%s\np1{%f, %f}\nco1{%f,%f,%f,%f}\nr1{%f,%f}\n", objectItr->first.c_str(), object->getPosition().x, object->getPosition().y,
 							collidable->getPosition().x, collidable->getPosition().y,
@@ -77,18 +87,16 @@ void ObjectManager::update(float fTime)
 							object->getRenderable()->getPosition().x, object->getRenderable()->getPosition().y);
 						DEBUG_MSG(buffer);
 						DEBUG_MSG("+\n")
-
-							sprintf_s(buffer, "%s\np2{%f, %f}\nco2{%f,%f,%f,%f}\nr2{%f,%f}\n", this->getObjectName(otherObject).c_str(), otherObject->getPosition().x, otherObject->getPosition().y,
-								otherCollidable->getPosition().x, otherCollidable->getPosition().y,
-								((Square*)otherCollidable)->getMax().x, ((Square*)otherCollidable)->getMax().y,
-								otherObject->getRenderable()->getPosition().x, otherObject->getRenderable()->getPosition().y);
-
+						sprintf_s(buffer, "%s\np2{%f, %f}\nco2{%f,%f,%f,%f}\nr2{%f,%f}\n", this->getObjectName(otherObject).c_str(), otherObject->getPosition().x, otherObject->getPosition().y,
+							otherCollidable->getPosition().x, otherCollidable->getPosition().y,
+							((Square*)otherCollidable)->getMax().x, ((Square*)otherCollidable)->getMax().y,
+							otherObject->getRenderable()->getPosition().x, otherObject->getRenderable()->getPosition().y);
 						DEBUG_MSG(buffer);
 						DEBUG_MSG("\n");
 					}
 #endif
 				}
-				checkedPairs.insert({ object, otherObject });
+				checkedPairs.insert(pairHash);
 			}
 		}
 	}

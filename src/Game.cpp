@@ -9,7 +9,7 @@ void Game::begin(void)
 
 	for (auto& p : fs::recursive_directory_iterator(current)) {
 		if (p.is_regular_file() && p.path().filename() == "title") {
-			p.path().parent_path().string();
+			std::string subString = p.path().parent_path().string();
 
 			// Read title contents
 			std::ifstream titleFile(p.path());
