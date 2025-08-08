@@ -7,8 +7,12 @@ Currently a pet project to reacclimate myself with game development.
 - DirectX 9 SDK (June 2010)
 - Vulkan SDK
 - GLM
-- GLFW
+- GLFW3
 - TinyXML2
+- SIMDJSON
+- stb (git submodule)
+- FastDelegate (included)
+- Visual Leak Detector (environment variables must be set: VLD_INCLUDE, VLD_LIB)
 
 The /bin folder contains free to use assets from anokolisa.itch.io.
 

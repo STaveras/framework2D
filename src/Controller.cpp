@@ -4,7 +4,7 @@
 Action* Controller::getAction(std::string actionName)
 {
 	std::list<Action>::iterator itr = _actions.begin();
-	for (;itr != _actions.end(); itr++) {
+	for (; itr != _actions.end(); itr++) {
 		if (itr->getActionName() == actionName) {
 			return &(*itr);
 		}
@@ -16,7 +16,7 @@ Action* Controller::getAction(std::string actionName)
 void Controller::removeAction(Action action)
 {
 	std::list<Action>::iterator itr = _actions.begin();
-	for (;itr != _actions.end(); itr++)
+	for (; itr != _actions.end(); itr++)
 	{
 		if (action == (*itr)) {
 			_actions.erase(itr);
@@ -25,26 +25,16 @@ void Controller::removeAction(Action action)
 	}
 }
 
-bool Controller::buttonPressed(std::string actionName)
+bool Controller::buttonPressed(Action* action)
 {
 	if (_input)
 	{
-		std::list<Action>::iterator itr = _actions.begin();
-		for (;itr != _actions.end(); itr++)
+		std::list<Keyboard::KEY>::const_iterator itr2 = action->getAssignments().begin();
+
+		for (; itr2 != action->getAssignments().end(); itr2++)
 		{
-			if (actionName == itr->getActionName())
-			{
-				std::list<Keyboard::KEY>::const_iterator itr2 = itr->getAssignments().begin();
-
-				for (; itr2 != itr->getAssignments().end(); itr2++)
-				{
-					if (_input->getKeyboard()->keyPressed((*itr2)))
-					{
-						return true;
-					}
-				}
-
-				break;
+			if (_input->getKeyboard()->keyPressed((*itr2))) {
+				return true;
 			}
 		}
 	}
@@ -52,29 +42,79 @@ bool Controller::buttonPressed(std::string actionName)
 	return false;
 }
 
-bool Controller::buttonReleased(std::string actionName)
+bool Controller::buttonReleased(Action* action)
 {
 	if (_input)
 	{
-		std::list<Action>::iterator itr = _actions.begin();
-		for (;itr != _actions.end(); itr++)
+		std::list<Keyboard::KEY>::const_iterator itr2 = action->getAssignments().begin();
+
+		for (; itr2 != action->getAssignments().end(); itr2++)
 		{
-			if (actionName == itr->getActionName())
-			{
-				std::list<Keyboard::KEY>::const_iterator itr2 = itr->getAssignments().begin();
-
-				for (; itr2 != itr->getAssignments().end(); itr2++)
-				{
-					if (_input->getKeyboard()->keyReleased((*itr2)))
-					{
-						return true;
-					}
-				}
-
-				break;
+			if (_input->getKeyboard()->keyReleased((*itr2))) {
+				return true;
 			}
 		}
 	}
 
 	return false;
+}
+
+bool Controller::buttonDown(Action* action)
+{
+	if (_input)
+	{
+		std::list<Keyboard::KEY>::const_iterator itr2 = action->getAssignments().begin();
+		for (; itr2 != action->getAssignments().end(); itr2++)
+		{
+			if (_input->getKeyboard()->keyDown(*itr2)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool Controller::buttonUp(Action* action)
+{
+	if (_input)
+	{
+		std::list<Keyboard::KEY>::const_iterator itr2 = action->getAssignments().begin();
+		for (; itr2 != action->getAssignments().end(); itr2++)
+		{
+			if (_input->getKeyboard()->keyUp(*itr2)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void Controller::update(float time)
+{
+	_elapsedTime += time;
+
+	for (Action& action : this->getActions()) {
+
+		if (this->buttonDown(&action)) {
+			action.setActive(true);
+			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYDOWN, this, _elapsedTime, action.getActionName()));
+		}
+		else if (this->buttonUp(&action)) {
+			action.setActive(false);
+			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYUP, this, _elapsedTime, action.getActionName()));
+		}
+
+		if (this->buttonPressed(&action))
+		{
+			action.setActive(true);
+			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYPRESSED, this, _elapsedTime, action.getActionName()));
+		}
+		else if (this->buttonReleased(&action))
+		{
+			action.setActive(false);
+			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYRELEASED, this, _elapsedTime, action.getActionName()));
+		}
+	}
 }

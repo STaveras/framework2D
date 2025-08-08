@@ -13,6 +13,7 @@ enc_temp_folder/
 *.cmake
 *.o
 *.d
+*.spv
 **/.DS_Store
 **/*.log
 bin/*.dll
@@ -22,3 +23,5 @@ bin/*.dSYM/**
 bin/data/cache/**
 bin/framework2D
 build/**
+out/
+

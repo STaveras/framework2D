@@ -15,29 +15,26 @@ class EventSystem;
 
 class InputManager
 {
-	float _elapsedTime;
-
+protected:
 	EventSystem* _eventSystem;
 	InputInterface* _input;
 
-	Factory<Controller> m_Controllers;
+private:
+	Factory<Controller> _controllers;
 
 public:
 	InputManager(void);
 	~InputManager(void);
 
-	Keyboard* getKeyboard(void) { return _input->getKeyboard(); }
-	Mouse* getMouse(void) { return _input->getMouse(); }
-
-	Controller* getController(unsigned int uiIndex) { return m_Controllers.at(uiIndex); }
-
-	void setEventSystem(EventSystem* pEventSystem) { _eventSystem = pEventSystem; }
-	void setInputInterface(IInput* pInput) { _input = pInput; }
+	void initialize(EventSystem* eventSystem, IInput* inputInterface);
 
 	Controller* createController(void);
-	void destroyController(Controller* controller) { m_Controllers.destroy(controller); }
+	Controller* getController(unsigned int uiIndex) { return _controllers.at(uiIndex); }
+	void destroyController(Controller* controller);
 
-	void initialize(EventSystem* pEventSystem, IInput* pInput) { _eventSystem = pEventSystem; _input = pInput; }
+	Keyboard* getKeyboard(void) { return _input->getKeyboard(); }
+	Mouse*	 getMouse(void)	 { return _input->getMouse(); }
+	
 	void update(float fTime);
 	void shutdown(void);
 };

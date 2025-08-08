@@ -14,13 +14,13 @@ class ObjectOperator
 	bool _enabled = false;
 
 public:
-
 	bool isEnabled(void) const { return _enabled; }
 	void setEnabled(bool enable) { _enabled = enable; }
 
 	virtual ~ObjectOperator(void) {}
 
-	virtual bool operator()(GameObject* object) = 0; // TODO: Make it return a status code?
+	// Returning false will remove the operator from the list
+	virtual bool operator()(GameObject* object) = 0;
 };
 
 #endif  //_OBJECTOPERATION_H

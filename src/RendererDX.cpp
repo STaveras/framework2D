@@ -40,191 +40,287 @@ m_pD3DSprite(NULL) {
 
 RendererDX::~RendererDX(void)
 {
-   this->shutdown();
+	this->shutdown();
 }
 
 // Checks if the device is lost, and attempts to reset it if it is.
 bool RendererDX::_checkDeviceLost()
 {
-   HRESULT hr = m_pD3DDevice->TestCooperativeLevel();
+	HRESULT hr = m_pD3DDevice->TestCooperativeLevel();
 
-   if (hr == D3DERR_DEVICELOST) {
-      return true;
-   }
-   else if (hr == D3DERR_DEVICENOTRESET) {
-      if (SUCCEEDED(_attemptDeviceReset())) {
-         return false;
-      }
-      else {
-         return true;
-      }
-   }
+	if (hr == D3DERR_DEVICELOST) {
+		return true;
+	}
+	else if (hr == D3DERR_DEVICENOTRESET) {
+		if (SUCCEEDED(_attemptDeviceReset())) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
 
-   return false;
+	return false;
 }
 
 HRESULT RendererDX::_attemptDeviceReset()
 {
-   // Release resources that are tied to the device
-   m_pD3DSprite->OnLostDevice();
+	// Release resources that are tied to the device
+	m_pD3DSprite->OnLostDevice();
 
-   D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
+	D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
 
-   // Attempt to reset the device
-   HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
+	// Attempt to reset the device
+	HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
 
-   if (SUCCEEDED(hr)) 
-   {
-      // Reinitialize resources tied to the device
-      m_pD3DSprite->OnResetDevice();
-   }
+	if (SUCCEEDED(hr))
+	{
+		// Reinitialize resources tied to the device
+		m_pD3DSprite->OnResetDevice();
+	}
 
-   return hr;
+	return hr;
 }
 
 D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 {
-   D3DPRESENT_PARAMETERS D3DPP;
-   ZeroMemory(&D3DPP, sizeof(D3DPP));
+	D3DPRESENT_PARAMETERS D3DPP;
+	ZeroMemory(&D3DPP, sizeof(D3DPP));
 
-   D3DPP.Windowed = (!m_bFullScreen) ? TRUE : FALSE;
-   D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
-   D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
-   D3DPP.BackBufferWidth = m_nWidth;
-   D3DPP.BackBufferHeight = m_nHeight;
-   D3DPP.PresentationInterval = (m_bVerticalSync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
-   D3DPP.hDeviceWindow = m_hWnd;
+	D3DPP.Windowed = (!m_bFullScreen) ? TRUE : FALSE;
+	D3DPP.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	D3DPP.BackBufferFormat = D3DFMT_UNKNOWN;
+	D3DPP.BackBufferWidth = m_nWidth;
+	D3DPP.BackBufferHeight = m_nHeight;
+	D3DPP.PresentationInterval = (m_bVerticalSync) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+	D3DPP.hDeviceWindow = m_hWnd;
 
-   return D3DPP;
+	return D3DPP;
 }
 
 // Why do we have offset? Center is already an offset...
 void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue)
 {
-   D3DXMATRIX transform;
-   //D3DXMatrixTransformation2D(&transform, &image->getRectCenter(), 0.0f, &image->getScale(), &image->getCenter(), image->getRotation(), NULL);
+	D3DXVECTOR3 position;
+	position.x = (image->getPosition().x + offset.x) * image->getScale().x;
+	position.y = (image->getPosition().y + offset.y) * image->getScale().y;
+	position.z = 0.0f; // Will eventually be used for z-effects
 
-   D3DXVECTOR2 rectCenter = image->getRectCenter();
-   D3DXVECTOR2 scale = image->getScale();
-   D3DXVECTOR2 center = image->getCenter();
+	D3DXVECTOR2 rectCenter = image->getRectCenter();
+	D3DXVECTOR2 scale = image->getScale();
+	D3DXVECTOR2 center = image->getCenter();
 
-   D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
+	D3DXMATRIX transform;
+	D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
 
-   D3DXVECTOR3 position;
-   position.x = (image->getPosition().x + offset.x) * image->getScale().x;
-   position.y = (image->getPosition().y + offset.y) * image->getScale().y;
-   position.z = 0.0f; // Will eventually be used for z-effects
+	// Depth for some reason? 
+	D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x * image->getScale().x, image->getCenter().y * image->getScale().y, 0.0f);
 
-   // Depth for some reason? 
-   D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x * image->getScale().x, image->getCenter().y * image->getScale().y, 0.0f); 
+	// No mipmaps, and nearest neighbor/point filtering 
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 
-   // No mipmaps, and nearest neighbor/point filtering 
-   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-   m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-
-   m_pD3DSprite->SetTransform(&transform);
-   m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(), 
-                     &image->getSrcRect(),
-                     &center3D, &position,
-                     tint._color);
+	m_pD3DSprite->SetTransform(&transform);
+	m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(),
+		&image->getSrcRect(),
+		&center3D, &position,
+		tint._color);
 }
+
+#ifdef _DEBUG
+
+// This is just to help with debugging, the renderer isn't not supposed to know of collidables
+
+#include "Collidable.h"
+#include "Square.h"
+
+// This effectively is a graphing function for the collision shape bounds
+// It will draw the bounds of the collision shape for debugging purposes
+// It draws basic shapes like circles, rectangles, and polygons!
+void RendererDX::_drawCollisionShapeBounds(Collidable* pCollidable, Color color) // Maybe pass in its associated renderable to get the right transform information?
+{
+	if (!pCollidable)
+		return;
+
+	// grab the current matrices & viewport
+	D3DXMATRIX matView, matProj;
+	D3DVIEWPORT9 vp;
+	m_pD3DDevice->GetTransform(D3DTS_VIEW, &matView);
+	m_pD3DDevice->GetTransform(D3DTS_PROJECTION, &matProj);
+	m_pD3DDevice->GetViewport(&vp);
+
+	switch (pCollidable->getType())
+	{
+	case COL_OBJ_CIRCLE:
+		// Draw circle bounds
+
+		break;
+	case COL_OBJ_PLANE:
+
+		break;
+	case COL_OBJ_SQUARE:
+	{
+		Square* pSquare = dynamic_cast<Square*>(pCollidable);
+		if (!pSquare)
+			return;
+
+		//// Let's make an example box and have it display at a known location on the screen
+		//D3DXVECTOR2 position = { 0,0 };
+
+		//float halfWidth = 50.0f; // Example width
+		//float halfHeight = 50.0f; // Example height
+
+		D3DXVECTOR2 position = pSquare->getPosition();
+
+		float halfWidth = pSquare->getWidth() / 2.0f;
+		float halfHeight = pSquare->getHeight() / 2.0f;
+
+		D3DXVECTOR3 worldPts[5] = {
+			{ pSquare->getPosition().x - halfWidth, pSquare->getPosition().y - halfHeight, 0.0f },
+			{ pSquare->getPosition().x + halfWidth, pSquare->getPosition().y - halfHeight, 0.0f },
+			{ pSquare->getPosition().x + halfWidth, pSquare->getPosition().y + halfHeight, 0.0f },
+			{ pSquare->getPosition().x - halfWidth, pSquare->getPosition().y + halfHeight, 0.0f },
+			{ pSquare->getPosition().x - halfWidth, pSquare->getPosition().y - halfHeight, 0.0f }
+		};
+
+		D3DXVECTOR3 screenPts[5];
+		for (int i = 0; i < 5; ++i)
+			D3DXVec3Project(
+				&screenPts[i],
+				&worldPts[i],
+				&vp,
+				&matProj,
+				&matView,
+				/*world=*/ nullptr  // nullptr == identity
+			);
+
+		struct Vertex { 
+			FLOAT x, y, z, rhw;
+			DWORD col;
+		};
+
+		Vertex box[5];
+
+		// Fill the vertex buffer with the screen points
+		for (int i = 0; i < 5; ++i)
+		{
+			box[i].x = screenPts[i].x;
+			box[i].y = screenPts[i].y;
+			box[i].z = screenPts[i].z;   // depth (0–1)
+			box[i].rhw = 1.0f;           // no further transforms
+			box[i].col = color._color;
+		}
+
+		// Set render state for untextured, solid color drawing
+		m_pD3DDevice->SetTexture(0, NULL);
+		m_pD3DDevice->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+
+		// Disable alpha blending if it's on
+		m_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+		m_pD3DDevice->DrawPrimitiveUP(D3DPT_LINESTRIP, 4, box, sizeof(Vertex));
+	}
+	break;
+	}
+}
+
+#endif
 
 // void RendererDX::_DrawFont(Font* pFont)
 //{
 
 //}
 
-ITexture *RendererDX::createTexture(const char *szFilename, Color colorKey)
+ITexture* RendererDX::createTexture(const char* szFilename, Color colorKey)
 {
-   ITexture* pTexture = _textureExists(szFilename);
+	ITexture* pTexture = _textureExists(szFilename);
 
-   if (!pTexture)
-   {
-      pTexture = (ITexture*)new TextureD3D(szFilename);
-      pTexture->SetKeyColor(colorKey);
+	if (!pTexture)
+	{
+		pTexture = (ITexture*)new TextureD3D(szFilename);
+		pTexture->SetKeyColor(colorKey);
 
-      m_Textures.store(pTexture);
+		m_Textures.store(pTexture);
 
-      D3DXCreateTextureFromFileEx(
-         m_pD3DDevice, szFilename,
-         D3DX_DEFAULT_NONPOW2,
-         D3DX_DEFAULT_NONPOW2,
-         D3DX_DEFAULT, 0,
-         D3DFMT_A8R8G8B8,
-         D3DPOOL_MANAGED,
-         D3DX_FILTER_POINT,
-         D3DX_DEFAULT,
-         (DWORD)colorKey._color,
-         &((TextureD3D*)pTexture)->_imageInfo, NULL,
-         &((TextureD3D*)pTexture)->_texture);
-   }
-   else {
-       ((TextureD3D*)pTexture)->getTexture()->AddRef();
-   }
+		D3DXCreateTextureFromFileEx(
+			m_pD3DDevice, szFilename,
+			D3DX_DEFAULT_NONPOW2,
+			D3DX_DEFAULT_NONPOW2,
+			D3DX_DEFAULT, 0,
+			D3DFMT_A8R8G8B8,
+			D3DPOOL_MANAGED,
+			D3DX_FILTER_POINT,
+			D3DX_DEFAULT,
+			(DWORD)colorKey._color,
+			&((TextureD3D*)pTexture)->_imageInfo, NULL,
+			&((TextureD3D*)pTexture)->_texture);
+	}
+	else {
+		((TextureD3D*)pTexture)->getTexture()->AddRef();
+	}
 
-   return pTexture;
+	return pTexture;
 }
 
 void RendererDX::destroyTexture(ITexture* texture)
 {
-   ((TextureD3D*)texture)->getTexture()->Release();
+	((TextureD3D*)texture)->getTexture()->Release();
 
-   IRenderer::destroyTexture(texture);
+	IRenderer::destroyTexture(texture);
 }
 
 void RendererDX::initialize(void)
 {
-   bool needsReset = true;
+	bool needsReset = true;
 
-   if (m_pD3D == NULL)
-   {
-      m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
-      needsReset = false;
-   }
+	if (m_pD3D == NULL)
+	{
+		m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
+		needsReset = false;
+	}
 
-   D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
+	D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
 
-   if (!needsReset) 
-   {
-      if (m_bFullScreen) {
-         D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-      }
-      else {
-         D3DPP.FullScreen_RefreshRateInHz = 0; // find supported refreshrates
-      }
-      m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
-   }
-   else
-   {
-      // Release resources before resetting
-      if (m_pD3DSprite)
-      {
-         m_pD3DSprite->Release();
-         m_pD3DSprite = nullptr;
-      }
+	if (!needsReset)
+	{
+		if (m_bFullScreen) {
+			D3DPP.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+		}
+		else {
+			D3DPP.FullScreen_RefreshRateInHz = 0; // find supported refreshrates
+		}
+		m_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &D3DPP, &m_pD3DDevice);
+	}
+	else
+	{
+		// Release resources before resetting
+		if (m_pD3DSprite)
+		{
+			m_pD3DSprite->Release();
+			m_pD3DSprite = nullptr;
+		}
 
-      HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
-      if (FAILED(hr))
-      {
-         // Handle error accordingly
-         return;
-      }
-   }
+		HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
+		if (FAILED(hr))
+		{
+			// Handle error accordingly
+			return;
+		}
+	}
 
-   if (m_pD3DDevice)
-   {
-      HRESULT hr = D3DXCreateSprite(m_pD3DDevice, &m_pD3DSprite);
-      if (FAILED(hr))
-      {
-         // Handle error accordingly
-         return;
-      }
+	if (m_pD3DDevice)
+	{
+		HRESULT hr = D3DXCreateSprite(m_pD3DDevice, &m_pD3DSprite);
+		if (FAILED(hr))
+		{
+			// Handle error accordingly
+			return;
+		}
 
-      D3DXMATRIX ortho2D;
-      D3DXMatrixOrthoLH(&ortho2D, (float)m_nWidth, (float)m_nHeight, 0.0f, 1.0f);
-      m_pD3DDevice->SetTransform(D3DTS_PROJECTION, &ortho2D);
-   }
+		D3DXMATRIX ortho2D;
+		D3DXMatrixOrthoLH(&ortho2D, (float)m_nWidth, (float)m_nHeight, 0.0f, 1.0f);
+		m_pD3DDevice->SetTransform(D3DTS_PROJECTION, &ortho2D);
+	}
 }
 
 void RendererDX::shutdown(void)
@@ -253,7 +349,9 @@ void RendererDX::render(void)
 	if (!m_pD3DDevice || this->_checkDeviceLost())
 		return;
 
-   // We should only actually render, if there is a change or update from the animations/sprites ergo game/application itself
+	IRenderer::render();
+
+	// We should only actually render, if there is a change or update from the animations/sprites ergo game/application itself
 	m_pD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, m_ClearColor._color, 1.0f, 0);
 
 	// Begin drawing the scene
@@ -269,71 +367,77 @@ void RendererDX::render(void)
 				D3DXMATRIX viewMat;
 				D3DXMatrixIdentity(&viewMat);
 
-            D3DXMATRIX scaleMat;
-            D3DXMatrixScaling(&scaleMat, m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
+				D3DXMATRIX scaleMat;
+				D3DXMatrixScaling(&scaleMat, m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
 
-            D3DXMATRIX rotationMat;
-            D3DXMatrixRotationZ(&rotationMat, m_pCamera->getRotation());
+				D3DXMATRIX rotationMat;
+				D3DXMatrixRotationZ(&rotationMat, m_pCamera->getRotation());
 
-            D3DXVECTOR2 position = vector2(m_pCamera->getPosition() - m_pCamera->getCenter());
+				D3DXVECTOR2 position = vector2(m_pCamera->getPosition() - m_pCamera->getCenter());
 
-            D3DXVECTOR2 xAxis = D3DXVECTOR2(1, 0);
-            D3DXVECTOR2 yAxis = D3DXVECTOR2(0, 1);
+				D3DXVECTOR2 xAxis = D3DXVECTOR2(1, 0);
+				D3DXVECTOR2 yAxis = D3DXVECTOR2(0, 1);
 
-            viewMat._41 = -D3DXVec2Dot(&xAxis, &position);
-            viewMat._42 = -D3DXVec2Dot(&yAxis, &position);
+				viewMat._41 = -D3DXVec2Dot(&xAxis, &position);
+				viewMat._42 = -D3DXVec2Dot(&yAxis, &position);
 
-            viewMat = scaleMat * rotationMat * viewMat;
+				viewMat = scaleMat * rotationMat * viewMat;
 
-            m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
-         }
+				m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
+			}
 
-         if (!_RenderLists.empty())
-         {
-            for (unsigned int i = 0; i < _RenderLists.size(); i++)
-            {
-               for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++)
-               {
-                  // We should be making *absolutely* sure that nothing that makes it here is NULL to begin with
-                  if ((*o)) 
-                  {
-                     if ((*o)->isVisible())
-                     {
-                        switch ((*o)->getRenderableType())
-                        {
-                        case RENDERABLE_TYPE_SPRITE:
-                        {
-                            Image* image = (Image*)(*o);
-                            _drawImage(image, image->getTintColor(),
-                                              image->getOffset());
-                        }
-                        break;
-                        case RENDERABLE_TYPE_ANIMATION:
-                        {
-                           Animation* animation = (Animation*)(*o);
-                           if (animation->getFrameCount()) {
-                              _drawImage(animation->getCurrentFrame()->getSprite(), 
-                                         animation->getCurrentFrame()->getSprite()->getTintColor(),
-                                         animation->getOffset());
-                           }
-                        }
-                        break;
-                        }
-                     }
-                  }
-               }
-            }
-         }
+			if (!_RenderLists.empty())
+			{
+				for (unsigned int i = 0; i < _RenderLists.size(); i++)
+				{
+					for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++)
+					{
+						// We should be making *absolutely* sure that nothing that makes it here is NULL to begin with
+						if ((*o))
+						{
+							if ((*o)->isVisible())
+							{
+								switch ((*o)->getRenderableType())
+								{
+								case RENDERABLE_TYPE_SPRITE:
+								{
+									Image* image = (Image*)(*o);
+									_drawImage(image, image->getTintColor(),
+										image->getOffset());
+								}
+								break;
+								case RENDERABLE_TYPE_ANIMATION:
+								{
+									Animation* animation = (Animation*)(*o);
+									if (animation->getFrameCount()) {
+										_drawImage(animation->getCurrentFrame()->getSprite(),
+											animation->getCurrentFrame()->getSprite()->getTintColor(),
+											animation->getOffset());
+									}
+								}
+								break;
+								}
+							}
+						}
+					}
+				}
+			}
 
-         m_pD3DSprite->End();
-      }
+			m_pD3DSprite->End();
+		}
+#ifdef _DEBUG
+		for (auto collidable : m_Collidables)
+		{
+			_drawCollisionShapeBounds(collidable, Color(1.0, 0.0, 0.0, 0.0));
+		}
+#endif
+		m_pD3DDevice->EndScene();
+	}
+	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 
-      // TODO : Font rendering here
-
-      m_pD3DDevice->EndScene();
-   }
-
-   m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+#if _DEBUG
+	m_Collidables.clear(); // Clear collidables after rendering
+#endif
 }
 
 #endif

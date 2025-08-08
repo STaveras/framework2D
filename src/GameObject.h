@@ -31,9 +31,6 @@
 
 class GameObject : public StateMachine, public Physical
 {
-   //bool _isColliding = false;
-   //bool _isRendering = false; 
-
 public:
     enum GAME_OBJ_TYPE
     {
@@ -120,9 +117,6 @@ public:
    }
 
    GAME_OBJ_TYPE getType(void) const { return _objType; }
-
-   //void setIsColliding(bool colliding) { _isColliding = colliding; }
-   //bool isColliding(void) const { _isColliding; }
 
    GameObjectState* addState(const char* name);
    GameObjectState* getState(const char* name) { return (GameObjectState*)StateMachine::getState(name); }

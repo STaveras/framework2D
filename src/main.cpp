@@ -14,7 +14,7 @@
 #include <iostream>
 
 // TODO: Put this in a DLL and have loader functions to search for "game" library files
-#include "FantasySideScroller.h"
+#include "FantasySideScroller/FantasySideScroller.h"
 
 // Ultimately, I want the executable to just be able to support running games without having to statically build a game
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
@@ -29,23 +29,26 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
    LPCCH defaultChar = NULL;
    LPBOOL usedDefaultChar = nullptr;
    LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
-   LPSTR* argv = new LPSTR[argc];
+   LPSTR* argvLPSTR = new LPSTR[argc];
+
+   // Convert LPSTR* argv to const char** for System::checkArguments*
+   const char** argv = new const char* [argc];
 
 	for (size_t i = 0; i < argc; i++) {
-		argv[i] = new CHAR[wcslen(argvW[i]) + 1]{ 0 };
+        argvLPSTR[i] = new CHAR[wcslen(argvW[i]) + 1]{ 0 };
 #if _DEBUG
 		OutputDebugStringW(L"\n");
 		OutputDebugStringW(argvW[i]);
 #endif
 		WideCharToMultiByte(CP_UTF8,
 			WC_NO_BEST_FIT_CHARS | WC_COMPOSITECHECK,
-			argvW[i], -1, argv[i], wcslen(argvW[(int)i]),
+			argvW[i], -1, argvLPSTR[i], (int)wcslen(argvW[(int)i]),
          defaultChar, usedDefaultChar);
 #if _DEBUG
 		OutputDebugStringA(argv[i]);
 #endif
+        argv[i] = argvLPSTR[i];
 	}
-
 #else
 
 #if defined(_WIN32) & defined(_DEBUG )
@@ -60,6 +63,7 @@ int main(int argc, const char *argv[])
 {
 #endif
    std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
+
    System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
 
 #if _DEBUG
@@ -92,20 +96,20 @@ int main(int argc, const char *argv[])
 #endif
    {
       window.initialize();
-      pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
-      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window); 
+      pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
+      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
 #if _WIN32
    else {
 
       window.initialize(hInstance, lpCmdLine);
-      pInput = (DirectInput*)Input::CreateDirectInputInterface(window.getHWND(), hInstance); 
+      pInput = (DirectInput*)Input::createDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
 #elif __APPLE__
    else {
       window.initialize();
-      pInput = (IInput*)Input::CreateInputInterface(&window); // right now would not work in windows
+      pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
 
       // if (System::checkArgumentsForSDL(argc, argv))
       //    pRenderer = (RenderingInterface*)(RendererSDL*)Renderer::createSDLRenderer(&window);
@@ -154,17 +158,11 @@ int main(int argc, const char *argv[])
 					}
 				}
    #endif
-
-				static std::string windowTitle = window.getWindowTitle();
-
-				size_t semiColonIndex = windowTitle.find_first_of(';');
-
-				std::string windowTitleSansFPS = windowTitle.substr(0, (semiColonIndex != -1) ? semiColonIndex : windowTitle.size());
-
-				windowTitle = windowTitleSansFPS + "; " + "FPS: " + std::to_string(/*(lastFPS + */engine->getTimer()->getFPS()/* / 2)*/) + "\n";;
-
-				window.setWindowTitle(windowTitle.c_str());
-
+            std::string currentTitle = window.getWindowTitle();
+            size_t semiColonIndex = currentTitle.find_first_of(';');
+            std::string baseTitle = currentTitle.substr(0, (semiColonIndex != std::string::npos) ? semiColonIndex : currentTitle.size());
+            std::string newTitle = baseTitle + "; FPS: " + std::to_string(engine->getTimer()->getFPS());
+            window.setWindowTitle(newTitle.c_str());
          }
 
       } while (!window.hasQuit() && !engine->hasQuit());
@@ -181,7 +179,7 @@ int main(int argc, const char *argv[])
 
    engine->shutdown();
    
-   Input::DestroyInputInterface(pInput);
+   Input::destroyInputInterface(pInput);
    Renderer::destroyRenderer(pRenderer);
 
    window.shutdown();

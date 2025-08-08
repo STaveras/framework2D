@@ -1,7 +1,8 @@
 // File: Square.h
 // Author: Stanley Taveras
 // Created: 2/20/2010
-// Modified: 7/21/2022
+// Modified: 7/30/2025
+#pragma once
 
 #if !defined(_SQUARE_H)
 #define _SQUARE_H
@@ -17,11 +18,11 @@ class Square : public Collidable
 {
 	float _width = 0;
 	float _height = 0;
-  
+
 public:
 	Square(void) : Collidable(COL_OBJ_SQUARE) {}
-	Square(const Square& s) : Collidable(COL_OBJ_SQUARE), _width(s._width), _height(s._height) { _position = s._position; }
-   Square(vector2 min, vector2 max) : Collidable(COL_OBJ_SQUARE), _width(max.x - min.x), _height(max.y - min.y) { _position = min; }
+	Square(const Square& s) : Collidable(s), _width(s._width), _height(s._height) {}
+	Square(vector2 min, vector2 max) : Collidable(COL_OBJ_SQUARE), _width(max.x - min.x), _height(max.y - min.y) { _position = min; }
 	Square(vector2 position, float width, float height) : Collidable(COL_OBJ_SQUARE) { _position = position; _width = width; _height = height; }
 
 	vector2 getMin(void) const { return _position; } // just because???
@@ -34,12 +35,12 @@ public:
 	void setHeight(float height) { _height = height; }
 	void setMin(const vector2& min) { _position = min; }
 	void setMax(const vector2& max) {
-		 _width = max.x - _position.x;
+		_width = max.x - _position.x;
 		_height = max.y - _position.y;
 	}
 
-  bool collidesWith(const Collidable * collidable);
-  bool collidesWith(vector2 point);
+	bool collidesWith(const Collidable* collidable);
+	bool collidesWith(vector2 point);
 };
 
 #endif  //_SQUARE_H

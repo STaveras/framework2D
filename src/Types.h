@@ -17,14 +17,15 @@
 
 #pragma warning(push)
 #pragma warning(disable: 26817)
+#pragma warning(disable: 26437)
 
 #include <simdjson.h>
 #include <tinyxml2.h>
 
-#pragma warning(pop)
-
 #pragma comment(lib, "simdjson.lib")
 #pragma comment(lib, "tinyxml2.lib")
+
+#pragma warning(pop)
 
 #define SAFE_DELETE(x) if(x) { delete x; x = NULL; }
 #define COUNT_OF(arr) sizeof(arr) / sizeof(arr[0])
@@ -52,8 +53,6 @@
 
 #include <d3d9.h>
 #include <d3dx9.h>
-
-#include <d3dx9math.h>
 
 #pragma warning(pop)
 
@@ -109,7 +108,12 @@ struct rect {
 
 #endif
 
-#include <glm/glm.hpp>
+#ifndef _DEBUG
+#define DEBUG_MSG(msg) // do nothing
+#endif
+
+#include "Maths.h"
+#include "Color.h"
 
 #include <GLFW/glfw3.h>
 
@@ -118,9 +122,6 @@ struct rect {
 #else
 #include <GLFW/glfw3native.h>
 #endif
-
-#include "Maths.h"
-#include "Color.h"
 
 #include "KEYBOARD_KEYS.h"
 #include "MOUSE_BUTTONS.h"

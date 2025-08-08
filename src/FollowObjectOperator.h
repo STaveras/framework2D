@@ -6,11 +6,12 @@
 // This is more like "hard attach"
 class AttachObjectsOperator: public ObjectOperator
 {
+	// The description seems backwards, but is as follows:
       GameObject* _source = NULL; // the object following
       GameObject* _object = NULL; // the object followed
 
       vector2 _offset;
-      bool _horizontally = true, _vertically = true;
+	  bool _horizontally = true, _vertically = true; // we should just send a scalar vector2 instead of two bools
 
    public:
 
@@ -25,10 +26,10 @@ class AttachObjectsOperator: public ObjectOperator
 
          vector2 position = _source->getPosition();
 
-         if (_horizontally)
+         if (_horizontally) // we would compare with (1, 0)
             position.x = object->getPosition().x;
 
-         if (_vertically)
+		 if (_vertically) // we would compare with (0, 1)
             position.y = object->getPosition().y;
 
          _source->setPosition(position + _offset);

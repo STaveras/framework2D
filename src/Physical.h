@@ -54,7 +54,6 @@ public:
 			return;
 
 		this->setPosition(this->getPosition() += _velocity * time);
-
 	}
 
 	virtual void collision(Physical* body) {
@@ -73,6 +72,8 @@ public:
 		float j = -(1 + e) * velAlongNormal;
 		j /= 1 / this->getMass() + 1 / body->getMass();
 		vector2 impulse = j * normal;
+
+		//addImpulse(normal, j);
 		//this->setVelocity(this->getVelocity() + impulse / this->getMass());
 		//this->setPosition(this->getPosition() + normal * OVERLAP_ALLOWANCE);
 		//body->setVelocity(body->getVelocity() - impulse / body->getMass());

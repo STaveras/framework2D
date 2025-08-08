@@ -8,8 +8,7 @@
 
 // I usually hate globals, but this one will only be accessible to TileSets
 // Eventually this might grow too large if we're loading many tilesets and not clearing this
-static Factory<Collidable> collisionObjects; 
-
+static Factory<Collidable> collisionObjects;
 
 TileSet* TileSet::loadFromFile(const char* fileName)
 {

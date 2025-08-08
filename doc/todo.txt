@@ -1,6 +1,8 @@
-- Reorganize base folder filters into folders by related-modules 
+# TODO List
+- Add key-mapping support... Xml file <key map="space" code="32">Action</key> or JSON file
 - Write a CMake file to auto-generate project filters
-- Functions for reading in shader files and compiling them when necessary (as needed)
 - Fix Timer to be in milliseconds and not in seconds
 - Fix 'PlatformInput' class
-- Add key-mapping support... Xml file <key map="space" code="32">Action</key>
+
+Vulkan Renderer:
+- Functions for reading in shader files and compiling them when necessary (as needed)
