@@ -122,6 +122,23 @@ void setupDebugMessenger(VkInstance instance)
 }
 #endif
 
+RendererVK::RendererVK(void)
+	: IRenderer(RENDERER_TYPE_VK),
+	  _instance(VK_NULL_HANDLE),
+	  _device(VK_NULL_HANDLE),
+	  _physicalDevice(VK_NULL_HANDLE),
+	  _surface(VK_NULL_HANDLE),
+	  _presentQueue(VK_NULL_HANDLE),
+	  _graphicsQueue(VK_NULL_HANDLE),
+	  _graphicsPipeline(VK_NULL_HANDLE),
+	  _pipelineLayout(VK_NULL_HANDLE),
+	  _renderPass(VK_NULL_HANDLE),
+	  _commandPool(VK_NULL_HANDLE),
+	  _descriptorPool(VK_NULL_HANDLE),
+	  _uniformDescriptorSetLayout(VK_NULL_HANDLE),
+	  _samplerDescriptorSetLayout(VK_NULL_HANDLE) {
+}
+
 bool checkValidationLayerSupport(std::vector<const char*>  validationLayers) {
 
 	uint32_t layerCount;
@@ -369,7 +386,21 @@ void RendererVK::pickPhysicalDevice(VkInstance instance)
 	}
 }
 
-void RendererVK::_drawImage(Sprite* sprite, VkCommandBuffer commandBuffer) 
+void RendererVK::_textureDescriptorSet(VkDescriptorSet& descriptorSet)
+{
+	// Allocate the descriptor set
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = _descriptorPool; // Descriptor pool defined elsewhere
+	allocInfo.descriptorSetCount = 1;
+	allocInfo.pSetLayouts = &_samplerDescriptorSetLayout;
+
+	if (vkAllocateDescriptorSets(_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to allocate descriptor sets!");
+	}
+}
+
+void RendererVK::_drawImage(Sprite* sprite, VkCommandBuffer commandBuffer)
 {
 	// Ensure the texture is valid
 	if (!sprite) return;
@@ -392,18 +423,8 @@ void RendererVK::_drawImage(Sprite* sprite, VkCommandBuffer commandBuffer)
 	vkUnmapMemory(_device, vertexBufferMemory);
 
 	// Create descriptor sets to bind the texture
-	VkDescriptorSet descriptorSet;	
-
-	// Allocate the descriptor set
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = _descriptorPool; // Descriptor pool defined elsewhere
-	allocInfo.descriptorSetCount = 1;
-	allocInfo.pSetLayouts = &_samplerDescriptorSetLayout;
-
-	if (vkAllocateDescriptorSets(_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to allocate descriptor sets!");
-	}
+	VkDescriptorSet descriptorSet;
+	_textureDescriptorSet(descriptorSet);
 
 	TextureVK* texture = (TextureVK*)sprite->getTexture();
 
@@ -782,8 +803,6 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 
 void RendererVK::createDescriptorPool(void)
 {
-	VkDescriptorPool _descriptorPool; // Member variable to store the descriptor pool
-
 	// Define the type and number of descriptors that can be allocated from the pool
 	VkDescriptorPoolSize poolSize{};
 	poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1054,7 +1073,7 @@ void RendererVK::createSyncObjects(void)
 	}
 }
 
-void RendererVK::OnWindowResized(const Event& e)
+void RendererVK::onWindowResized(const Event& e)
 {
 	GLFWwindow* window = (GLFWwindow*)e.getSender();
 
@@ -1191,8 +1210,6 @@ void RendererVK::initialize(void)
 			createSyncObjects();
 			createDescriptorPool();
 		}
-
-		Engine2D::getEventSystem()->registerCallback<RendererVK>(EVT_WINDOW_RESIZED, this, &RendererVK::OnWindowResized);
 	}
 }
 
@@ -1455,22 +1472,61 @@ void RendererVK::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t widt
 
 void RendererVK::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
+	// 1) Validate inputs early
+	if (size == 0) {
+#if _DEBUG
+		std::cerr << "[VK] createBuffer: refusing to create buffer with size=0\n";
+#endif
+		throw std::runtime_error("createBuffer: size must be > 0");
+	}
+	if (usage == 0) {
+#if _DEBUG
+		std::cerr << "[VK] createBuffer: refusing to create buffer with usage=0\n";
+#endif
+		throw std::runtime_error("createBuffer: usage must not be 0");
+	}
+
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
 	bufferInfo.usage = usage;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(_device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create buffer!");
+	// If you only use one graphics queue, EXCLUSIVE is ideal.
+	// If you use both graphics and transfer queues concurrently, set CONCURRENT and provide families.
+	QueueFamilyIndices q = findQueueFamilies(_physicalDevice);
+	const uint32_t fams[2] = { q.graphicsFamily.value(), q.presentFamily.value() };
+	bool familiesDiffer = q.graphicsFamily != q.presentFamily;
+
+	if (familiesDiffer) {
+		bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+		bufferInfo.queueFamilyIndexCount = 2;
+		bufferInfo.pQueueFamilyIndices = fams;
+	}
+	else {
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	}
+
+	if (VkResult rc = vkCreateBuffer(_device, &bufferInfo, nullptr, &buffer)) {
+		if (rc != VK_SUCCESS) {
+#if _DEBUG
+			std::cerr << "[VK] vkCreateBuffer failed. size=" << (uint64_t)size
+				<< " usage=0x" << std::hex << usage << std::dec
+				<< " sharing=" << (familiesDiffer ? "CONCURRENT" : "EXCLUSIVE")
+				<< " rc=" << (int)rc << "\n";
+#endif
+			throw std::runtime_error("Failed to create buffer");
+		}
 	}
 
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(_device, buffer, &memRequirements);
 
+	// Align up to required alignment
+	VkDeviceSize allocSize = (size + memRequirements.alignment - 1) & ~(memRequirements.alignment - 1);
+
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.allocationSize = allocSize;
 	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(_device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {

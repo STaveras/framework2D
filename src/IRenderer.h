@@ -20,6 +20,18 @@ public:
 		// TODO: Add other state information
 	} RenderList;
 
+	// Renderer API types
+	// This is used to identify the type of renderer being used
+	// NOTE: This might go away in the future, as we might want to use a more generic interface
+	typedef enum RENDERER_API
+	{
+		RENDERER_TYPE_NULL = 0,
+		RENDERER_TYPE_DX,		// DirectX 9 Sprite renderer
+		RENDERER_TYPE_MTL,	// Metal renderer (for macOS/iOS)
+		RENDERER_TYPE_VK,		// Vulkan renderer
+		RENDERER_TYPE_GL		// OpenGL renderer
+	}TYPE;
+
 protected:
 #if _DEBUG
 	void _backgroundColorShift(void);
@@ -35,32 +47,27 @@ protected:
 	Factory<ITexture> m_Textures;
 	Factory<RenderList> _RenderLists;
 
+	RENDERER_API _rendererType;
+
 	ITexture *_textureExists(const char *szFilename);
 
 public:
-	IRenderer(void) :
+	IRenderer(RENDERER_API renderingAPI = RENDERER_TYPE_NULL, 
+				 int nWidth = 0, int nHeight = 0,
+				 bool fullscreen = false, 
+				 bool vsync = false) :
+		_rendererType(renderingAPI),
 #if _DEBUG
 		m_bStaticBG(false),
 #endif
 		m_bFullScreen(false),
 		m_bVerticalSync(false),
-		m_nWidth(0), m_nHeight(0),
+		m_nWidth(nWidth), m_nHeight(nHeight),
 		m_ClearColor(0xFFFFFFFF),
-		m_pCamera(NULL)
-	{
+		m_pCamera(NULL){
+		// Comes with one global render list
 		_RenderLists.create();
-	} // Comes with one global render list
-
-	IRenderer(int nWidth, int nHeight, bool fullscreen = false, bool vsync = false) :
-#if _DEBUG
-		m_bStaticBG(false),
-#endif
-		m_bFullScreen(fullscreen),
-		m_bVerticalSync(vsync),
-		m_nWidth(nWidth),
-		m_nHeight(nHeight),
-		m_ClearColor(0xFFFFFFFF),
-		m_pCamera(NULL) {}
+	} 
 
 	virtual ~IRenderer() = 0;
 
@@ -97,6 +104,8 @@ public:
 	virtual void initialize(void) = 0;
 	virtual void shutdown(void) = 0;
 	virtual void render(void) = 0;
+
+	TYPE renderingAPI(void) const { return _rendererType; }
 	
 } RenderingInterface;
 

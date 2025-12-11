@@ -55,10 +55,12 @@ void ObjectManager::update(float fTime)
 		Collidable* collidable = object->getCollidable();
 		if (collidable && collidable->isActive()) {
 
-#if _DEBUG && (defined(_WIN32) || defined(_WIN64))
-			RendererDX* renderer = dynamic_cast<RendererDX*>(Engine2D::getRenderer());
-			renderer->m_Collidables.push_back(collidable);
-#endif
+//#if _DEBUG && (defined(_WIN32) || defined(_WIN64))
+//			RenderingInterface* renderer = dynamic_cast<IRenderer*>(Engine2D::getRenderer());
+//			if (renderer->renderingAPI() == RenderingInterface::RENDERER_TYPE_DX) {
+//				dynamic_cast<RendererDX*>(renderer)->m_Collidables.push_back(collidable);
+//			}
+//#endif
 			for (auto& otherPair : objects) {
 				GameObject* otherObject = otherPair.second;
 
@@ -77,9 +79,11 @@ void ObjectManager::update(float fTime)
 					Engine2D::getEventSystem()->sendEvent(CollisionEvent(object, otherObject));
 #if _DEBUG
 					if (Debug::dbgObjects) {
-#if (defined(_WIN32) || defined(_WIN64))
-						renderer->m_Collidables.push_back(otherCollidable);
-#endif
+//#if (defined(_WIN32) || defined(_WIN64))
+//						if (renderer->renderingAPI() == RenderingInterface::RENDERER_TYPE_DX) {
+//							dynamic_cast<RendererDX*>(renderer)->m_Collidables.push_back(otherCollidable);
+//						}
+//#endif
 						char buffer[256]{ 0 };
 						sprintf_s(buffer, "%s\np1{%f, %f}\nco1{%f,%f,%f,%f}\nr1{%f,%f}\n", objectItr->first.c_str(), object->getPosition().x, object->getPosition().y,
 							collidable->getPosition().x, collidable->getPosition().y,
