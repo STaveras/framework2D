@@ -15,6 +15,7 @@ IRenderer::~IRenderer() {
 
 // NOTE: Initial test demo
 #if _DEBUG
+
 void IRenderer::_backgroundColorShift(void)
 {
 	if (!m_bStaticBG)

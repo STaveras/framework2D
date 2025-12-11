@@ -36,11 +36,6 @@ public:
 	void addAction(Action action) { _actions.push_back(action); }
 	void removeAction(Action action);
 
-	//bool buttonPressed(std::string actionName);
-	//bool buttonReleased(std::string actionName);
-	//bool buttonDown(std::string actionName);
-	//bool buttonUp(std::string actionName);
-
 	bool buttonPressed(Action* action);
 	bool buttonReleased(Action* action);
 	bool buttonDown(Action* action);

@@ -5,11 +5,12 @@
 
 #include "EventSystem.h"
 #include "ImageLoaders.h"
+#include "Window.h"
 
 #include <optional>
 #include <vector>
 
-class RendererVK : public IRenderer
+class RendererVK : public IRenderer/*, public Window::EventListener*/
 {
 	VkInstance _instance = VK_NULL_HANDLE;
 
@@ -71,6 +72,8 @@ class RendererVK : public IRenderer
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
+	void _textureDescriptorSet(VkDescriptorSet& descriptorSet);
+
 	//void _updateBillboards(const std::vector<Renderable*>& renderList);
 	//void _drawImage(Sprite* sprite, Color tint = 0xFFFFFFFF, vector2 offset = {0,0}, float zValue = 0.0f);
 	void _drawImage(Sprite* sprite, VkCommandBuffer commandBuffer);
@@ -104,11 +107,13 @@ class RendererVK : public IRenderer
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	void createSyncObjects(void); // I don't necessarily want to even declare this here
 
-	void OnWindowResized(const Event& e);
+	void onWindowResized(const Event& e);
 
 	uint32_t currentFrame = 0;
 
 public:
+	RendererVK(void);
+
 	void initialize(void);
 	void shutdown(void);
 	void render(void);

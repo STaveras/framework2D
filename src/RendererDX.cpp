@@ -22,19 +22,21 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
-RendererDX::RendererDX(void) : IRenderer(),
-							   m_hWnd(NULL),
-							   m_pD3D(NULL),
-							   m_pD3DDevice(NULL),
-							   m_pD3DSprite(NULL) {
+RendererDX::RendererDX(void) : 
+	IRenderer(RENDERER_TYPE_DX),
+	m_hWnd(NULL),
+	m_pD3D(NULL),
+	m_pD3DDevice(NULL),
+	m_pD3DSprite(NULL) {
 
 }
 
-RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : IRenderer(nWidth, nHeight, bFullscreen, bVsync),
-m_hWnd(hWnd),
-m_pD3D(NULL),
-m_pD3DDevice(NULL),
-m_pD3DSprite(NULL) {
+RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync) : 
+	IRenderer(RENDERER_TYPE_DX, nWidth, nHeight, bFullscreen, bVsync),
+	m_hWnd(hWnd),
+	m_pD3D(NULL),
+	m_pD3DDevice(NULL),
+	m_pD3DSprite(NULL) {
 
 }
 
@@ -127,104 +129,6 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 		&center3D, &position,
 		tint._color);
 }
-
-#ifdef _DEBUG
-
-// This is just to help with debugging, the renderer isn't not supposed to know of collidables
-
-#include "Collidable.h"
-#include "Square.h"
-
-// This effectively is a graphing function for the collision shape bounds
-// It will draw the bounds of the collision shape for debugging purposes
-// It draws basic shapes like circles, rectangles, and polygons!
-void RendererDX::_drawCollisionShapeBounds(Collidable* pCollidable, Color color) // Maybe pass in its associated renderable to get the right transform information?
-{
-	if (!pCollidable)
-		return;
-
-	// grab the current matrices & viewport
-	D3DXMATRIX matView, matProj;
-	D3DVIEWPORT9 vp;
-	m_pD3DDevice->GetTransform(D3DTS_VIEW, &matView);
-	m_pD3DDevice->GetTransform(D3DTS_PROJECTION, &matProj);
-	m_pD3DDevice->GetViewport(&vp);
-
-	switch (pCollidable->getType())
-	{
-	case COL_OBJ_CIRCLE:
-		// Draw circle bounds
-
-		break;
-	case COL_OBJ_PLANE:
-
-		break;
-	case COL_OBJ_SQUARE:
-	{
-		Square* pSquare = dynamic_cast<Square*>(pCollidable);
-		if (!pSquare)
-			return;
-
-		//// Let's make an example box and have it display at a known location on the screen
-		//D3DXVECTOR2 position = { 0,0 };
-
-		//float halfWidth = 50.0f; // Example width
-		//float halfHeight = 50.0f; // Example height
-
-		D3DXVECTOR2 position = pSquare->getPosition();
-
-		float halfWidth = pSquare->getWidth() / 2.0f;
-		float halfHeight = pSquare->getHeight() / 2.0f;
-
-		D3DXVECTOR3 worldPts[5] = {
-			{ pSquare->getPosition().x - halfWidth, pSquare->getPosition().y - halfHeight, 0.0f },
-			{ pSquare->getPosition().x + halfWidth, pSquare->getPosition().y - halfHeight, 0.0f },
-			{ pSquare->getPosition().x + halfWidth, pSquare->getPosition().y + halfHeight, 0.0f },
-			{ pSquare->getPosition().x - halfWidth, pSquare->getPosition().y + halfHeight, 0.0f },
-			{ pSquare->getPosition().x - halfWidth, pSquare->getPosition().y - halfHeight, 0.0f }
-		};
-
-		D3DXVECTOR3 screenPts[5];
-		for (int i = 0; i < 5; ++i)
-			D3DXVec3Project(
-				&screenPts[i],
-				&worldPts[i],
-				&vp,
-				&matProj,
-				&matView,
-				/*world=*/ nullptr  // nullptr == identity
-			);
-
-		struct Vertex { 
-			FLOAT x, y, z, rhw;
-			DWORD col;
-		};
-
-		Vertex box[5];
-
-		// Fill the vertex buffer with the screen points
-		for (int i = 0; i < 5; ++i)
-		{
-			box[i].x = screenPts[i].x;
-			box[i].y = screenPts[i].y;
-			box[i].z = screenPts[i].z;   // depth (0�1)
-			box[i].rhw = 1.0f;           // no further transforms
-			box[i].col = color._color;
-		}
-
-		// Set render state for untextured, solid color drawing
-		m_pD3DDevice->SetTexture(0, NULL);
-		m_pD3DDevice->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
-
-		// Disable alpha blending if it's on
-		m_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-		m_pD3DDevice->DrawPrimitiveUP(D3DPT_LINESTRIP, 4, box, sizeof(Vertex));
-	}
-	break;
-	}
-}
-
-#endif
 
 // void RendererDX::_DrawFont(Font* pFont)
 //{
@@ -425,19 +329,19 @@ void RendererDX::render(void)
 
 			m_pD3DSprite->End();
 		}
-#ifdef _DEBUG
-		for (auto collidable : m_Collidables)
-		{
-			_drawCollisionShapeBounds(collidable, Color(1.0, 0.0, 0.0, 0.0));
-		}
-#endif
+//#ifdef _DEBUG
+//		for (auto collidable : m_Collidables)
+//		{
+//			_drawCollisionShapeBounds(collidable, Color(1.0, 0.0, 0.0, 0.0));
+//		}
+//#endif
 		m_pD3DDevice->EndScene();
 	}
 	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 
-#if _DEBUG
-	m_Collidables.clear(); // Clear collidables after rendering
-#endif
+//#if _DEBUG
+//	m_Collidables.clear(); // Clear collidables after rendering
+//#endif
 }
 
 #endif

@@ -3,6 +3,8 @@
 
 #include "Types.h"
 
+#define EVT_WINDOW_RESIZED "EVT_WINDOW_RESIZED"
+
 class Window
 {
 	bool m_bHasQuit;
@@ -20,11 +22,36 @@ class Window
 	const char* m_szWindowClassName;
 	std::string m_szWindowTitle;
 
+public:
+
+	//constexpr static const char* EVT_WINDOW_RESIZED = "EVT_WINDOW_RESIZED";
+
+	//class EventListener : public Cyclable
+	//{
+	//public:
+	//	virtual void onWindowResized(const Event& evt) = 0;
+
+	//	virtual ~EventListener() {}
+
+	//	virtual void start(void) {
+	//		//Engine2D::getInstance()->getEventSystem()->registerCallback<EventListener>(EVT_WINDOW_RESIZED, this, &EventListener::onWindowResized);
+	//	}
+
+	//	virtual void update(float time) {
+	//		throw std::runtime_error("Window::EventListener::update() not implemented.");
+	//	}
+
+	//	virtual void finish(void) {
+	//		//Engine2D::getInstance()->getEventSystem()->unregister<EventListener>(EVT_WINDOW_RESIZED, this, &EventListener::onWindowResized);
+	//	}
+	//};
+
+private:
 #ifdef _WIN32
 	static LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
 protected:
-	friend class RendererVK;
+	friend class RendererVK; // HACK: This shouldn't be necessary, but we need to access the underlying window handle for Vulkan
 
 public:
 	Window(void);

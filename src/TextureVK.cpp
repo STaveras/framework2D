@@ -6,8 +6,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-RendererVK* rendererVK = (RendererVK*)Renderer::get();
-
 TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE)
 {
    // Load image using stb_image library
@@ -21,6 +19,12 @@ TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE),
 
    _width = static_cast<uint32_t>(texWidth);
    _height = static_cast<uint32_t>(texHeight);
+
+   RendererVK* rendererVK = (RendererVK*)Renderer::get();
+
+   if (!rendererVK) {
+      throw std::runtime_error("RendererVK instance is not available!");
+	}
 
    // Create staging buffer
    VkBuffer stagingBuffer;
@@ -59,8 +63,10 @@ TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE),
 
 TextureVK::~TextureVK()
 {
-   vkDestroySampler(rendererVK->getDevice(), _sampler, nullptr);
-   vkDestroyImageView(rendererVK->getDevice(), _imageView, nullptr);
-   vkDestroyImage(rendererVK->getDevice(), _image, nullptr);
-   vkFreeMemory(rendererVK->getDevice(), _imageMemory, nullptr);
+   if (RendererVK* rendererVK = (RendererVK*)Renderer::get()) {
+      vkDestroySampler(rendererVK->getDevice(), _sampler, nullptr);
+      vkDestroyImageView(rendererVK->getDevice(), _imageView, nullptr);
+      vkDestroyImage(rendererVK->getDevice(), _image, nullptr);
+      vkFreeMemory(rendererVK->getDevice(), _imageMemory, nullptr);
+   }
 }

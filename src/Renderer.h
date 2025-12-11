@@ -11,6 +11,7 @@
 #include "IRenderer.h"
 #include "Renderable.h"
 #include "RendererDX.h"
+#include "RendererGL.h"
 #include "RendererMTL.h"
 #include "RendererVK.h"
 #include "Window.h"
@@ -31,7 +32,7 @@ namespace Renderer
 	// Create a Vulkan renderer
 	IRenderer* createVKRenderer(Window* window);
 
-	// Create an OpenGL renderer
+	// TODO: Create an OpenGL renderer
 	IRenderer* createGLRenderer(Window* window);
 	
 	void destroyRenderer(IRenderer* pRenderer);
