@@ -91,30 +91,55 @@ int main(int argc, const char *argv[])
    RenderingInterface* pRenderer = nullptr;
    InputInterface* pInput = nullptr;
 
-#ifndef __linux__   
-   if (System::checkArgumentsForVulkan(argc, argv))
-#endif
-   {
-      window.initialize();
-      pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
+   const bool useVulkan = System::checkArgumentsForVulkan(argc, argv);
+   const bool useOpenGL = System::checkArgumentsForOpenGL(argc, argv);
+
+#if _WIN32
+   if (useOpenGL) {
+      window.initialize(Window::ClientAPI::OpenGL);
+      pInput = (IInput*)Input::createInputInterface(&window);
+      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+   }
+   else if (useVulkan) {
+      window.initialize(Window::ClientAPI::None, true);
+      pInput = (IInput*)Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
-#if _WIN32
    else {
-
       window.initialize(hInstance, lpCmdLine);
       pInput = (DirectInput*)Input::createDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
 #elif __APPLE__
+   if (useOpenGL) {
+      window.initialize(Window::ClientAPI::OpenGL);
+      pInput = (IInput*)Input::createInputInterface(&window);
+      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+   }
+   else if (useVulkan) {
+      window.initialize(Window::ClientAPI::None, true);
+      pInput = (IInput*)Input::createInputInterface(&window);
+      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
+   }
    else {
-      window.initialize();
+      window.initialize(Window::ClientAPI::None);
       pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
 
       // if (System::checkArgumentsForSDL(argc, argv))
       //    pRenderer = (RenderingInterface*)(RendererSDL*)Renderer::createSDLRenderer(&window);
       // else
          pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
+   }
+#else
+   if (useOpenGL) {
+      window.initialize(Window::ClientAPI::OpenGL);
+      pInput = (IInput*)Input::createInputInterface(&window);
+      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+   }
+   else {
+      window.initialize(Window::ClientAPI::None, true);
+      pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
+      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
 #endif
 
