@@ -31,8 +31,11 @@ IRenderer* Renderer::createVKRenderer(Window* window)
 
 IRenderer* Renderer::createGLRenderer(Window* window)
 {
-	IRenderer* renderer = nullptr;
-	// TODO: Create the OpenGL renderer instance
+	IRenderer* renderer = new RendererGL(window);
+	if (window) {
+		renderer->setWidth(window->getWidth());
+		renderer->setHeight(window->getHeight());
+	}
 	return renderer;
 }
 

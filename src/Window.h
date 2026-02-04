@@ -23,6 +23,11 @@ class Window
 	std::string m_szWindowTitle;
 
 public:
+	enum class ClientAPI
+	{
+		None,
+		OpenGL
+	};
 
 	//constexpr static const char* EVT_WINDOW_RESIZED = "EVT_WINDOW_RESIZED";
 
@@ -80,7 +85,7 @@ public:
 #ifdef _WIN32
 	void initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
 #endif
-	void initialize(void);
+	void initialize(ClientAPI clientAPI = ClientAPI::None, bool requireVulkanSupport = false);
 	void update(void);
 	void shutdown(void);
 
