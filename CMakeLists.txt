@@ -49,6 +49,7 @@ endif()
 
 find_library(GLFW_LIBRARY NAMES glfw3)
 find_path(GLFW_INCLUDE_DIR GLFW/glfw3.h)
+find_package(OpenGL REQUIRED)
 
 # Libraries
 find_package(GLM REQUIRED)
@@ -64,7 +65,7 @@ file(GLOB SOURCES "src/*.cpp")
 
 # Executable
 add_executable(MyProject ${SOURCES})
-target_link_libraries(MyProject ${GLM_LIBRARIES} glfw ${TinyXML2_LIBRARIES} ${SIMDJSON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(MyProject ${GLM_LIBRARIES} glfw ${TinyXML2_LIBRARIES} ${SIMDJSON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} OpenGL::GL)
 
 if(WIN32)
   target_link_libraries(MyProject ${DirectX_LIBRARIES} ${Vulkan_LIBRARIES})
