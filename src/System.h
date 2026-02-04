@@ -106,7 +106,7 @@ namespace System
         return false;
     }
 
-    static bool checkArgumentsForOpenGL(int argc, char** argv) 
+    static bool checkArgumentsForOpenGL(int argc, const char** argv) 
     {
         if (argc > 1) {
 

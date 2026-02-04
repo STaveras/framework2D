@@ -1,78 +1,208 @@
+// RendererGL.cpp
 
-//#include "RendererGL.h"
-//
-//#include <iostream>
-//
-//RendererGL::RendererGL() {}
-//
-//RendererGL::~RendererGL()
-//{
-//   if (m_window) glfwDestroyWindow(m_window);
-//   glfwTerminate();
-//}
-//
-//bool RendererGL::Init(const RenderParams& params)
-//{
-//   // Initialise GLFW
-//   if (!glfwInit()) {
-//      std::cerr << "Failed to init GLFW\n";
-//      return false;
-//   }
-//
-//   // Request an OpenGL 3.3 Core context (adjust as needed)
-//   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//
-//   m_window = glfwCreateWindow(params.width, params.height,
-//      "OpenGL Renderer", nullptr, nullptr);
-//   if (!m_window) {
-//      std::cerr << "Failed to create window\n";
-//      return false;
-//   }
-//   glfwMakeContextCurrent(m_window);
-//
-//   // Load OpenGL functions
-//   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-//      std::cerr << "Failed to load GLAD\n";
-//      return false;
-//   }
-//
-//   // Simple full?screen quad VAO/VBO
-//   float vertices[] = {
-//       -1.0f,  1.0f, 0.f,
-//       -1.0f, -1.0f, 0.f,
-//        1.0f, -1.0f, 0.f,
-//        1.0f,  1.0f, 0.f
-//   };
-//   glGenVertexArrays(1, &m_vao);
-//   glBindVertexArray(m_vao);
-//
-//   glGenBuffers(1, &m_vbo);
-//   glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-//   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-//   glEnableVertexAttribArray(0);           // location 0 in the shader
-//   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-//      3 * sizeof(float), (void*)0);
-//
-//   return true;
-//}
-//
-//void RendererGL::Resize(int width, int height)
-//{
-//   glfwSetWindowSize(m_window, width, height);
-//   glViewport(0, 0, width, height);
-//}
-//
-//void RendererGL::BeginFrame()
-//{
-//   glClearColor(0.1f, 0.2f, 0.3f, 1.f);
-//   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//}
-//
-//void RendererGL::EndFrame() {}
-//
-//void RendererGL::Present()
-//{
-//   glfwSwapBuffers(m_window);
-//}
+#include "RendererGL.h"
+
+#include "Animation.h"
+#include "Camera.h"
+#include "Frame.h"
+#include "Sprite.h"
+#include "TextureGL.h"
+
+#include <cmath>
+
+namespace {
+constexpr float kRadiansToDegrees = 180.0f / 3.14159265358979323846f;
+}
+#if defined(__APPLE__)
+#include <OpenGL/gl3.h>
+#else
+#include <GL/gl.h>
+#endif
+
+RendererGL::RendererGL() : IRenderer(RENDERER_TYPE_GL) {}
+
+RendererGL::RendererGL(Window* window) :
+	IRenderer(RENDERER_TYPE_GL, window ? window->getWidth() : 0, window ? window->getHeight() : 0),
+	_window(window ? window->getUnderlyingWindow() : nullptr)
+{
+}
+
+RendererGL::~RendererGL()
+{
+	shutdown();
+}
+
+void RendererGL::setVerticalSync(bool vsyncEnabled)
+{
+	IRenderer::setVerticalSync(vsyncEnabled);
+	if (_window) {
+		glfwSwapInterval(vsyncEnabled ? 1 : 0);
+	}
+}
+
+void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset)
+{
+	if (!sprite) {
+		return;
+	}
+
+	TextureGL* texture = static_cast<TextureGL*>(const_cast<ITexture*>(sprite->getTexture()));
+	if (!texture) {
+		return;
+	}
+
+	const RECT& srcRect = sprite->getSrcRect();
+	const float srcWidth = static_cast<float>(srcRect.right - srcRect.left);
+	const float srcHeight = static_cast<float>(srcRect.bottom - srcRect.top);
+
+	if (srcWidth <= 0.0f || srcHeight <= 0.0f) {
+		return;
+	}
+
+	const float texWidth = static_cast<float>(texture->getWidth());
+	const float texHeight = static_cast<float>(texture->getHeight());
+
+	const float u0 = srcRect.left / texWidth;
+	const float v0 = srcRect.top / texHeight;
+	const float u1 = srcRect.right / texWidth;
+	const float v1 = srcRect.bottom / texHeight;
+
+	const vector2 position = sprite->getPosition() + offset;
+	const vector2 center = sprite->getCenter();
+	const vector2 scale = sprite->getScale();
+	const float rotationRadians = sprite->getRotation();
+
+	glBindTexture(GL_TEXTURE_2D, texture->getTextureId());
+
+	glColor4f(tint.r / 255.0f, tint.g / 255.0f, tint.b / 255.0f, tint.a / 255.0f);
+
+	glPushMatrix();
+	glTranslatef(position.x, position.y, 0.0f);
+	glTranslatef(center.x, center.y, 0.0f);
+	glRotatef(rotationRadians * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
+	glScalef(scale.x, scale.y, 1.0f);
+	glTranslatef(-center.x, -center.y, 0.0f);
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(u0, v0);
+	glVertex2f(0.0f, 0.0f);
+
+	glTexCoord2f(u1, v0);
+	glVertex2f(srcWidth, 0.0f);
+
+	glTexCoord2f(u1, v1);
+	glVertex2f(srcWidth, srcHeight);
+
+	glTexCoord2f(u0, v1);
+	glVertex2f(0.0f, srcHeight);
+	glEnd();
+
+	glPopMatrix();
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+ITexture* RendererGL::createTexture(const char* szFilename, Color colorKey)
+{
+	ITexture* pTexture = _textureExists(szFilename);
+
+	if (!pTexture) {
+		pTexture = (ITexture*)new TextureGL(szFilename);
+		pTexture->SetKeyColor(colorKey);
+		m_Textures.store(pTexture);
+	}
+
+	return pTexture;
+}
+
+bool RendererGL::destroyTexture(const ITexture* texture)
+{
+	if (!texture) {
+		return false;
+	}
+
+	delete const_cast<ITexture*>(texture);
+	return IRenderer::destroyTexture(texture);
+}
+
+void RendererGL::initialize(void)
+{
+	if (!_window) {
+		return;
+	}
+
+	glfwMakeContextCurrent(_window);
+
+	setVerticalSync(m_bVerticalSync);
+
+	glViewport(0, 0, m_nWidth, m_nHeight);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_TEXTURE_2D);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, static_cast<double>(m_nWidth), static_cast<double>(m_nHeight), 0.0, -1.0, 1.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void RendererGL::shutdown(void)
+{
+	if (_window) {
+		glfwMakeContextCurrent(_window);
+	}
+}
+
+void RendererGL::render(void)
+{
+	if (!_window) {
+		return;
+	}
+
+	IRenderer::render();
+
+	glClearColor(m_ClearColor.r / 255.0f, m_ClearColor.g / 255.0f, m_ClearColor.b / 255.0f, m_ClearColor.a / 255.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	if (m_pCamera) {
+		vector2 cameraPosition = m_pCamera->getPosition() - m_pCamera->getCenter();
+
+		glTranslatef(m_pCamera->getCenter().x, m_pCamera->getCenter().y, 0.0f);
+		glScalef(m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
+		glRotatef(m_pCamera->getRotation() * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
+		glTranslatef(-m_pCamera->getCenter().x - cameraPosition.x, -m_pCamera->getCenter().y - cameraPosition.y, 0.0f);
+	}
+
+	if (!_RenderLists.empty()) {
+		for (unsigned int i = 0; i < _RenderLists.size(); i++) {
+			for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++) {
+				if ((*o) && (*o)->isVisible()) {
+					switch ((*o)->getRenderableType()) {
+					case RENDERABLE_TYPE_SPRITE:
+					{
+						Image* image = (Image*)(*o);
+						_drawImage(image, image->getTintColor(), image->getOffset());
+					}
+					break;
+					case RENDERABLE_TYPE_ANIMATION:
+					{
+						Animation* animation = (Animation*)(*o);
+						if (animation->getFrameCount()) {
+							_drawImage(animation->getCurrentFrame()->getSprite(),
+								animation->getCurrentFrame()->getSprite()->getTintColor(),
+								animation->getOffset());
+						}
+					}
+					break;
+					}
+				}
+			}
+		}
+	}
+
+	glfwSwapBuffers(_window);
+}

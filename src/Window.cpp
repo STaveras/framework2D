@@ -80,7 +80,7 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 }
 #endif
 
-void Window::initialize(void) {
+void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
 
 #if __APPLE__
 	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_TRUE);
@@ -91,12 +91,20 @@ void Window::initialize(void) {
 	if (!glfwInit())
 		return; // -1
 
-	if (glfwVulkanSupported() == GLFW_FALSE) {
+	if (requireVulkanSupport && glfwVulkanSupported() == GLFW_FALSE) {
 		std::cout << "Vulkan is not supported on this platform." << std::endl;
 		return;
 	}
 
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	if (clientAPI == ClientAPI::OpenGL) {
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+	}
+	else {
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	}
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	/* Create a windowed mode window and its OpenGL context */
