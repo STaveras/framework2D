@@ -351,6 +351,7 @@
     <ClCompile Include="src\Stage.cpp" />
     <ClCompile Include="src\StateMachine.cpp" />
     <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\TextureGL.cpp" />
     <ClCompile Include="src\TextureVK.cpp" />
     <ClCompile Include="src\TileSet.cpp" />
     <ClCompile Include="src\Timer.cpp" />

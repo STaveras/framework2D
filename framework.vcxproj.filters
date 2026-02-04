@@ -593,6 +593,9 @@
     <ClCompile Include="src\RendererGL.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\TextureGL.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\project.d">
