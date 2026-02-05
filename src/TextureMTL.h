@@ -14,11 +14,8 @@ class TextureMTL : public ITexture
 	unsigned int _height;
 
 public:
-	TextureMTL(const char* szFilename): ITexture(szFilename), _texture(nil), _width(0), _height(0) {}
-	~TextureMTL(void)
-	{
-		// Texture release logic if needed
-	}
+	TextureMTL(const char* szFilename);
+	~TextureMTL(void);
 
 	id<MTLTexture> getTexture(void) { return _texture; }
 	unsigned int getWidth(void) const { return _width; }
