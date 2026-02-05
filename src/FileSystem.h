@@ -179,7 +179,7 @@ namespace FileSystem
 					{
 						files.push_back(file);
 						std::string subPath = std::string(path) + DIR_SEP + file;
-						std::vector<std::string> subFiles = = ListAllSubdirectories(subPath.c_str());
+						std::vector<std::string> subFiles = ListAllSubdirectories(subPath.c_str());
 						for (std::string subFile : subFiles) {
 							files.push_back(file + DIR_SEP + subFile);
 						}

@@ -3,9 +3,34 @@
 	"transitionFrequency": 0.000000,
 	"transitions": [
 		{
-			"state": "Dead",
+			"state": "Idle",
+			"event": "JUMP_PRESSED",
+			"resultState": "Rising"
+		},
+		{
+			"state": "Idle",
+			"event": "LEFT_DOWN",
+			"resultState": "RunningLeft"
+		},
+		{
+			"state": "Idle",
+			"event": "RIGHT_DOWN",
+			"resultState": "RunningRight"
+		},
+		{
+			"state": "Idle",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack01"
+		},
+		{
+			"state": "Idle",
+			"event": "IN_AIR",
+			"resultState": "Falling"
+		},
+		{
+			"state": "Idle",
 			"event": "DEATH",
-			"resultState": "Idle"
+			"resultState": "Dead"
 		},
 		{
 			"state": "Rising",
@@ -39,61 +64,6 @@
 		},
 		{
 			"state": "Jump",
-			"event": "DEATH",
-			"resultState": "Dead"
-		},
-		{
-			"state": "Idle",
-			"event": "JUMP_PRESSED",
-			"resultState": "Rising"
-		},
-		{
-			"state": "Idle",
-			"event": "LEFT_DOWN",
-			"resultState": "RunningLeft"
-		},
-		{
-			"state": "Idle",
-			"event": "RIGHT_DOWN",
-			"resultState": "RunningRight"
-		},
-		{
-			"state": "Idle",
-			"event": "ATTACK_PRESSED",
-			"resultState": "Attack01"
-		},
-		{
-			"state": "Idle",
-			"event": "IN_AIR",
-			"resultState": "Falling"
-		},
-		{
-			"state": "Idle",
-			"event": "DEATH",
-			"resultState": "Dead"
-		},
-		{
-			"state": "Attack01",
-			"event": "EVT_STATE_END",
-			"resultState": "Idle"
-		},
-		{
-			"state": "Attack01",
-			"event": "ATTACK_PRESSED",
-			"resultState": "Attack02"
-		},
-		{
-			"state": "Attack01",
-			"event": "DEATH",
-			"resultState": "Dead"
-		},
-		{
-			"state": "Attack02",
-			"event": "EVT_STATE_END",
-			"resultState": "Idle"
-		},
-		{
-			"state": "Attack02",
 			"event": "DEATH",
 			"resultState": "Dead"
 		},
@@ -176,6 +146,36 @@
 			"state": "RunningRight",
 			"event": "DEATH",
 			"resultState": "Dead"
+		},
+		{
+			"state": "Attack01",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Attack01",
+			"event": "ATTACK_PRESSED",
+			"resultState": "Attack02"
+		},
+		{
+			"state": "Attack01",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "Attack02",
+			"event": "EVT_STATE_END",
+			"resultState": "Idle"
+		},
+		{
+			"state": "Attack02",
+			"event": "DEATH",
+			"resultState": "Dead"
+		},
+		{
+			"state": "Dead",
+			"event": "DEATH",
+			"resultState": "Idle"
 		}
 	]
 }

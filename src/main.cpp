@@ -81,7 +81,8 @@ int main(int argc, const char *argv[])
       }
 #endif
    }
-   sleep(1000);
+   // sleep is in milliseconds for Windows, seconds for others!
+   // sleep(1000);
 #endif
 
    Window window = Window(GLOBAL_WIDTH, GLOBAL_HEIGHT, Engine2D::version());

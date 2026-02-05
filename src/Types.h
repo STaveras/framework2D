@@ -101,7 +101,8 @@ struct rect {
    int left, top, right, bottom;
 };
 
-#define RECT rect
+// #define RECT rect
+typedef struct rect RECT;
 #define DEFAULT_KEY_COLOR 0xFFFF00FF
 
 #endif
