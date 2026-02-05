@@ -124,7 +124,6 @@ bool RendererGL::destroyTexture(const ITexture* texture)
 		return false;
 	}
 
-	delete const_cast<ITexture*>(texture);
 	return IRenderer::destroyTexture(texture);
 }
 
