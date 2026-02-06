@@ -176,7 +176,6 @@ int main(int argc, const char *argv[])
          if (System::checkArgumentsForFPSCounter(argc, argv)) 
          {
 #ifdef _DEBUG
-            static unsigned int lastFPS = 0;
             static Timer timer; timer.update();
 
             std::string framesPerSecond = "FPS: ";
@@ -187,7 +186,6 @@ int main(int argc, const char *argv[])
 
                     framesPerSecond += std::to_string(engine->getTimer()->getFPS()) + "\n";
                     DEBUG_MSG(framesPerSecond.c_str());
-                    lastFPS = engine->getTimer()->getFPS();
                     timer.reset();
                 }
             }

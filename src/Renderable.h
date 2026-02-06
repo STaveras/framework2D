@@ -46,18 +46,20 @@ public:
 	}_appearance{};
 
 protected:
-    Renderable(void): m_eType(RENDERABLE_TYPE_NULL), 
+    Renderable(void):
 		_offset(0.0f, 0.0f),
 		_center(0.0f, 0.0f),
 		_scale(1.0f, 1.0f),
-		_rotation(0.0f) {}
+		_rotation(0.0f),
+		m_eType(RENDERABLE_TYPE_NULL) {}
 
 public:
-	explicit Renderable(RENDERABLE_TYPE eType):m_eType(eType),
+	explicit Renderable(RENDERABLE_TYPE eType):
 		_offset(0.0f, 0.0f),
 		_center(0.0f, 0.0f),
 		_scale(1.0f, 1.0f),
-		_rotation(0.0f) {
+		_rotation(0.0f),
+		m_eType(eType) {
 		_appearance._isVisible = true; 
 	}
 	virtual ~Renderable(void) = default;

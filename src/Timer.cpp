@@ -11,11 +11,12 @@ using namespace std::chrono;
 
 using ms = duration<double, std::milli>;
 
-Timer::Timer(void) : _delta(0.0),
-					 _frameCap(0.0),
-					 _framesPerSecond(0),
+Timer::Timer(void) :
 					 _timeMultiplier(1.0),
-					 _ticks(0) {
+					 _delta(0.0),
+					 _frameCap(0.0),
+					 _ticks(0),
+					 _framesPerSecond(0) {
 #ifdef _WIN32
 	QueryPerformanceFrequency(&m_liFrequency);
 	QueryPerformanceCounter(&m_liDelta);

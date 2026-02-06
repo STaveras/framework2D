@@ -27,10 +27,10 @@ using namespace FileSystem;
 //}
 
 StateMachine::StateMachine(void) :
+   _state(NULL),
    _isBuffered(false),
    _transitionFrequency(0.0f),
-   _transitionTimer(0.0f) ,
-   _state(NULL) {
+   _transitionTimer(0.0f) {
 
 }
 
@@ -123,12 +123,13 @@ void StateMachine::finish(void)
 void StateMachine::sendInput(const char* condition, void* sender)
 {
    //this->_onEvent(StateMachineEvent(condition, sender));
+	void* eventSender = sender ? sender : this;
 	if (_isBuffered) {
 		if (!containsCondition(condition)) {
-			_events.push(StateMachineEvent(condition, this));
+			_events.push(StateMachineEvent(condition, eventSender));
 		}
 	}
-	else if (State* state = _nextState(StateMachineEvent(condition, this))) {
+	else if (State* state = _nextState(StateMachineEvent(condition, eventSender))) {
 		setState(state);
 	}
 }

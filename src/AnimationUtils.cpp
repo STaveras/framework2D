@@ -72,6 +72,8 @@ namespace Animations {
          return "LOOPING";
       case Animation::eOscillate:
          return "OSCILLATE";
+      case Animation::eOnce:
+         return "ONCE";
       }
       return "ONCE";
    }
@@ -133,7 +135,7 @@ namespace Animations {
       file << "  \"AnimationFile\": {\n";
       file << "    \"Animation\": [\n";
 
-      for (int i = 0; i < animations.size(); ++i) {
+      for (size_t i = 0; i < animations.size(); ++i) {
          Animation* animation = animations[i];
          file << "      {\n";
          file << "        \"Name\": \"" << animation->getName() << "\",\n";
@@ -142,7 +144,7 @@ namespace Animations {
          file << "        \"Speed\": " << animation->getSpeed() << ",\n";
          file << "        \"Frame\": [\n";
 
-         for (int j = 0; j < animation->getFrameCount(); ++j) {
+         for (size_t j = 0; j < animation->getFrameCount(); ++j) {
             Frame* frame = (*animation)[j];
             file << "          {\n";
             file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
@@ -150,7 +152,7 @@ namespace Animations {
             file << "            \"Duration\": " << frame->getDuration() << "\n";
             file << "          }";
 
-            if (j != animation->getFrameCount() - 1) {
+            if (j + 1 != animation->getFrameCount()) {
                file << ",";
             }
             file << "\n";
@@ -159,7 +161,7 @@ namespace Animations {
          file << "        ]\n";
          file << "      }";
 
-         if (i != animations.size() - 1) {
+         if (i + 1 != animations.size()) {
             file << ",";
          }
          file << "\n";

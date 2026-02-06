@@ -20,9 +20,9 @@ class TileMap : public Tile
 
 public:
 	explicit TileMap(unsigned int mapWidth, unsigned int mapHeight, TileSet* tileSet) : Tile(-1, tileSet),
-		_tileSet(tileSet),
 		_mapWidth(mapWidth),
-		_mapHeight(mapHeight) {
+		_mapHeight(mapHeight),
+		_tileSet(tileSet) {
 
 		if (_tileSet) {
 			for (unsigned int i = 0; i < mapWidth; i++) {

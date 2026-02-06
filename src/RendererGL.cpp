@@ -202,6 +202,10 @@ void RendererGL::render(void)
 			for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++) {
 				if ((*o) && (*o)->isVisible()) {
 					switch ((*o)->getRenderableType()) {
+					case RENDERABLE_TYPE_NULL:
+					case RENDERABLE_TYPE_WIDGET:
+					case RENDERABLE_TYPE_FONT:
+						break;
 					case RENDERABLE_TYPE_SPRITE:
 					{
 						Image* image = (Image*)(*o);

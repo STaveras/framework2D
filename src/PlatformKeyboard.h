@@ -25,10 +25,10 @@ public:
 
     void release(void) {}
 
-    bool keyDown(KEY key);
-    bool keyUp(KEY key);
-    bool keyPressed(KEY key);
-    bool keyReleased(KEY key);
+    bool keyDown(KEY key) override;
+    bool keyUp(KEY key) override;
+    bool keyPressed(KEY key) override;
+    bool keyReleased(KEY key) override;
     
     void update(void) override;
 
@@ -179,5 +179,5 @@ public:
         GLFW_KEY_UNKNOWN  // DIK_MEDIASELECT
     };
 
-	const KEYS& getKeys(void) const { return (*this).keys; }
+	const KEYS& getKeys(void) const override { return (*this).keys; }
 };

@@ -24,7 +24,7 @@ PlayState::~PlayState() {
 
 void PlayState::onEnter(State* prev)
 {
-	GameState::onEnter();
+	GameState::onEnter(prev);
 
 	_player = Engine2D::getGame()->getPlayers()->create();
 	_camera = new Camera();
@@ -153,5 +153,5 @@ void PlayState::onExit(State* next)
 
 	Engine2D::getGame()->getPlayers()->destroy(_player);
 
-	GameState::onExit();
+	GameState::onExit(next);
 }
