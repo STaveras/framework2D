@@ -29,9 +29,9 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 	_camera = new Camera();
 
-	_pixel = new Image(BASE_DIRECTORY"pixel.bmp");
+	_pixel = new Image(BasePath("pixel.bmp").c_str());
 
-	_background = new Image(BASE_DIRECTORY"Background/Background.png");
+	_background = new Image(BasePath("Background/Background.png").c_str());
 	_background->center();
 
 #ifdef _DEBUG
@@ -40,11 +40,11 @@ void PlayState::onEnter(State* prev)
 #endif
 	_renderList->push_back(_background);
 
-	_tileSet = TileSet::loadFromFile(BASE_DIRECTORY"Assets/fantasyTiles.tsj");
+	_tileSet = TileSet::loadFromFile(BasePath("Assets/fantasyTiles.tsj").c_str());
 
 	//_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
 	//_tileMap = (*TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).begin());
-	_tileMaps = TileMap::loadFromJSONFile(BASE_DIRECTORY"testMap.tmj", _tileSet);
+	_tileMaps = TileMap::loadFromJSONFile(BasePath("testMap.tmj").c_str(), _tileSet);
 
 	for (unsigned int j = 0; j < _tileMaps.size(); j++)
 	{
@@ -94,7 +94,7 @@ bool PlayState::onExecute(float time)
 	{
 		// Output a hashed to the console
 		char buffer[256];
-		sprintf_s(buffer, "PlayState::onExecute() - %s, %f\n", Engine2D::getTimer()->getTimeStamp().c_str(), Engine2D::getTimer()->getElapsedTime());
+		sprintf_s(buffer, sizeof(buffer), "PlayState::onExecute() - %s, %f\n", Engine2D::getTimer()->getTimeStamp().c_str(), Engine2D::getTimer()->getElapsedTime());
 		DEBUG_MSG(buffer);
 	}
 #endif

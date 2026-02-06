@@ -1,0 +1,76 @@
+# Build settings
+CXX ?= c++
+STD := -std=c++17
+WARN := -Wall -Wextra
+DIAG := -fdiagnostics-color=always
+INCLUDES := -I./ext -I./ext/inc -I./ext/inc/metal-cpp
+LIBS := -lglfw -lvulkan -ltinyxml2 -lsimdjson
+
+# Debug (make DEBUG=1)
+ifeq ($(DEBUG),1)
+  DEBUG_FLAGS := -D_DEBUG -g
+else
+  DEBUG_FLAGS :=
+endif
+
+UNAME_S := $(shell uname -s)
+
+# Platform-specific flags
+ifeq ($(UNAME_S),Darwin)
+  CXX := clang++
+  PLATFORM_FLAGS := -stdlib=libc++ -x objective-c++ \
+    -framework Metal -framework QuartzCore -framework OpenGL -framework Cocoa
+  # Ensure runtime can find Vulkan dylib on common macOS prefixes
+  PLATFORM_RPATH := -Wl,-rpath,/usr/local/lib -Wl,-rpath,/opt/homebrew/lib
+  PLATFORM_SRCS := src/RendererMTL.mm src/TextureMTL.mm
+else
+  PLATFORM_FLAGS :=
+  PLATFORM_RPATH :=
+  PLATFORM_SRCS :=
+endif
+
+COMMON_SRCS := \
+  src/main.cpp src/Engine2D.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
+  src/ObjectManager.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
+  src/AnimationManager.cpp src/AnimationUtils.cpp src/Square.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
+  src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
+  src/TextureVK.cpp src/TextureGL.cpp src/InputEvent.cpp src/IInput.cpp src/Trigger.cpp \
+  src/UpdateBackgroundOperator.cpp src/SDSParser.cpp src/PlatformInput.cpp src/PlatformKeyboard.cpp src/System.cpp \
+  src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
+  src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/PlayState.cpp \
+  src/FantasySideScroller/Character.cpp
+
+SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
+
+OBJDIR := build/obj
+OBJS := $(SRCS:%.cpp=$(OBJDIR)/%.o)
+OBJS := $(OBJS:%.mm=$(OBJDIR)/%.o)
+
+TARGET := bin/$(notdir $(CURDIR))
+
+CPPFLAGS := $(INCLUDES)
+CXXFLAGS := $(STD) $(WARN) $(DIAG) $(DEBUG_FLAGS) $(PLATFORM_FLAGS)
+LDFLAGS := $(LIBS) $(PLATFORM_FLAGS) $(PLATFORM_RPATH)
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	@mkdir -p $(dir $@)
+	$(CXX) $^ -o $@ $(LDFLAGS)
+
+# C++ sources
+$(OBJDIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+# Objective-C++ sources (macOS)
+$(OBJDIR)/%.o: %.mm
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+-include $(OBJS:.o=.d)
+
+clean:
+	rm -rf $(OBJDIR) $(TARGET)

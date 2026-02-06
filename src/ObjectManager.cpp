@@ -85,13 +85,13 @@ void ObjectManager::update(float fTime)
 //						}
 //#endif
 						char buffer[256]{ 0 };
-						sprintf_s(buffer, "%s\np1{%f, %f}\nco1{%f,%f,%f,%f}\nr1{%f,%f}\n", objectItr->first.c_str(), object->getPosition().x, object->getPosition().y,
+						sprintf_s(buffer, sizeof(buffer), "%s\np1{%f, %f}\nco1{%f,%f,%f,%f}\nr1{%f,%f}\n", objectItr->first.c_str(), object->getPosition().x, object->getPosition().y,
 							collidable->getPosition().x, collidable->getPosition().y,
 							((Square*)collidable)->getMax().x, ((Square*)collidable)->getMax().y,
 							object->getRenderable()->getPosition().x, object->getRenderable()->getPosition().y);
 						DEBUG_MSG(buffer);
 						DEBUG_MSG("+\n")
-						sprintf_s(buffer, "%s\np2{%f, %f}\nco2{%f,%f,%f,%f}\nr2{%f,%f}\n", this->getObjectName(otherObject).c_str(), otherObject->getPosition().x, otherObject->getPosition().y,
+						sprintf_s(buffer, sizeof(buffer), "%s\np2{%f, %f}\nco2{%f,%f,%f,%f}\nr2{%f,%f}\n", this->getObjectName(otherObject).c_str(), otherObject->getPosition().x, otherObject->getPosition().y,
 							otherCollidable->getPosition().x, otherCollidable->getPosition().y,
 							((Square*)otherCollidable)->getMax().x, ((Square*)otherCollidable)->getMax().y,
 							otherObject->getRenderable()->getPosition().x, otherObject->getRenderable()->getPosition().y);

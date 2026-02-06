@@ -248,7 +248,13 @@ void StateMachine::fromJSON(std::istream& fileStream)
 
    // Parse the JSON using simdjson
    simdjson::dom::parser parser;
-   simdjson::dom::element root = parser.parse(jsonString);
+   simdjson::padded_string paddedJson(jsonString);
+   simdjson::simdjson_result<simdjson::dom::element> rootResult = parser.parse(paddedJson);
+   if (rootResult.error()) {
+      std::cerr << "Failed to parse StateMachine JSON: " << rootResult.error() << std::endl;
+      return;
+   }
+   simdjson::dom::element root = rootResult.value();
 
    // Deserialize the StateMachine properties from the JSON
    _isBuffered = root["isBuffered"].get_bool();
@@ -259,9 +265,13 @@ void StateMachine::fromJSON(std::istream& fileStream)
    {
       for (simdjson::dom::element transition : root["transitions"]) 
       {
-         std::string stateString(std::string_view(transition["state"].get_string()));
-         std::string eventString(std::string_view(transition["event"].get_string()));
-         std::string resultState(std::string_view(transition["resultState"].get_string()));
+         auto stateView = transition["state"].get_string().value_unsafe();
+         auto eventView = transition["event"].get_string().value_unsafe();
+         auto resultStateView = transition["resultState"].get_string().value_unsafe();
+         
+         std::string stateString(stateView);
+         std::string eventString(eventView);
+         std::string resultState(resultStateView);
          
          this->registerTransition(stateString.c_str(), eventString.c_str(), resultState.c_str());
       }
@@ -270,7 +280,8 @@ void StateMachine::fromJSON(std::istream& fileStream)
    // Deserialize events
    if (root["events"].is_array()) {
       for (simdjson::dom::element event : root["events"]) {
-         std::string eventCondition(std::string_view(event.get_string()));
+         auto eventView = event.get_string().value_unsafe();
+         std::string eventCondition(eventView);
          this->sendInput(eventCondition.c_str());
       }
    }
