@@ -5,6 +5,8 @@
 
 #include "GameObject.h"
 
+#include <algorithm>
+
 Engine2D* engine = Engine2D::getInstance();
 
 bool GameState::addObject(GameObject * object)
@@ -21,8 +23,6 @@ void GameState::onEnter(void)
 {
    _renderList = engine->getRenderer()->createRenderList();
 
-   engine->getEventSystem()->registerCallback<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
-   engine->getEventSystem()->registerCallback<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
    engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
 
@@ -44,8 +44,6 @@ void GameState::onExit(void)
 
    engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
    engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
-   engine->getEventSystem()->unregister<GameState>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameState::_OnObjectStateExit);
-   engine->getEventSystem()->unregister<GameState>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameState::_OnObjectStateEnter);
 
    engine->getRenderer()->destroyRenderList(_renderList);
 }
@@ -56,38 +54,48 @@ void GameState::onExit(void)
 // Meaning we'll need to filter for the object, checking if it's contained within our object manager
 ///
 
-void GameState::_OnObjectStateEnter(const Event& e) {
-
-   if (e.getSender()) {
-
-      GameObject::GameObjectState *objectState = (GameObject::GameObjectState*)e.getSender(); 
-      Renderable* renderable = objectState->getRenderable();
-
-      if (renderable) {
-         _renderList->push_back(renderable);
-      }
-   }
-}
-
-void GameState::_OnObjectStateExit(const Event& e) {
-
-   if (e.getSender()) {
-
-      GameObject::GameObjectState *objectState = (GameObject::GameObjectState*)e.getSender();
-      Renderable* renderable = objectState->getRenderable();
-
-      if (renderable) {
-          _renderList->remove(renderable);
-      }
-   }
-}
-
 void GameState::_OnObjectAdded(const Event & e)
 {
-   ((GameObject*)e.getSender())->start();
+   GameObject* object = (GameObject*)e.getSender();
+   if (!object) {
+      return;
+   }
+
+   object->start();
+
+   GameObject::GameObjectState* currentState = object->getState();
+   for (auto it = object->begin(); it != object->end(); ++it) {
+      GameObject::GameObjectState* state = (GameObject::GameObjectState*)(*it);
+      if (!state) {
+         continue;
+      }
+      Renderable* renderable = state->getRenderable();
+      if (renderable && std::find(_renderList->begin(), _renderList->end(), renderable) == _renderList->end()) {
+         _renderList->push_back(renderable);
+      }
+      if (renderable) {
+         renderable->setVisibility(state == currentState);
+      }
+   }
 }
 
 void GameState::_OnObjectRemoved(const Event & e)
 {
-   ((GameObject*)e.getSender())->finish();
+   GameObject* object = (GameObject*)e.getSender();
+   if (!object) {
+      return;
+   }
+
+   for (auto it = object->begin(); it != object->end(); ++it) {
+      GameObject::GameObjectState* state = (GameObject::GameObjectState*)(*it);
+      if (!state) {
+         continue;
+      }
+      Renderable* renderable = state->getRenderable();
+      if (renderable) {
+         _renderList->remove(renderable);
+      }
+   }
+
+   object->finish();
 }

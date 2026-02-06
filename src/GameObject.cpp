@@ -72,6 +72,7 @@ void GameObject::updateComponents()
 	}
 }
 
+
 void GameObject::update(float time) // lawl time as a float xfd
 {
 	Physical::update(time);

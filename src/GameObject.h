@@ -106,7 +106,6 @@ public:
 protected:
 
    void updateComponents();
-
    std::function<void(const Event* e)> _collisionEventHandler = NULL;
 
 public:
