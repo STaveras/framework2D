@@ -7,12 +7,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "framework", "framework.vcxp
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
+		Debug (DirectX9)|x64 = Debug (DirectX9)|x64
+		Debug (OpenGL)|x64 = Debug (OpenGL)|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Debug|x64.ActiveCfg = Debug|x64
-		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Debug|x64.Build.0 = Debug|x64
+		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Debug (DirectX9)|x64.ActiveCfg = Debug|x64
+		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Debug (DirectX9)|x64.Build.0 = Debug|x64
+		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Debug (OpenGL)|x64.ActiveCfg = Debug (openGL)|x64
+		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Debug (OpenGL)|x64.Build.0 = Debug (openGL)|x64
 		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Release|x64.ActiveCfg = Release|x64
 		{31B78B48-E690-4980-84FE-8C87A0D241BF}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
