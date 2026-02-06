@@ -10,8 +10,6 @@
 
 class GameState : public ProgramState
 {
-	virtual void _OnObjectStateEnter(const Event& e);
-	virtual void _OnObjectStateExit(const Event& e);
 	virtual void _OnObjectAdded(const Event& e);
 	virtual void _OnObjectRemoved(const Event& e);
 

@@ -50,7 +50,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--opengl"],
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--opengl", "--fps"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [{ "name": "config", "value": "Debug" }],
