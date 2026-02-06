@@ -33,8 +33,8 @@ public:
 	bool addObject(GameObject* object);
 	bool removeObject(GameObject* object);
 
-	virtual void onEnter(void);
-	virtual bool onExecute(float time);
-	virtual void onExit(void);
+	virtual void onEnter(State* prevState) override;
+	virtual bool onExecute(float time) override;
+	virtual void onExit(State* nextState) override;
 };
 // - Stan

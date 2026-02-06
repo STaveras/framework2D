@@ -7,9 +7,9 @@
 
 Engine2D::Engine2D(void) :
 	_hasQuit(false),
+	_game(NULL),
 	_input(NULL),
-	_renderer(NULL),
-	_game(NULL)
+	_renderer(NULL)
 {}
 
 void Engine2D::initialize(void)

@@ -51,10 +51,6 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 
 	std::vector<VkShaderModule> _shaderModules;
 
-#if !defined(NDEBUG)
-	VkDebugUtilsMessengerEXT debugMessenger;
-#endif
-
 	struct QueueFamilyIndices {
 
 		std::optional<uint32_t> graphicsFamily;

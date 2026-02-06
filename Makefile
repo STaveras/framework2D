@@ -2,8 +2,12 @@
 CXX ?= c++
 STD := -std=c++17
 WARN := -Wall -Wextra
+SUPPRESS_UNUSED ?= 1
+ifeq ($(SUPPRESS_UNUSED),1)
+  WARN += -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
+endif
 DIAG := -fdiagnostics-color=always
-INCLUDES := -I./ext -I./ext/inc -I./ext/inc/metal-cpp
+INCLUDES := -I./ext -isystem ./ext/inc -isystem ./ext/inc/metal-cpp
 LIBS := -lglfw -lvulkan -ltinyxml2 -lsimdjson
 
 # Debug (make DEBUG=1)
@@ -18,13 +22,14 @@ UNAME_S := $(shell uname -s)
 # Platform-specific flags
 ifeq ($(UNAME_S),Darwin)
   CXX := clang++
-  PLATFORM_FLAGS := -stdlib=libc++ -x objective-c++ \
-    -framework Metal -framework QuartzCore -framework OpenGL -framework Cocoa
+  PLATFORM_COMPILE_FLAGS := -stdlib=libc++ -DGL_SILENCE_DEPRECATION -x objective-c++
+  PLATFORM_LINK_FLAGS := -stdlib=libc++ -framework Metal -framework QuartzCore -framework OpenGL -framework Cocoa
   # Ensure runtime can find Vulkan dylib on common macOS prefixes
   PLATFORM_RPATH := -Wl,-rpath,/usr/local/lib -Wl,-rpath,/opt/homebrew/lib
   PLATFORM_SRCS := src/RendererMTL.mm src/TextureMTL.mm
 else
-  PLATFORM_FLAGS :=
+  PLATFORM_COMPILE_FLAGS :=
+  PLATFORM_LINK_FLAGS :=
   PLATFORM_RPATH :=
   PLATFORM_SRCS :=
 endif
@@ -42,15 +47,20 @@ COMMON_SRCS := \
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
-OBJDIR := build/obj
+TARGET_BASE := $(notdir $(CURDIR))
+ifeq ($(DEBUG),1)
+  TARGET := bin/$(TARGET_BASE)_d
+  OBJDIR := build/obj_d
+else
+  TARGET := bin/$(TARGET_BASE)
+  OBJDIR := build/obj
+endif
 OBJS := $(SRCS:%.cpp=$(OBJDIR)/%.o)
 OBJS := $(OBJS:%.mm=$(OBJDIR)/%.o)
 
-TARGET := bin/$(notdir $(CURDIR))
-
 CPPFLAGS := $(INCLUDES)
-CXXFLAGS := $(STD) $(WARN) $(DIAG) $(DEBUG_FLAGS) $(PLATFORM_FLAGS)
-LDFLAGS := $(LIBS) $(PLATFORM_FLAGS) $(PLATFORM_RPATH)
+CXXFLAGS := $(STD) $(WARN) $(DIAG) $(DEBUG_FLAGS) $(PLATFORM_COMPILE_FLAGS)
+LDFLAGS := $(LIBS) $(PLATFORM_LINK_FLAGS) $(PLATFORM_RPATH)
 
 .PHONY: all clean
 
@@ -73,4 +83,4 @@ $(OBJDIR)/%.o: %.mm
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -rf $(OBJDIR) $(TARGET)
+	rm -rf build/obj build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d

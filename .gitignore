@@ -22,6 +22,7 @@ bin/*.exe
 bin/*.dSYM/**
 bin/data/cache/**
 bin/framework2D
+bin/framework2D_d
 build/**
 out/
 framework/

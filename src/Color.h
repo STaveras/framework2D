@@ -23,6 +23,7 @@ namespace framework {
 			g = (int)(green * 255);
 			b = (int)(blue * 255); 
 		}
+		color(const color& other) = default;
 
 	//#ifdef D3DCOLOR_DEFINED
 		//operator DWORD()

@@ -21,8 +21,9 @@ int32_t flipEndianness(int32_t value)
 
 	byte* pV1 = (byte*)(&flippedValue), *pV2 = (byte*)(&value);
 
-	for (int i = 0; i < sizeof(int32_t); i++) {
-		pV1[i] = pV2[(sizeof(int32_t) - 1) - i];
+	const size_t kSize = sizeof(int32_t);
+	for (size_t i = 0; i < kSize; i++) {
+		pV1[i] = pV2[(kSize - 1) - i];
 	}
 
 	return flippedValue;

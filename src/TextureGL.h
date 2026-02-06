@@ -3,12 +3,6 @@
 
 #include "ITexture.h"
 
-#if defined(__APPLE__)
-#include <OpenGL/gl3.h>
-#else
-#include <GL/gl.h>
-#endif
-
 class TextureGL : public ITexture
 {
 	GLuint _textureId = 0;

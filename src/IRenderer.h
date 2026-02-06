@@ -34,11 +34,9 @@ public:
 	}TYPE;
 
 protected:
-#if _DEBUG
 	void _backgroundColorShift(void);
 
 	bool m_bStaticBG; // For demoing
-#endif
 	bool m_bFullScreen;
 	bool m_bVerticalSync;
 	int m_nWidth;
@@ -57,25 +55,21 @@ public:
 				 int nWidth = 0, int nHeight = 0,
 				 bool fullscreen = false, 
 				 bool vsync = false) :
-		_type(renderingAPI),
-#if _DEBUG
 		m_bStaticBG(false),
-#endif
-		m_bFullScreen(false),
-		m_bVerticalSync(false),
+		m_bFullScreen(fullscreen),
+		m_bVerticalSync(vsync),
 		m_nWidth(nWidth), m_nHeight(nHeight),
 		m_ClearColor(0xFFFFFFFF),
-		m_pCamera(NULL){
+		m_pCamera(NULL),
+		_type(renderingAPI){
 		// Comes with one global render list
 		_RenderLists.create();
 	} 
 
 	virtual ~IRenderer() = 0;
 
-#if _DEBUG
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
 	void setBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
-#endif
 
 	bool isFullScreen(void) const { return m_bFullScreen; }
 	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };
