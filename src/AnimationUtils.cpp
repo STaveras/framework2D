@@ -6,6 +6,7 @@
 #include "FileSystem.h"
 #include "System.h"
 
+#include <cctype>
 #include <string>
 
 using namespace tinyxml2;
@@ -14,32 +15,89 @@ namespace Animations {
 
    RECT rectFromString(const char *rectDescription)
    {
-      RECT output;
+      RECT output{};
 
-      char *tmp = _strdup(rectDescription);
-
-      // tokenize
-      const char* seps = "{,}";
-      char* first = NULL, * second = NULL, * value = NULL;
-      first = strtok_s(tmp, seps, &second);
-
-      while (first != NULL) {
-
-         char *var = strtok_s(first, "=", &value);
-
-         if (!strcmp(var, "X"))
-            output.left = atoi(value);
-         else if (!strcmp(var, "Y"))
-            output.top = atoi(value);
-         else if (!strcmp(var, "Width"))
-            output.right = atoi(value);
-         else if (!strcmp(var, "Height"))
-            output.bottom = atoi(value);
-
-         first = strtok_s(second, seps, &second);
+      if (!rectDescription || rectDescription[0] == '\0') {
+         return output;
       }
 
-      free(tmp);
+      auto trim = [](std::string_view value) -> std::string {
+         size_t start = 0;
+         size_t end = value.size();
+
+         while (start < end && std::isspace(static_cast<unsigned char>(value[start]))) {
+            ++start;
+         }
+         while (end > start && std::isspace(static_cast<unsigned char>(value[end - 1]))) {
+            --end;
+         }
+
+         return std::string(value.substr(start, end - start));
+      };
+
+      std::string input(rectDescription);
+      for (char& c : input) {
+         if (c == '{' || c == '}') {
+            c = ' ';
+         }
+      }
+
+      int width = -1;
+      int height = -1;
+      int numericValues[4]{ 0, 0, 0, 0 };
+      int numericCount = 0;
+      bool usedKeyValues = false;
+
+      size_t start = 0;
+      while (start < input.size()) {
+         size_t end = input.find(',', start);
+         if (end == std::string::npos) {
+            end = input.size();
+         }
+
+         std::string token = trim(std::string_view(input).substr(start, end - start));
+         if (!token.empty()) {
+            size_t eq = token.find('=');
+            if (eq != std::string::npos) {
+               usedKeyValues = true;
+               std::string key = trim(std::string_view(token).substr(0, eq));
+               std::string value = trim(std::string_view(token).substr(eq + 1));
+               int parsedValue = std::atoi(value.c_str());
+
+               if (key == "X") {
+                  output.left = parsedValue;
+               }
+               else if (key == "Y") {
+                  output.top = parsedValue;
+               }
+               else if (key == "Width") {
+                  width = parsedValue;
+               }
+               else if (key == "Height") {
+                  height = parsedValue;
+               }
+            }
+            else if (numericCount < 4) {
+               numericValues[numericCount++] = std::atoi(token.c_str());
+            }
+         }
+
+         start = end + 1;
+      }
+
+      if (!usedKeyValues && numericCount >= 4) {
+         output.left = numericValues[0];
+         output.top = numericValues[1];
+         width = numericValues[2];
+         height = numericValues[3];
+      }
+
+      if (width >= 0) {
+         output.right = output.left + width;
+      }
+      if (height >= 0) {
+         output.bottom = output.top + height;
+      }
 
       return output;
    }
@@ -105,22 +163,57 @@ namespace Animations {
 
       for (simdjson::dom::element animationElement : document["AnimationFile"]["Animation"]) {
 
-         Animation* animation = (!animationManager) ? new Animation() : animationManager->CreateAnimation("");
+         std::string name;
+         auto nameElement = animationElement["Name"];
+         if (nameElement.is_string()) {
+            std::string_view nameView = nameElement.get_string().value_unsafe();
+            name = std::string(nameView);
+         }
+
+         Animation* animation = nullptr;
+         if (animationManager) {
+            animation = animationManager->CreateAnimation(name.empty() ? "" : name.c_str());
+         }
+         else {
+            animation = name.empty() ? new Animation() : new Animation(name.c_str());
+         }
+
+         if (!name.empty()) {
+            animation->setName(name.c_str());
+         }
+
+         auto modeElement = animationElement["Mode"];
+         if (modeElement.is_string()) {
+            std::string_view modeView = modeElement.get_string().value_unsafe();
+            std::string modeValue(modeView);
+            animation->setMode(animationModeFromString(modeValue.c_str()));
+         }
+
+         auto forwardElement = animationElement["Forward"];
+         if (forwardElement.is_bool()) {
+            animation->setIsForward(forwardElement.get_bool().value_unsafe());
+         }
+
+         auto speedElement = animationElement["Speed"];
+         if (speedElement.is_double()) {
+            animation->setSpeed((float)speedElement.get_double().value_unsafe());
+         }
 
          for (simdjson::dom::element frameElement : animationElement["Frame"]) {
 
-            std::string_view displayRectString = frameElement["DisplayRect"].get_string();
-
-            RECT srcRect = rectFromString(std::string(displayRectString).c_str());
+            std::string_view displayRectView = frameElement["DisplayRect"].get_string().value_unsafe();
+            std::string displayRectString(displayRectView);
+            RECT srcRect = rectFromString(displayRectString.c_str());
 
             // TODO: Make key color configurable via a tool
             // TODO: Collision information
             // TODO: Add support for triggers (sound, effects, scripts, etc.)
 
-            std::string_view frameImagePath = frameElement["Filename"].get_string();
-            std::string resolvedFramePath = FileSystem::Path::ResolveFromBaseOrParent(std::string(frameImagePath), System::GlobalDataPath());
+            std::string_view frameImageView = frameElement["Filename"].get_string().value_unsafe();
+            std::string frameImagePath(frameImageView);
+            std::string resolvedFramePath = FileSystem::Path::ResolveFromBaseOrParent(frameImagePath, System::GlobalDataPath());
 
-            animation->addFrame(new Frame(new Sprite(resolvedFramePath.c_str(), 0xFFFF00FF, srcRect), (float)frameElement["Duration"].get_double()));
+            animation->addFrame(new Frame(new Sprite(resolvedFramePath.c_str(), 0xFFFF00FF, srcRect), (float)frameElement["Duration"].get_double().value_unsafe()));
          }
 
          animations.push_back(animation);
@@ -135,7 +228,7 @@ namespace Animations {
       file << "  \"AnimationFile\": {\n";
       file << "    \"Animation\": [\n";
 
-      for (int i = 0; i < animations.size(); ++i) {
+      for (size_t i = 0; i < animations.size(); ++i) {
          Animation* animation = animations[i];
          file << "      {\n";
          file << "        \"Name\": \"" << animation->getName() << "\",\n";
@@ -144,7 +237,7 @@ namespace Animations {
          file << "        \"Speed\": " << animation->getSpeed() << ",\n";
          file << "        \"Frame\": [\n";
 
-         for (int j = 0; j < animation->getFrameCount(); ++j) {
+         for (size_t j = 0; j < animation->getFrameCount(); ++j) {
             Frame* frame = (*animation)[j];
             file << "          {\n";
             file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
@@ -152,7 +245,7 @@ namespace Animations {
             file << "            \"Duration\": " << frame->getDuration() << "\n";
             file << "          }";
 
-            if (j != animation->getFrameCount() - 1) {
+            if (j + 1 != animation->getFrameCount()) {
                file << ",";
             }
             file << "\n";
@@ -161,7 +254,7 @@ namespace Animations {
          file << "        ]\n";
          file << "      }";
 
-         if (i != animations.size() - 1) {
+         if (i + 1 != animations.size()) {
             file << ",";
          }
          file << "\n";

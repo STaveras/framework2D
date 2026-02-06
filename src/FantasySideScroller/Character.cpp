@@ -2,6 +2,8 @@
 
 #include "Character.h"
 
+#include <cstring>
+
 Character::Character(void) : 
 	GameObject(GAME_OBJ_OBJECT),
 	_tile(NULL) {
@@ -21,19 +23,55 @@ Character::Character(void) :
 Character::~Character() {}
 
 void Character::_initStates() {
+	std::string animationsFilePath = BasePath("Character/Animations.json");
+	std::vector<Animation*> loadedAnimations;
+	bool animationsFromJson = false;
+
+	if (FileSystem::FileExists(animationsFilePath)) {
+		loadedAnimations = Animations::fromJSON(animationsFilePath.c_str(), nullptr);
+		if (!loadedAnimations.empty()) {
+			for (Animation* animation : loadedAnimations) {
+				if (animation) {
+					_animationManager.store(animation);
+				}
+			}
+		}
+		animationsFromJson = !loadedAnimations.empty();
+	}
+
+	auto findLoadedAnimation = [&](const char* name) -> Animation* {
+		for (Animation* animation : loadedAnimations) {
+			if (animation && std::strcmp(animation->getName(), name) == 0) {
+				return animation;
+			}
+		}
+		return nullptr;
+	};
+
+	auto getAnimation = [&](const char* name, bool& loaded) -> Animation* {
+		Animation* animation = animationsFromJson ? findLoadedAnimation(name) : nullptr;
+		loaded = (animation != nullptr);
+		if (!animation) {
+			animation = _animationManager.create();
+		}
+		return animation;
+	};
+
 	GameObjectState* idle = this->addState("Idle");
 
-	Animation* idleAnimation = _animationManager.create();
+	bool idleLoaded = false;
+	Animation* idleAnimation = getAnimation("Idle", idleLoaded);
 
 	vector2 idleFrameDimensions{ 64, 80 };
 
-	Texture* idleSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Idle/Idle-Sheet.png").c_str());
-
-	Animations::createFramesForAnimation(idleAnimation, idleSheet, idleFrameDimensions, _spriteManager);
+	if (!idleLoaded) {
+		Texture* idleSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Idle/Idle-Sheet.png").c_str());
+		Animations::createFramesForAnimation(idleAnimation, idleSheet, idleFrameDimensions, _spriteManager);
+		idleAnimation->setMode(Animation::Mode::eOscillate);
+		idleAnimation->setFrameRate(30);
+	}
 
 	idleAnimation->setName(idle->getName());
-	idleAnimation->setMode(Animation::Mode::eOscillate);
-	idleAnimation->setFrameRate(30);
 	idleAnimation->center();
 
 	idle->setPreserveScaling(true);
@@ -51,15 +89,17 @@ void Character::_initStates() {
 	//rising->setDirection(vector2(0.0f, -1.0f));
 	//rising->setForce(MOVE_UNITS * (JUMP_MULTIPLIER * 0.1));
 
-	Animation* risingAnimation = _animationManager.create();
+	bool risingLoaded = false;
+	Animation* risingAnimation = getAnimation("Rising", risingLoaded);
 	vector2 risingDimensions{ 64, 64 };
-	Texture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
-
-	Animations::createFramesForAnimation(risingAnimation, risingSheet, risingDimensions, _spriteManager);
+	if (!risingLoaded) {
+		Texture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
+		Animations::createFramesForAnimation(risingAnimation, risingSheet, risingDimensions, _spriteManager);
+		risingAnimation->setFrameRate(30);
+	}
 
 	risingAnimation->setName(rising->getName());
 	risingAnimation->setOffset({ 0.0, -8.0 });
-	risingAnimation->setFrameRate(30);
 	risingAnimation->center();
 
 	rising->setRenderable(risingAnimation);
@@ -77,18 +117,20 @@ void Character::_initStates() {
 	jump->setDirection(vector2(0.0f, -1.0f));
 	jump->setForce(MOVE_UNITS * (JUMP_MULTIPLIER * 0.67));
 
-	Animation* jumpAnimation = _animationManager.create();
+	bool jumpLoaded = false;
+	Animation* jumpAnimation = getAnimation("Jump", jumpLoaded);
 
 	vector2 jumpDimensions{ 64, 64 };
 
-	Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jumlp-All/Jump-All-Sheet.png").c_str());
-
-	Animations::createFramesForAnimation(jumpAnimation, jumpSheet, jumpDimensions, _spriteManager, 4, 8);
+	if (!jumpLoaded) {
+		Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jumlp-All/Jump-All-Sheet.png").c_str());
+		Animations::createFramesForAnimation(jumpAnimation, jumpSheet, jumpDimensions, _spriteManager, 4, 8);
+		jumpAnimation->setMode(Animation::Mode::eOscillate);
+		jumpAnimation->setFrameRate(60);
+	}
 
 	jumpAnimation->setName(jump->getName());
-	jumpAnimation->setMode(Animation::Mode::eOscillate);
 	jumpAnimation->setOffset({ 0.0, -8.0 });
-	jumpAnimation->setFrameRate(60);
 	jumpAnimation->center();
 
 	jump->setRenderable(jumpAnimation);
@@ -118,16 +160,18 @@ void Character::_initStates() {
 
 	vector2 landingDimensions{ 64, 64 };
 
-	Texture* landingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-End/Jump-End-Sheet.png").c_str());
-
-	Animation* landingAnimation = _animationManager.create();
+	bool landingLoaded = false;
+	Animation* landingAnimation = getAnimation("Landing", landingLoaded);
 	landingAnimation->setName(landing->getName());
 	landingAnimation->setOffset({ 0.0, -8.0 });
-	landingAnimation->setSpeed(2.7f);
 	landing->setRenderable(landingAnimation);
 
-	Animations::createFramesForAnimation(landingAnimation, landingSheet, landingDimensions, _spriteManager);
-	landingAnimation->setFrameRate(30);
+	if (!landingLoaded) {
+		Texture* landingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-End/Jump-End-Sheet.png").c_str());
+		Animations::createFramesForAnimation(landingAnimation, landingSheet, landingDimensions, _spriteManager);
+		landingAnimation->setFrameRate(30);
+		landingAnimation->setSpeed(2.7f);
+	}
 	landingAnimation->center();
 
 	/////////////////////////////////////////
@@ -143,10 +187,10 @@ void Character::_initStates() {
 	runningLeft->setForce(100);
 	runningRight->setForce(100);
 
-	Texture* runningSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Run/Run-Sheet.png").c_str());
-
-	Animation* runningLeftAnimation = _animationManager.create();
-	Animation* runningRightAnimation = _animationManager.create();
+	bool runningLeftLoaded = false;
+	bool runningRightLoaded = false;
+	Animation* runningLeftAnimation = getAnimation("RunningLeft", runningLeftLoaded);
+	Animation* runningRightAnimation = getAnimation("RunningRight", runningRightLoaded);
 
 	runningLeftAnimation->setName(runningLeft->getName());
 	runningRightAnimation->setName(runningRight->getName());
@@ -154,8 +198,15 @@ void Character::_initStates() {
 	runningLeft->setRenderable(runningLeftAnimation);
 	runningRight->setRenderable(runningRightAnimation);
 
-	Animations::createFramesForAnimation(runningLeftAnimation, runningSheet, runningDimensions, _spriteManager);
-	Animations::createFramesForAnimation(runningRightAnimation, runningSheet, runningDimensions, _spriteManager);
+	if (!runningLeftLoaded || !runningRightLoaded) {
+		Texture* runningSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Run/Run-Sheet.png").c_str());
+		if (!runningLeftLoaded) {
+			Animations::createFramesForAnimation(runningLeftAnimation, runningSheet, runningDimensions, _spriteManager);
+		}
+		if (!runningRightLoaded) {
+			Animations::createFramesForAnimation(runningRightAnimation, runningSheet, runningDimensions, _spriteManager);
+		}
+	}
 
 	static Square runHitBox({ 19, 17 }, 26, 41);
 	for (unsigned int i = 0; i < runningRightAnimation->getFrameCount(); i++) {
@@ -164,15 +215,19 @@ void Character::_initStates() {
 	}
 
 	runningLeftAnimation->mirror(true, false);
-	runningLeftAnimation->setMode(Animation::Mode::eLoop);
-	runningLeftAnimation->setFrameRate(60);
-	runningLeftAnimation->setSpeed(1.1f);
 	runningLeftAnimation->center();
 
-	runningRightAnimation->setMode(Animation::Mode::eLoop);
-	runningRightAnimation->setFrameRate(60);
-	runningRightAnimation->setSpeed(1.1f);
 	runningRightAnimation->center();
+	if (!runningLeftLoaded) {
+		runningLeftAnimation->setMode(Animation::Mode::eLoop);
+		runningLeftAnimation->setFrameRate(60);
+		runningLeftAnimation->setSpeed(1.1f);
+	}
+	if (!runningRightLoaded) {
+		runningRightAnimation->setMode(Animation::Mode::eLoop);
+		runningRightAnimation->setFrameRate(60);
+		runningRightAnimation->setSpeed(1.1f);
+	}
 
 	/////////////////////////////////////////
 
@@ -184,19 +239,27 @@ void Character::_initStates() {
 
 	vector2 attackDimensions{ 96.0, 80.0 };
 
-	Texture* attackSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Attack-01/Attack-01-Sheet.png").c_str());
-
-	Animation* attack01Animation = _animationManager.create();
-	Animations::createFramesForAnimation(attack01Animation, attackSheet, attackDimensions, _spriteManager, 0, 5);
+	Texture* attackSheet = nullptr;
+	bool attack01Loaded = false;
+	bool attack02Loaded = false;
+	Animation* attack01Animation = getAnimation("Attack01", attack01Loaded);
+	if (!attack01Loaded || !attack02Loaded) {
+		attackSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Attack-01/Attack-01-Sheet.png").c_str());
+	}
+	if (!attack01Loaded) {
+		Animations::createFramesForAnimation(attack01Animation, attackSheet, attackDimensions, _spriteManager, 0, 5);
+		attack01Animation->setFrameRate(60);
+	}
 	attack01Animation->setName(attack01->getName());
-	attack01Animation->setFrameRate(60);
 	attack01Animation->center();
 	attack01->setRenderable(attack01Animation);
 
-	Animation* attack02Animation = _animationManager.create();
-	Animations::createFramesForAnimation(attack02Animation, attackSheet, attackDimensions, _spriteManager, 5, 3);
+	Animation* attack02Animation = getAnimation("Attack02", attack02Loaded);
+	if (!attack02Loaded) {
+		Animations::createFramesForAnimation(attack02Animation, attackSheet, attackDimensions, _spriteManager, 5, 3);
+		attack02Animation->setFrameRate(30);
+	}
 	attack02Animation->setName(attack02->getName());
-	attack02Animation->setFrameRate(30);
 	attack02Animation->center();
 	attack02->setRenderable(attack02Animation);
 
@@ -209,26 +272,30 @@ void Character::_initStates() {
 
 	Texture* deadSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Dead/Dead-Sheet.png").c_str());
 
-	Animation* deadAnimation = _animationManager.create();
-
-	Animations::createFramesForAnimation(deadAnimation, deadSheet, deadDimensions, _spriteManager);
+	bool deadLoaded = false;
+	Animation* deadAnimation = getAnimation("Dead", deadLoaded);
+	if (!deadLoaded) {
+		Animations::createFramesForAnimation(deadAnimation, deadSheet, deadDimensions, _spriteManager);
+		deadAnimation->setFrameRate(30);
+	}
 
 	deadAnimation->setName(dead->getName());
 	deadAnimation->setOffset({ 8.0, 8.0 });
-	deadAnimation->setFrameRate(30);
 	deadAnimation->center();
 
 	dead->setRenderable(deadAnimation);
 
 	// This isn't really used for much at the moment...
 	// But I'd like to eventually store the collision data from each of the frames
-	std::vector<Animation*> animations;
-	for (auto& animation : _animationManager) {
-		if (animation) {
-			animations.push_back(animation);
+	if (!animationsFromJson) {
+		std::vector<Animation*> animations;
+		for (auto& animation : _animationManager) {
+			if (animation) {
+				animations.push_back(animation);
+			}
 		}
+		Animations::toJSON(animations, animationsFilePath.c_str());
 	}
-	Animations::toJSON(animations, BasePath("Character/Animations.json").c_str());
 	/////////////////////////////////////////////////////////////////////////////
 }
 
