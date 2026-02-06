@@ -343,6 +343,12 @@ void Character::_setupCollisionHandler() {
 						DEBUG_MSG(buffer);
 						break;
 					}
+					case COL_OBJ_VOID:
+						break;
+					case COL_OBJ_CIRCLE:
+						break;
+					case COL_OBJ_PLANE:
+						break;
 					case COL_OBJ_GROUP:
 						break;
 					}
@@ -474,6 +480,12 @@ void Character::update(float time)
 				DEBUG_MSG(buffer);
 				break;
 			}
+			case COL_OBJ_VOID:
+				break;
+			case COL_OBJ_CIRCLE:
+				break;
+			case COL_OBJ_PLANE:
+				break;
 			case COL_OBJ_GROUP:
 				break;
 			}

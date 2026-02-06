@@ -6,6 +6,8 @@
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
 
+#include <cstdint>
+
 // Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
 #define FRAMEWORK_VERSION "0.06"
 
@@ -15,22 +17,16 @@
 #define GLOBAL_WIDTH  640
 #define GLOBAL_HEIGHT 480
 
+#if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable: 26817)
 #pragma warning(disable: 26437)
-
-#include <simdjson.h>
-#include <tinyxml2.h>
-
-#pragma comment(lib, "simdjson.lib")
-#pragma comment(lib, "tinyxml2.lib")
-
-#pragma warning(pop)
+#endif
 
 #define SAFE_DELETE(x) if(x) { delete x; x = NULL; }
 #define COUNT_OF(arr) sizeof(arr) / sizeof(arr[0])
 
-#define byte uint8_t
+using byte = uint8_t;
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -42,9 +38,11 @@
 #include <shellapi.h>
 
 // Suppressing warnings from DirectX headers
+#if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable: 26495)
 #pragma warning(disable: 28251)
+#endif
 
 #define DIRECTINPUT_VERSION 0x0800
 
@@ -54,7 +52,9 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+#if defined(_MSC_VER)
 #pragma warning(pop)
+#endif
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
@@ -68,6 +68,9 @@
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
 #define MTL_PRIVATE_IMPLEMENTATION
+
+// Prevent GLFW from including legacy OpenGL headers on macOS
+#define GLFW_INCLUDE_NONE
 
 // #define GLM
 #define GLFW_EXPOSE_NATIVE_COCOA
@@ -98,18 +101,34 @@
 #define INFINITE INFINITY
 #define UINT unsigned int
 
-struct rect {
+typedef struct rect {
    int left, top, right, bottom;
-};
+}RECT;
 
-// #define RECT rect
-typedef struct rect RECT;
 #define DEFAULT_KEY_COLOR 0xFFFF00FF
 
 #endif
 
+#include <simdjson.h>
+#include <tinyxml2.h>
+
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+
+#if defined(_MSC_VER)
+#pragma comment(lib, "simdjson.lib")
+#pragma comment(lib, "tinyxml2.lib")
+#pragma comment(lib, "opengl32.lib")
+#pragma warning(pop)
+#endif
+
 #ifndef _DEBUG
+#ifndef DEBUG_MSG
 #define DEBUG_MSG(msg) // do nothing
+#endif
 #endif
 
 #include "Maths.h"
@@ -126,8 +145,6 @@ typedef struct rect RECT;
 //   VkRect2D _rect2D;
 //#endif
 //};
-
-#define RECT RECT
 
 #ifdef _WIN32
 #pragma comment(lib, "glfw3.lib")

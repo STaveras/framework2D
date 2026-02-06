@@ -18,6 +18,7 @@ _sprite(sprite)
 
 void Frame::update(float fTime)
 {
+
 	// If flashing, set image color to what's specified in this frame's data
 
 	std::list<Trigger>::iterator itr = _triggers.begin();

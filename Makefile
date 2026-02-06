@@ -2,6 +2,10 @@
 CXX ?= c++
 STD := -std=c++17
 WARN := -Wall -Wextra
+SUPPRESS_UNUSED ?= 1
+ifeq ($(SUPPRESS_UNUSED),1)
+  WARN += -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
+endif
 DIAG := -fdiagnostics-color=always
 INCLUDES := -I./ext -isystem ./ext/inc -isystem ./ext/inc/metal-cpp
 LIBS := -lglfw -lvulkan -ltinyxml2 -lsimdjson
