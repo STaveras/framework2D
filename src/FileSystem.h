@@ -219,6 +219,129 @@ namespace FileSystem
 		return file.good();
 	}
 
+	namespace Path
+	{
+		static std::filesystem::path Normalize(const std::filesystem::path& path)
+		{
+			return path.lexically_normal();
+		}
+
+		static bool IsSubpath(const std::filesystem::path& path, const std::filesystem::path& base)
+		{
+			auto pathIt = path.begin();
+			auto baseIt = base.begin();
+
+			for (; baseIt != base.end(); ++baseIt, ++pathIt) {
+				if (pathIt == path.end() || *pathIt != *baseIt) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		static std::string MakeRelative(const std::string& path, const std::string& baseDir)
+		{
+			if (path.empty()) {
+				return "";
+			}
+
+			std::filesystem::path inputPath(path);
+			if (inputPath.is_relative()) {
+				return Normalize(inputPath).generic_string();
+			}
+
+			if (baseDir.empty()) {
+				return Normalize(inputPath).generic_string();
+			}
+
+			std::filesystem::path basePath(baseDir);
+			if (basePath.is_relative()) {
+				basePath = std::filesystem::absolute(basePath);
+			}
+			inputPath = Normalize(inputPath);
+			basePath = Normalize(basePath);
+
+			if (IsSubpath(inputPath, basePath)) {
+				std::filesystem::path rel = inputPath.lexically_relative(basePath);
+				if (!rel.empty()) {
+					return rel.generic_string();
+				}
+			}
+
+			return inputPath.generic_string();
+		}
+
+		static std::string MakeRelativeToParent(const std::string& path, const std::string& baseDir)
+		{
+			if (baseDir.empty()) {
+				return MakeRelative(path, baseDir);
+			}
+
+			std::filesystem::path basePath(baseDir);
+			std::filesystem::path parentPath = basePath.parent_path();
+			if (parentPath.empty()) {
+				return MakeRelative(path, baseDir);
+			}
+
+			return MakeRelative(path, parentPath.generic_string());
+		}
+
+		static std::string ResolveFromBase(const std::string& path, const std::string& baseDir)
+		{
+			if (path.empty()) {
+				return "";
+			}
+
+			std::filesystem::path inputPath(path);
+			if (inputPath.is_absolute()) {
+				return Normalize(inputPath).generic_string();
+			}
+
+			if (baseDir.empty()) {
+				return Normalize(inputPath).generic_string();
+			}
+
+			std::filesystem::path basePath(baseDir);
+			std::filesystem::path fullPath = Normalize(basePath / inputPath);
+			return fullPath.generic_string();
+		}
+
+		static std::string ResolveFromBaseOrParent(const std::string& path, const std::string& baseDir)
+		{
+			if (path.empty()) {
+				return "";
+			}
+
+			std::filesystem::path inputPath(path);
+			if (inputPath.is_absolute()) {
+				return Normalize(inputPath).generic_string();
+			}
+
+			if (baseDir.empty()) {
+				return Normalize(inputPath).generic_string();
+			}
+
+			std::filesystem::path basePath(baseDir);
+			std::filesystem::path baseName = basePath.filename();
+
+			if (!baseName.empty()) {
+				auto inputIt = inputPath.begin();
+				while (inputIt != inputPath.end() && *inputIt == ".") {
+					++inputIt;
+				}
+				if (inputIt != inputPath.end() && *inputIt == baseName) {
+					std::filesystem::path parentPath = basePath.parent_path();
+					if (!parentPath.empty()) {
+						return ResolveFromBase(path, parentPath.generic_string());
+					}
+				}
+			}
+
+			return ResolveFromBase(path, baseDir);
+		}
+	}
+
 
 	static void ListDirectoryContents(const char* path)
 	{

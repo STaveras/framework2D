@@ -4,6 +4,7 @@
 #include "AnimationManager.h"
 
 #include "FileSystem.h"
+#include "System.h"
 
 #include <string>
 
@@ -117,8 +118,9 @@ namespace Animations {
             // TODO: Add support for triggers (sound, effects, scripts, etc.)
 
             std::string_view frameImagePath = frameElement["Filename"].get_string();
+            std::string resolvedFramePath = FileSystem::Path::ResolveFromBaseOrParent(std::string(frameImagePath), System::GlobalDataPath());
 
-            animation->addFrame(new Frame(new Sprite(std::string(frameImagePath).c_str(), 0xFFFF00FF, srcRect), (float)frameElement["Duration"].get_double()));
+            animation->addFrame(new Frame(new Sprite(resolvedFramePath.c_str(), 0xFFFF00FF, srcRect), (float)frameElement["Duration"].get_double()));
          }
 
          animations.push_back(animation);
@@ -146,7 +148,7 @@ namespace Animations {
             Frame* frame = (*animation)[j];
             file << "          {\n";
             file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
-            file << "            \"Filename\": \"" << frame->getSprite()->getTexture()->getFilename() << "\",\n";
+            file << "            \"Filename\": \"" << FileSystem::Path::MakeRelativeToParent(frame->getSprite()->getTexture()->getFilename(), System::GlobalDataPath()) << "\",\n";
             file << "            \"Duration\": " << frame->getDuration() << "\n";
             file << "          }";
 
