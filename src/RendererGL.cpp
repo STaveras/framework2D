@@ -137,7 +137,14 @@ void RendererGL::initialize(void)
 
 	setVerticalSync(m_bVerticalSync);
 
-	glViewport(0, 0, m_nWidth, m_nHeight);
+	int framebufferWidth = 0;
+	int framebufferHeight = 0;
+	glfwGetFramebufferSize(_window, &framebufferWidth, &framebufferHeight);
+	if (framebufferWidth <= 0 || framebufferHeight <= 0) {
+		framebufferWidth = m_nWidth;
+		framebufferHeight = m_nHeight;
+	}
+	glViewport(0, 0, framebufferWidth, framebufferHeight);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_TEXTURE_2D);
@@ -164,8 +171,21 @@ void RendererGL::render(void)
 
 	IRenderer::render();
 
+	int framebufferWidth = 0;
+	int framebufferHeight = 0;
+	glfwGetFramebufferSize(_window, &framebufferWidth, &framebufferHeight);
+	if (framebufferWidth <= 0 || framebufferHeight <= 0) {
+		framebufferWidth = m_nWidth;
+		framebufferHeight = m_nHeight;
+	}
+	glViewport(0, 0, framebufferWidth, framebufferHeight);
+
 	glClearColor(m_ClearColor.r / 255.0f, m_ClearColor.g / 255.0f, m_ClearColor.b / 255.0f, m_ClearColor.a / 255.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, static_cast<double>(m_nWidth), static_cast<double>(m_nHeight), 0.0, -1.0, 1.0);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -173,10 +193,9 @@ void RendererGL::render(void)
 	if (m_pCamera) {
 		vector2 cameraPosition = m_pCamera->getPosition() - m_pCamera->getCenter();
 
-		glTranslatef(m_pCamera->getCenter().x, m_pCamera->getCenter().y, 0.0f);
 		glScalef(m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
 		glRotatef(m_pCamera->getRotation() * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
-		glTranslatef(-m_pCamera->getCenter().x - cameraPosition.x, -m_pCamera->getCenter().y - cameraPosition.y, 0.0f);
+		glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
 	}
 
 	if (!_RenderLists.empty()) {

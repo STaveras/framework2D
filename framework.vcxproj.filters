@@ -497,9 +497,6 @@
     <ClCompile Include="src\Sprite.cpp">
       <Filter>Assets / Resources</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="src\Renderer.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
@@ -596,6 +593,7 @@
     <ClCompile Include="src\TextureGL.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\project.d">

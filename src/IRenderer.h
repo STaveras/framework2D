@@ -9,6 +9,7 @@
 #include "Factory.h"
 #include "ITexture.h"
 #include <list>
+#include <unordered_map>
 
 class Camera;
 
@@ -23,7 +24,7 @@ public:
 	// Renderer API types
 	// This is used to identify the type of renderer being used
 	// NOTE: This might go away in the future, as we might want to use a more generic interface
-	typedef enum RENDERER_API
+	typedef enum RENDERER_API_TYPE
 	{
 		RENDERER_TYPE_NULL = 0,
 		RENDERER_TYPE_DX,		// DirectX 9 Sprite renderer
@@ -47,16 +48,16 @@ protected:
 	Factory<ITexture> m_Textures;
 	Factory<RenderList> _RenderLists;
 
-	RENDERER_API _rendererType;
+	RENDERER_API_TYPE _type;
 
 	ITexture *_textureExists(const char *szFilename);
 
 public:
-	IRenderer(RENDERER_API renderingAPI = RENDERER_TYPE_NULL, 
+	IRenderer(RENDERER_API_TYPE renderingAPI = RENDERER_TYPE_NULL, 
 				 int nWidth = 0, int nHeight = 0,
 				 bool fullscreen = false, 
 				 bool vsync = false) :
-		_rendererType(renderingAPI),
+		_type(renderingAPI),
 #if _DEBUG
 		m_bStaticBG(false),
 #endif
@@ -105,8 +106,34 @@ public:
 	virtual void shutdown(void) = 0;
 	virtual void render(void) = 0;
 
-	TYPE renderingAPI(void) const { return _rendererType; }
+	TYPE renderingAPI(void) const { return _type; }
 	
 } RenderingInterface;
+
+// Mapping from enum to string
+static const std::unordered_map<RenderingInterface::TYPE, std::string> apiTypeToString{
+	 { RenderingInterface::TYPE::RENDERER_TYPE_DX, "DirectX9" },
+	 { RenderingInterface::TYPE::RENDERER_TYPE_GL, "OpenGL" },
+	 { RenderingInterface::TYPE::RENDERER_TYPE_VK, "Vulkan" }
+};
+
+// Mapping from string to enum
+static const std::unordered_map<std::string, RenderingInterface::TYPE> stringToAPIType{
+	 { "DirectX9",  RenderingInterface::TYPE::RENDERER_TYPE_DX},
+	 { "OpenGL", RenderingInterface::TYPE::RENDERER_TYPE_GL },
+	 { "Vulkan",  RenderingInterface::TYPE::RENDERER_TYPE_VK }
+};
+
+namespace RENDERER_API_TYPE {
+
+	// Convert enum to string
+	static std::string toString(RenderingInterface::TYPE type) {
+		auto it = apiTypeToString.find(type);
+		if (it != apiTypeToString.end()) {
+			return it->second;
+		}
+		throw std::invalid_argument("Invalid API enum value");
+	}
+}
 
 #endif

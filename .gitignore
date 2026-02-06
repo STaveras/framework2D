@@ -24,4 +24,4 @@ bin/data/cache/**
 bin/framework2D
 build/**
 out/
-
+framework/

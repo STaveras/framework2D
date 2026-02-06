@@ -165,30 +165,44 @@ int main(int argc, const char *argv[])
          window.update();
          engine->update();
 
+         // Compose window title with renderer and FPS info without overwriting one another
+         std::string currentTitle = window.getWindowTitle();
+         size_t semiColonIndex = currentTitle.find_first_of(';');
+         std::string baseTitle = currentTitle.substr(0, (semiColonIndex != std::string::npos) ? semiColonIndex : currentTitle.size());
+
+         std::string suffix;
+
+         if (Debug::Mode.isEnabled()) {
+             suffix += "Renderer: " + RENDERER_API_TYPE::toString(Renderer::get()->renderingAPI());
+         }
+
          if (System::checkArgumentsForFPSCounter(argc, argv)) 
          {
-   #ifdef _DEBUG
+#ifdef _DEBUG
             static unsigned int lastFPS = 0;
             static Timer timer; timer.update();
 
             std::string framesPerSecond = "FPS: ";
 
-				if (DEBUGGING) {
+            if (DEBUGGING) {
 
-					if (timer.getElapsedTime() >= 1.0f) {
+                if (timer.getElapsedTime() >= 1.0f) {
 
-						framesPerSecond += std::to_string(/*(lastFPS + */engine->getTimer()->getFPS()/* / 2)*/) + "\n";
-						DEBUG_MSG(framesPerSecond.c_str());
-						lastFPS = engine->getTimer()->getFPS();
-						timer.reset();
-					}
-				}
-   #endif
-            std::string currentTitle = window.getWindowTitle();
-            size_t semiColonIndex = currentTitle.find_first_of(';');
-            std::string baseTitle = currentTitle.substr(0, (semiColonIndex != std::string::npos) ? semiColonIndex : currentTitle.size());
-            std::string newTitle = baseTitle + "; FPS: " + std::to_string(engine->getTimer()->getFPS());
-            window.setWindowTitle(newTitle.c_str());
+                    framesPerSecond += std::to_string(engine->getTimer()->getFPS()) + "\n";
+                    DEBUG_MSG(framesPerSecond.c_str());
+                    lastFPS = engine->getTimer()->getFPS();
+                    timer.reset();
+                }
+            }
+#endif
+            // Append FPS to the suffix (preserve renderer info if present)
+            if (!suffix.empty()) suffix += "; ";
+            suffix += "FPS: " + std::to_string(engine->getTimer()->getFPS());
+         }
+
+         if (!suffix.empty()) {
+             std::string newTitle = baseTitle + "; " + suffix;
+             window.setWindowTitle(newTitle.c_str());
          }
 
       } while (!window.hasQuit() && !engine->hasQuit());
