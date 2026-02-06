@@ -32,7 +32,6 @@ void GameObject::_onCollision(const Event& e)
 {
 	CollisionEvent* collisionEvent = (CollisionEvent*)&e;
 
-	GameObject* object = (GameObject*)collisionEvent->getSender();
 	GameObject* otherObject = collisionEvent->involvedObject;
 
 	Physical::collision(otherObject);
@@ -95,27 +94,33 @@ Collidable* GameObject::getCollidable(void)
 	Collidable* collidable = (_collisionObjects.empty()) ? [&]() -> Collidable* {
 		// Use the collision information from the current state
         if (GameObjectState* currentState = this->getState()) {
-			if (collidable = this->getState()->getCollidable()) {
-				switch (collidable->getType()) {
-				case COL_OBJ_SQUARE:
-					collidable = _collisionObjects.createDerived<Square>((Square&)*collidable);
-					break;
-
-				// TODO: Add missing cases
-				case COL_OBJ_GROUP:
-				case COL_OBJ_CIRCLE:
-				case COL_OBJ_PLANE:
-				default:
-					// Handle default case if necessary
-					break;
-				}
-				// Collidable information is consumed each frame; this translates local coordinates,
-				// to potentially global coordinates, based on the actual position of this object's renderable
-				// what we get is a shadow of the collidable
-				collidable->setPosition(this->getRenderable()->getPosition() + collidable->getPosition());
+			Collidable* stateCollidable = currentState->getCollidable();
+			if (!stateCollidable) {
+				return nullptr;
 			}
+
+			Collidable* derived = stateCollidable;
+
+			switch (stateCollidable->getType()) {
+			case COL_OBJ_SQUARE:
+				derived = _collisionObjects.createDerived<Square>((Square&)*stateCollidable);
+				break;
+
+			// TODO: Add missing cases
+			case COL_OBJ_GROUP:
+			case COL_OBJ_CIRCLE:
+			case COL_OBJ_PLANE:
+			default:
+				// Handle default case if necessary
+				break;
+			}
+			// Collidable information is consumed each frame; this translates local coordinates,
+			// to potentially global coordinates, based on the actual position of this object's renderable
+			// what we get is a shadow of the collidable
+			derived->setPosition(this->getRenderable()->getPosition() + derived->getPosition());
+			return derived;
 		}
-		return collidable;
+		return nullptr;
 	}() : _collisionObjects.front();
 	return collidable;
 }
