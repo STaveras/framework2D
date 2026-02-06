@@ -28,7 +28,8 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "lldb",
-            "targetArchitecture":"arm64"
+            "targetArchitecture":"arm64",
+            "preLaunchTask": "Make (macOS, debug)"
         },
         {
             "name": "clang++ - Debug program (mac, vulkan)",
@@ -42,8 +43,9 @@
             "environment": [{ "name": "config", "value": "Debug" }],
             "externalConsole": false,
             "MIMode": "lldb",
-            "targetArchitecture":"arm64"
-        }
+            "targetArchitecture":"arm64",
+            "preLaunchTask": "Make (macOS, debug)"
+        },
         {
             "name": "clang++ - Debug program (mac, opengl)",
             // "type": "cppdbg",
@@ -56,7 +58,8 @@
             "environment": [{ "name": "config", "value": "Debug" }],
             "externalConsole": false,
             "MIMode": "lldb",
-            "targetArchitecture":"arm64"
+            "targetArchitecture":"arm64",
+            "preLaunchTask": "Make (macOS, debug)"
         }
     ]
 }

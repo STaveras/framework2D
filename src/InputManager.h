@@ -39,4 +39,4 @@ public:
 	void shutdown(void);
 };
 #endif
-// Author: Stanley Taveras1
+// Author: Stanley Taveras

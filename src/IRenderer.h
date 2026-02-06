@@ -55,13 +55,13 @@ public:
 				 int nWidth = 0, int nHeight = 0,
 				 bool fullscreen = false, 
 				 bool vsync = false) :
-		_type(renderingAPI),
 		m_bStaticBG(false),
-		m_bFullScreen(false),
-		m_bVerticalSync(false),
+		m_bFullScreen(fullscreen),
+		m_bVerticalSync(vsync),
 		m_nWidth(nWidth), m_nHeight(nHeight),
 		m_ClearColor(0xFFFFFFFF),
-		m_pCamera(NULL){
+		m_pCamera(NULL),
+		_type(renderingAPI){
 		// Comes with one global render list
 		_RenderLists.create();
 	} 

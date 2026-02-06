@@ -12,8 +12,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "maths/vector2.h"
-#include "maths/vector3.h"
+#include "maths/Vector2.h"
+#include "maths/Vector3.h"
 
 #if !defined(_WIN32) || defined (GLM)// We're going to have to check this at run time if we want to swap between DX and VK on the fly
 

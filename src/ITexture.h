@@ -17,7 +17,7 @@ typedef class ITexture
 
 public:
 	ITexture(void): _clearKeyColor(0) {}
-	ITexture(const char* szFilename): _fileName(szFilename), _clearKeyColor(0) {}
+	ITexture(const char* szFilename): _clearKeyColor(0), _fileName(szFilename) {}
 	virtual ~ITexture(void){ }
 
 	const char* getFilename(void) const { return _fileName.c_str(); }

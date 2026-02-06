@@ -6,10 +6,10 @@
 
 Animation::Animation(void):
 	Renderable(RENDERABLE_TYPE_ANIMATION),
+	m_eMode(eOnce),
+	_frameIndex(0),
 	m_bForward(true),
 	m_bPlaying(false),
-	_frameIndex(0),
-	m_eMode(eOnce),
 	m_fSpeed(1.0f),
 	m_fTimer(0.0f),
 	m_szName("")
@@ -17,10 +17,10 @@ Animation::Animation(void):
 
 Animation::Animation(const char* szName):
 	Renderable(RENDERABLE_TYPE_ANIMATION),
+	m_eMode(eOnce),
 	_frameIndex(0),
 	m_bForward(true),
 	m_bPlaying(false),
-	m_eMode(eOnce),
 	m_fSpeed(1.0f),
 	m_fTimer(0.0f),
 	m_szName(szName)
