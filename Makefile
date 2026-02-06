@@ -42,11 +42,16 @@ COMMON_SRCS := \
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
-OBJDIR := build/obj
+TARGET_BASE := $(notdir $(CURDIR))
+ifeq ($(DEBUG),1)
+  TARGET := bin/$(TARGET_BASE)_d
+  OBJDIR := build/obj_d
+else
+  TARGET := bin/$(TARGET_BASE)
+  OBJDIR := build/obj
+endif
 OBJS := $(SRCS:%.cpp=$(OBJDIR)/%.o)
 OBJS := $(OBJS:%.mm=$(OBJDIR)/%.o)
-
-TARGET := bin/$(notdir $(CURDIR))
 
 CPPFLAGS := $(INCLUDES)
 CXXFLAGS := $(STD) $(WARN) $(DIAG) $(DEBUG_FLAGS) $(PLATFORM_FLAGS)
@@ -73,4 +78,4 @@ $(OBJDIR)/%.o: %.mm
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -rf $(OBJDIR) $(TARGET)
+	rm -rf build/obj build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d

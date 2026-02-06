@@ -7,9 +7,7 @@
 #include "Timer.h"
 #include "System.h"
 #include "Renderer.h"
-#ifdef _DEBUG
 #include "Debug.h"
-#endif
 class Game;
 class IInput;
 class Engine2D : public ISingleton<Engine2D>
