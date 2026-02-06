@@ -5,16 +5,14 @@
 #include "Keyboard.h"
 #include "PlatformInput.h"
 
-#include <map>
+#include <vector>
 
 // Keyboard input based on GLFW
 class PlatformKeyboard : public Keyboard
 {
-    GLFWkeyfun _onKeyEvent;
-    // I wanted to carry over the array implementation in DirectInput, 
-    // but I'm not sure the same would work on other platforms
-    std::map<KEY, bool> _keyStates;
-    std::map<KEY, bool> _keyStatesLast;
+    GLFWwindow* _window;
+    std::vector<unsigned char> _keyStates;
+    std::vector<unsigned char> _keyStatesLast;
 
 public:
    // TODO: Expose key definitions
@@ -31,6 +29,8 @@ public:
     bool keyUp(KEY key);
     bool keyPressed(KEY key);
     bool keyReleased(KEY key);
+    
+    void update(void) override;
 
     KEYS keys{
         GLFW_KEY_ESCAPE,

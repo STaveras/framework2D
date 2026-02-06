@@ -125,11 +125,7 @@ int main(int argc, const char *argv[])
    else {
       window.initialize(Window::ClientAPI::None);
       pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
-
-      // if (System::checkArgumentsForSDL(argc, argv))
-      //    pRenderer = (RenderingInterface*)(RendererSDL*)Renderer::createSDLRenderer(&window);
-      // else
-         pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
+      pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
 #else
    if (useOpenGL) {

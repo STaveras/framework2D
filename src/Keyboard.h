@@ -168,6 +168,8 @@ namespace framework {
 		virtual bool keyPressed(KEY nKey) = 0;
 		virtual bool keyReleased(KEY nKey) = 0;
 
+		virtual void update(void) = 0;
+				
 		//virtual void Capture(void) = 0;
 		//virtual void release(void) = 0;
 
