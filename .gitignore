@@ -1,6 +1,5 @@
 .cache/**
 .vs/
-/add/inc/glm
 Debug/
 Release/
 enc_temp_folder/
