@@ -14,8 +14,6 @@ IRenderer::~IRenderer() {
 }
 
 // NOTE: Initial test demo
-#if _DEBUG
-
 void IRenderer::_backgroundColorShift(void)
 {
 	if (!m_bStaticBG)
@@ -73,7 +71,6 @@ void IRenderer::_backgroundColorShift(void)
 		m_ClearColor = colors[7];
 	}
 }
-#endif
 
 ITexture* IRenderer::_textureExists(const char* szFilename)
 {
@@ -121,9 +118,7 @@ bool IRenderer::destroyTexture(const ITexture* pTexture)
 }
 
 void IRenderer::render(void) {
-#if _DEBUG
-	_backgroundColorShift();
-#else
-	throw std::runtime_error("RenderingInterface::render() unimplemented");
-#endif
+	if (DEBUGGING) {
+		_backgroundColorShift();
+	}
 }
