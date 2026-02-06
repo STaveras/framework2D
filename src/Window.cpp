@@ -114,7 +114,7 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
 	}
 
 	glfwSetWindowUserPointer(_window, this);
-	
+
 	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
 
 		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
@@ -123,7 +123,7 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
 
 			_window->setWidth(width);
 			_window->setHeight(height);
-			
+
 			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
 		}
 	});

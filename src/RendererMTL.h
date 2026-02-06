@@ -21,7 +21,7 @@ class RendererMTL : public IRenderer
 
    id<MTLDevice> m_device;
    id<MTLCommandQueue> m_commandQueue;
-   
+
    CAMetalLayer* m_metalLayer;
    MTKView* m_view;
 

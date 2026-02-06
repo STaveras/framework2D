@@ -29,7 +29,7 @@ public:
     bool keyUp(KEY key) override;
     bool keyPressed(KEY key) override;
     bool keyReleased(KEY key) override;
-    
+
     void update(void) override;
 
     KEYS keys{

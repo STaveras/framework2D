@@ -74,6 +74,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData) {
 
+
+
 	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
 		std::cerr << std::endl << "Vulkan -- " << pCallbackData->pMessage << std::endl;
 	}
@@ -270,6 +272,7 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
 }
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes, bool verticalSync = false) {
+
 
 	// Check the vailable modes and filter for one of these two below... 
 
@@ -760,7 +763,7 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 	if (vkCreateDescriptorSetLayout(_device, &layoutInfo, nullptr, &_samplerDescriptorSetLayout) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create descriptor set layout!");
 	}
-	
+
 	// Include both descriptor set layouts in the pipeline layout
 	VkDescriptorSetLayout descriptorSetLayouts[] = {
 		_uniformDescriptorSetLayout, 
@@ -995,6 +998,10 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 
 					switch (renderable->getRenderableType())
 					{
+					case RENDERABLE_TYPE_NULL:
+					case RENDERABLE_TYPE_WIDGET:
+					case RENDERABLE_TYPE_FONT:
+						break;
 					case RENDERABLE_TYPE_SPRITE: // Rename to image
 						_drawImage((Sprite*)renderable, commandBuffer);
 						break;
@@ -1392,6 +1399,7 @@ void RendererVK::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 
 void RendererVK::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
+
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	VkImageMemoryBarrier barrier{};
@@ -1624,6 +1632,7 @@ VkSampler RendererVK::createSampler(void)
 // TODO: Complete this function to correctly create a texture in Vulkan
 ITexture* RendererVK::createTexture(const char* szFilename, Color colorKey)
 {
+
 	ITexture* pTexture = _textureExists(szFilename);
 
 	if (!pTexture)

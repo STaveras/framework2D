@@ -13,14 +13,6 @@
 namespace {
 constexpr float kRadiansToDegrees = 180.0f / 3.14159265358979323846f;
 }
-#if defined(__APPLE__)
-#include <OpenGL/gl3.h>
-#else
-#include <GL/gl.h>
-#ifdef _WIN32
-#pragma comment(lib, "opengl32.lib")
-#endif
-#endif
 
 RendererGL::RendererGL() : IRenderer(RENDERER_TYPE_GL) {}
 

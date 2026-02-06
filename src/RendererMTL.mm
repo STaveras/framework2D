@@ -14,6 +14,10 @@ RendererMTL::RendererMTL(void)
 // Parameterized constructor
 RendererMTL::RendererMTL(NSWindow* window, int nWidth, int nHeight, bool bFullscreen, bool bVsync)
 {
+
+
+
+
     m_window = window;
 
     // Additional setup based on provided parameters
@@ -57,6 +61,7 @@ void RendererMTL::initialize(void)
 // Create Texture method
 ITexture* RendererMTL::createTexture(const char* szFilename, Color colorKey)
 {
+
     // Create a new TextureMTL object
     TextureMTL* textureMTL = new TextureMTL(szFilename);
 
@@ -69,10 +74,9 @@ ITexture* RendererMTL::createTexture(const char* szFilename, Color colorKey)
 }
 
 // Destroy Texture method
-void RendererMTL::destroyTexture(ITexture* texture)
+bool RendererMTL::destroyTexture(const ITexture* texture)
 {
-    // Release the texture resources if needed
-    delete texture;
+    return IRenderer::destroyTexture(texture);
 }
 
 // Shutdown method
@@ -86,10 +90,10 @@ void RendererMTL::shutdown(void)
 // Render method
 void RendererMTL::render(void)
 {
-    
+
     // // Obtain a drawable object
     // m_drawable = [m_metalLayer nextDrawable];
-    
+
     // if (!m_drawable) {
     //     return; // Return if no drawable available
     // }
