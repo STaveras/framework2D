@@ -55,7 +55,7 @@ void DIMouse::update(void) {
 
       if (timer.getElapsedTime() > 1) {
          char buffer[128];
-         sprintf_s(buffer, "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
+         sprintf_s(buffer, sizeof(buffer), "Mouse pos(%i, %i)\nLbutton %s\n\n", _mouseState.lX, _mouseState.lY, (_mouseState.rgbButtons[0]) ? "true" : "false");
          DEBUG_MSG(buffer);
          timer.reset();
       }

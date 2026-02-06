@@ -4,8 +4,6 @@
 
 #pragma once
 
-#define BASE_DIRECTORY "./fantasySideScroller/"
-
 #define WINDOW_SIZE_MULTIPLIER 2
 #define GAME_RES_X 336
 #define GAME_RES_Y 192
@@ -25,6 +23,8 @@
 #include "CollisionEvent.h"
 
 #include "Square.h"
+
+#include "FantasySideScroller/Resources.h"
 
 #define MOVE_UNITS 150.0f
 #define JUMP_MULTIPLIER 2.67f
@@ -57,7 +57,7 @@ class FantasySideScroller : public Game
 
 				vector2 idleFrameDimensions{ 64, 80 };
 
-				Texture* idleSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Idle/Idle-Sheet.png");
+				Texture* idleSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Idle/Idle-Sheet.png").c_str());
 
 				Animations::createFramesForAnimation(idleAnimation, idleSheet, idleFrameDimensions, _spriteManager);
 
@@ -76,7 +76,7 @@ class FantasySideScroller : public Game
 
 				animations.push_back(idleAnimation);
 
-				Animations::toJSON(animations, BASE_DIRECTORY"Character/Idle/IdleAnimation.json");
+				Animations::toJSON(animations, BasePath("Character/Idle/IdleAnimation.json").c_str());
 
 				/////////////////////////////////////////
 				GameObjectState* rising = this->addState("Rising");
@@ -89,7 +89,7 @@ class FantasySideScroller : public Game
 
 				vector2 risingDimensions{ 64, 64 };
 
-				Texture* risingSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Jump-Start/Jump-Start-Sheet.png");
+				Texture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
 
 				Animations::createFramesForAnimation(risingAnimation, risingSheet, risingDimensions, _spriteManager);
 
@@ -117,7 +117,7 @@ class FantasySideScroller : public Game
 
 				vector2 jumpDimensions{ 64, 64 };
 
-				Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Jumlp-All/Jump-All-Sheet.png");
+				Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jumlp-All/Jump-All-Sheet.png").c_str());
 
 				Animations::createFramesForAnimation(jumpAnimation, jumpSheet, jumpDimensions, _spriteManager, 4, 8);
 
@@ -151,7 +151,7 @@ class FantasySideScroller : public Game
 
 				vector2 landingDimensions{ 64, 64 };
 
-				Texture* landingSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Jump-End/Jump-End-Sheet.png");
+				Texture* landingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-End/Jump-End-Sheet.png").c_str());
 
 				Animation* landingAnimation = _animationManager.create();
 				landingAnimation->setName(landing->getName());
@@ -176,7 +176,7 @@ class FantasySideScroller : public Game
 				runningLeft->setForce(100);
 				runningRight->setForce(100);
 
-				Texture* runningSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Run/Run-Sheet.png");
+				Texture* runningSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Run/Run-Sheet.png").c_str());
 
 				Animation* runningLeftAnimation = _animationManager.create();
 				Animation* runningRightAnimation = _animationManager.create();
@@ -217,7 +217,7 @@ class FantasySideScroller : public Game
 
 				vector2 attackDimensions{ 96.0, 80.0 };
 
-				Texture* attackSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Attack-01/Attack-01-Sheet.png");
+				Texture* attackSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Attack-01/Attack-01-Sheet.png").c_str());
 
 				Animation* attack01Animation = _animationManager.create();
 				Animations::createFramesForAnimation(attack01Animation, attackSheet, attackDimensions, _spriteManager, 0, 5);
@@ -240,7 +240,7 @@ class FantasySideScroller : public Game
 
 				vector2 deadDimensions{ 80, 64 };
 
-				Texture* deadSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Dead/Dead-Sheet.png");
+				Texture* deadSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Dead/Dead-Sheet.png").c_str());
 
 				Animation* deadAnimation = _animationManager.create();
 
@@ -257,10 +257,10 @@ class FantasySideScroller : public Game
 				// running, press jump, jumping, if previous state running, on end, return to running
 				/////////////////////////////////////////
 
-				const char* transitionsFilePath = BASE_DIRECTORY"Character/Transitions.json";
+				std::string transitionsFilePath = BasePath("Character/Transitions.json");
 				if (FileSystem::FileExists(transitionsFilePath)) 
 				{
-					FileStream fileStream = FileSystem::File::Open(transitionsFilePath, true);
+					FileStream fileStream = FileSystem::File::Open(transitionsFilePath);
 					this->fromJSON(fileStream);
 					fileStream.close();
 				}
@@ -361,11 +361,11 @@ class FantasySideScroller : public Game
 				if (DEBUGGING && Debug::dbgObjects) 
 				{
 					char buffer[256];
-					sprintf_s(buffer, "pos{ % f,% f }\n", this->_position.x, this->_position.y);
+					sprintf_s(buffer, sizeof(buffer), "pos{ % f,% f }\n", this->_position.x, this->_position.y);
 					DEBUG_MSG(buffer);
 
 					if (Renderable* renderable = this->getRenderable()) {
-						sprintf_s(buffer, "renderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
+						sprintf_s(buffer, sizeof(buffer), "renderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
 						DEBUG_MSG(buffer);
 					}
 
@@ -373,7 +373,7 @@ class FantasySideScroller : public Game
 						switch (collidable->getType()) {
 						case COL_OBJ_SQUARE: {
 							Square* square = (Square*)this->getCollidable();
-							sprintf_s(buffer, "colSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
+							sprintf_s(buffer, sizeof(buffer), "colSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
 							DEBUG_MSG(buffer);
 							break;
 						}
@@ -395,14 +395,14 @@ class FantasySideScroller : public Game
 		{
 			GameState::onEnter();
 
-			_background = new Image(BASE_DIRECTORY"Background/Background.png");
+			_background = new Image(BasePath("Background/Background.png").c_str());
 			_background->center();
 
 			_renderList->push_back(_background);
 
-			_tileSet = TileSet::loadFromFile(BASE_DIRECTORY"Assets/fantasyTiles.tsj");
+			_tileSet = TileSet::loadFromFile(BasePath("Assets/fantasyTiles.tsj").c_str());
 
-			_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
+			_tileMap = TileMap::loadFromCSVFile(BasePath("testMap.csv").c_str(), _tileSet);
 
 			for (unsigned int i = 0; i < (unsigned int)_tileMap->getTiles().size(); i++) {
 				char buffer[32]{ 0 }; sprintf_s(buffer, 32, "t%u", i);
@@ -499,7 +499,7 @@ public:
 	{
 		//Game::begin();
 
-		Renderer::window->setWindowTitle(BASE_DIRECTORY);
+		Renderer::window->setWindowTitle(BaseDir());
 		Renderer::window->setWidth(GAME_RES_X * WINDOW_SIZE_MULTIPLIER);
 		Renderer::window->setHeight(GAME_RES_Y * WINDOW_SIZE_MULTIPLIER);
 

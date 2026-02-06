@@ -27,7 +27,7 @@ void Character::_initStates() {
 
 	vector2 idleFrameDimensions{ 64, 80 };
 
-	Texture* idleSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Idle/Idle-Sheet.png");
+	Texture* idleSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Idle/Idle-Sheet.png").c_str());
 
 	Animations::createFramesForAnimation(idleAnimation, idleSheet, idleFrameDimensions, _spriteManager);
 
@@ -53,7 +53,7 @@ void Character::_initStates() {
 
 	Animation* risingAnimation = _animationManager.create();
 	vector2 risingDimensions{ 64, 64 };
-	Texture* risingSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Jump-Start/Jump-Start-Sheet.png");
+	Texture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
 
 	Animations::createFramesForAnimation(risingAnimation, risingSheet, risingDimensions, _spriteManager);
 
@@ -81,7 +81,7 @@ void Character::_initStates() {
 
 	vector2 jumpDimensions{ 64, 64 };
 
-	Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Jumlp-All/Jump-All-Sheet.png");
+	Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jumlp-All/Jump-All-Sheet.png").c_str());
 
 	Animations::createFramesForAnimation(jumpAnimation, jumpSheet, jumpDimensions, _spriteManager, 4, 8);
 
@@ -118,7 +118,7 @@ void Character::_initStates() {
 
 	vector2 landingDimensions{ 64, 64 };
 
-	Texture* landingSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Jump-End/Jump-End-Sheet.png");
+	Texture* landingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-End/Jump-End-Sheet.png").c_str());
 
 	Animation* landingAnimation = _animationManager.create();
 	landingAnimation->setName(landing->getName());
@@ -143,7 +143,7 @@ void Character::_initStates() {
 	runningLeft->setForce(100);
 	runningRight->setForce(100);
 
-	Texture* runningSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Run/Run-Sheet.png");
+	Texture* runningSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Run/Run-Sheet.png").c_str());
 
 	Animation* runningLeftAnimation = _animationManager.create();
 	Animation* runningRightAnimation = _animationManager.create();
@@ -184,7 +184,7 @@ void Character::_initStates() {
 
 	vector2 attackDimensions{ 96.0, 80.0 };
 
-	Texture* attackSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Attack-01/Attack-01-Sheet.png");
+	Texture* attackSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Attack-01/Attack-01-Sheet.png").c_str());
 
 	Animation* attack01Animation = _animationManager.create();
 	Animations::createFramesForAnimation(attack01Animation, attackSheet, attackDimensions, _spriteManager, 0, 5);
@@ -207,7 +207,7 @@ void Character::_initStates() {
 
 	vector2 deadDimensions{ 80, 64 };
 
-	Texture* deadSheet = Engine2D::getRenderer()->createTexture(BASE_DIRECTORY"Character/Dead/Dead-Sheet.png");
+	Texture* deadSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Dead/Dead-Sheet.png").c_str());
 
 	Animation* deadAnimation = _animationManager.create();
 
@@ -228,16 +228,16 @@ void Character::_initStates() {
 			animations.push_back(animation);
 		}
 	}
-	Animations::toJSON(animations, BASE_DIRECTORY"Character/Animations.json");
+	Animations::toJSON(animations, BasePath("Character/Animations.json").c_str());
 	/////////////////////////////////////////////////////////////////////////////
 }
 
 void Character::_initTransitions() {
 
-	const char* transitionsFilePath = BASE_DIRECTORY"Character/Transitions.json";
+	std::string transitionsFilePath = BasePath("Character/Transitions.json");
 	if (FileSystem::FileExists(transitionsFilePath))
 	{
-		FileStream fileStream = FileSystem::File::Open(transitionsFilePath, true);
+		FileStream fileStream = FileSystem::File::Open(transitionsFilePath);
 		this->fromJSON(fileStream);
 		fileStream.close();
 	}
@@ -327,11 +327,11 @@ void Character::_setupCollisionHandler() {
 			if (DEBUGGING && Debug::dbgCollision)
 			{
 				char buffer[256];
-				sprintf_s(buffer, "Tile (%i):\n\tpos{ % f,% f }\n", this->_tile->getTileIndex(), this->_tile->_position.x, this->_tile->_position.y);
+				sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", this->_tile->getTileIndex(), this->_tile->_position.x, this->_tile->_position.y);
 				DEBUG_MSG(buffer);
 
 				if (Renderable* renderable = this->_tile->getRenderable()) {
-					sprintf_s(buffer, "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
+					sprintf_s(buffer, sizeof(buffer), "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
 					DEBUG_MSG(buffer);
 				}
 
@@ -339,7 +339,7 @@ void Character::_setupCollisionHandler() {
 					switch (collidable->getType()) {
 					case COL_OBJ_SQUARE: {
 						Square* square = (Square*)otherObject->getCollidable();
-						sprintf_s(buffer, "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
+						sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
 						DEBUG_MSG(buffer);
 						break;
 					}
@@ -458,11 +458,11 @@ void Character::update(float time)
 	if (DEBUGGING && Debug::dbgObjects)
 	{
 		char buffer[256];
-		sprintf_s(buffer, "Character:\n\tpos{ % f,% f }\n", this->_position.x, this->_position.y);
+		sprintf_s(buffer, sizeof(buffer), "Character:\n\tpos{ % f,% f }\n", this->_position.x, this->_position.y);
 		DEBUG_MSG(buffer);
 
 		if (Renderable* renderable = this->getRenderable()) {
-			sprintf_s(buffer, "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
+			sprintf_s(buffer, sizeof(buffer), "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
 			DEBUG_MSG(buffer);
 		}
 
@@ -470,7 +470,7 @@ void Character::update(float time)
 			switch (collidable->getType()) {
 			case COL_OBJ_SQUARE: {
 				Square* square = (Square*)this->getCollidable();
-				sprintf_s(buffer, "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
+				sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
 				DEBUG_MSG(buffer);
 				break;
 			}

@@ -91,7 +91,8 @@
 #define ZeroMemory(p, sz) memset((p), 0, (sz))
 
 //#define strncpy_s strncpy
-#define sprintf_s printf
+#include <cstdio>
+#define sprintf_s snprintf
 #define strtok_s strtok_r
 #define _strdup strdup
 #define INFINITE INFINITY

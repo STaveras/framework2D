@@ -80,24 +80,23 @@ void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset)
 	glColor4f(tint.r / 255.0f, tint.g / 255.0f, tint.b / 255.0f, tint.a / 255.0f);
 
 	glPushMatrix();
+	// Match DirectX sprite semantics: position refers to the sprite's center.
 	glTranslatef(position.x, position.y, 0.0f);
-	glTranslatef(center.x, center.y, 0.0f);
 	glRotatef(rotationRadians * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
 	glScalef(scale.x, scale.y, 1.0f);
-	glTranslatef(-center.x, -center.y, 0.0f);
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(u0, v0);
-	glVertex2f(0.0f, 0.0f);
+	glVertex2f(-center.x, -center.y);
 
 	glTexCoord2f(u1, v0);
-	glVertex2f(srcWidth, 0.0f);
+	glVertex2f(srcWidth - center.x, -center.y);
 
 	glTexCoord2f(u1, v1);
-	glVertex2f(srcWidth, srcHeight);
+	glVertex2f(srcWidth - center.x, srcHeight - center.y);
 
 	glTexCoord2f(u0, v1);
-	glVertex2f(0.0f, srcHeight);
+	glVertex2f(-center.x, srcHeight - center.y);
 	glEnd();
 
 	glPopMatrix();
