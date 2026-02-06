@@ -417,13 +417,13 @@ void Character::update(float time)
 		const char* stateName = state->getName();
 
 		if (Player* player = Engine2D::getGame()->getPlayerWith(this)) {
-#if _DEBUG
+//#if _DEBUG
 			if (KEYBOARD) {
 				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {
 					this->sendInput("DEATH");
 				}
 			}
-#endif
+//#endif
 			if (!strcmp(stateName, "Jump") || !strcmp(stateName, "Falling"))
 			{
 				this->_tile = NULL; // Reset the tile we are on, so we can check for collisions again
