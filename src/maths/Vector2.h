@@ -26,10 +26,6 @@ typedef struct vector2 : public glm::vec2
 
     float length() const { return sqrtf(norm()); }
 
-#ifdef GLM_VERSION
-    operator glm::vec2() const { return glm::vec2(x, y); }
-#endif
-
 #ifdef __D3DX9MATH_H__
     operator D3DXVECTOR2() const { return D3DXVECTOR2(x, y); }
 #endif
