@@ -11,16 +11,19 @@ Engine2D* engine = Engine2D::getInstance();
 
 bool GameState::addObject(GameObject * object)
 {
+
    return false; // Not added
 }
 
 bool GameState::removeObject(GameObject * object)
 {
+
    return false; // Not removed
 }
 
-void GameState::onEnter(void)
+void GameState::onEnter(State* prevState)
 {
+
    _renderList = engine->getRenderer()->createRenderList();
 
    engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
@@ -38,8 +41,9 @@ bool GameState::onExecute(float time)
    return true; // We're still updating!!! ...Right?
 }
 
-void GameState::onExit(void)
+void GameState::onExit(State* nextState)
 {
+
    _inputManager.shutdown();
 
    engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);

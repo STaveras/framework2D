@@ -21,7 +21,7 @@ class RendererMTL : public IRenderer
 
    id<MTLDevice> m_device;
    id<MTLCommandQueue> m_commandQueue;
-   
+
    CAMetalLayer* m_metalLayer;
    MTKView* m_view;
 
@@ -39,12 +39,12 @@ public:
    id<MTLDevice> getDevice(void) const { return m_device; }
 
 private:
-   ITexture* createTexture(const char* szFilename, Color colorKey = 0);
-   void destroyTexture(ITexture* texture);
+   ITexture* createTexture(const char* szFilename, Color colorKey = 0) override;
+   bool destroyTexture(const ITexture* texture) override;
 
-   void initialize(void);
-   void shutdown(void);
-   void render(void);
+   void initialize(void) override;
+   void shutdown(void) override;
+   void render(void) override;
 };
 
 #endif //_RENDERERMTL_H

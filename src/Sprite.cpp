@@ -11,8 +11,8 @@
 Sprite::Sprite(void):
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(NULL),
-	_manuallyLoaded(false),
-	_sourceRect({ -1, -1, -1, -1 }) {
+	_sourceRect({ -1, -1, -1, -1 }),
+	_manuallyLoaded(false) {
 
 }
 
@@ -20,22 +20,23 @@ Sprite::Sprite(void):
 Sprite::Sprite(const Sprite& image) :
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(image.getTexture()),
-	_manuallyLoaded(false),
-	_sourceRect(image._sourceRect) {
+	_sourceRect(image._sourceRect),
+	_manuallyLoaded(false) {
 
 }
 
 Sprite::Sprite(ITexture* pImage, const RECT& srcRect):
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(pImage),
-	_manuallyLoaded(false),
-	_sourceRect(srcRect) {
+	_sourceRect(srcRect),
+	_manuallyLoaded(false) {
 
 }
 
 Sprite::Sprite(const char* filePath, Color clearColor, const RECT& srcRect):
 	Renderable(RENDERABLE_TYPE_SPRITE),
 	_texture(NULL),
+	_sourceRect(srcRect),
 	_manuallyLoaded(true) {
 	this->load(filePath,clearColor,srcRect);
 }

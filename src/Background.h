@@ -15,11 +15,11 @@ namespace Background
             Mirror // Repeats, but mirrored ><><><><
         }mode;
 
-        void setMode(Mode m) {
+        static void setMode(Mode m) {
             mode = m;
         }
 
-        Mode getMode(Mode m) {
+        static Mode getMode(void) {
             return mode;
         }
     };

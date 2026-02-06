@@ -90,7 +90,7 @@ void ObjectManager::update(float fTime)
 							((Square*)collidable)->getMax().x, ((Square*)collidable)->getMax().y,
 							object->getRenderable()->getPosition().x, object->getRenderable()->getPosition().y);
 						DEBUG_MSG(buffer);
-						DEBUG_MSG("+\n")
+						DEBUG_MSG("+\n");
 						sprintf_s(buffer, sizeof(buffer), "%s\np2{%f, %f}\nco2{%f,%f,%f,%f}\nr2{%f,%f}\n", this->getObjectName(otherObject).c_str(), otherObject->getPosition().x, otherObject->getPosition().y,
 							otherCollidable->getPosition().x, otherCollidable->getPosition().y,
 							((Square*)otherCollidable)->getMax().x, ((Square*)otherCollidable)->getMax().y,

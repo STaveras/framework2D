@@ -13,9 +13,9 @@ Window::Window(void) :
 	m_bHasQuit(false),
 	m_nWidth(GLOBAL_WIDTH),
 	m_nHeight(GLOBAL_HEIGHT),
-	m_szWindowTitle(""),
+	_window(NULL),
 	m_szWindowClassName("_ENGINE_2D_WINDOW"),
-	_window(NULL) {
+	m_szWindowTitle("") {
 
 }
 
@@ -23,9 +23,9 @@ Window::Window(int nWidth, int nHeight, const char* szWindowTitle, const char* s
 	m_bHasQuit(false),
 	m_nWidth(nWidth),
 	m_nHeight(nHeight),
-	m_szWindowTitle(szWindowTitle),
+	_window(NULL),
 	m_szWindowClassName((!strcmp(szWindowClassName, "")) ? "_ENGINE_2D_WINDOW" : szWindowClassName),
-	_window(NULL) {
+	m_szWindowTitle(szWindowTitle) {
 
 }
 
@@ -114,7 +114,7 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
 	}
 
 	glfwSetWindowUserPointer(_window, this);
-	
+
 	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
 
 		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
@@ -123,7 +123,7 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
 
 			_window->setWidth(width);
 			_window->setHeight(height);
-			
+
 			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
 		}
 	});

@@ -36,7 +36,7 @@ private:
 	LARGE_INTEGER	m_liTimer; // Used internally for calculating FPS
 #else
 	std::chrono::high_resolution_clock::time_point m_tpTime;
-	
+
 	double m_dNow = 0.0;
 	double m_dElapsed = 0.0;
 

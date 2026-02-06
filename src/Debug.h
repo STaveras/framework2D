@@ -34,7 +34,10 @@ namespace Debug
 #define OutputDebugString(m) 
 #endif
 
-#define DEBUG_MSG(msg) std::cout << msg; OutputDebugString(msg);
+#ifdef DEBUG_MSG
+#undef DEBUG_MSG
+#endif
+#define DEBUG_MSG(msg) do { if (Debug::Mode.isEnabled()) { std::cout << msg; OutputDebugString(msg); } } while(0)
 
 #define DEBUGGING (Debug::Mode.isEnabled())
 

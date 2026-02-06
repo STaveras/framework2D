@@ -131,6 +131,8 @@ namespace Animations {
          return "LOOPING";
       case Animation::eOscillate:
          return "OSCILLATE";
+      case Animation::eOnce:
+         return "ONCE";
       }
       return "ONCE";
    }

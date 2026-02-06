@@ -73,6 +73,8 @@ bool WithCircle(const Square* square, const Circle* circle)
 
 bool WithPlane(const Square* square, const Plane* plane)
 {
+
+
 	//vector2 position = ((_position + m_Max) / 2);
 
 	//vector2 toSquare = position - plane->getPosition();

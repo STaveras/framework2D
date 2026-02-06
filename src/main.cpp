@@ -66,9 +66,10 @@ int main(int argc, const char *argv[])
 
    System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
 
-#if _DEBUG
-   (System::checkArgumentsForDebugMode(argc, argv)) ? Debug::Mode.enable() : Debug::Mode.disable(); // ONLY TIME WE CHECK FOR THIS
+   const bool enableDebug = System::checkArgumentsForDebugMode(argc, argv);
+   enableDebug ? Debug::Mode.enable() : Debug::Mode.disable(); // set runtime debug mode
 
+#if _DEBUG
    if (Debug::Mode.isEnabled()) {
       // Check for game data
       FileSystem::ListDirectoryContents(System::GlobalDataPath());
@@ -167,7 +168,7 @@ int main(int argc, const char *argv[])
          std::string baseTitle = currentTitle.substr(0, (semiColonIndex != std::string::npos) ? semiColonIndex : currentTitle.size());
 
          std::string suffix;
-
+         
          if (Debug::Mode.isEnabled()) {
              suffix += "Renderer: " + RENDERER_API_TYPE::toString(Renderer::get()->renderingAPI());
          }
@@ -175,7 +176,6 @@ int main(int argc, const char *argv[])
          if (System::checkArgumentsForFPSCounter(argc, argv)) 
          {
 #ifdef _DEBUG
-            static unsigned int lastFPS = 0;
             static Timer timer; timer.update();
 
             std::string framesPerSecond = "FPS: ";
@@ -186,7 +186,6 @@ int main(int argc, const char *argv[])
 
                     framesPerSecond += std::to_string(engine->getTimer()->getFPS()) + "\n";
                     DEBUG_MSG(framesPerSecond.c_str());
-                    lastFPS = engine->getTimer()->getFPS();
                     timer.reset();
                 }
             }

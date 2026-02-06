@@ -34,8 +34,8 @@ protected:
     }
 
 public:
-    Logger(void):_isNew(true),_szFilename(""),_pFileStream(NULL){}
-    Logger(const char* filename):_isNew(true),_szFilename(filename), _pFileStream(NULL){}
+    Logger(void):_isNew(true),_pFileStream(NULL),_szFilename(""){}
+    Logger(const char* filename):_isNew(true),_pFileStream(NULL),_szFilename(filename){}
     ~Logger(void){ if (_pFileStream) { _pFileStream->clear(); delete _pFileStream; } }
 
     void close(void)

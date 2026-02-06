@@ -73,6 +73,7 @@ public:
 		}
 
 		virtual void update(float time) {
+
 			throw std::runtime_error("EventListener::update() not implemented.");
 		}
 

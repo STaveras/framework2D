@@ -230,7 +230,7 @@ bool GameObject::GameObjectState::onExecute(float time)
 		}
 	}
 
-	if (_executeTime > 0 && _runTime >= _executeTime || !finalCheck)
+	if ((_executeTime > 0 && _runTime >= _executeTime) || !finalCheck)
 		return false;
 
 	return finalCheck;

@@ -30,6 +30,7 @@ public:
    void setName(const char* szName) { if (m_szName) free(m_szName); m_szName = _strdup(szName); }
 
    virtual void onEnter(State* prevState) {
+
 	   //if (prevState) {
 		  // prevState->onExit(this);
 	   //}
@@ -38,6 +39,7 @@ public:
    virtual bool onExecute(void) { return false; }
 
    virtual void onExit(State* nextState) {
+
 	   //if (nextState) {
 		  // nextState->onEnter(this);
 	   //}

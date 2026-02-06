@@ -26,7 +26,7 @@ private:
 	Trigger(void);
 
 public:
-	explicit Trigger(TYPE type,std::string value,MODE mode = ONCE):Type(type),Value(value),Mode(mode),_bTriggered(false){}
+	explicit Trigger(TYPE type,std::string value,MODE mode = ONCE):Type(type),Mode(mode),Value(value),_bTriggered(false){}
 	Trigger(const Trigger& t);
 	~Trigger(void){}
 
