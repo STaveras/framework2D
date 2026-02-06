@@ -26,8 +26,8 @@ void PlatformInput::initialize(void)
 
 void PlatformInput::update(void)
 {
-//    if (_keyboard)
-//       ((DIKeyboard*)_keyboard)->update();
+   if (_keyboard)
+      _keyboard->update();
 
 //    if (_mouse)
 //       ((DIMouse*)_mouse)->update();

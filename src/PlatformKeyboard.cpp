@@ -3,41 +3,59 @@
 
 #include "Engine2D.h"
 
-PlatformKeyboard::PlatformKeyboard(Window *window): _onKeyEvent(NULL)
+PlatformKeyboard::PlatformKeyboard(Window *window)
 {
-    // This is hideous but...
-    auto func = [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        InputInterface *input = Engine2D::getInput();
-        PlatformKeyboard *keyboard = (PlatformKeyboard*)input->getKeyboard();
-        keyboard->_onKeyEventHandler(window, key, scancode, action, mods);
-    };
-    glfwSetKeyCallback(window->getUnderlyingWindow(), func);
-    // ..it works. But I'm concerned as to how it works, in regards to memory management 
-    // Are lambda funcs passed as a stack object?
+    _window = window ? window->getUnderlyingWindow() : nullptr;
+    _keyStates.assign(GLFW_KEY_LAST + 1, 0);
+    _keyStatesLast.assign(GLFW_KEY_LAST + 1, 0);
 }
 
 void PlatformKeyboard::_onKeyEventHandler(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    _keyStatesLast[(KEY)key] = _keyStates[(KEY)key];
-    _keyStates[(KEY)key] = (action == GLFW_RELEASE) ? false : true;
+    // Intentionally unused: we poll key states each frame in update().
 }
 
 bool PlatformKeyboard::keyDown(KEY key)
 {
-    return _keyStates[key];
+    if (key < 0 || key > GLFW_KEY_LAST) {
+        return false;
+    }
+    return _keyStates[(size_t)key] != 0;
 }
 
 bool PlatformKeyboard::keyUp(KEY key)
 {
-    return !_keyStates[key];
+    return !keyDown(key);
 }
 
 bool PlatformKeyboard::keyPressed(KEY key)
 {
-    return _keyStatesLast[key] != _keyStates[key] && keyDown(key);
+    if (key < 0 || key > GLFW_KEY_LAST) {
+        return false;
+    }
+    size_t k = (size_t)key;
+    return _keyStates[k] && !_keyStatesLast[k];
 }
 
 bool PlatformKeyboard::keyReleased(KEY key)
 {
-    return _keyStatesLast[key] != _keyStates[key] && keyUp(key);
+    if (key < 0 || key > GLFW_KEY_LAST) {
+        return false;
+    }
+    size_t k = (size_t)key;
+    return !_keyStates[k] && _keyStatesLast[k];
+}
+
+void PlatformKeyboard::update(void)
+{
+    if (!_window) {
+        return;
+    }
+
+    _keyStatesLast = _keyStates;
+
+    for (int key = 0; key <= GLFW_KEY_LAST; ++key) {
+        int state = glfwGetKey(_window, key);
+        _keyStates[(size_t)key] = (state == GLFW_PRESS || state == GLFW_REPEAT) ? 1 : 0;
+    }
 }
