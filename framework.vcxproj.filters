@@ -129,7 +129,7 @@
     <ClInclude Include="src\Vertex.h">
       <Filter>Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="src\maths\vector3.h">
+    <ClInclude Include="src\maths\Vector3.h">
       <Filter>Math / Utilities</Filter>
     </ClInclude>
     <ClInclude Include="src\Timer.h">
@@ -156,7 +156,7 @@
     <ClInclude Include="src\Maths.h">
       <Filter>Math / Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="src\logger.h">
+    <ClInclude Include="src\Logger.h">
       <Filter>Debugging</Filter>
     </ClInclude>
     <ClInclude Include="src\Text.h">
@@ -309,7 +309,7 @@
     <ClInclude Include="src\Debug.h">
       <Filter>Debugging</Filter>
     </ClInclude>
-    <ClInclude Include="src\debugLogger.hpp">
+    <ClInclude Include="src\DebugLogger.hpp">
       <Filter>Debugging</Filter>
     </ClInclude>
     <ClInclude Include="src\DirectInput.h">
@@ -402,7 +402,7 @@
     <ClInclude Include="src\Cyclable.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\maths\vector2.h">
+    <ClInclude Include="src\maths\Vector2.h">
       <Filter>Math / Utilities</Filter>
     </ClInclude>
     <ClInclude Include="src\Tile.h">

@@ -92,10 +92,16 @@ bool PlayState::onExecute(float time)
 #if _DEBUG
 	if (DEBUGGING)
 	{
-		// Output a hashed to the console
-		char buffer[256];
-		sprintf_s(buffer, sizeof(buffer), "PlayState::onExecute() - %s, %f\n", Engine2D::getTimer()->getTimeStamp().c_str(), Engine2D::getTimer()->getElapsedTime());
-		DEBUG_MSG(buffer);
+		static Timer timer; timer.update();
+
+		if (timer.getElapsedTime() >= 1.0f) {
+			timer.reset();
+			
+			// Output a hashed to the console
+			char buffer[256];
+			sprintf_s(buffer, sizeof(buffer), "PlayState::onExecute() - %s, %f\n", Engine2D::getTimer()->getTimeStamp().c_str(), Engine2D::getTimer()->getElapsedTime());
+			DEBUG_MSG(buffer);
+		}
 	}
 #endif
 
