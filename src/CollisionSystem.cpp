@@ -1,12 +1,16 @@
 #include "CollisionSystem.h"
 
 #include "Collidable.h"
+#include "CollidableGroup.h"
 #include "GameObject.h"
+#include "Polygon.h"
 #include "Renderable.h"
 #include "Square.h"
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
+#include <limits>
 #include <map>
 #include <utility>
 #include <vector>
@@ -38,6 +42,256 @@ bool tryGetSquareBounds(const Collidable* collidable, vector2& outMin, vector2& 
 	return true;
 }
 
+bool tryGetPolygonBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
+{
+	if (!collidable || collidable->getType() != COL_OBJ_POLYGON) {
+		return false;
+	}
+
+	const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+	if (!polygon || !polygon->isValid()) {
+		return false;
+	}
+
+	outMin = polygon->getMin();
+	outMax = polygon->getMax();
+	return true;
+}
+
+bool tryGetBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
+{
+	if (!collidable) {
+		return false;
+	}
+
+	if (tryGetSquareBounds(collidable, outMin, outMax) || tryGetPolygonBounds(collidable, outMin, outMax)) {
+		return true;
+	}
+
+	if (collidable->getType() != COL_OBJ_GROUP) {
+		return false;
+	}
+
+	const CollidableGroup* group = (const CollidableGroup*)collidable;
+	if (!group || group->empty()) {
+		return false;
+	}
+
+	bool hasAnyBounds = false;
+	vector2 minBounds(0.0f, 0.0f);
+	vector2 maxBounds(0.0f, 0.0f);
+	for (const Collidable* member : *group) {
+		vector2 memberMin(0.0f, 0.0f);
+		vector2 memberMax(0.0f, 0.0f);
+		if (!member || !tryGetBounds(member, memberMin, memberMax)) {
+			continue;
+		}
+
+		if (!hasAnyBounds) {
+			minBounds = memberMin;
+			maxBounds = memberMax;
+			hasAnyBounds = true;
+			continue;
+		}
+
+		minBounds.x = std::min(minBounds.x, memberMin.x);
+		minBounds.y = std::min(minBounds.y, memberMin.y);
+		maxBounds.x = std::max(maxBounds.x, memberMax.x);
+		maxBounds.y = std::max(maxBounds.y, memberMax.y);
+	}
+
+	if (!hasAnyBounds) {
+		return false;
+	}
+
+	outMin = minBounds;
+	outMax = maxBounds;
+	return true;
+}
+
+void collectPolygonLoops(const Collidable* collidable, std::vector<std::vector<vector2>>& outLoops)
+{
+	if (!collidable) {
+		return;
+	}
+
+	if (collidable->getType() == COL_OBJ_POLYGON) {
+		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+		if (polygon && polygon->isValid()) {
+			const std::vector<vector2>& vertices = polygon->getWorldVertices();
+			if (vertices.size() >= 3) {
+				outLoops.push_back(vertices);
+			}
+		}
+		return;
+	}
+
+	if (collidable->getType() == COL_OBJ_GROUP) {
+		const CollidableGroup* group = (const CollidableGroup*)collidable;
+		if (!group) {
+			return;
+		}
+		for (const Collidable* member : *group) {
+			collectPolygonLoops(member, outLoops);
+		}
+	}
+}
+
+void collectPrimitiveCollidables(const Collidable* collidable, std::vector<const Collidable*>& outPrimitives)
+{
+	if (!collidable) {
+		return;
+	}
+
+	if (collidable->getType() == COL_OBJ_GROUP) {
+		const CollidableGroup* group = (const CollidableGroup*)collidable;
+		if (!group) {
+			return;
+		}
+		for (const Collidable* member : *group) {
+			collectPrimitiveCollidables(member, outPrimitives);
+		}
+		return;
+	}
+
+	outPrimitives.push_back(collidable);
+}
+
+void buildSquareVertices(const Square* square, std::vector<vector2>& outVertices)
+{
+	outVertices.clear();
+	if (!square) {
+		return;
+	}
+
+	const vector2 min = square->getMin();
+	const vector2 max = square->getMax();
+	outVertices.push_back(vector2(min.x, min.y));
+	outVertices.push_back(vector2(max.x, min.y));
+	outVertices.push_back(vector2(max.x, max.y));
+	outVertices.push_back(vector2(min.x, max.y));
+}
+
+vector2 computeCentroid(const std::vector<vector2>& vertices)
+{
+	if (vertices.empty()) {
+		return vector2(0.0f, 0.0f);
+	}
+
+	vector2 centroid(0.0f, 0.0f);
+	for (const vector2& vertex : vertices) {
+		centroid.x += vertex.x;
+		centroid.y += vertex.y;
+	}
+	return vector2(
+		centroid.x / (float)vertices.size(),
+		centroid.y / (float)vertices.size());
+}
+
+bool getVertices(const Collidable* collidable, std::vector<vector2>& outVertices)
+{
+	outVertices.clear();
+	if (!collidable) {
+		return false;
+	}
+
+	if (collidable->getType() == COL_OBJ_SQUARE) {
+		buildSquareVertices((const Square*)collidable, outVertices);
+		return outVertices.size() == 4;
+	}
+	if (collidable->getType() == COL_OBJ_POLYGON) {
+		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+		if (!polygon || !polygon->isValid()) {
+			return false;
+		}
+		outVertices = polygon->getWorldVertices();
+		return outVertices.size() >= 3;
+	}
+
+	return false;
+}
+
+bool projectOnAxis(const std::vector<vector2>& vertices, const vector2& axis, float& outMin, float& outMax)
+{
+	if (vertices.empty()) {
+		return false;
+	}
+
+	outMin = dot(vertices[0], axis);
+	outMax = outMin;
+	for (size_t i = 1; i < vertices.size(); ++i) {
+		const float value = dot(vertices[i], axis);
+		outMin = std::min(outMin, value);
+		outMax = std::max(outMax, value);
+	}
+	return true;
+}
+
+bool computeSATHints(
+	const std::vector<vector2>& aVertices,
+	const std::vector<vector2>& bVertices,
+	std::optional<vector2>& outNormal,
+	std::optional<float>& outPenetrationDepth)
+{
+	if (aVertices.size() < 3 || bVertices.size() < 3) {
+		return false;
+	}
+
+	constexpr float axisEpsilon = 0.0001f;
+	float minOverlap = std::numeric_limits<float>::max();
+	vector2 bestAxis(0.0f, 0.0f);
+	bool hasAxis = false;
+
+	auto testAxes = [&](const std::vector<vector2>& vertices) -> bool {
+		for (size_t i = 0; i < vertices.size(); ++i) {
+			const vector2& p0 = vertices[i];
+			const vector2& p1 = vertices[(i + 1) % vertices.size()];
+			vector2 edge = p1 - p0;
+			if (edge.norm() <= axisEpsilon) {
+				continue;
+			}
+
+			vector2 axis(-edge.y, edge.x);
+			axis.normalize();
+
+			float aMin = 0.0f;
+			float aMax = 0.0f;
+			float bMin = 0.0f;
+			float bMax = 0.0f;
+			if (!projectOnAxis(aVertices, axis, aMin, aMax) || !projectOnAxis(bVertices, axis, bMin, bMax)) {
+				return false;
+			}
+
+			const float overlap = std::min(aMax, bMax) - std::max(aMin, bMin);
+			if (overlap <= 0.0f) {
+				return false;
+			}
+
+			if (overlap < minOverlap) {
+				minOverlap = overlap;
+				bestAxis = axis;
+				hasAxis = true;
+			}
+		}
+		return true;
+	};
+
+	if (!testAxes(aVertices) || !testAxes(bVertices) || !hasAxis) {
+		return false;
+	}
+
+	vector2 centerA = computeCentroid(aVertices);
+	vector2 centerB = computeCentroid(bVertices);
+	vector2 toB = centerB - centerA;
+	if (dot(toB, bestAxis) < 0.0f) {
+		bestAxis = vector2(-bestAxis.x, -bestAxis.y);
+	}
+
+	outNormal = bestAxis;
+	outPenetrationDepth = minOverlap;
+	return true;
+}
+
 std::optional<vector2> computeContactMidpoint(const Collidable* a, const Collidable* b, bool overlapping)
 {
 	if (!a || !b) {
@@ -46,7 +300,7 @@ std::optional<vector2> computeContactMidpoint(const Collidable* a, const Collida
 
 	if (overlapping) {
 		vector2 aMin, aMax, bMin, bMax;
-		if (tryGetSquareBounds(a, aMin, aMax) && tryGetSquareBounds(b, bMin, bMax)) {
+		if (tryGetBounds(a, aMin, aMax) && tryGetBounds(b, bMin, bMax)) {
 			vector2 overlapMin(
 				std::max(aMin.x, bMin.x),
 				std::max(aMin.y, bMin.y));
@@ -98,36 +352,56 @@ CollisionSystem::CollisionPairKey CollisionSystem::makePairKey(GameObject* a, Ga
 
 void CollisionSystem::computeGeometryHints(const Collidable* a, const Collidable* b, std::optional<vector2>& normal, std::optional<float>& penetrationDepth)
 {
-	if (!a || !b || a->getType() != COL_OBJ_SQUARE || b->getType() != COL_OBJ_SQUARE) {
+	if (!a || !b) {
 		return;
 	}
 
-	const Square* aSquare = (const Square*)a;
-	const Square* bSquare = (const Square*)b;
+	std::vector<const Collidable*> aPrimitives;
+	std::vector<const Collidable*> bPrimitives;
+	collectPrimitiveCollidables(a, aPrimitives);
+	collectPrimitiveCollidables(b, bPrimitives);
 
-	vector2 aMin = aSquare->getMin();
-	vector2 aMax = aSquare->getMax();
-	vector2 bMin = bSquare->getMin();
-	vector2 bMax = bSquare->getMax();
-
-	float overlapX = std::min(aMax.x, bMax.x) - std::max(aMin.x, bMin.x);
-	float overlapY = std::min(aMax.y, bMax.y) - std::max(aMin.y, bMin.y);
-
-	if (overlapX <= 0.0f || overlapY <= 0.0f) {
+	if (aPrimitives.empty() || bPrimitives.empty()) {
 		return;
 	}
 
-	vector2 aCenter = aMin + ((aMax - aMin) * 0.5f);
-	vector2 bCenter = bMin + ((bMax - bMin) * 0.5f);
-	vector2 delta = bCenter - aCenter;
+	float bestDepth = std::numeric_limits<float>::max();
+	std::optional<vector2> bestNormal;
+	std::optional<float> bestPenetration;
+	std::vector<vector2> aVertices;
+	std::vector<vector2> bVertices;
+	for (const Collidable* aPrimitive : aPrimitives) {
+		if (!aPrimitive) {
+			continue;
+		}
 
-	if (overlapX < overlapY) {
-		normal = vector2((delta.x < 0.0f) ? -1.0f : 1.0f, 0.0f);
-		penetrationDepth = overlapX;
+		for (const Collidable* bPrimitive : bPrimitives) {
+			if (!bPrimitive) {
+				continue;
+			}
+
+			if (!getVertices(aPrimitive, aVertices) || !getVertices(bPrimitive, bVertices)) {
+				continue;
+			}
+
+			std::optional<vector2> candidateNormal;
+			std::optional<float> candidateDepth;
+			if (!computeSATHints(aVertices, bVertices, candidateNormal, candidateDepth)) {
+				continue;
+			}
+
+			const float depthValue = candidateDepth.value_or(std::numeric_limits<float>::max());
+			if (depthValue < bestDepth) {
+				bestDepth = depthValue;
+				bestNormal = candidateNormal;
+				bestPenetration = candidateDepth;
+			}
+		}
 	}
-	else {
-		normal = vector2(0.0f, (delta.y < 0.0f) ? -1.0f : 1.0f);
-		penetrationDepth = overlapY;
+
+	if (bestNormal.has_value() && bestPenetration.has_value()) {
+		normal = bestNormal;
+		penetrationDepth = bestPenetration;
 	}
 }
 
@@ -231,12 +505,14 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 		}
 
 		shape.anchorWithRenderableOffset = shape.objectPosition + shape.renderableOffset;
-		shape.collidable = object->getCollidable();
+			shape.collidable = object->getCollidable();
 
-		if (shape.collidable) {
-			shape.collidableActive = shape.collidable->isActive();
-			shape.hasBounds = tryGetSquareBounds(shape.collidable, shape.min, shape.max);
-		}
+			if (shape.collidable) {
+				shape.collidableActive = shape.collidable->isActive();
+				shape.hasBounds = tryGetBounds(shape.collidable, shape.min, shape.max);
+				collectPolygonLoops(shape.collidable, shape.polygonLoops);
+				shape.hasPolygon = !shape.polygonLoops.empty();
+			}
 
 		shapeIndexByObject[object] = _debugShapes.size();
 		_debugShapes.push_back(shape);
@@ -281,9 +557,10 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 				continue;
 			}
 
-			if (!collidable->collidesWith(otherCollidable)) {
-				continue;
-			}
+				const bool overlapping = collidable->collidesWith(otherCollidable) || otherCollidable->collidesWith(collidable);
+				if (!overlapping) {
+					continue;
+				}
 
 			CollisionPairKey key = makePairKey(object, otherObject);
 			currentPairs.insert(key);
@@ -293,7 +570,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 			pending.first = object;
 			pending.second = otherObject;
 			pending.phase = phase;
-			pending.overlapping = true;
+				pending.overlapping = true;
 			computeGeometryHints(collidable, otherCollidable, pending.normal, pending.penetrationDepth);
 			pendingDispatches.push_back(pending);
 		}

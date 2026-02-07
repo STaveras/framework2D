@@ -1638,7 +1638,7 @@ ITexture* RendererVK::createTexture(const char* szFilename, Color colorKey)
 	if (!pTexture)
 	{
 		pTexture = (ITexture*)new TextureVK(szFilename);
-		//pTexture->SetKeyColor(colorKey);
+		//pTexture->setKeyColor(colorKey);
 
 		//m_Textures.store(pTexture);
 

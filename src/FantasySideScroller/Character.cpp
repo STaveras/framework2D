@@ -2,18 +2,22 @@
 
 #include "Character.h"
 
+#include "../CollidableGroup.h"
 #include "../GameState.h"
+#include "../Polygon.h"
 #include "../Square.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include <vector>
 
 namespace {
 constexpr float kGroundLossGraceSeconds = 0.06f;
-constexpr float kSupportProbeInset = 2.0f;
-constexpr float kSupportProbeHeight = 4.0f;
-constexpr float kSupportProbeVerticalBias = 1.0f;
+constexpr float kSupportSampleInset = 2.0f;
+constexpr float kDefaultMaxSnapPerFrame = 8.0f;
+constexpr float kGroundNormalThreshold = 0.2f;
 }
 
 Character::Character(void) : 
@@ -45,7 +49,7 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 	}
 
 	if (contact.normal.has_value()) {
-		return contact.normal->y > 0.5f;
+		return contact.normal->y > kGroundNormalThreshold;
 	}
 
 	vector2 directionToObject = tile->getPosition() - this->getPosition();
@@ -88,7 +92,69 @@ void Character::_refreshGroundTile()
 	_tile = bestTile;
 }
 
-Tile* Character::_findGroundSupportTile()
+bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, float& outY) const
+{
+	if (!collidable || !collidable->isActive()) {
+		return false;
+	}
+
+	constexpr float kHorizontalEpsilon = 0.001f;
+	switch (collidable->getType()) {
+	case COL_OBJ_SQUARE: {
+		const Square* square = (const Square*)collidable;
+		if (!square) {
+			return false;
+		}
+
+		const vector2 min = square->getMin();
+		const vector2 max = square->getMax();
+		if (sampleX < (min.x - kHorizontalEpsilon) || sampleX > (max.x + kHorizontalEpsilon)) {
+			return false;
+		}
+
+		outY = min.y;
+		return true;
+	}
+	case COL_OBJ_POLYGON: {
+		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+		if (!polygon || !polygon->isValid()) {
+			return false;
+		}
+		return polygon->findTopSurfaceYAtX(sampleX, outY);
+	}
+	case COL_OBJ_GROUP: {
+		const CollidableGroup* group = (const CollidableGroup*)collidable;
+		if (!group) {
+			return false;
+		}
+
+		bool found = false;
+		float bestY = std::numeric_limits<float>::max();
+		for (const Collidable* member : *group) {
+			float memberY = 0.0f;
+			if (!_sampleSupportY(member, sampleX, memberY)) {
+				continue;
+			}
+
+			if (!found || memberY < bestY) {
+				bestY = memberY;
+				found = true;
+			}
+		}
+
+		if (!found) {
+			return false;
+		}
+
+		outY = bestY;
+		return true;
+	}
+	default:
+		return false;
+	}
+}
+
+Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, float& outSupportY)
 {
 	Collidable* body = this->getCollidable();
 	if (!body || !body->isActive() || body->getType() != COL_OBJ_SQUARE) {
@@ -96,24 +162,23 @@ Tile* Character::_findGroundSupportTile()
 	}
 
 	Square* bodySquare = (Square*)body;
-	vector2 bodyMin = bodySquare->getMin();
-	vector2 bodyMax = bodySquare->getMax();
-	float bodyWidth = bodyMax.x - bodyMin.x;
+	const vector2 bodyMin = bodySquare->getMin();
+	const vector2 bodyMax = bodySquare->getMax();
+	const float bodyWidth = bodyMax.x - bodyMin.x;
 	if (bodyWidth <= 0.0f) {
 		return NULL;
 	}
 
-	float probeWidth = bodyWidth - (kSupportProbeInset * 2.0f);
-	if (probeWidth <= 0.0f) {
-		probeWidth = bodyWidth;
+	float sampleInset = std::min(kSupportSampleInset, bodyWidth * 0.45f);
+	if (sampleInset < 0.0f) {
+		sampleInset = 0.0f;
 	}
 
-	// Keep a thin strip around the feet so support checks are stable across
-	// animation/state hitbox changes and avoid treating side contacts as floor.
-	vector2 probeMin(
-		bodyMin.x + ((bodyWidth - probeWidth) * 0.5f),
-		bodyMax.y - kSupportProbeVerticalBias);
-	Square supportProbe(probeMin, probeWidth, kSupportProbeHeight);
+	const float sampleXs[3] = {
+		bodyMin.x + sampleInset,
+		bodyMin.x + (bodyWidth * 0.5f),
+		bodyMax.x - sampleInset
+	};
 
 	Game* game = Engine2D::getGame();
 	if (!game || game->empty()) {
@@ -128,7 +193,8 @@ Tile* Character::_findGroundSupportTile()
 
 	const auto& objects = activeGameState->getObjectManager()->getObjects();
 	Tile* bestSupportTile = NULL;
-	float bestTopDelta = std::numeric_limits<float>::max();
+	float bestSupportY = footY;
+	float bestDistance = std::numeric_limits<float>::max();
 
 	for (const auto& entry : objects) {
 		GameObject* object = entry.second;
@@ -146,26 +212,32 @@ Tile* Character::_findGroundSupportTile()
 			continue;
 		}
 
-		if (!supportProbe.collidesWith(tileCollidable)) {
-			continue;
-		}
+		for (float sampleX : sampleXs) {
+			float supportY = 0.0f;
+			if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
+				continue;
+			}
 
-		float topDelta = 0.0f;
-		if (tileCollidable->getType() == COL_OBJ_SQUARE) {
-			Square* tileSquare = (Square*)tileCollidable;
-			topDelta = abs(tileSquare->getMin().y - bodyMax.y);
-		}
-		else {
-			topDelta = abs(tileCollidable->getPosition().y - bodyMax.y);
-		}
+			const float deltaY = supportY - footY;
+			if (deltaY < -maxSnapDistance || deltaY > maxSnapDistance) {
+				continue;
+			}
 
-		if (topDelta < bestTopDelta) {
-			bestTopDelta = topDelta;
-			bestSupportTile = tile;
+			const float distance = std::fabs(deltaY);
+			if (distance < bestDistance) {
+				bestDistance = distance;
+				bestSupportY = supportY;
+				bestSupportTile = tile;
+			}
 		}
 	}
 
-	return bestSupportTile;
+	if (bestSupportTile) {
+		outSupportY = bestSupportY;
+		return bestSupportTile;
+	}
+
+	return NULL;
 }
 
 void Character::_initStates() {
@@ -223,7 +295,7 @@ void Character::_initStates() {
 	idle->setPreserveScaling(true);
 	idle->setRenderable(idleAnimation);
 
-	static Square idleHitBox({ -10, -20 }, 20, 48);
+	static Square idleHitBox({ -10, -24 }, 20, 48);
 	for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
 		(*idleAnimation)[i]->setCollidable(&idleHitBox);
 	}
@@ -250,7 +322,7 @@ void Character::_initStates() {
 
 	rising->setRenderable(risingAnimation);
 
-	static Square risingHitBox({ -10, -16 }, 20, 38);
+	static Square risingHitBox({ -14, -32 }, 20, 48);
 	for (unsigned int i = 0; i < risingAnimation->getFrameCount(); i++) {
 		(*risingAnimation)[i]->setCollidable(&risingHitBox);
 	}
@@ -281,7 +353,7 @@ void Character::_initStates() {
 
 	jump->setRenderable(jumpAnimation);
 
-	static Square jumpHitBox({ -10, -16 }, 20, 40);
+	static Square jumpHitBox({ -14, -32 }, 20, 48);
 	for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
 		(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
 	}
@@ -553,6 +625,9 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 				DEBUG_MSG(buffer);
 				break;
 			}
+			case COL_OBJ_POLYGON:
+				DEBUG_MSG("\tcolPolygon\n");
+				break;
 			case COL_OBJ_VOID:
 				break;
 			case COL_OBJ_CIRCLE:
@@ -600,7 +675,7 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 		if (contact.normal->y < -0.5f) {
 			return "JUMP_RELEASED";
 		}
-		if (contact.normal->y > 0.5f) {
+		if (contact.normal->y > kGroundNormalThreshold) {
 			if (contact.phase == CollisionPhase::Enter) {
 				return "GROUND_COLLISION";
 			}
@@ -619,7 +694,7 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 		if (directionToObject.y < -0.5f) {
 			return "JUMP_RELEASED";
 		}
-		if (directionToObject.y > 0.5f) {
+		if (directionToObject.y > kGroundNormalThreshold) {
 			if (contact.phase == CollisionPhase::Enter) {
 				return "GROUND_COLLISION";
 			}
@@ -640,14 +715,25 @@ void Character::update(float time)
 {
 	GameObject::update(time);
 	_refreshGroundTile();
-	Tile* supportTile = _findGroundSupportTile();
+
+	float maxSnapPerFrame = kDefaultMaxSnapPerFrame;
+	if (_tile && _tile->getTileSet()) {
+		maxSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
+	}
+
+	float footY = this->getPosition().y;
+	if (Collidable* bodyCollidable = this->getCollidable()) {
+		if (bodyCollidable->getType() == COL_OBJ_SQUARE) {
+			Square* bodySquare = (Square*)bodyCollidable;
+			footY = bodySquare->getMax().y;
+		}
+	}
+
+	float supportY = footY;
+	Tile* supportTile = _findGroundSupportTile(footY, maxSnapPerFrame, supportY);
 	bool hasGroundSupport = (supportTile != NULL);
 	if (supportTile) {
 		_tile = supportTile;
-	}
-
-	if (!hasGroundSupport && !_groundContacts.empty()) {
-		hasGroundSupport = true;
 	}
 
 	GameObjectState* state = this->getState();
@@ -662,6 +748,22 @@ void Character::update(float time)
 	if (state) {
 
 		const char* stateName = state->getName();
+		const bool groundedLocomotionState =
+			!strcmp(stateName, "Idle") ||
+			!strcmp(stateName, "RunningLeft") ||
+			!strcmp(stateName, "RunningRight") ||
+			!strcmp(stateName, "Landing") ||
+			!strcmp(stateName, "Attack01") ||
+			!strcmp(stateName, "Attack02");
+
+		if (hasGroundSupport && groundedLocomotionState) {
+			float deltaY = supportY - footY;
+			if (std::fabs(deltaY) > 0.001f) {
+				deltaY = std::max(-maxSnapPerFrame, std::min(maxSnapPerFrame, deltaY));
+				this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
+				footY += deltaY;
+			}
+		}
 
 		if (Player* player = Engine2D::getGame()->getPlayerWith(this)) {
 //#if _DEBUG
@@ -716,6 +818,9 @@ void Character::update(float time)
 				DEBUG_MSG(buffer);
 				break;
 			}
+			case COL_OBJ_POLYGON:
+				DEBUG_MSG("\tcolPolygon\n");
+				break;
 			case COL_OBJ_VOID:
 				break;
 			case COL_OBJ_CIRCLE:

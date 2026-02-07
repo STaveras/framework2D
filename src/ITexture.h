@@ -25,8 +25,8 @@ public:
 	virtual unsigned int getWidth(void) const = 0;
 	virtual unsigned int getHeight(void) const = 0;
 
-	void SetFilename(const char* szFilename) { _fileName = szFilename; }
-	void SetKeyColor(Color clrColor) { _clearKeyColor = clrColor; }
+	void setFilename(const char* szFilename) { _fileName = szFilename; }
+	void setKeyColor(Color clrColor) { _clearKeyColor = clrColor; }
 	
 }Texture;
 

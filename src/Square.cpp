@@ -4,7 +4,9 @@
 // Modified: 2/20/2010
 
 #include "Square.h"
+#include "CollidableGroup.h"
 #include "Plane.h"
+#include "Polygon.h"
 #include "Circle.h"
 
 bool WithCircle(const Square* square, const Circle* circle)
@@ -119,6 +121,20 @@ bool Square::collidesWith(const Collidable* collidable)
       return WithSquare(this, (Square*)collidable);
    case COL_OBJ_CIRCLE:
       return WithCircle(this, (Circle*)collidable);
+   case COL_OBJ_POLYGON:
+      return ((PolygonCollider*)collidable)->collidesWith(this);
+   case COL_OBJ_GROUP: {
+      const CollidableGroup* group = (const CollidableGroup*)collidable;
+      if (!group) {
+         return false;
+      }
+      for (const Collidable* member : *group) {
+         if (member && this->collidesWith(member)) {
+            return true;
+         }
+      }
+      return false;
+   }
    default:
 		return this->collidesWith(collidable->getPosition());
    }
