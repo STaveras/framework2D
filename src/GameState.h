@@ -30,6 +30,7 @@ public:
 	
 	InputManager * getInputManager(void) { return &_inputManager; }
 	ObjectManager* getObjectManager(void) { return &_objectManager; }
+	const CollisionSystem* getCollisionSystem(void) const { return &_collisionSystem; }
 
 	// Allow gamestates to reject objects?
 	bool addObject(GameObject* object);

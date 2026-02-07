@@ -1,6 +1,5 @@
 #include "GameObject.h"
 #include "Animation.h"
-#include "CollisionEvent.h"
 
 #include "Factory.h"
 #include "Square.h"
@@ -49,6 +48,23 @@ void GameObject::setCollisionPredicate(CollisionPredicate predicate)
 	_collisionPredicate = std::move(predicate);
 }
 
+vector2 GameObject::getCollisionAnchor(void) const
+{
+	vector2 anchor = this->getPosition();
+
+	if (!_useRenderableOffsetForCollisionAnchor) {
+		return anchor;
+	}
+
+	if (GameObjectState* state = this->getState()) {
+		if (Renderable* renderable = state->getRenderable()) {
+			anchor = anchor + vector2(renderable->getOffset());
+		}
+	}
+
+	return anchor;
+}
+
 const char* GameObject::mapCollisionToCommand(const CollisionContact& contact) const
 {
 	(void)contact;
@@ -66,11 +82,6 @@ void GameObject::onCollisionContact(const CollisionContact& contact)
 	}
 
 	handleCollisionContact(contact);
-
-	if ((contact.phase == CollisionPhase::Enter || contact.phase == CollisionPhase::Stay) && _collisionEventHandler) {
-		CollisionEvent legacyEvent(this, contact.other);
-		_collisionEventHandler(&legacyEvent);
-	}
 
 	const char* command = mapCollisionToCommand(contact);
 	if (command && command[0] != '\0') {
@@ -149,16 +160,13 @@ Collidable* GameObject::getCollidable(void)
 				default:
 					return nullptr;
 				}
-				// Collidable information is consumed each frame; this translates local coordinates,
-				// to potentially global coordinates, based on the actual position of this object's renderable
-				// what we get is a shadow of the collidable
-				vector2 anchor = this->getPosition();
-				if (Renderable* renderable = this->getRenderable()) {
-					anchor = renderable->getPosition()/* + renderable->getOffset()*/;
-				}
+
+				// Collidable information is consumed each frame. This translates state-local
+				// collision coordinates to world-space using the object's collision anchor.
+				vector2 anchor = this->getCollisionAnchor();
 				derived->setPosition(anchor + stateCollidable->getPosition());
 				return derived;
-			}
+				}
 			else {
 				return nullptr;
 			}

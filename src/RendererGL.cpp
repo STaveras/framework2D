@@ -4,7 +4,12 @@
 
 #include "Animation.h"
 #include "Camera.h"
+#include "CollisionSystem.h"
+#include "Debug.h"
+#include "Engine2D.h"
 #include "Frame.h"
+#include "Game.h"
+#include "GameState.h"
 #include "Sprite.h"
 #include "TextureGL.h"
 
@@ -12,6 +17,132 @@
 
 namespace {
 constexpr float kRadiansToDegrees = 180.0f / 3.14159265358979323846f;
+
+const CollisionSystem* getActiveCollisionSystem()
+{
+	Game* game = Engine2D::getGame();
+	if (!game || game->empty()) {
+		return nullptr;
+	}
+
+	ProgramState* topState = game->top();
+	GameState* gameState = dynamic_cast<GameState*>(topState);
+	if (!gameState) {
+		return nullptr;
+	}
+
+	return gameState->getCollisionSystem();
+}
+
+void drawLine(const vector2& start, const vector2& end, float r, float g, float b, float a)
+{
+	glColor4f(r, g, b, a);
+	glBegin(GL_LINES);
+	glVertex2f(start.x, start.y);
+	glVertex2f(end.x, end.y);
+	glEnd();
+}
+
+void drawCross(const vector2& position, float radius, float r, float g, float b, float a)
+{
+	drawLine(
+		vector2(position.x - radius, position.y),
+		vector2(position.x + radius, position.y),
+		r, g, b, a);
+	drawLine(
+		vector2(position.x, position.y - radius),
+		vector2(position.x, position.y + radius),
+		r, g, b, a);
+}
+
+void drawRect(const vector2& min, const vector2& max, float r, float g, float b, float a)
+{
+	glColor4f(r, g, b, a);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(min.x, min.y);
+	glVertex2f(max.x, min.y);
+	glVertex2f(max.x, max.y);
+	glVertex2f(min.x, max.y);
+	glEnd();
+}
+
+void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
+{
+	const auto& shapes = collisionSystem.getDebugShapes();
+	const auto& contacts = collisionSystem.getDebugContacts();
+	if (shapes.empty() && contacts.empty()) {
+		return;
+	}
+
+	glDisable(GL_TEXTURE_2D);
+	glLineWidth(1.0f);
+
+	for (const CollisionDebugShape& shape : shapes) {
+		if (!shape.collidable || !shape.hasBounds) {
+			continue;
+		}
+
+		float r = 0.2f;
+		float g = 0.95f;
+		float b = 0.25f;
+		float a = 0.9f;
+
+		if (!shape.collidableActive) {
+			r = 0.45f;
+			g = 0.45f;
+			b = 0.45f;
+		}
+		else if (shape.hasContact) {
+			switch (shape.phase) {
+			case CollisionPhase::Enter:
+				r = 1.0f;
+				g = 0.25f;
+				b = 0.25f;
+				break;
+			case CollisionPhase::Stay:
+				r = 1.0f;
+				g = 0.9f;
+				b = 0.15f;
+				break;
+			case CollisionPhase::Exit:
+				r = 1.0f;
+				g = 0.35f;
+				b = 1.0f;
+				break;
+			}
+		}
+
+		drawRect(shape.min, shape.max, r, g, b, a);
+		drawCross(shape.objectPosition, 2.0f, 1.0f, 1.0f, 1.0f, 0.9f);
+		drawCross(shape.collisionAnchor, 2.0f, 0.0f, 1.0f, 1.0f, 0.9f);
+
+		if (shape.renderableOffset.x != 0.0f || shape.renderableOffset.y != 0.0f) {
+			drawCross(shape.anchorWithRenderableOffset, 2.0f, 0.7f, 0.4f, 1.0f, 0.9f);
+			drawLine(shape.objectPosition, shape.anchorWithRenderableOffset, 0.35f, 0.35f, 1.0f, 0.75f);
+		}
+	}
+
+	for (const CollisionDebugContact& contact : contacts) {
+		if (!contact.overlapping || !contact.midpoint.has_value()) {
+			continue;
+		}
+
+		const vector2& midpoint = contact.midpoint.value();
+		drawCross(midpoint, 2.0f, 1.0f, 0.4f, 0.0f, 0.9f);
+
+		if (contact.normal.has_value()) {
+			vector2 normal = contact.normal.value();
+			float normalLength = std::sqrt((normal.x * normal.x) + (normal.y * normal.y));
+			if (normalLength > 0.0f) {
+				normal = vector2(normal.x / normalLength, normal.y / normalLength);
+				float lineLength = 12.0f + (contact.penetrationDepth.value_or(0.0f) * 4.0f);
+				drawLine(midpoint, midpoint + (normal * lineLength), 1.0f, 0.4f, 0.0f, 1.0f);
+			}
+		}
+	}
+
+	glEnable(GL_TEXTURE_2D);
+}
 }
 
 RendererGL::RendererGL() : IRenderer(RENDERER_TYPE_GL) {}
@@ -217,6 +348,12 @@ void RendererGL::render(void)
 					}
 				}
 			}
+		}
+	}
+
+	if (DEBUGGING/* && Debug::dbgCollision*/) {
+		if (const CollisionSystem* collisionSystem = getActiveCollisionSystem()) {
+			drawCollisionDebugOverlay(*collisionSystem);
 		}
 	}
 

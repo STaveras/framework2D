@@ -23,7 +23,6 @@ bool GameState::removeObject(GameObject * object)
 
 void GameState::onEnter(State* prevState)
 {
-
    _renderList = engine->getRenderer()->createRenderList();
    _collisionSystem.reset();
 

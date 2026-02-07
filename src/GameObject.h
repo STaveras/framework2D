@@ -107,9 +107,8 @@ protected:
 
    void updateComponents();
    CollisionPredicate _collisionPredicate = NULL;
+   bool _useRenderableOffsetForCollisionAnchor = false;
 
-   // Legacy path. Prefer onCollisionContact(...) and mapCollisionToCommand(...).
-   std::function<void(const Event* e)> _collisionEventHandler = NULL;
    virtual void handleCollisionContact(const CollisionContact& contact) {}
    virtual void onStateWillExit(State* current, State* next) override;
    virtual void onStateDidEnter(State* previous, State* current) override;
@@ -131,9 +130,12 @@ public:
 
    Renderable* getRenderable(void) const { return this->getState()->getRenderable(); }
    Collidable* getCollidable(void);
+   virtual vector2 getCollisionAnchor(void) const;
 
    virtual bool shouldCollideWith(const GameObject& other) const;
    void setCollisionPredicate(CollisionPredicate predicate);
+   void setCollisionAnchorUsesRenderableOffset(bool enabled) { _useRenderableOffsetForCollisionAnchor = enabled; }
+   bool collisionAnchorUsesRenderableOffset(void) const { return _useRenderableOffsetForCollisionAnchor; }
 
    virtual void onCollisionContact(const CollisionContact& contact);
    virtual const char* mapCollisionToCommand(const CollisionContact& contact) const;
