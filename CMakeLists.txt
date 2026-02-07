@@ -4,214 +4,140 @@ project(framework2D LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 if(APPLE)
   enable_language(OBJCXX)
-  set(CMAKE_OBJCXX_STANDARD 17)
-  set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
+
+  # Default to the host architecture to avoid accidental universal builds.
+  if(NOT CMAKE_OSX_ARCHITECTURES)
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+      set(_default_arch "arm64")
+    elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
+      set(_default_arch "x86_64")
+    else()
+      execute_process(
+        COMMAND uname -m
+        OUTPUT_VARIABLE _uname_arch
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      if(_uname_arch MATCHES "^(arm64|aarch64)$")
+        set(_default_arch "arm64")
+      else()
+        set(_default_arch "x86_64")
+      endif()
+    endif()
+
+    set(CMAKE_OSX_ARCHITECTURES "${_default_arch}" CACHE STRING "macOS build architecture" FORCE)
+  endif()
+
+  message(STATUS "macOS build architecture: ${CMAKE_OSX_ARCHITECTURES}")
 endif()
 
-option(SUPPRESS_UNUSED "Suppress unused warnings" ON)
+find_package(OpenGL REQUIRED)
+find_package(GLM REQUIRED)
+find_package(TinyXML2 REQUIRED)
+find_package(SIMDJSON REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(Vulkan REQUIRED)
 
-set(PROJECT_ROOT ${CMAKE_SOURCE_DIR})
+file(GLOB_RECURSE HEADER_DIRECTORIES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/ext/inc/*")
 
-set(COMMON_SOURCES
-  src/main.cpp
-  src/Engine2D.cpp
-  src/EventSystem.cpp
-  src/ProgramStack.cpp
-  src/InputManager.cpp
-  src/StateMachine.cpp
-  src/ObjectManager.cpp
-  src/Game.cpp
-  src/GameObject.cpp
-  src/GameState.cpp
-  src/Frame.cpp
-  src/Animation.cpp
-  src/AnimationManager.cpp
-  src/AnimationUtils.cpp
-  src/Square.cpp
-  src/Camera.cpp
-  src/Controller.cpp
-  src/Timer.cpp
-  src/Window.cpp
-  src/Player.cpp
-  src/IRenderer.cpp
-  src/Renderer.cpp
-  src/RendererVK.cpp
-  src/RendererGL.cpp
-  src/TextureVK.cpp
-  src/TextureGL.cpp
-  src/InputEvent.cpp
-  src/IInput.cpp
-  src/Trigger.cpp
-  src/UpdateBackgroundOperator.cpp
-  src/SDSParser.cpp
-  src/PlatformInput.cpp
-  src/PlatformKeyboard.cpp
-  src/System.cpp
-  src/ImageLoaders.cpp
-  src/Sprite.cpp
-  src/TileSet.cpp
-  src/Debug.cpp
-  src/FantasySideScroller/FantasySideScroller.cpp
-  src/FantasySideScroller/PlayState.cpp
-  src/FantasySideScroller/Character.cpp
-)
-
-set(PLATFORM_SOURCES "")
-if(APPLE)
-  list(APPEND PLATFORM_SOURCES
-    src/RendererMTL.mm
-    src/TextureMTL.mm
-  )
-elseif(WIN32)
-  list(APPEND PLATFORM_SOURCES
-    src/RendererDX.cpp
-  )
-endif()
-
-add_executable(framework2D ${COMMON_SOURCES} ${PLATFORM_SOURCES})
-
-target_include_directories(framework2D
-  PRIVATE
-    ${PROJECT_ROOT}/ext
-  SYSTEM PRIVATE
-    ${PROJECT_ROOT}/ext/inc
-    ${PROJECT_ROOT}/ext/inc/metal-cpp
-)
-
-find_package(Threads REQUIRED)
-target_link_libraries(framework2D PRIVATE Threads::Threads)
-
-find_package(glm QUIET)
-if(TARGET glm::glm)
-  target_link_libraries(framework2D PRIVATE glm::glm)
-elseif(DEFINED GLM_INCLUDE_DIRS)
-  target_include_directories(framework2D PRIVATE ${GLM_INCLUDE_DIRS})
-endif()
-
-target_compile_options(framework2D PRIVATE
-  $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-Wall -Wextra -fdiagnostics-color=always>
-  $<$<CXX_COMPILER_ID:MSVC>:/W3>
-)
-
-if(SUPPRESS_UNUSED)
-  target_compile_options(framework2D PRIVATE
-    $<$<CXX_COMPILER_ID:AppleClang,Clang,GNU>:-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function>
-  )
-endif()
-
-target_compile_definitions(framework2D PRIVATE
-  $<$<CONFIG:Debug>:_DEBUG>
-)
-
-set_target_properties(framework2D PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${PROJECT_ROOT}/bin"
-  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_ROOT}/bin"
-  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_ROOT}/bin"
-  OUTPUT_NAME "framework2D"
-  OUTPUT_NAME_DEBUG "framework2D_d"
-)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 if(APPLE)
-  target_compile_definitions(framework2D PRIVATE GL_SILENCE_DEPRECATION)
-  target_compile_options(framework2D PRIVATE -stdlib=libc++ -x objective-c++)
-  target_link_options(framework2D PRIVATE -stdlib=libc++)
+  file(GLOB APPLE_OBJCXX_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.mm")
+  list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
+endif()
 
-  find_library(METAL_FRAMEWORK Metal)
-  find_library(QUARTZCORE_FRAMEWORK QuartzCore)
-  find_library(OPENGL_FRAMEWORK OpenGL)
-  find_library(COCOA_FRAMEWORK Cocoa)
+add_executable(MyProject ${SOURCES})
 
-  target_link_libraries(framework2D PRIVATE
+target_include_directories(MyProject PRIVATE
+  "${CMAKE_SOURCE_DIR}/ext/inc"
+  "${CMAKE_SOURCE_DIR}/ext/inc/metal-cpp"
+  ${GLM_INCLUDE_DIRS}
+  ${GLFW_INCLUDE_DIR}
+  ${TinyXML2_INCLUDE_DIRS}
+  ${SIMDJSON_INCLUDE_DIRS}
+)
+
+foreach(HEADER_DIRECTORY ${HEADER_DIRECTORIES})
+  if(IS_DIRECTORY ${HEADER_DIRECTORY})
+    target_include_directories(MyProject PRIVATE ${HEADER_DIRECTORY})
+  endif()
+endforeach()
+
+target_compile_options(MyProject PRIVATE -pthread)
+
+if(APPLE)
+  target_compile_options(MyProject PRIVATE -stdlib=libc++ -x objective-c++ -DGL_SILENCE_DEPRECATION)
+  target_link_options(MyProject PRIVATE -stdlib=libc++)
+endif()
+
+set(PROJECT_LIBS
+  ${CMAKE_THREAD_LIBS_INIT}
+  OpenGL::GL
+)
+
+if(TARGET tinyxml2::tinyxml2)
+  list(APPEND PROJECT_LIBS tinyxml2::tinyxml2)
+else()
+  list(APPEND PROJECT_LIBS tinyxml2)
+endif()
+
+if(TARGET simdjson::simdjson)
+  list(APPEND PROJECT_LIBS simdjson::simdjson)
+else()
+  list(APPEND PROJECT_LIBS simdjson)
+endif()
+
+if(TARGET glfw)
+  list(APPEND PROJECT_LIBS glfw)
+elseif(TARGET glfw3::glfw)
+  list(APPEND PROJECT_LIBS glfw3::glfw)
+elseif(TARGET glfw3::glfw3)
+  list(APPEND PROJECT_LIBS glfw3::glfw3)
+else()
+  list(APPEND PROJECT_LIBS glfw)
+endif()
+
+if(TARGET Vulkan::Vulkan)
+  list(APPEND PROJECT_LIBS Vulkan::Vulkan)
+else()
+  list(APPEND PROJECT_LIBS vulkan)
+endif()
+
+if(APPLE)
+  find_library(METAL_FRAMEWORK Metal REQUIRED)
+  find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
+  find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+
+  list(APPEND PROJECT_LIBS
     ${METAL_FRAMEWORK}
     ${QUARTZCORE_FRAMEWORK}
-    ${OPENGL_FRAMEWORK}
     ${COCOA_FRAMEWORK}
   )
 
-  find_library(VULKAN_LIBRARY vulkan)
-  if(VULKAN_LIBRARY)
-    target_link_libraries(framework2D PRIVATE ${VULKAN_LIBRARY})
-  else()
-    target_link_libraries(framework2D PRIVATE vulkan)
-  endif()
-
-  set_target_properties(framework2D PROPERTIES
-    BUILD_RPATH "/usr/local/lib;/opt/homebrew/lib"
+  target_link_options(MyProject PRIVATE
+    "-Wl,-rpath,/opt/homebrew/lib"
+    "-Wl,-rpath,/usr/local/lib"
   )
-
-elseif(WIN32)
-  if(DEFINED ENV{DXSDK_DIR})
-    target_include_directories(framework2D PRIVATE "$ENV{DXSDK_DIR}/Include")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      target_link_directories(framework2D PRIVATE "$ENV{DXSDK_DIR}/Lib/x64")
-    else()
-      target_link_directories(framework2D PRIVATE "$ENV{DXSDK_DIR}/Lib/x86")
-    endif()
-  endif()
-
-  if(DEFINED ENV{VK_SDK_PATH})
-    target_include_directories(framework2D PRIVATE "$ENV{VK_SDK_PATH}/Include")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      target_link_directories(framework2D PRIVATE "$ENV{VK_SDK_PATH}/Lib")
-    else()
-      target_link_directories(framework2D PRIVATE "$ENV{VK_SDK_PATH}/Lib32")
-    endif()
-  endif()
-
-  target_link_libraries(framework2D PRIVATE opengl32)
-
-  find_library(VULKAN_LIBRARY vulkan-1)
-  if(VULKAN_LIBRARY)
-    target_link_libraries(framework2D PRIVATE ${VULKAN_LIBRARY})
-  else()
-    target_link_libraries(framework2D PRIVATE vulkan-1)
-  endif()
 endif()
 
-find_package(glfw3 QUIET)
-if(TARGET glfw)
-  target_link_libraries(framework2D PRIVATE glfw)
-elseif(TARGET glfw3)
-  target_link_libraries(framework2D PRIVATE glfw3)
-elseif(TARGET glfw3::glfw)
-  target_link_libraries(framework2D PRIVATE glfw3::glfw)
-else()
-  find_library(GLFW_LIB NAMES glfw3 glfw)
-  if(GLFW_LIB)
-    target_link_libraries(framework2D PRIVATE ${GLFW_LIB})
-  else()
-    target_link_libraries(framework2D PRIVATE glfw)
-  endif()
-endif()
-
-find_package(TinyXML2 QUIET)
-if(TARGET TinyXML2::TinyXML2)
-  target_link_libraries(framework2D PRIVATE TinyXML2::TinyXML2)
-elseif(TARGET tinyxml2::tinyxml2)
-  target_link_libraries(framework2D PRIVATE tinyxml2::tinyxml2)
-else()
-  target_link_libraries(framework2D PRIVATE tinyxml2)
-endif()
-
-find_package(simdjson QUIET)
-if(TARGET simdjson::simdjson)
-  target_link_libraries(framework2D PRIVATE simdjson::simdjson)
-else()
-  target_link_libraries(framework2D PRIVATE simdjson)
-endif()
+target_link_libraries(MyProject PRIVATE ${PROJECT_LIBS})
 
 if(WIN32)
   add_custom_command(
-    TARGET framework2D POST_BUILD
-    COMMAND ${PROJECT_ROOT}/utl/compile-shaders.bat
-    WORKING_DIRECTORY ${PROJECT_ROOT}
+    TARGET MyProject POST_BUILD
+    COMMAND ${CMAKE_SOURCE_DIR}/utl/compile-shaders.bat
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 else()
   add_custom_command(
-    TARGET framework2D POST_BUILD
-    COMMAND ${PROJECT_ROOT}/utl/compile-shaders.sh
-    WORKING_DIRECTORY ${PROJECT_ROOT}
+    TARGET MyProject POST_BUILD
+    COMMAND ${CMAKE_SOURCE_DIR}/utl/compile-shaders.sh
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 endif()
