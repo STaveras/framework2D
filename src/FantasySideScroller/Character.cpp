@@ -322,7 +322,7 @@ void Character::_initStates() {
 
 	rising->setRenderable(risingAnimation);
 
-	static Square risingHitBox({ -14, -32 }, 20, 48);
+	static Square risingHitBox({ -14, -36 }, 20, 52);
 	for (unsigned int i = 0; i < risingAnimation->getFrameCount(); i++) {
 		(*risingAnimation)[i]->setCollidable(&risingHitBox);
 	}
@@ -353,7 +353,7 @@ void Character::_initStates() {
 
 	jump->setRenderable(jumpAnimation);
 
-	static Square jumpHitBox({ -14, -32 }, 20, 48);
+	static Square jumpHitBox({ -14, -36 }, 20, 52);
 	for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
 		(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
 	}
@@ -430,7 +430,7 @@ void Character::_initStates() {
 		}
 	}
 
-	static Square runHitBox({ -16, -20 }, 26, 41);
+	static Square runHitBox({ -10, -20 }, 26, 42);
 	for (unsigned int i = 0; i < runningRightAnimation->getFrameCount(); i++) {
 		(*runningLeftAnimation)[i]->setCollidable(&runHitBox);
 		(*runningRightAnimation)[i]->setCollidable(&runHitBox);

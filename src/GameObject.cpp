@@ -141,19 +141,40 @@ Collidable* GameObject::getCollidable(void)
 		if (GameObjectState* currentState = this->getState()) {
 
 			if (Collidable* stateCollidable = currentState->getCollidable()) {
-				std::function<Collidable*(const Collidable*, const vector2&)> cloneCollidable =
-					[&](const Collidable* source, const vector2& parentWorldPosition) -> Collidable* {
+				vector2 mirrorScale(1.0f, 1.0f);
+				if (Renderable* renderable = currentState->getRenderable()) {
+					vector2 scale = renderable->getScale();
+					mirrorScale.x = (scale.x < 0.0f) ? -1.0f : 1.0f;
+					mirrorScale.y = (scale.y < 0.0f) ? -1.0f : 1.0f;
+				}
+
+				std::function<Collidable*(const Collidable*, const vector2&, const vector2&)> cloneCollidable =
+					[&](const Collidable* source, const vector2& parentWorldPosition, const vector2& mirrorSign) -> Collidable* {
 						if (!source) {
 							return nullptr;
 						}
 
-						const vector2 worldPosition = parentWorldPosition + source->getPosition();
+						const vector2 sourcePosition = source->getPosition();
+						const vector2 mirroredOffset(
+							sourcePosition.x * mirrorSign.x,
+							sourcePosition.y * mirrorSign.y);
+						const vector2 worldPosition = parentWorldPosition + mirroredOffset;
 
 						switch (source->getType())
 						{
 						case COL_OBJ_SQUARE: {
-							Square* clone = _collisionObjects.createDerived<Square>((const Square&)*source);
-							clone->setPosition(worldPosition);
+							const Square* sourceSquare = (const Square*)source;
+							Square* clone = _collisionObjects.createDerived<Square>(*sourceSquare);
+
+							vector2 mirroredMin = sourceSquare->getPosition();
+							if (mirrorSign.x < 0.0f) {
+								mirroredMin.x = -(sourceSquare->getPosition().x + sourceSquare->getWidth());
+							}
+							if (mirrorSign.y < 0.0f) {
+								mirroredMin.y = -(sourceSquare->getPosition().y + sourceSquare->getHeight());
+							}
+
+							clone->setPosition(parentWorldPosition + mirroredMin);
 							return clone;
 						}
 						case COL_OBJ_CIRCLE: {
@@ -162,12 +183,29 @@ Collidable* GameObject::getCollidable(void)
 							return clone;
 						}
 						case COL_OBJ_PLANE: {
-							Plane* clone = _collisionObjects.createDerived<Plane>((const Plane&)*source);
+							const Plane* sourcePlane = (const Plane*)source;
+							Plane* clone = _collisionObjects.createDerived<Plane>(*sourcePlane);
 							clone->setPosition(worldPosition);
+
+							vector2 mirroredNormal = sourcePlane->getNormal();
+							mirroredNormal.x *= mirrorSign.x;
+							mirroredNormal.y *= mirrorSign.y;
+							if (mirroredNormal.norm() > 0.0f) {
+								mirroredNormal.normalize();
+							}
+							clone->setNormal(mirroredNormal);
 							return clone;
 						}
 						case COL_OBJ_POLYGON: {
-							PolygonCollider* clone = _collisionObjects.createDerived<PolygonCollider>((const PolygonCollider&)*source);
+							const PolygonCollider* sourcePolygon = (const PolygonCollider*)source;
+							PolygonCollider* clone = _collisionObjects.createDerived<PolygonCollider>(*sourcePolygon);
+
+							std::vector<vector2> mirroredVertices = sourcePolygon->getLocalVertices();
+							for (vector2& vertex : mirroredVertices) {
+								vertex.x *= mirrorSign.x;
+								vertex.y *= mirrorSign.y;
+							}
+							clone->setLocalVertices(mirroredVertices);
 							clone->setPosition(worldPosition);
 							return clone;
 						}
@@ -180,7 +218,7 @@ Collidable* GameObject::getCollidable(void)
 							CollidableGroup* cloneGroup = _collisionObjects.createDerived<CollidableGroup>();
 							cloneGroup->setPosition(worldPosition);
 							for (const Collidable* member : *sourceGroup) {
-								if (Collidable* clonedMember = cloneCollidable(member, worldPosition)) {
+								if (Collidable* clonedMember = cloneCollidable(member, worldPosition, mirrorSign)) {
 									cloneGroup->push_back(clonedMember);
 								}
 							}
@@ -194,7 +232,7 @@ Collidable* GameObject::getCollidable(void)
 				// Collidable information is consumed each frame. This translates state-local
 				// collision coordinates to world-space using the object's collision anchor.
 				vector2 anchor = this->getCollisionAnchor();
-				return cloneCollidable(stateCollidable, anchor);
+				return cloneCollidable(stateCollidable, anchor, mirrorScale);
 			}
 			else {
 				return nullptr;
