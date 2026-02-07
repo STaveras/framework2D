@@ -211,11 +211,28 @@ void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset)
 
 	const float texWidth = static_cast<float>(texture->getWidth());
 	const float texHeight = static_cast<float>(texture->getHeight());
+	const bool hasValidTextureSize = texWidth > 0.0f && texHeight > 0.0f;
+	if (!hasValidTextureSize) {
+		return;
+	}
 
-	const float u0 = srcRect.left / texWidth;
-	const float v0 = srcRect.top / texHeight;
-	const float u1 = srcRect.right / texWidth;
-	const float v1 = srcRect.bottom / texHeight;
+	const bool isSubRect =
+		srcRect.left > 0 ||
+		srcRect.top > 0 ||
+		srcRect.right < static_cast<int>(texWidth) ||
+		srcRect.bottom < static_cast<int>(texHeight);
+
+	float uInset = 0.0f;
+	float vInset = 0.0f;
+	if (isSubRect && srcWidth > 1.0f && srcHeight > 1.0f) {
+		uInset = 0.5f / texWidth;
+		vInset = 0.5f / texHeight;
+	}
+
+	const float u0 = (srcRect.left / texWidth) + uInset;
+	const float v0 = (srcRect.top / texHeight) + vInset;
+	const float u1 = (srcRect.right / texWidth) - uInset;
+	const float v1 = (srcRect.bottom / texHeight) - vInset;
 
 	const vector2 position = sprite->getPosition() + offset;
 	const vector2 center = sprite->getCenter();
@@ -337,11 +354,25 @@ void RendererGL::render(void)
 	glLoadIdentity();
 
 	if (m_pCamera) {
-		vector2 cameraPosition = m_pCamera->getPosition() - m_pCamera->getCenter();
+		const vector2 cameraPosition = m_pCamera->getRenderPosition();
+		const vector2 cameraCenter = m_pCamera->getCenter();
+		const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+		const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
 
-		glScalef(m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
-		glRotatef(m_pCamera->getRotation() * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
-		glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
+		if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+			// screen = center + rotate(scale(world - cameraPos))
+			glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
+			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+			glScalef(zoom, zoom, 1.0f);
+			glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
+		}
+		else {
+			// Preserve legacy origin-oriented behavior.
+			const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
+			glScalef(zoom, zoom, 1.0f);
+			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+			glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
+		}
 	}
 
 	if (!_RenderLists.empty()) {

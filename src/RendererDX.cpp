@@ -22,6 +22,42 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
+#include <cmath>
+
+namespace {
+D3DXVECTOR2 worldToScreen(const Camera* camera, const vector2& worldPosition)
+{
+	if (!camera) {
+		return D3DXVECTOR2(worldPosition.x, worldPosition.y);
+	}
+
+	const vector2 cameraPosition = camera->getRenderPosition();
+	const vector2 center = camera->getCenter();
+	const float zoom = (camera->getZoom() > 0.0f) ? camera->getZoom() : 1.0f;
+	const float rotation = camera->getRotation();
+	const float cosTheta = std::cos(rotation);
+	const float sinTheta = std::sin(rotation);
+
+	vector2 translated = worldPosition - cameraPosition;
+	vector2 rotated(
+		(translated.x * cosTheta) - (translated.y * sinTheta),
+		(translated.x * sinTheta) + (translated.y * cosTheta));
+
+	if (camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		return D3DXVECTOR2(
+			center.x + (rotated.x * zoom),
+			center.y + (rotated.y * zoom));
+	}
+
+	// Preserve legacy origin-oriented behavior.
+	vector2 legacyTranslated = worldPosition - (cameraPosition - center);
+	vector2 legacyRotated(
+		(legacyTranslated.x * cosTheta) - (legacyTranslated.y * sinTheta),
+		(legacyTranslated.x * sinTheta) + (legacyTranslated.y * cosTheta));
+	return D3DXVECTOR2(legacyRotated.x * zoom, legacyRotated.y * zoom);
+}
+}
+
 RendererDX::RendererDX(void) : 
 	IRenderer(RENDERER_TYPE_DX),
 	m_hWnd(NULL),
@@ -103,10 +139,13 @@ D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 // Why do we have offset? Center is already an offset...
 void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue)
 {
+	vector2 worldPosition = image->getPosition() + vector2(offset.x, offset.y);
+	D3DXVECTOR2 screenPosition = worldToScreen(m_pCamera, worldPosition);
+
 	D3DXVECTOR3 position;
-	position.x = (image->getPosition().x + offset.x) * image->getScale().x;
-	position.y = (image->getPosition().y + offset.y) * image->getScale().y;
-	position.z = 0.0f; // Will eventually be used for z-effects
+	position.x = screenPosition.x;
+	position.y = screenPosition.y;
+	position.z = zValue;
 
 	D3DXVECTOR2 rectCenter = image->getRectCenter();
 	D3DXVECTOR2 scale = image->getScale();
@@ -122,6 +161,8 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 
 	m_pD3DSprite->SetTransform(&transform);
 	m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(),
@@ -266,29 +307,9 @@ void RendererDX::render(void)
 		// Draw sprites
 		if (SUCCEEDED(m_pD3DSprite->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_DEPTH_FRONTTOBACK)))
 		{
-			if (m_pCamera)
-			{
-				D3DXMATRIX viewMat;
-				D3DXMatrixIdentity(&viewMat);
-
-				D3DXMATRIX scaleMat;
-				D3DXMatrixScaling(&scaleMat, m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f);
-
-				D3DXMATRIX rotationMat;
-				D3DXMatrixRotationZ(&rotationMat, m_pCamera->getRotation());
-
-				D3DXVECTOR2 position = vector2(m_pCamera->getPosition() - m_pCamera->getCenter());
-
-				D3DXVECTOR2 xAxis = D3DXVECTOR2(1, 0);
-				D3DXVECTOR2 yAxis = D3DXVECTOR2(0, 1);
-
-				viewMat._41 = -D3DXVec2Dot(&xAxis, &position);
-				viewMat._42 = -D3DXVec2Dot(&yAxis, &position);
-
-				viewMat = scaleMat * rotationMat * viewMat;
-
-				m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
-			}
+			D3DXMATRIX viewMat;
+			D3DXMatrixIdentity(&viewMat);
+			m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 
 			if (!_RenderLists.empty())
 			{
