@@ -76,7 +76,7 @@ void Character::_initStates() {
 	idle->setPreserveScaling(true);
 	idle->setRenderable(idleAnimation);
 
-	static Square idleHitBox({ -10, -16 }, 20, 48);
+	static Square idleHitBox({ -10, -20 }, 20, 48);
 	for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
 		(*idleAnimation)[i]->setCollidable(&idleHitBox);
 	}
@@ -207,7 +207,7 @@ void Character::_initStates() {
 		}
 	}
 
-	static Square runHitBox({ 19, 17 }, 26, 41);
+	static Square runHitBox({ -16, -20 }, 26, 41);
 	for (unsigned int i = 0; i < runningRightAnimation->getFrameCount(); i++) {
 		(*runningLeftAnimation)[i]->setCollidable(&runHitBox);
 		(*runningRightAnimation)[i]->setCollidable(&runHitBox);

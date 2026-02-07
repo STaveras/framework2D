@@ -52,7 +52,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_d",
-            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--opengl", "--fps"],
+            "args": ["--dataPath", "${workspaceFolder}/bin/data", "--debug", "--opengl", "--fps", "--dbg-collision"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [{ "name": "config", "value": "Debug" }],

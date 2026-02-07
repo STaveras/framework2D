@@ -2,12 +2,79 @@
 
 #include "Collidable.h"
 #include "GameObject.h"
+#include "Renderable.h"
 #include "Square.h"
 
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <utility>
 #include <vector>
+
+namespace {
+int phasePriority(CollisionPhase phase)
+{
+	switch (phase) {
+	case CollisionPhase::Enter:
+		return 3;
+	case CollisionPhase::Stay:
+		return 2;
+	case CollisionPhase::Exit:
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+bool tryGetSquareBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
+{
+	if (!collidable || collidable->getType() != COL_OBJ_SQUARE) {
+		return false;
+	}
+
+	const Square* square = (const Square*)collidable;
+	outMin = square->getMin();
+	outMax = square->getMax();
+	return true;
+}
+
+std::optional<vector2> computeContactMidpoint(const Collidable* a, const Collidable* b, bool overlapping)
+{
+	if (!a || !b) {
+		return std::nullopt;
+	}
+
+	if (overlapping) {
+		vector2 aMin, aMax, bMin, bMax;
+		if (tryGetSquareBounds(a, aMin, aMax) && tryGetSquareBounds(b, bMin, bMax)) {
+			vector2 overlapMin(
+				std::max(aMin.x, bMin.x),
+				std::max(aMin.y, bMin.y));
+			vector2 overlapMax(
+				std::min(aMax.x, bMax.x),
+				std::min(aMax.y, bMax.y));
+
+			if (overlapMax.x > overlapMin.x && overlapMax.y > overlapMin.y) {
+				return overlapMin + ((overlapMax - overlapMin) * 0.5f);
+			}
+		}
+	}
+
+	return a->getPosition() + ((b->getPosition() - a->getPosition()) * 0.5f);
+}
+
+void updateContactPhase(std::map<GameObject*, CollisionPhase>& phaseMap, GameObject* object, CollisionPhase phase)
+{
+	if (!object) {
+		return;
+	}
+
+	auto itr = phaseMap.find(object);
+	if (itr == phaseMap.end() || phasePriority(phase) > phasePriority(itr->second)) {
+		phaseMap[object] = phase;
+	}
+}
+} // namespace
 
 bool CollisionSystem::CollisionPairKey::operator<(const CollisionPairKey& rhs) const
 {
@@ -112,6 +179,8 @@ void CollisionSystem::dispatchPair(
 void CollisionSystem::reset(void)
 {
 	_activePairs.clear();
+	_debugShapes.clear();
+	_debugContacts.clear();
 }
 
 void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
@@ -130,6 +199,9 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 	activeObjects.reserve(objects.size());
 
 	std::set<GameObject*> activeObjectSet;
+	_debugShapes.clear();
+	_debugContacts.clear();
+
 	for (const auto& entry : objects) {
 		GameObject* object = entry.second;
 		if (!object) {
@@ -138,6 +210,36 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 
 		activeObjects.push_back(object);
 		activeObjectSet.insert(object);
+	}
+
+	_debugShapes.reserve(activeObjects.size());
+	std::map<GameObject*, size_t> shapeIndexByObject;
+	for (GameObject* object : activeObjects) {
+		if (!object) {
+			continue;
+		}
+
+		CollisionDebugShape shape;
+		shape.object = object;
+		shape.objectPosition = object->getPosition();
+		shape.collisionAnchor = object->getCollisionAnchor();
+
+		if (GameObject::GameObjectState* state = object->getState()) {
+			if (Renderable* renderable = state->getRenderable()) {
+				shape.renderableOffset = renderable->getOffset();
+			}
+		}
+
+		shape.anchorWithRenderableOffset = shape.objectPosition + shape.renderableOffset;
+		shape.collidable = object->getCollidable();
+
+		if (shape.collidable) {
+			shape.collidableActive = shape.collidable->isActive();
+			shape.hasBounds = tryGetSquareBounds(shape.collidable, shape.min, shape.max);
+		}
+
+		shapeIndexByObject[object] = _debugShapes.size();
+		_debugShapes.push_back(shape);
 	}
 
 	for (auto itr = _activePairs.begin(); itr != _activePairs.end();) {
@@ -213,6 +315,41 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 		pending.phase = CollisionPhase::Exit;
 		pending.overlapping = false;
 		pendingDispatches.push_back(pending);
+	}
+
+	std::map<GameObject*, CollisionPhase> contactPhasesByObject;
+	_debugContacts.reserve(pendingDispatches.size());
+	for (const PendingDispatch& pending : pendingDispatches) {
+		if (!pending.first || !pending.second) {
+			continue;
+		}
+
+		updateContactPhase(contactPhasesByObject, pending.first, pending.phase);
+		updateContactPhase(contactPhasesByObject, pending.second, pending.phase);
+
+		CollisionDebugContact debugContact;
+		debugContact.first = pending.first;
+		debugContact.second = pending.second;
+		debugContact.phase = pending.phase;
+		debugContact.overlapping = pending.overlapping;
+		debugContact.normal = pending.normal;
+		debugContact.penetrationDepth = pending.penetrationDepth;
+
+		Collidable* firstCollidable = pending.first->getCollidable();
+		Collidable* secondCollidable = pending.second->getCollidable();
+		debugContact.midpoint = computeContactMidpoint(firstCollidable, secondCollidable, pending.overlapping);
+		_debugContacts.push_back(debugContact);
+	}
+
+	for (const auto& objectPhase : contactPhasesByObject) {
+		auto shapeItr = shapeIndexByObject.find(objectPhase.first);
+		if (shapeItr == shapeIndexByObject.end()) {
+			continue;
+		}
+
+		CollisionDebugShape& shape = _debugShapes[shapeItr->second];
+		shape.hasContact = true;
+		shape.phase = objectPhase.second;
 	}
 
 	for (const PendingDispatch& pending : pendingDispatches) {
