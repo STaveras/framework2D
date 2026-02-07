@@ -9,11 +9,15 @@
 
 #include "Square.h"
 
+#include <cmath>
+
 Camera::Camera(void):
   GameObject(GAME_OBJ_CAMERA),
    _screenWidth(0),
    _screenHeight(0),
-   _zoom(1.0f) {
+   _zoom(1.0f),
+   _zoomAnchorMode(ZoomAnchorMode::TargetCenter),
+   _snapToPixelGrid(true) {
    
    // TODO: Add different states to the camera so it employs different behaviors
    this->addState("Static");
@@ -37,9 +41,19 @@ void Camera::pan(vector2 direction, float amount)
 void Camera::update(float time)
 {
    GameObject::update(time);
+}
 
-   _position.x = roundf(_position.x);
-   _position.y = roundf(_position.y);
+vector2 Camera::getRenderPosition(void) const
+{
+	vector2 renderPosition = _position;
+	if (!_snapToPixelGrid) {
+		return renderPosition;
+	}
+
+	const float zoom = (_zoom > 0.0f) ? _zoom : 1.0f;
+	renderPosition.x = std::round(renderPosition.x * zoom) / zoom;
+	renderPosition.y = std::round(renderPosition.y * zoom) / zoom;
+	return renderPosition;
 }
 
 // Trying to make this as simple as possible...

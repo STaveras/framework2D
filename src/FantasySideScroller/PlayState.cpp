@@ -28,6 +28,8 @@ void PlayState::onEnter(State* prev)
 
 	_player = Engine2D::getGame()->getPlayers()->create();
 	_camera = new Camera();
+	_camera->setZoomAnchorMode(Camera::ZoomAnchorMode::TargetCenter);
+	_camera->setSnapToPixelGrid(true);
 
 	_pixel = new Image(BasePath("pixel.bmp").c_str());
 
@@ -136,6 +138,19 @@ bool PlayState::onExecute(float time)
 
 		if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
 			_camera->setZoom(_camera->getZoom() - 0.1f);
+		}
+
+		if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
+			const Camera::ZoomAnchorMode nextMode =
+				(_camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
+				Camera::ZoomAnchorMode::OriginLegacy :
+				Camera::ZoomAnchorMode::TargetCenter;
+			_camera->setZoomAnchorMode(nextMode);
+
+			char buffer[128]{ 0 };
+			sprintf_s(buffer, sizeof(buffer), "Camera Zoom Anchor: %s\n",
+				(nextMode == Camera::ZoomAnchorMode::TargetCenter) ? "TargetCenter" : "OriginLegacy");
+			DEBUG_MSG(buffer);
 		}
 	}
 	_background->setPosition(_camera->getPosition());
