@@ -141,6 +141,7 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 {
 	vector2 worldPosition = image->getPosition() + vector2(offset.x, offset.y);
 	D3DXVECTOR2 screenPosition = worldToScreen(m_pCamera, worldPosition);
+	const float cameraZoom = (m_pCamera && m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
 
 	D3DXVECTOR3 position;
 	position.x = screenPosition.x;
@@ -149,13 +150,15 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 
 	D3DXVECTOR2 rectCenter = image->getRectCenter();
 	D3DXVECTOR2 scale = image->getScale();
+	scale.x *= cameraZoom;
+	scale.y *= cameraZoom;
 	D3DXVECTOR2 center = image->getCenter();
 
 	D3DXMATRIX transform;
 	D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
 
 	// Depth for some reason? 
-	D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x * image->getScale().x, image->getCenter().y * image->getScale().y, 0.0f);
+	D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x * scale.x, image->getCenter().y * scale.y, 0.0f);
 
 	// No mipmaps, and nearest neighbor/point filtering 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
