@@ -5,8 +5,10 @@
 #include "Square.h"
 #include "Circle.h"
 #include "Plane.h"
+#include "Polygon.h"
 #include "CollidableGroup.h"
 
+#include <functional>
 #include <utility>
 
 void GameObject::onStateWillExit(State* current, State* next)
@@ -138,35 +140,62 @@ Collidable* GameObject::getCollidable(void)
 		// Use the collision information from the current state
 		if (GameObjectState* currentState = this->getState()) {
 
-			Collidable* derived = nullptr;
-
 			if (Collidable* stateCollidable = currentState->getCollidable()) {
+				std::function<Collidable*(const Collidable*, const vector2&)> cloneCollidable =
+					[&](const Collidable* source, const vector2& parentWorldPosition) -> Collidable* {
+						if (!source) {
+							return nullptr;
+						}
 
-				switch (stateCollidable->getType()) 
-				{
-				case COL_OBJ_SQUARE:
-					derived = _collisionObjects.createDerived<Square>((Square&)*stateCollidable);
-					break;
+						const vector2 worldPosition = parentWorldPosition + source->getPosition();
 
-				case COL_OBJ_CIRCLE:
-					derived = _collisionObjects.createDerived<Circle>((Circle&)*stateCollidable);
-					break;
-				case COL_OBJ_PLANE:
-					derived = _collisionObjects.createDerived<Plane>((Plane&)*stateCollidable);
-					break;
-				case COL_OBJ_GROUP:
-					derived = _collisionObjects.createDerived<CollidableGroup>((CollidableGroup&)*stateCollidable);
-					break;
-				default:
-					return nullptr;
-				}
+						switch (source->getType())
+						{
+						case COL_OBJ_SQUARE: {
+							Square* clone = _collisionObjects.createDerived<Square>((const Square&)*source);
+							clone->setPosition(worldPosition);
+							return clone;
+						}
+						case COL_OBJ_CIRCLE: {
+							Circle* clone = _collisionObjects.createDerived<Circle>((const Circle&)*source);
+							clone->setPosition(worldPosition);
+							return clone;
+						}
+						case COL_OBJ_PLANE: {
+							Plane* clone = _collisionObjects.createDerived<Plane>((const Plane&)*source);
+							clone->setPosition(worldPosition);
+							return clone;
+						}
+						case COL_OBJ_POLYGON: {
+							PolygonCollider* clone = _collisionObjects.createDerived<PolygonCollider>((const PolygonCollider&)*source);
+							clone->setPosition(worldPosition);
+							return clone;
+						}
+						case COL_OBJ_GROUP: {
+							const CollidableGroup* sourceGroup = (const CollidableGroup*)source;
+							if (!sourceGroup) {
+								return nullptr;
+							}
+
+							CollidableGroup* cloneGroup = _collisionObjects.createDerived<CollidableGroup>();
+							cloneGroup->setPosition(worldPosition);
+							for (const Collidable* member : *sourceGroup) {
+								if (Collidable* clonedMember = cloneCollidable(member, worldPosition)) {
+									cloneGroup->push_back(clonedMember);
+								}
+							}
+							return cloneGroup;
+						}
+						default:
+							return nullptr;
+						}
+					};
 
 				// Collidable information is consumed each frame. This translates state-local
 				// collision coordinates to world-space using the object's collision anchor.
 				vector2 anchor = this->getCollisionAnchor();
-				derived->setPosition(anchor + stateCollidable->getPosition());
-				return derived;
-				}
+				return cloneCollidable(stateCollidable, anchor);
+			}
 			else {
 				return nullptr;
 			}

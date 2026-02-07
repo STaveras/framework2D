@@ -142,7 +142,7 @@ ITexture* RendererDX::createTexture(const char* szFilename, Color colorKey)
 	if (!pTexture)
 	{
 		pTexture = (ITexture*)new TextureD3D(szFilename);
-		pTexture->SetKeyColor(colorKey);
+		pTexture->setKeyColor(colorKey);
 
 		m_Textures.store(pTexture);
 

@@ -4,7 +4,11 @@
 
 #include "Engine2D.h"
 #include "FileSystem.h"
+#include "CollidableGroup.h"
+#include "Polygon.h"
 #include "Square.h"
+
+#include <vector>
 
 // I usually hate globals, but this one will only be accessible to TileSets
 // Eventually this might grow too large if we're loading many tilesets and not clearing this
@@ -33,11 +37,26 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 			tileSet = new TileSet(Engine2D::getRenderer()->createTexture(imagePath.c_str()), (unsigned int)tileWidth);
 
-			simdjson::dom::array tiles = root["tiles"].get_array();
+				simdjson::dom::array tiles = root["tiles"].get_array();
+				auto readFloat = [](simdjson::dom::element element, float fallback = 0.0f) -> float {
+					if (element.is_null()) {
+						return fallback;
+					}
+					if (element.is_double()) {
+						return (float)element.get_double();
+					}
+					if (element.is_int64()) {
+						return (float)element.get_int64();
+					}
+					if (element.is_uint64()) {
+						return (float)element.get_uint64();
+					}
+					return fallback;
+				};
 
-			for (size_t i = 0; i < tiles.size(); i++)
-			{
-				simdjson::dom::element tile = tiles.at(i);
+				for (size_t i = 0; i < tiles.size(); i++)
+				{
+					simdjson::dom::element tile = tiles.at(i);
 
 				// Access fields of the "tile" object here
 				int64_t id = tile["id"].get_int64();
@@ -49,32 +68,80 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 					tileInfo._typeName = std::string(className);
 				}
 
-				if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
-					// Tile properties
-					simdjson::dom::element objectgroup = tile["objectgroup"];
+					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
+						// Tile properties
+						simdjson::dom::element objectgroup = tile["objectgroup"];
 
-					// Right now, the only collection of "objects" we have are for collision
-					if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
+						// Right now, the only collection of "objects" we have are for collision
+						if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
+							Collidable* tileCollision = nullptr;
+							CollidableGroup* tileCollisionGroup = nullptr;
 
-						for (auto object : objectgroup["objects"]) {
-							std::string_view collisionObjectType = object["type"];
+							for (auto object : objectgroup["objects"]) {
+								const int64_t objectId = object["id"].is_null() ? -1 : (int64_t)object["id"].get_int64();
+								const bool hasPolygon = !object["polygon"].is_null() && object["polygon"].is_array();
+								const bool hasRectangle = !object["width"].is_null() && !object["height"].is_null();
+								std::string_view collisionObjectType = object["type"].is_string() ? object["type"].get_string().value_unsafe() : "";
 
-							if (collisionObjectType == "square") {
-								Square* square = collisionObjects.createDerived<Square>();
-								square->_x = (float)object["x"].get_double();
-								square->_y = (float)object["y"].get_double();
-								square->setWidth((float)object["width"].get_double());
-								square->setHeight((float)object["height"].get_double());
-								tileInfo._collisionInfo = square;
-							}
-							else if (collisionObjectType == "polygon") { // TODO: Support other collision object types
+								Collidable* parsedCollision = nullptr;
+								if (hasPolygon) {
+									PolygonCollider* polygon = collisionObjects.createDerived<PolygonCollider>();
+									polygon->setPosition(readFloat(object["x"]), readFloat(object["y"]));
+
+									std::vector<vector2> polygonVertices;
+									for (auto point : object["polygon"]) {
+										polygonVertices.push_back(vector2(
+											readFloat(point["x"]),
+											readFloat(point["y"])));
+									}
+									polygon->setLocalVertices(polygonVertices);
+
+									if (!polygon->isValid()) {
 #if _DEBUG
-								DEBUG_MSG("polygon\n");
+										char buffer[256];
+										sprintf_s(
+											buffer,
+											sizeof(buffer),
+											"Skipping non-convex/invalid polygon collision object (tile=%lld, object=%lld)\n",
+											(long long)id,
+											(long long)objectId);
+										DEBUG_MSG(buffer);
 #endif
+										collisionObjects.destroy(polygon);
+									}
+									else {
+										parsedCollision = polygon;
+									}
+								}
+								else if (collisionObjectType == "square" || hasRectangle) {
+									Square* square = collisionObjects.createDerived<Square>();
+									square->setPosition(readFloat(object["x"]), readFloat(object["y"]));
+									square->setWidth(readFloat(object["width"]));
+									square->setHeight(readFloat(object["height"]));
+									parsedCollision = square;
+								}
+
+								if (!parsedCollision) {
+									continue;
+								}
+
+								if (!tileCollision) {
+									tileCollision = parsedCollision;
+									continue;
+								}
+
+								if (!tileCollisionGroup) {
+									tileCollisionGroup = collisionObjects.createDerived<CollidableGroup>();
+									tileCollisionGroup->push_back(tileCollision);
+									tileCollision = tileCollisionGroup;
+								}
+
+								tileCollisionGroup->push_back(parsedCollision);
 							}
+
+							tileInfo._collisionInfo = tileCollision;
 						}
 					}
-				}
 
 				if (tileInfo._typeName != "" || tileInfo._collisionInfo != NULL) {
 					tileSet->_tileInfo[(int)id] = tileInfo;

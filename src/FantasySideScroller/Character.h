@@ -23,7 +23,8 @@ class Character : public GameObject
 	void _initTransitions();
 	bool _isGroundContact(const CollisionContact& contact) const;
 	void _refreshGroundTile();
-	Tile* _findGroundSupportTile();
+	bool _sampleSupportY(const Collidable* collidable, float sampleX, float& outY) const;
+	Tile* _findGroundSupportTile(float footY, float maxSnapDistance, float& outSupportY);
 	virtual void handleCollisionContact(const CollisionContact& contact) override;
 	virtual const char* mapCollisionToCommand(const CollisionContact& contact) const override;
 

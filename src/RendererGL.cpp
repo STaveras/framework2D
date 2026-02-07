@@ -66,6 +66,20 @@ void drawRect(const vector2& min, const vector2& max, float r, float g, float b,
 	glEnd();
 }
 
+void drawPolygonLoop(const std::vector<vector2>& vertices, float r, float g, float b, float a)
+{
+	if (vertices.size() < 3) {
+		return;
+	}
+
+	glColor4f(r, g, b, a);
+	glBegin(GL_LINE_LOOP);
+	for (const vector2& vertex : vertices) {
+		glVertex2f(vertex.x, vertex.y);
+	}
+	glEnd();
+}
+
 void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 {
 	const auto& shapes = collisionSystem.getDebugShapes();
@@ -78,7 +92,7 @@ void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 	glLineWidth(1.0f);
 
 	for (const CollisionDebugShape& shape : shapes) {
-		if (!shape.collidable || !shape.hasBounds) {
+		if (!shape.collidable || (!shape.hasBounds && !shape.hasPolygon)) {
 			continue;
 		}
 
@@ -86,6 +100,11 @@ void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 		float g = 0.95f;
 		float b = 0.25f;
 		float a = 0.9f;
+		if (shape.hasPolygon) {
+			r = 0.3f;
+			g = 0.8f;
+			b = 1.0f;
+		}
 
 		if (!shape.collidableActive) {
 			r = 0.45f;
@@ -112,7 +131,12 @@ void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 			}
 		}
 
-		drawRect(shape.min, shape.max, r, g, b, a);
+		if (shape.hasBounds) {
+			drawRect(shape.min, shape.max, r, g, b, a);
+		}
+		for (const std::vector<vector2>& polygonLoop : shape.polygonLoops) {
+			drawPolygonLoop(polygonLoop, r, g, b, a);
+		}
 		drawCross(shape.objectPosition, 2.0f, 1.0f, 1.0f, 1.0f, 0.9f);
 		drawCross(shape.collisionAnchor, 2.0f, 0.0f, 1.0f, 1.0f, 0.9f);
 
@@ -233,7 +257,7 @@ ITexture* RendererGL::createTexture(const char* szFilename, Color colorKey)
 
 	if (!pTexture) {
 		pTexture = (ITexture*)new TextureGL(szFilename);
-		pTexture->SetKeyColor(colorKey);
+		pTexture->setKeyColor(colorKey);
 		m_Textures.store(pTexture);
 	}
 

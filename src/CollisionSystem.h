@@ -39,6 +39,7 @@ struct CollisionDebugShape
 	Collidable* collidable = nullptr;
 	bool collidableActive = false;
 	bool hasBounds = false;
+	bool hasPolygon = false;
 	bool hasContact = false;
 	CollisionPhase phase = CollisionPhase::Stay;
 	vector2 min = vector2(0.0f, 0.0f);
@@ -47,6 +48,7 @@ struct CollisionDebugShape
 	vector2 collisionAnchor = vector2(0.0f, 0.0f);
 	vector2 renderableOffset = vector2(0.0f, 0.0f);
 	vector2 anchorWithRenderableOffset = vector2(0.0f, 0.0f);
+	std::vector<std::vector<vector2>> polygonLoops;
 };
 
 struct CollisionDebugContact
