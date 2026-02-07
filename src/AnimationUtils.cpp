@@ -240,7 +240,7 @@ namespace Animations {
          file << "        \"Frame\": [\n";
 
          for (size_t j = 0; j < animation->getFrameCount(); ++j) {
-            Frame* frame = (*animation)[j];
+            Frame* frame = (*animation)[(unsigned int)j];
             file << "          {\n";
             file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
             file << "            \"Filename\": \"" << FileSystem::Path::MakeRelativeToParent(frame->getSprite()->getTexture()->getFilename(), System::GlobalDataPath()) << "\",\n";
