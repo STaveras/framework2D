@@ -25,6 +25,7 @@ void GameState::onEnter(State* prevState)
 {
 
    _renderList = engine->getRenderer()->createRenderList();
+   _collisionSystem.reset();
 
    engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
    engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
@@ -37,12 +38,14 @@ bool GameState::onExecute(float time)
 {
    _inputManager.update(time);
    _objectManager.update(time);
+   _collisionSystem.update(_objectManager.getObjects());
 
    return true; // We're still updating!!! ...Right?
 }
 
 void GameState::onExit(State* nextState)
 {
+   _collisionSystem.reset();
 
    _inputManager.shutdown();
 

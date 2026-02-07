@@ -5,6 +5,7 @@
 #include "ProgramState.h"
 #include "InputManager.h"	
 #include "ObjectManager.h"
+#include "CollisionSystem.h"
 
 #include "Game.h"
 
@@ -21,6 +22,7 @@ protected:
 
 	InputManager     _inputManager;
 	ObjectManager    _objectManager;
+	CollisionSystem  _collisionSystem;
 
 public:
 	GameState(void) : ProgramState() { }

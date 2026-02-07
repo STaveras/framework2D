@@ -5,7 +5,6 @@
 #include "../GameObject.h"
 #include "../Tile.h"
 #include "../AnimationUtils.h"
-#include "../CollisionEvent.h"
 
 #include "Constants.h"
 #include "Resources.h"
@@ -18,8 +17,8 @@ class Character : public GameObject
 	void _initStates();
 	// Load or set up state transitions
 	void _initTransitions();
-	// Configure collision callback
-	void _setupCollisionHandler();
+	virtual void handleCollisionContact(const CollisionContact& contact) override;
+	virtual const char* mapCollisionToCommand(const CollisionContact& contact) const override;
 
 public:
 	Character(void);

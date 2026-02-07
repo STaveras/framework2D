@@ -1,53 +1,88 @@
 #include "GameObject.h"
 #include "Animation.h"
-#include "InputEvent.h"
 #include "CollisionEvent.h"
 
 #include "Factory.h"
 #include "Square.h"
+#include "Circle.h"
+#include "Plane.h"
+#include "CollidableGroup.h"
 
-void GameObject::_onStateEntered(const Event& e) 
+#include <utility>
+
+void GameObject::onStateWillExit(State* current, State* next)
 {
-	this->updateComponents();
+	(void)next;
 
-	if (GameObjectState* sendingState = (GameObjectState*)e.getSender()) {
-		if (this->find(*sendingState)) { // We need to make sure the state we're entering is from our object only
-			this->addImpulse(sendingState->getDirection(), sendingState->getForce());
-		}
-	}
-}
-
-void GameObject::_onStateExited(const Event& e)
-{
-	if (GameObjectState* sendingState = (GameObjectState*)e.getSender()) {
-		if (this->find(*sendingState)) { 
-			this->addImpulse(sendingState->getDirection(), -sendingState->getForce());
-		}
+	GameObjectState* previousState = (GameObjectState*)current;
+	if (!previousState) {
+		return;
 	}
 
+	this->addImpulse(previousState->getDirection(), -previousState->getForce());
 	this->updateComponents();
 }
 
-void GameObject::_onCollision(const Event& e) 
+void GameObject::onStateDidEnter(State* previous, State* current)
 {
-	CollisionEvent* collisionEvent = (CollisionEvent*)&e;
+	(void)previous;
 
-	GameObject* otherObject = collisionEvent->involvedObject;
+	GameObjectState* nextState = (GameObjectState*)current;
+	if (!nextState) {
+		return;
+	}
 
-	Physical::collision(otherObject);
+	this->updateComponents();
+	this->addImpulse(nextState->getDirection(), nextState->getForce());
+}
 
-	if (_collisionEventHandler) {
-		_collisionEventHandler(collisionEvent);
+bool GameObject::shouldCollideWith(const GameObject& other) const
+{
+	if (_collisionPredicate) {
+		return _collisionPredicate(other);
+	}
+	return true;
+}
+
+void GameObject::setCollisionPredicate(CollisionPredicate predicate)
+{
+	_collisionPredicate = std::move(predicate);
+}
+
+const char* GameObject::mapCollisionToCommand(const CollisionContact& contact) const
+{
+	(void)contact;
+	return NULL;
+}
+
+void GameObject::onCollisionContact(const CollisionContact& contact)
+{
+	if (!contact.other) {
+		return;
+	}
+
+	if (contact.phase == CollisionPhase::Enter || contact.phase == CollisionPhase::Stay) {
+		Physical::collision(contact.other);
+	}
+
+	handleCollisionContact(contact);
+
+	if ((contact.phase == CollisionPhase::Enter || contact.phase == CollisionPhase::Stay) && _collisionEventHandler) {
+		CollisionEvent legacyEvent(this, contact.other);
+		_collisionEventHandler(&legacyEvent);
+	}
+
+	const char* command = mapCollisionToCommand(contact);
+	if (command && command[0] != '\0') {
+		sendInput(command);
 	}
 }
+
 
 void GameObject::start(void)
 {
-	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_COLLISION, this, &GameObject::_onCollision);
-	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameObject::_onStateEntered);
-	Engine2D::getEventSystem()->registerCallback<GameObject>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameObject::_onStateExited);
-
 	StateMachine::start();
+	this->updateComponents();
 }
 
 void GameObject::setPosition(vector2 position) 
@@ -83,42 +118,50 @@ void GameObject::update(float time) // lawl time as a float xfd
 void GameObject::finish(void)
 {
 	StateMachine::finish();
-
-	Engine2D::getEventSystem()->unregister<GameObject>(EVT_GAMEOBJECT_STATE_EXIT, this, &GameObject::_onStateExited);
-	Engine2D::getEventSystem()->unregister<GameObject>(EVT_GAMEOBJECT_STATE_ENTER, this, &GameObject::_onStateEntered);
-	Engine2D::getEventSystem()->unregister<GameObject>(EVT_COLLISION, this, &GameObject::_onCollision);
 }
 
 Collidable* GameObject::getCollidable(void) 
 {
 	Collidable* collidable = (_collisionObjects.empty()) ? [&]() -> Collidable* {
+
 		// Use the collision information from the current state
-        if (GameObjectState* currentState = this->getState()) {
-			Collidable* stateCollidable = currentState->getCollidable();
-			if (!stateCollidable) {
+		if (GameObjectState* currentState = this->getState()) {
+
+			Collidable* derived = nullptr;
+
+			if (Collidable* stateCollidable = currentState->getCollidable()) {
+
+				switch (stateCollidable->getType()) 
+				{
+				case COL_OBJ_SQUARE:
+					derived = _collisionObjects.createDerived<Square>((Square&)*stateCollidable);
+					break;
+
+				case COL_OBJ_CIRCLE:
+					derived = _collisionObjects.createDerived<Circle>((Circle&)*stateCollidable);
+					break;
+				case COL_OBJ_PLANE:
+					derived = _collisionObjects.createDerived<Plane>((Plane&)*stateCollidable);
+					break;
+				case COL_OBJ_GROUP:
+					derived = _collisionObjects.createDerived<CollidableGroup>((CollidableGroup&)*stateCollidable);
+					break;
+				default:
+					return nullptr;
+				}
+				// Collidable information is consumed each frame; this translates local coordinates,
+				// to potentially global coordinates, based on the actual position of this object's renderable
+				// what we get is a shadow of the collidable
+				vector2 anchor = this->getPosition();
+				if (Renderable* renderable = this->getRenderable()) {
+					anchor = renderable->getPosition()/* + renderable->getOffset()*/;
+				}
+				derived->setPosition(anchor + stateCollidable->getPosition());
+				return derived;
+			}
+			else {
 				return nullptr;
 			}
-
-			Collidable* derived = stateCollidable;
-
-			switch (stateCollidable->getType()) {
-			case COL_OBJ_SQUARE:
-				derived = _collisionObjects.createDerived<Square>((Square&)*stateCollidable);
-				break;
-
-			// TODO: Add missing cases
-			case COL_OBJ_GROUP:
-			case COL_OBJ_CIRCLE:
-			case COL_OBJ_PLANE:
-			default:
-				// Handle default case if necessary
-				break;
-			}
-			// Collidable information is consumed each frame; this translates local coordinates,
-			// to potentially global coordinates, based on the actual position of this object's renderable
-			// what we get is a shadow of the collidable
-			derived->setPosition(this->getRenderable()->getPosition() + derived->getPosition());
-			return derived;
 		}
 		return nullptr;
 	}() : _collisionObjects.front();
@@ -145,7 +188,7 @@ Collidable* GameObject::GameObjectState::getCollidable(void)
 		if (Animation* animation = (Animation*)this->getRenderable()) {
 			if (Frame* currentFrame = animation->getCurrentFrame()) {
 				if (Collidable* collidable = currentFrame->getCollidable()) {
-					return (_collidable = collidable);
+					return collidable;
 				}
 			}
 		}
@@ -175,7 +218,7 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 					// We should just be checking and matching signs
 					if (_renderable->getScale() != prevRenderable->getScale()) {
 
-						if (Collidable* collidable = this->getCollidable()) {
+						if (Collidable* collidable = _collidable) {
 							switch (collidable->getType()) {
 							case COL_OBJ_SQUARE:
 								if (oldCenter != newCenter) {
@@ -210,7 +253,6 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 		}
 	}
 
-	Engine2D::getInstance()->getEventSystem()->sendEvent(EVT_GAMEOBJECT_STATE_ENTER, this);
 }
 
 bool GameObject::GameObjectState::onExecute(float time)
@@ -243,8 +285,6 @@ bool GameObject::GameObjectState::onExecute(float time)
 
 void GameObject::GameObjectState::onExit(State* nextState)
 {
-	Engine2D::getInstance()->getEventSystem()->sendEvent(EVT_GAMEOBJECT_STATE_EXIT, this);
-
 	if (_renderable) {
 
 		switch (_renderable->getRenderableType())

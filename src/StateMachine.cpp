@@ -60,9 +60,15 @@ void StateMachine::setState(State* state)
          return;
 
       if (_state) {
+         onStateWillExit(_state, state);
          _state->onExit(state);
       }
       state->onEnter(_state);
+
+      State* previousState = _state;
+      _state = state;
+      onStateDidEnter(previousState, _state);
+      return;
    }
    
    // We're allowing externally setting of "NULL"

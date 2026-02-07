@@ -91,7 +91,9 @@ void EventSystem::sendEvent(const T& e, void* pSender, Event::event_priority_lev
 		return;
 
 	Event* pEvent = _events.createDerived<T>(e);
-	pEvent->_sender = pSender;
+	if (pSender) {
+		pEvent->_sender = pSender;
+	}
 	pEvent->_priorityLevel = ePriority;
 
 	if(pEvent->_priorityLevel == Event::event_priority_immediate)
