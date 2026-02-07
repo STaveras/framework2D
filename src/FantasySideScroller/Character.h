@@ -9,14 +9,21 @@
 #include "Constants.h"
 #include "Resources.h"
 
+#include <unordered_set>
+
 class Character : public GameObject
 {
 	Tile* _tile = NULL; // The tile the character is on
+	std::unordered_set<Tile*> _groundContacts;
+	float _timeWithoutGroundContact = 0.0f;
 
 	// Initialize animation states and hitboxes
 	void _initStates();
 	// Load or set up state transitions
 	void _initTransitions();
+	bool _isGroundContact(const CollisionContact& contact) const;
+	void _refreshGroundTile();
+	Tile* _findGroundSupportTile();
 	virtual void handleCollisionContact(const CollisionContact& contact) override;
 	virtual const char* mapCollisionToCommand(const CollisionContact& contact) const override;
 

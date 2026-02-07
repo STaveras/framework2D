@@ -101,7 +101,6 @@ int main(int argc, const char *argv[])
    const bool useVulkan = System::checkArgumentsForVulkan(argc, argv);
    const bool useOpenGL = System::checkArgumentsForOpenGL(argc, argv);
 
-#if _WIN32
    if (useOpenGL) {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
@@ -112,37 +111,22 @@ int main(int argc, const char *argv[])
       pInput = (IInput*)Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
+#if _WIN32
    else {
       window.initialize(hInstance, lpCmdLine);
       pInput = (DirectInput*)Input::createDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
 #elif __APPLE__
-   if (useOpenGL) {
+   else if(bool useMetal = false) {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
-   }
-   else if (useVulkan) {
-      window.initialize(Window::ClientAPI::None, true);
-      pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
-   }
-   else {
-      window.initialize(Window::ClientAPI::None);
-      pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
       pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
-#else
-   if (useOpenGL) {
+   else {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
-   }
-   else {
-      window.initialize(Window::ClientAPI::None, true);
-      pInput = (IInput*)Input::createInputInterface(&window); // right now would not work in windows
-      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
 #endif
 
