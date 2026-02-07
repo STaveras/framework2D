@@ -2,7 +2,19 @@
 
 #include "Character.h"
 
+#include "../GameState.h"
+#include "../Square.h"
+
 #include <cstring>
+#include <limits>
+#include <vector>
+
+namespace {
+constexpr float kGroundLossGraceSeconds = 0.06f;
+constexpr float kSupportProbeInset = 2.0f;
+constexpr float kSupportProbeHeight = 4.0f;
+constexpr float kSupportProbeVerticalBias = 1.0f;
+}
 
 Character::Character(void) : 
 	GameObject(GAME_OBJ_OBJECT),
@@ -20,6 +32,141 @@ Character::Character(void) :
 }
 
 Character::~Character() {}
+
+bool Character::_isGroundContact(const CollisionContact& contact) const
+{
+	if (!contact.other || contact.phase == CollisionPhase::Exit || contact.other->getType() != GAME_OBJ_TILE) {
+		return false;
+	}
+
+	Tile* tile = (Tile*)contact.other;
+	if (!tile || tile->getTileType() != "tile") {
+		return false;
+	}
+
+	if (contact.normal.has_value()) {
+		return contact.normal->y > 0.5f;
+	}
+
+	vector2 directionToObject = tile->getPosition() - this->getPosition();
+	directionToObject.normalize();
+	return directionToObject.y > 0.0f;
+}
+
+void Character::_refreshGroundTile()
+{
+	Tile* bestTile = NULL;
+	float bestDistance = std::numeric_limits<float>::max();
+	std::vector<Tile*> staleTiles;
+
+	for (Tile* tile : _groundContacts) {
+		if (!tile || tile->getTileType() != "tile") {
+			staleTiles.push_back(tile);
+			continue;
+		}
+
+		Collidable* collidable = tile->getCollidable();
+		if (!collidable || !collidable->isActive()) {
+			staleTiles.push_back(tile);
+			continue;
+		}
+
+		vector2 delta(
+			tile->getPosition().x - this->getPosition().x,
+			tile->getPosition().y - this->getPosition().y);
+		float distance = delta.norm();
+		if (distance < bestDistance) {
+			bestDistance = distance;
+			bestTile = tile;
+		}
+	}
+
+	for (Tile* staleTile : staleTiles) {
+		_groundContacts.erase(staleTile);
+	}
+
+	_tile = bestTile;
+}
+
+Tile* Character::_findGroundSupportTile()
+{
+	Collidable* body = this->getCollidable();
+	if (!body || !body->isActive() || body->getType() != COL_OBJ_SQUARE) {
+		return NULL;
+	}
+
+	Square* bodySquare = (Square*)body;
+	vector2 bodyMin = bodySquare->getMin();
+	vector2 bodyMax = bodySquare->getMax();
+	float bodyWidth = bodyMax.x - bodyMin.x;
+	if (bodyWidth <= 0.0f) {
+		return NULL;
+	}
+
+	float probeWidth = bodyWidth - (kSupportProbeInset * 2.0f);
+	if (probeWidth <= 0.0f) {
+		probeWidth = bodyWidth;
+	}
+
+	// Keep a thin strip around the feet so support checks are stable across
+	// animation/state hitbox changes and avoid treating side contacts as floor.
+	vector2 probeMin(
+		bodyMin.x + ((bodyWidth - probeWidth) * 0.5f),
+		bodyMax.y - kSupportProbeVerticalBias);
+	Square supportProbe(probeMin, probeWidth, kSupportProbeHeight);
+
+	Game* game = Engine2D::getGame();
+	if (!game || game->empty()) {
+		return NULL;
+	}
+
+	ProgramState* activeProgramState = game->top();
+	GameState* activeGameState = dynamic_cast<GameState*>(activeProgramState);
+	if (!activeGameState) {
+		return NULL;
+	}
+
+	const auto& objects = activeGameState->getObjectManager()->getObjects();
+	Tile* bestSupportTile = NULL;
+	float bestTopDelta = std::numeric_limits<float>::max();
+
+	for (const auto& entry : objects) {
+		GameObject* object = entry.second;
+		if (!object || object == this || object->getType() != GAME_OBJ_TILE) {
+			continue;
+		}
+
+		Tile* tile = (Tile*)object;
+		if (!tile || tile->getTileType() != "tile") {
+			continue;
+		}
+
+		Collidable* tileCollidable = tile->getCollidable();
+		if (!tileCollidable || !tileCollidable->isActive()) {
+			continue;
+		}
+
+		if (!supportProbe.collidesWith(tileCollidable)) {
+			continue;
+		}
+
+		float topDelta = 0.0f;
+		if (tileCollidable->getType() == COL_OBJ_SQUARE) {
+			Square* tileSquare = (Square*)tileCollidable;
+			topDelta = abs(tileSquare->getMin().y - bodyMax.y);
+		}
+		else {
+			topDelta = abs(tileCollidable->getPosition().y - bodyMax.y);
+		}
+
+		if (topDelta < bestTopDelta) {
+			bestTopDelta = topDelta;
+			bestSupportTile = tile;
+		}
+	}
+
+	return bestSupportTile;
+}
 
 void Character::_initStates() {
 	std::string animationsFilePath = BasePath("Character/Animations.json");
@@ -170,6 +317,10 @@ void Character::_initStates() {
 		Animations::createFramesForAnimation(landingAnimation, landingSheet, landingDimensions, _spriteManager);
 		landingAnimation->setFrameRate(30);
 		landingAnimation->setSpeed(2.7f);
+	}
+
+	for (unsigned int i = 0; i < landingAnimation->getFrameCount(); i++) {
+		(*landingAnimation)[i]->setCollidable(&jumpHitBox);
 	}
 	landingAnimation->center();
 
@@ -361,44 +512,40 @@ void Character::_initTransitions() {
 
 void Character::handleCollisionContact(const CollisionContact& contact)
 {
-	if (contact.other->getType() != GAME_OBJ_TILE) {
+	if (!contact.other || contact.other->getType() != GAME_OBJ_TILE) {
 		return;
 	}
 
 	Tile* tile = (Tile*)contact.other;
-
-	if (contact.phase == CollisionPhase::Exit) {
-		if (_tile == tile) {
-			_tile = NULL;
-		}
+	if (!tile) {
 		return;
 	}
 
-	vector2 directionToObject = tile->getPosition() - this->getPosition();
-
-	if (_tile && _tile != tile) {
-		vector2 currentDirectionToObject = _tile->getPosition() - this->getPosition();
-		if (currentDirectionToObject.norm() < directionToObject.norm()) {
-			return;
-		}
+	if (contact.phase == CollisionPhase::Exit) {
+		_groundContacts.erase(tile);
+		_refreshGroundTile();
+		return;
 	}
 
-	directionToObject.normalize();
-	_tile = tile;
+	if (_isGroundContact(contact)) {
+		_groundContacts.insert(tile);
+		_timeWithoutGroundContact = 0.0f;
+		_refreshGroundTile();
+	}
 
 #if _DEBUG
 	if (DEBUGGING && Debug::dbgCollision)
 	{
 		char buffer[256];
-		sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", _tile->getTileIndex(), _tile->_position.x, _tile->_position.y);
+		sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", tile->getTileIndex(), tile->_position.x, tile->_position.y);
 		DEBUG_MSG(buffer);
 
-		if (Renderable* renderable = _tile->getRenderable()) {
+		if (Renderable* renderable = tile->getRenderable()) {
 			sprintf_s(buffer, sizeof(buffer), "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
 			DEBUG_MSG(buffer);
 		}
 
-		if (Collidable* collidable = _tile->getCollidable()) {
+		if (Collidable* collidable = tile->getCollidable()) {
 			switch (collidable->getType()) {
 			case COL_OBJ_SQUARE: {
 				Square* square = (Square*)contact.other->getCollidable();
@@ -419,12 +566,12 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 	}
 #endif
 
-	if (_tile->getTileType() == "key" && contact.phase == CollisionPhase::Enter)
+	if (tile->getTileType() == "key" && contact.phase == CollisionPhase::Enter)
 	{
-		if (Renderable* renderable = _tile->getRenderable()) {
+		if (Renderable* renderable = tile->getRenderable()) {
 			renderable->setVisibility(false);
 		}
-		if (Collidable* collidable = _tile->getCollidable()) {
+		if (Collidable* collidable = tile->getCollidable()) {
 			collidable->setActive(false);
 		}
 	}
@@ -445,26 +592,44 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 		return "DEATH";
 	}
 
-	if (tile->getTileType() != "tile" || _tile != tile) {
+	if (tile->getTileType() != "tile") {
 		return NULL;
 	}
 
 	if (contact.normal) {
-		if (contact.normal->y < 0.0f) {
+		if (contact.normal->y < -0.5f) {
 			return "JUMP_RELEASED";
 		}
-		if (contact.normal->y > 0.0f) {
-			return "GROUND_COLLISION";
+		if (contact.normal->y > 0.5f) {
+			if (contact.phase == CollisionPhase::Enter) {
+				return "GROUND_COLLISION";
+			}
+			if (contact.phase == CollisionPhase::Stay) {
+				if (GameObjectState* state = this->getState()) {
+					if (!strcmp(state->getName(), "Falling")) {
+						return "GROUND_COLLISION";
+					}
+				}
+			}
 		}
 	}
 	else {
 		vector2 directionToObject = tile->getPosition() - this->getPosition();
 		directionToObject.normalize();
-		if (directionToObject.y < 0.0f) {
+		if (directionToObject.y < -0.5f) {
 			return "JUMP_RELEASED";
 		}
-		if (directionToObject.y > 0.0f) {
-			return "GROUND_COLLISION";
+		if (directionToObject.y > 0.5f) {
+			if (contact.phase == CollisionPhase::Enter) {
+				return "GROUND_COLLISION";
+			}
+			if (contact.phase == CollisionPhase::Stay) {
+				if (GameObjectState* state = this->getState()) {
+					if (!strcmp(state->getName(), "Falling")) {
+						return "GROUND_COLLISION";
+					}
+				}
+			}
 		}
 	}
 
@@ -474,7 +639,25 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 void Character::update(float time)
 {
 	GameObject::update(time);
+	_refreshGroundTile();
+	Tile* supportTile = _findGroundSupportTile();
+	bool hasGroundSupport = (supportTile != NULL);
+	if (supportTile) {
+		_tile = supportTile;
+	}
+
+	if (!hasGroundSupport && !_groundContacts.empty()) {
+		hasGroundSupport = true;
+	}
+
 	GameObjectState* state = this->getState();
+
+	if (!hasGroundSupport) {
+		_timeWithoutGroundContact += time;
+	}
+	else {
+		_timeWithoutGroundContact = 0.0f;
+	}
 
 	if (state) {
 
@@ -490,8 +673,6 @@ void Character::update(float time)
 //#endif
 			if (!strcmp(stateName, "Jump") || !strcmp(stateName, "Falling"))
 			{
-				this->_tile = NULL; // Reset the tile we are on, so we can check for collisions again
-
 				if (player->getController()->getAction("LEFT")->isActive()) {
 					this->setPosition(this->getPosition().x - MOVE_UNITS * time, this->getPosition().y);
 					this->getRenderable()->setScale(-abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
@@ -506,21 +687,12 @@ void Character::update(float time)
 			// like having a "KEEP_ALIVE" condition in the event queue, and in the lack of that condition,
 			// the character will fall or otherwise change state
 
-			if (!this->_tile) {
-				if (!containsCondition("GROUND_COLLISION")) {
-					if (!strcmp(stateName, "Idle") || !strcmp(stateName, "RunningLeft") || !strcmp(stateName, "RunningRight"))
-						this->sendInput("");// IN_AIR
+			// Grounded state is tracked by collision Enter/Stay/Exit callbacks.
+			// Debounce loss slightly to avoid one-frame Enter/Exit jitter.
+			if (!hasGroundSupport && _timeWithoutGroundContact >= kGroundLossGraceSeconds) {
+				if (!strcmp(stateName, "Idle") || !strcmp(stateName, "RunningLeft") || !strcmp(stateName, "RunningRight")) {
+					this->sendInput("IN_AIR");
 				}
-			}
-			else {
-				// Check if we're still colliding with the tile
-				if (Collidable* collidable = this->getCollidable()) {
-					if (!collidable->collidesWith(this->_tile->getCollidable())) {
-						_tile = NULL;
-					}
-				}
-				else
-					_tile = NULL; // No collidable, so we can't check for collisions
 			}
 		} // if (Player)
 	}
