@@ -256,6 +256,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\repos\framework2D\src\CollisionSystem.h" />
+    <ClInclude Include="..\..\source\repos\framework2D\src\Polygon.h" />
     <ClInclude Include="src\Action.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\AnimationManager.h" />
@@ -380,6 +382,8 @@
     <ClInclude Include="src\XAudioFile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\repos\framework2D\src\CollisionSystem.cpp" />
+    <ClCompile Include="..\..\source\repos\framework2D\src\Polygon.cpp" />
     <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />

@@ -125,6 +125,19 @@ bool PlayState::onExecute(float time)
 		Engine2D::quit();
 	}
 
+	if (DEBUGGING) {
+		if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
+			_camera->setZoom(_camera->getZoom() + 0.1f);
+		}
+
+		if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
+			_camera->setZoom(1.0f);
+		}
+
+		if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
+			_camera->setZoom(_camera->getZoom() - 0.1f);
+		}
+	}
 	_background->setPosition(_camera->getPosition());
 
 	return GameState::onExecute(time);
