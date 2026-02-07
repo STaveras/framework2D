@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <functional>
 #include <limits>
 #include <vector>
 
@@ -18,6 +19,9 @@ constexpr float kGroundLossGraceSeconds = 0.06f;
 constexpr float kSupportSampleInset = 2.0f;
 constexpr float kDefaultMaxSnapPerFrame = 8.0f;
 constexpr float kGroundNormalThreshold = 0.2f;
+constexpr float kLocomotionFootLocalY = 22.0f;
+constexpr float kFootlineTolerance = 0.5f;
+constexpr float kFootlineEpsilon = 0.001f;
 }
 
 Character::Character(void) : 
@@ -55,6 +59,104 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 	vector2 directionToObject = tile->getPosition() - this->getPosition();
 	directionToObject.normalize();
 	return directionToObject.y > 0.0f;
+}
+
+bool Character::_isGroundedLocomotionState(const char* stateName) const
+{
+	if (!stateName) {
+		return false;
+	}
+
+	return !strcmp(stateName, "Idle") ||
+		!strcmp(stateName, "RunningLeft") ||
+		!strcmp(stateName, "RunningRight") ||
+		!strcmp(stateName, "Landing");
+}
+
+bool Character::_getStateFootLocalY(const GameObjectState* state, float& outFootY) const
+{
+	outFootY = 0.0f;
+	if (!state) {
+		return false;
+	}
+
+	const GameObjectState* resolvedState = state;
+	Collidable* stateCollidable = const_cast<GameObjectState*>(resolvedState)->getCollidable();
+	if (!stateCollidable) {
+		return false;
+	}
+
+	std::function<bool(const Collidable*, float, float&)> findFootLocalY =
+		[&](const Collidable* collidable, float parentOffsetY, float& outFootLocalY) -> bool {
+			if (!collidable) {
+				return false;
+			}
+
+			switch (collidable->getType()) {
+			case COL_OBJ_SQUARE: {
+				const Square* square = (const Square*)collidable;
+				if (!square) {
+					return false;
+				}
+
+				outFootLocalY = parentOffsetY + square->getPosition().y + square->getHeight();
+				return true;
+			}
+			case COL_OBJ_POLYGON: {
+				const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+				if (!polygon || !polygon->isValid()) {
+					return false;
+				}
+
+				const std::vector<vector2>& localVertices = polygon->getLocalVertices();
+				if (localVertices.empty()) {
+					return false;
+				}
+
+				float maxVertexY = std::numeric_limits<float>::lowest();
+				for (const vector2& vertex : localVertices) {
+					if (vertex.y > maxVertexY) {
+						maxVertexY = vertex.y;
+					}
+				}
+
+				outFootLocalY = parentOffsetY + polygon->getPosition().y + maxVertexY;
+				return true;
+			}
+			case COL_OBJ_GROUP: {
+				const CollidableGroup* group = (const CollidableGroup*)collidable;
+				if (!group) {
+					return false;
+				}
+
+				const float groupOffsetY = parentOffsetY + group->getPosition().y;
+				bool hasMember = false;
+				float bestMemberFootY = std::numeric_limits<float>::lowest();
+				for (const Collidable* member : *group) {
+					float memberFootY = 0.0f;
+					if (!findFootLocalY(member, groupOffsetY, memberFootY)) {
+						continue;
+					}
+
+					if (!hasMember || memberFootY > bestMemberFootY) {
+						bestMemberFootY = memberFootY;
+						hasMember = true;
+					}
+				}
+
+				if (!hasMember) {
+					return false;
+				}
+
+				outFootLocalY = bestMemberFootY;
+				return true;
+			}
+			default:
+				return false;
+			}
+		};
+
+	return findFootLocalY(stateCollidable, 0.0f, outFootY);
 }
 
 void Character::_refreshGroundTile()
@@ -192,9 +294,12 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 	}
 
 	const auto& objects = activeGameState->getObjectManager()->getObjects();
-	Tile* bestSupportTile = NULL;
-	float bestSupportY = footY;
-	float bestDistance = std::numeric_limits<float>::max();
+	Tile* bestUpwardSupportTile = NULL;
+	float bestUpwardSupportY = footY;
+	float bestUpwardDistance = std::numeric_limits<float>::max();
+	Tile* bestDownwardSupportTile = NULL;
+	float bestDownwardSupportY = footY;
+	float bestDownwardDelta = std::numeric_limits<float>::max();
 
 	for (const auto& entry : objects) {
 		GameObject* object = entry.second;
@@ -223,18 +328,32 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 				continue;
 			}
 
-			const float distance = std::fabs(deltaY);
-			if (distance < bestDistance) {
-				bestDistance = distance;
-				bestSupportY = supportY;
-				bestSupportTile = tile;
+			// Prefer supports that resolve penetration (support at/above current footline)
+			// before supports that move the character farther downward.
+			if (deltaY <= 0.0f) {
+				const float distance = std::fabs(deltaY);
+				if (distance < bestUpwardDistance) {
+					bestUpwardDistance = distance;
+					bestUpwardSupportY = supportY;
+					bestUpwardSupportTile = tile;
+				}
+			}
+			else if (deltaY < bestDownwardDelta) {
+				bestDownwardDelta = deltaY;
+				bestDownwardSupportY = supportY;
+				bestDownwardSupportTile = tile;
 			}
 		}
 	}
 
-	if (bestSupportTile) {
-		outSupportY = bestSupportY;
-		return bestSupportTile;
+	if (bestUpwardSupportTile) {
+		outSupportY = bestUpwardSupportY;
+		return bestUpwardSupportTile;
+	}
+
+	if (bestDownwardSupportTile) {
+		outSupportY = bestDownwardSupportY;
+		return bestDownwardSupportTile;
 	}
 
 	return NULL;
@@ -295,7 +414,7 @@ void Character::_initStates() {
 	idle->setPreserveScaling(true);
 	idle->setRenderable(idleAnimation);
 
-	static Square idleHitBox({ -10, -24 }, 20, 48);
+	static Square idleHitBox({ -10, kLocomotionFootLocalY - 48.0f }, 20, 48);
 	for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
 		(*idleAnimation)[i]->setCollidable(&idleHitBox);
 	}
@@ -322,7 +441,7 @@ void Character::_initStates() {
 
 	rising->setRenderable(risingAnimation);
 
-	static Square risingHitBox({ -14, -36 }, 20, 52);
+	static Square risingHitBox({ -14, kLocomotionFootLocalY - 52.0f }, 20, 52);
 	for (unsigned int i = 0; i < risingAnimation->getFrameCount(); i++) {
 		(*risingAnimation)[i]->setCollidable(&risingHitBox);
 	}
@@ -353,7 +472,7 @@ void Character::_initStates() {
 
 	jump->setRenderable(jumpAnimation);
 
-	static Square jumpHitBox({ -14, -36 }, 20, 52);
+	static Square jumpHitBox({ -14, kLocomotionFootLocalY - 52.0f }, 20, 52);
 	for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
 		(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
 	}
@@ -430,7 +549,7 @@ void Character::_initStates() {
 		}
 	}
 
-	static Square runHitBox({ -10, -20 }, 26, 42);
+	static Square runHitBox({ -10, kLocomotionFootLocalY - 42.0f }, 26, 42);
 	for (unsigned int i = 0; i < runningRightAnimation->getFrameCount(); i++) {
 		(*runningLeftAnimation)[i]->setCollidable(&runHitBox);
 		(*runningRightAnimation)[i]->setCollidable(&runHitBox);
@@ -507,6 +626,44 @@ void Character::_initStates() {
 
 	dead->setRenderable(deadAnimation);
 
+#if _DEBUG
+	if (DEBUGGING && Debug::dbgCollision) {
+		struct FootlineCheck {
+			const char* stateName;
+			GameObjectState* state;
+		};
+
+		const FootlineCheck checks[] = {
+			{ "Idle", idle },
+			{ "Rising", rising },
+			{ "Jump", jump },
+			{ "Landing", landing },
+			{ "RunningLeft", runningLeft }
+		};
+
+		char buffer[256];
+		for (const FootlineCheck& check : checks) {
+			float footLocalY = 0.0f;
+			if (!_getStateFootLocalY(check.state, footLocalY)) {
+				sprintf_s(buffer, sizeof(buffer), "Character Footline [%s]: unavailable\n", check.stateName);
+				DEBUG_MSG(buffer);
+				continue;
+			}
+
+			sprintf_s(buffer, sizeof(buffer), "Character Footline [%s]: %.2f (target %.2f)\n",
+				check.stateName, footLocalY, kLocomotionFootLocalY);
+			DEBUG_MSG(buffer);
+
+			if (std::fabs(footLocalY - kLocomotionFootLocalY) > kFootlineTolerance) {
+				sprintf_s(buffer, sizeof(buffer),
+					"WARNING Character Footline mismatch [%s]: %.2f vs %.2f\n",
+					check.stateName, footLocalY, kLocomotionFootLocalY);
+				DEBUG_MSG(buffer);
+			}
+		}
+	}
+#endif
+
 	// This isn't really used for much at the moment...
 	// But I'd like to eventually store the collision data from each of the frames
 	if (!animationsFromJson) {
@@ -580,6 +737,33 @@ void Character::_initTransitions() {
 
 		this->toJSON(transitionsFilePath);
 	}
+}
+
+void Character::onStateDidEnter(State* previous, State* current)
+{
+	GameObject::onStateDidEnter(previous, current);
+	_pendingTransitionFootCorrection = 0.0f;
+
+	GameObjectState* previousState = (GameObjectState*)previous;
+	GameObjectState* currentState = (GameObjectState*)current;
+	if (!previousState || !currentState) {
+		return;
+	}
+
+	float previousFootLocalY = 0.0f;
+	float currentFootLocalY = 0.0f;
+	if (!_getStateFootLocalY(previousState, previousFootLocalY) ||
+		!_getStateFootLocalY(currentState, currentFootLocalY)) {
+		return;
+	}
+
+	const float deltaY = previousFootLocalY - currentFootLocalY;
+	if (std::fabs(deltaY) <= kFootlineEpsilon) {
+		return;
+	}
+
+	this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
+	_pendingTransitionFootCorrection = std::fabs(deltaY);
 }
 
 void Character::handleCollisionContact(const CollisionContact& contact)
@@ -716,9 +900,13 @@ void Character::update(float time)
 	GameObject::update(time);
 	_refreshGroundTile();
 
-	float maxSnapPerFrame = kDefaultMaxSnapPerFrame;
+	float baseSnapPerFrame = kDefaultMaxSnapPerFrame;
 	if (_tile && _tile->getTileSet()) {
-		maxSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
+		baseSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
+	}
+	float maxSnapPerFrame = baseSnapPerFrame;
+	if (_pendingTransitionFootCorrection > 0.0f) {
+		maxSnapPerFrame = std::max(baseSnapPerFrame, _pendingTransitionFootCorrection + 1.0f);
 	}
 
 	float footY = this->getPosition().y;
@@ -748,15 +936,13 @@ void Character::update(float time)
 	if (state) {
 
 		const char* stateName = state->getName();
-		const bool groundedLocomotionState =
-			!strcmp(stateName, "Idle") ||
-			!strcmp(stateName, "RunningLeft") ||
-			!strcmp(stateName, "RunningRight") ||
-			!strcmp(stateName, "Landing") ||
+		const bool groundedLocomotionState = _isGroundedLocomotionState(stateName);
+		const bool shouldApplyGroundSnap =
+			groundedLocomotionState ||
 			!strcmp(stateName, "Attack01") ||
 			!strcmp(stateName, "Attack02");
 
-		if (hasGroundSupport && groundedLocomotionState) {
+		if (hasGroundSupport && shouldApplyGroundSnap) {
 			float deltaY = supportY - footY;
 			if (std::fabs(deltaY) > 0.001f) {
 				deltaY = std::max(-maxSnapPerFrame, std::min(maxSnapPerFrame, deltaY));
@@ -792,12 +978,13 @@ void Character::update(float time)
 			// Grounded state is tracked by collision Enter/Stay/Exit callbacks.
 			// Debounce loss slightly to avoid one-frame Enter/Exit jitter.
 			if (!hasGroundSupport && _timeWithoutGroundContact >= kGroundLossGraceSeconds) {
-				if (!strcmp(stateName, "Idle") || !strcmp(stateName, "RunningLeft") || !strcmp(stateName, "RunningRight")) {
+				if (_isGroundedLocomotionState(stateName)) {
 					this->sendInput("IN_AIR");
 				}
 			}
 		} // if (Player)
 	}
+	_pendingTransitionFootCorrection = 0.0f;
 #if _DEBUG
 	if (DEBUGGING && Debug::dbgObjects)
 	{
