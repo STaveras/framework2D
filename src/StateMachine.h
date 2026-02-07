@@ -32,6 +32,9 @@ protected:
 	std::multimap<State*, std::pair<StateMachineEvent, State*>> _transitionTable;
 	std::queue<StateMachineEvent> _events;
 
+	virtual void onStateWillExit(State* current, State* next) {}
+	virtual void onStateDidEnter(State* previous, State* current) {}
+
 	State* _nextState(const StateMachineEvent& evt);
 
 public:

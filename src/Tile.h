@@ -20,6 +20,9 @@ class Tile : public GameObject
 
 public:
    Tile(void) : GameObject(GAME_OBJ_TILE) {
+      this->setCollisionPredicate([](const GameObject& other) {
+         return other.getType() != GAME_OBJ_TILE;
+      });
       this->addState("");
       this->start();
       this->setStatic(true);
@@ -29,6 +32,10 @@ public:
    explicit Tile(int tileIndex, TileSet* tileSet) :
       GameObject(GAME_OBJ_TILE),
       _tileSet(tileSet) {
+
+      this->setCollisionPredicate([](const GameObject& other) {
+         return other.getType() != GAME_OBJ_TILE;
+      });
 
       if (_tileSet) {
          this->addState(_tileSet->getTileInfo(tileIndex)._typeName.c_str()); // Look up the tileType in the tile set info

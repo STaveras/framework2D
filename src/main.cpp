@@ -68,6 +68,11 @@ int main(int argc, const char *argv[])
 
    const bool enableDebug = System::checkArgumentsForDebugMode(argc, argv);
    enableDebug ? Debug::Mode.enable() : Debug::Mode.disable(); // set runtime debug mode
+   if (enableDebug) {
+      Debug::dbgCollision = System::checkArgumentsForCollisionDebug(argc, argv);
+      Debug::dbgObjects = System::checkArgumentsForObjectDebug(argc, argv);
+      Debug::dbgTiles = System::checkArgumentsForTileDebug(argc, argv);
+   }
 
 #if _DEBUG
    if (Debug::Mode.isEnabled()) {

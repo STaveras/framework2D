@@ -39,6 +39,42 @@ namespace System
         return false;
     }
 
+    static bool checkArgumentsForCollisionDebug(int argc, const char** argv)
+    {
+        if (argc > 1) {
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--dbg-collision")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static bool checkArgumentsForObjectDebug(int argc, const char** argv)
+    {
+        if (argc > 1) {
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--dbg-objects")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static bool checkArgumentsForTileDebug(int argc, const char** argv)
+    {
+        if (argc > 1) {
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--dbg-tiles")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static bool checkArgumentsForFullscreen(int argc, const char** argv) 
     {
         if (argc > 1) {

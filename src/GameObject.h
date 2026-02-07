@@ -5,6 +5,7 @@
 
 #include "StateMachine.h"
 #include "Physical.h"
+#include "CollisionSystem.h"
 
 #include "Engine2D.h"
 #include "AnimationManager.h"
@@ -26,9 +27,6 @@
 //        What we have here is something in between a base "object" class and a pseudo "entity" class... Which is why something like the Camera derives from 
 //        So this will change over time a lot until I land on something that is sufficiently generalized enough to cover as many different games 
 
-#define EVT_GAMEOBJECT_STATE_ENTER "EVT_STATE_ENTER"
-#define EVT_GAMEOBJECT_STATE_EXIT  "EVT_STATE_EXIT"
-
 class GameObject : public StateMachine, public Physical
 {
    //Timer _lifeTime; this one makes me sad
@@ -42,6 +40,8 @@ public:
         GAME_OBJ_TILE,
         GAME_OBJ_EFFECT
     };
+
+   using CollisionPredicate = std::function<bool(const GameObject&)>;
 
 private:
    GAME_OBJ_TYPE _objType = GAME_OBJ_NULL; // I feel like this shouldn't be a thing
@@ -106,7 +106,13 @@ public:
 protected:
 
    void updateComponents();
+   CollisionPredicate _collisionPredicate = NULL;
+
+   // Legacy path. Prefer onCollisionContact(...) and mapCollisionToCommand(...).
    std::function<void(const Event* e)> _collisionEventHandler = NULL;
+   virtual void handleCollisionContact(const CollisionContact& contact) {}
+   virtual void onStateWillExit(State* current, State* next) override;
+   virtual void onStateDidEnter(State* previous, State* current) override;
 
 public:
    // We should probably forgo "GameObject types"
@@ -126,15 +132,15 @@ public:
    Renderable* getRenderable(void) const { return this->getState()->getRenderable(); }
    Collidable* getCollidable(void);
 
+   virtual bool shouldCollideWith(const GameObject& other) const;
+   void setCollisionPredicate(CollisionPredicate predicate);
+
+   virtual void onCollisionContact(const CollisionContact& contact);
+   virtual const char* mapCollisionToCommand(const CollisionContact& contact) const;
+
    virtual void start(void);
    virtual void update(float fTime);
    virtual void finish(void);
-
-private:
-    virtual void _onStateEntered(const Event& e);
-    virtual void _onStateExited(const Event& e);
-
-    virtual void _onCollision(const Event& e);
 };
 typedef GameObject::GameObjectState ObjectState;
 #endif

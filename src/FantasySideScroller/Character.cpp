@@ -11,8 +11,7 @@ Character::Character(void) :
 	// TODO: Write a loadObjectFromJSON function to load the character from a JSON file, otherwise, call the init functions directly
 	//		 Basically, it calls
 
-	_setupCollisionHandler();
-		  _initStates();
+	_initStates();
 	_initTransitions();
 
 	this->setBuffered(false);
@@ -360,118 +359,116 @@ void Character::_initTransitions() {
 	}
 }
 
-void Character::_setupCollisionHandler() {
+void Character::handleCollisionContact(const CollisionContact& contact)
+{
+	if (contact.other->getType() != GAME_OBJ_TILE) {
+		return;
+	}
 
-	// I think each state should have its own collision handler?
-	_collisionEventHandler = [=](const Event* e) {
+	Tile* tile = (Tile*)contact.other;
 
-		CollisionEvent* collisionEvent = (CollisionEvent*)e;
+	if (contact.phase == CollisionPhase::Exit) {
+		if (_tile == tile) {
+			_tile = NULL;
+		}
+		return;
+	}
 
-		GameObject* otherObject = collisionEvent->involvedObject;
-		if (otherObject->getType() == GAME_OBJ_TILE) {
+	vector2 directionToObject = tile->getPosition() - this->getPosition();
 
-			Tile* tile = (Tile*)otherObject;
+	if (_tile && _tile != tile) {
+		vector2 currentDirectionToObject = _tile->getPosition() - this->getPosition();
+		if (currentDirectionToObject.norm() < directionToObject.norm()) {
+			return;
+		}
+	}
 
-			if (this->_tile == tile) {
-				return; // Already on this tile, no need to handle again
-			}
-
-			vector2 directionToObject = tile->getPosition() - this->getPosition();
-
-			// Check if the other tile is closer than the one we are currently on
-			if (this->_tile) {
-				vector2 currentDirectionToObject = this->_tile->getPosition() - this->getPosition();
-				if (currentDirectionToObject.norm() < directionToObject.norm()) {
-					return; // The current tile is closer, no need to handle this one
-				}
-			}
-
-			directionToObject.normalize();
-
-			this->_tile = tile;
+	directionToObject.normalize();
+	_tile = tile;
 
 #if _DEBUG
-			if (DEBUGGING && Debug::dbgCollision)
-			{
-				char buffer[256];
-				sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", this->_tile->getTileIndex(), this->_tile->_position.x, this->_tile->_position.y);
+	if (DEBUGGING && Debug::dbgCollision)
+	{
+		char buffer[256];
+		sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", _tile->getTileIndex(), _tile->_position.x, _tile->_position.y);
+		DEBUG_MSG(buffer);
+
+		if (Renderable* renderable = _tile->getRenderable()) {
+			sprintf_s(buffer, sizeof(buffer), "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
+			DEBUG_MSG(buffer);
+		}
+
+		if (Collidable* collidable = _tile->getCollidable()) {
+			switch (collidable->getType()) {
+			case COL_OBJ_SQUARE: {
+				Square* square = (Square*)contact.other->getCollidable();
+				sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
 				DEBUG_MSG(buffer);
-
-				if (Renderable* renderable = this->_tile->getRenderable()) {
-					sprintf_s(buffer, sizeof(buffer), "\trenderablePos{%f, %f}\n", renderable->getPosition().x, renderable->getPosition().y);
-					DEBUG_MSG(buffer);
-				}
-
-				if (Collidable* collidable = this->_tile->getCollidable()) {
-					switch (collidable->getType()) {
-					case COL_OBJ_SQUARE: {
-						Square* square = (Square*)otherObject->getCollidable();
-						sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
-						DEBUG_MSG(buffer);
-						break;
-					}
-					case COL_OBJ_VOID:
-						break;
-					case COL_OBJ_CIRCLE:
-						break;
-					case COL_OBJ_PLANE:
-						break;
-					case COL_OBJ_GROUP:
-						break;
-					}
-				}
+				break;
 			}
-#endif
-			if (this->_tile->getTileType() == "tile") {
-
-				Square* square = NULL;
-				Square* otherSquare = NULL;
-
-				if (Collidable* collidable = this->getCollidable())
-				{
-					if (this->getCollidable()->getType() != COL_OBJ_SQUARE) {
-						DEBUG_MSG("Character collidable is not a square!\n");
-						return;
-					}
-
-					square = (Square*)this->getCollidable();
-
-					if (otherObject->getCollidable()->getType() != COL_OBJ_SQUARE) {
-						DEBUG_MSG("Other object collidable is not a square!\n");
-						return;
-					}
-					otherSquare = (Square*)this->_tile->getCollidable();
-				}
-
-				// Determine if we are colliding from the top or bottom
-				if (directionToObject.y < 0.0f) {
-					this->sendInput("JUMP_RELEASED");
-				}
-				else if (directionToObject.y > 0.0f) {
-					this->sendInput("GROUND_COLLISION");
-				}
-
-				if (square != NULL && otherSquare != NULL)
-				{
-					// Determine if we are colliding from the left or right
-					if (directionToObject.x < 0.0f) {
-						// Stop from moving
-						// this->addImpulse(-this->getState()->getDirection(), this->getState()->getForce());
-					}
-					else if (directionToObject.x > 0.0f) {
-						//this->addImpulse(vector2(-1.0f, 0.0f), 1.0f); // move to the left?
-						//this->setPosition(otherSquare->getPosition().x + otherSquare->getMax().x, this->getPosition().y);
-					}
-				}
-			}
-			else if (this->_tile->getTileType() == "key")
-			{
-				this->_tile->getRenderable()->setVisibility(false);
-				this->_tile->getCollidable()->setActive(false);
-				this->sendInput("DEATH");
+			case COL_OBJ_VOID:
+				break;
+			case COL_OBJ_CIRCLE:
+				break;
+			case COL_OBJ_PLANE:
+				break;
+			case COL_OBJ_GROUP:
+				break;
 			}
 		}
-	};
+	}
+#endif
+
+	if (_tile->getTileType() == "key" && contact.phase == CollisionPhase::Enter)
+	{
+		if (Renderable* renderable = _tile->getRenderable()) {
+			renderable->setVisibility(false);
+		}
+		if (Collidable* collidable = _tile->getCollidable()) {
+			collidable->setActive(false);
+		}
+	}
+}
+
+const char* Character::mapCollisionToCommand(const CollisionContact& contact) const
+{
+	if (!contact.other || contact.phase == CollisionPhase::Exit || contact.other->getType() != GAME_OBJ_TILE) {
+		return NULL;
+	}
+
+	Tile* tile = (Tile*)contact.other;
+	if (!tile) {
+		return NULL;
+	}
+
+	if (tile->getTileType() == "key" && contact.phase == CollisionPhase::Enter) {
+		return "DEATH";
+	}
+
+	if (tile->getTileType() != "tile" || _tile != tile) {
+		return NULL;
+	}
+
+	if (contact.normal) {
+		if (contact.normal->y < 0.0f) {
+			return "JUMP_RELEASED";
+		}
+		if (contact.normal->y > 0.0f) {
+			return "GROUND_COLLISION";
+		}
+	}
+	else {
+		vector2 directionToObject = tile->getPosition() - this->getPosition();
+		directionToObject.normalize();
+		if (directionToObject.y < 0.0f) {
+			return "JUMP_RELEASED";
+		}
+		if (directionToObject.y > 0.0f) {
+			return "GROUND_COLLISION";
+		}
+	}
+
+	return NULL;
 }
 
 void Character::update(float time)

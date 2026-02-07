@@ -23,6 +23,8 @@ class ObjectManager
 	 std::list<ObjectOperator*> m_lsObjOperators;
 
 public:
+	const std::map<std::string, GameObject*>& getObjects(void) const { return m_mObjects; }
+
 	std::string getObjectName(GameObject* object) {
 		std::map<std::string, GameObject*>::iterator itr = m_mObjects.begin();
 		for (; itr != m_mObjects.end(); itr++) {
