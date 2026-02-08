@@ -44,10 +44,6 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 			tileSet = new TileSet(Engine2D::getRenderer()->createTexture(imagePath.c_str()), (unsigned int)tileWidth);
 
-				simdjson::dom::array tiles;
-				if (!root["tiles"].is_null() && root["tiles"].is_array()) {
-					tiles = root["tiles"].get_array();
-				}
 				auto readFloat = [](simdjson::dom::element element, float fallback = 0.0f) -> float {
 					if (element.is_null()) {
 						return fallback;
@@ -64,99 +60,109 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 					return fallback;
 				};
 
-				for (size_t i = 0; i < tiles.size(); i++)
-				{
-					simdjson::dom::element tile = tiles.at(i);
+				if (!root["tiles"].is_null() && root["tiles"].is_array()) {
+					simdjson::dom::array tiles = root["tiles"].get_array();
 
-				// Access fields of the "tile" object here
-				int64_t id = tile["id"].get_int64();
+					for (simdjson::dom::element tile : tiles)
+					{
+						const bool hasIntId = tile["id"].is_int64();
+						const bool hasUIntId = tile["id"].is_uint64();
+						if (!hasIntId && !hasUIntId) {
+							continue;
+						}
 
-				TileSet::TileInfo tileInfo;
+						const int64_t id = hasIntId ? (int64_t)tile["id"].get_int64() : (int64_t)tile["id"].get_uint64();
+						if (id < 0 || id >= tileCount) {
+							continue;
+						}
 
-				if (!tile["type"].is_null() && tile["type"].is_string()) {
-					std::string_view className = tile["type"].get_string();
-					tileInfo._typeName = std::string(className);
-				}
+						TileSet::TileInfo tileInfo;
 
-					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
-						// Tile properties
-						simdjson::dom::element objectgroup = tile["objectgroup"];
+						if (!tile["type"].is_null() && tile["type"].is_string()) {
+							std::string_view className = tile["type"].get_string();
+							tileInfo._typeName = std::string(className);
+						}
 
-						// Right now, the only collection of "objects" we have are for collision
-						if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
-							Collidable* tileCollision = nullptr;
-							CollidableGroup* tileCollisionGroup = nullptr;
+						if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
+							// Tile properties
+							simdjson::dom::element objectgroup = tile["objectgroup"];
 
-							for (auto object : objectgroup["objects"]) {
-								const int64_t objectId = object["id"].is_null() ? -1 : (int64_t)object["id"].get_int64();
-								const bool hasPolygon = !object["polygon"].is_null() && object["polygon"].is_array();
-								const bool hasRectangle = !object["width"].is_null() && !object["height"].is_null();
-								std::string_view collisionObjectType = object["type"].is_string() ? object["type"].get_string().value_unsafe() : "";
+							// Right now, the only collection of "objects" we have are for collision
+							if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
+								Collidable* tileCollision = nullptr;
+								CollidableGroup* tileCollisionGroup = nullptr;
 
-								Collidable* parsedCollision = nullptr;
-								if (hasPolygon) {
-									PolygonCollider* polygon = collisionObjects.createDerived<PolygonCollider>();
-									polygon->setPosition(readFloat(object["x"]), readFloat(object["y"]));
+								for (auto object : objectgroup["objects"]) {
+									const int64_t objectId = object["id"].is_null() ? -1 : (int64_t)object["id"].get_int64();
+									const bool hasPolygon = !object["polygon"].is_null() && object["polygon"].is_array();
+									const bool hasRectangle = !object["width"].is_null() && !object["height"].is_null();
+									std::string_view collisionObjectType = object["type"].is_string() ? object["type"].get_string().value_unsafe() : "";
 
-									std::vector<vector2> polygonVertices;
-									for (auto point : object["polygon"]) {
-										polygonVertices.push_back(vector2(
-											readFloat(point["x"]),
-											readFloat(point["y"])));
-									}
-									polygon->setLocalVertices(polygonVertices);
+									Collidable* parsedCollision = nullptr;
+									if (hasPolygon) {
+										PolygonCollider* polygon = collisionObjects.createDerived<PolygonCollider>();
+										polygon->setPosition(readFloat(object["x"]), readFloat(object["y"]));
 
-									if (!polygon->isValid()) {
+										std::vector<vector2> polygonVertices;
+										for (auto point : object["polygon"]) {
+											polygonVertices.push_back(vector2(
+												readFloat(point["x"]),
+												readFloat(point["y"])));
+										}
+										polygon->setLocalVertices(polygonVertices);
+
+										if (!polygon->isValid()) {
 #if _DEBUG
-										char buffer[256];
-										sprintf_s(
-											buffer,
-											sizeof(buffer),
-											"Skipping non-convex/invalid polygon collision object (tile=%lld, object=%lld)\n",
-											(long long)id,
-											(long long)objectId);
-										DEBUG_MSG(buffer);
+											char buffer[256];
+											sprintf_s(
+												buffer,
+												sizeof(buffer),
+												"Skipping non-convex/invalid polygon collision object (tile=%lld, object=%lld)\n",
+												(long long)id,
+												(long long)objectId);
+											DEBUG_MSG(buffer);
 #endif
-										collisionObjects.destroy(polygon);
+											collisionObjects.destroy(polygon);
+										}
+										else {
+											parsedCollision = polygon;
+										}
 									}
-									else {
-										parsedCollision = polygon;
+									else if (collisionObjectType == "square" || hasRectangle) {
+										Square* square = collisionObjects.createDerived<Square>();
+										square->setPosition(readFloat(object["x"]), readFloat(object["y"]));
+										square->setWidth(readFloat(object["width"]));
+										square->setHeight(readFloat(object["height"]));
+										parsedCollision = square;
 									}
-								}
-								else if (collisionObjectType == "square" || hasRectangle) {
-									Square* square = collisionObjects.createDerived<Square>();
-									square->setPosition(readFloat(object["x"]), readFloat(object["y"]));
-									square->setWidth(readFloat(object["width"]));
-									square->setHeight(readFloat(object["height"]));
-									parsedCollision = square;
+
+									if (!parsedCollision) {
+										continue;
+									}
+
+									if (!tileCollision) {
+										tileCollision = parsedCollision;
+										continue;
+									}
+
+									if (!tileCollisionGroup) {
+										tileCollisionGroup = collisionObjects.createDerived<CollidableGroup>();
+										tileCollisionGroup->push_back(tileCollision);
+										tileCollision = tileCollisionGroup;
+									}
+
+									tileCollisionGroup->push_back(parsedCollision);
 								}
 
-								if (!parsedCollision) {
-									continue;
-								}
-
-								if (!tileCollision) {
-									tileCollision = parsedCollision;
-									continue;
-								}
-
-								if (!tileCollisionGroup) {
-									tileCollisionGroup = collisionObjects.createDerived<CollidableGroup>();
-									tileCollisionGroup->push_back(tileCollision);
-									tileCollision = tileCollisionGroup;
-								}
-
-								tileCollisionGroup->push_back(parsedCollision);
+								tileInfo._collisionInfo = tileCollision;
 							}
+						}
 
-							tileInfo._collisionInfo = tileCollision;
+						if (tileInfo._typeName != "" || tileInfo._collisionInfo != NULL) {
+							tileSet->_tileInfo[(int)id] = tileInfo;
 						}
 					}
-
-				if (tileInfo._typeName != "" || tileInfo._collisionInfo != NULL) {
-					tileSet->_tileInfo[(int)id] = tileInfo;
 				}
-			}
 
 			for (int64_t i = 0; i < tileCount; i++)
 			{
