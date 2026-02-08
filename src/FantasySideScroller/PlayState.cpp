@@ -1,19 +1,13 @@
 // PlayState.cpp
 #include "PlayState.h"
 
-#include "../TileMap.h"
 #include "../Camera.h"
 
-#include "Resources.h"
 #include "Constants.h"
 #include "Character.h"
 
 PlayState::PlayState()
     : _player(nullptr)
-    , _camera(nullptr)
-    , _background(nullptr)
-    , _pixel(nullptr)
-    , _tileSet(nullptr)
     , _playableCharacter(nullptr) {
 
 }
@@ -27,45 +21,20 @@ void PlayState::onEnter(State* prev)
 	GameState::onEnter(prev);
 
 	_player = Engine2D::getGame()->getPlayers()->create();
-	_camera = new Camera();
-	_camera->setZoomAnchorMode(Camera::ZoomAnchorMode::TargetCenter);
-	_camera->setSnapToPixelGrid(true);
 
-	_pixel = new Image(BasePath("pixel.bmp").c_str());
-
-	_background = new Image(BasePath("Background/Background.png").c_str());
-	_background->center();
-
-#ifdef _DEBUG
-	_background->setVisibility(false);
-	Renderer::get()->setBackgroundStatic(false);
-#endif
-	_renderList->push_back(_background);
-
-	_tileSet = TileSet::loadFromFile(BasePath("Assets/fantasyTiles.tsj").c_str());
-
-	//_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
-	//_tileMap = (*TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).begin());
-	_tileMaps = TileMap::loadFromJSONFile(BasePath("testMap.tmj").c_str(), _tileSet);
-
-	for (unsigned int j = 0; j < _tileMaps.size(); j++)
-	{
-		TileMap* _tileMap = _tileMaps[j];
-
-		for (unsigned int i = 0; i < (unsigned int)_tileMap->getTiles().size(); i++) {
-			char buffer[32]{ 0 }; sprintf_s(buffer, 32, "t%u", i);
-			_objectManager.addObject(buffer, _tileMap->getTiles()[i]);
-		}
-
-		_tileMap->setPosition(-60, 0);
-		_tileMap->arrangeTiles();
-	}
+	// Preferred: map-declared tilesets from the .tmj file.
+	_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	//_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
-	_playableCharacter->setPosition(START_POSITION);
+	if (_levelManager.hasSpawnPoint()) {
+		_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+	}
+	else {
+		_playableCharacter->setPosition(START_POSITION);
+	}
 
 	_objectManager.addObject("Hero", _playableCharacter);
-	_objectManager.addObject("Camera", _camera);
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
@@ -77,16 +46,12 @@ void PlayState::onEnter(State* prev)
 	_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
 	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
 	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
+	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
+	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
 	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
 	_player->setGameObject(_playableCharacter);
 
-	_cameraPlayerAttach.setSource(_camera);
-	_cameraPlayerAttach.follow(_objectManager.getGameObject("Hero"), true, true);
-	_cameraPlayerAttach.setEnabled(true);
-
-	_objectManager.pushOperator(&_cameraPlayerAttach);
-
-	Engine2D::getRenderer()->setCamera(_camera);
+	_levelManager.attachCameraTo(_objectManager.getGameObject("Hero"), _objectManager, true, true);
 }
 
 bool PlayState::onExecute(float time)
@@ -115,9 +80,13 @@ bool PlayState::onExecute(float time)
 	{
 		_playableCharacter->clearEvents();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
-		_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120);
 
-		//if (_playableCharacter->tile)
+		if (_levelManager.hasSpawnPoint()) {
+			_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+		}
+		else {
+			_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
+		}
 	}
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
@@ -127,63 +96,59 @@ bool PlayState::onExecute(float time)
 		Engine2D::quit();
 	}
 
-	if (DEBUGGING) {
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
-			_camera->setZoom(_camera->getZoom() + 0.1f);
-		}
+	if (DEBUGGING) 
+	{
+		Camera* camera = _levelManager.getCamera();
+		if (camera) {
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
+				camera->setZoom(camera->getZoom() + 0.1f);
+			}
 
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
-			_camera->setZoom(1.0f);
-		}
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
+				camera->setZoom(1.0f);
+			}
 
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
-			_camera->setZoom(_camera->getZoom() - 0.1f);
-		}
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
+				camera->setZoom(camera->getZoom() - 0.1f);
+			}
 
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
-			const Camera::ZoomAnchorMode nextMode =
-				(_camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
-				Camera::ZoomAnchorMode::OriginLegacy :
-				Camera::ZoomAnchorMode::TargetCenter;
-			_camera->setZoomAnchorMode(nextMode);
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
+				const Camera::ZoomAnchorMode nextMode =
+					(camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
+					Camera::ZoomAnchorMode::OriginLegacy :
+					Camera::ZoomAnchorMode::TargetCenter;
+				camera->setZoomAnchorMode(nextMode);
+
+				char buffer[128]{ 0 };
+				sprintf_s(buffer, sizeof(buffer), "Camera Zoom Anchor: %s\n",
+					(nextMode == Camera::ZoomAnchorMode::TargetCenter) ? "TargetCenter" : "OriginLegacy");
+				DEBUG_MSG(buffer);
+			}
+		}
+		if (keyboard->keyPressed(keyboard->getKeys().KBK_F3)) {
+			Debug::dbgCollision = !Debug::dbgCollision;
 
 			char buffer[128]{ 0 };
-			sprintf_s(buffer, sizeof(buffer), "Camera Zoom Anchor: %s\n",
-				(nextMode == Camera::ZoomAnchorMode::TargetCenter) ? "TargetCenter" : "OriginLegacy");
+			sprintf_s(buffer, sizeof(buffer), "Collision Debug: %s\n",
+				Debug::dbgCollision ? "ON" : "OFF");
 			DEBUG_MSG(buffer);
 		}
 	}
-	_background->setPosition(_camera->getPosition());
 
-	return GameState::onExecute(time);
+	const bool keepRunning = GameState::onExecute(time);
+	_levelManager.update();
+	return keepRunning;
 }
 
 void PlayState::onExit(State* next)
 {
 	_player->finish();
 
-	_objectManager.removeObject("Camera");
-	_objectManager.removeObject("Hero");
+	_objectManager.removeObject(_playableCharacter);
 
 	SAFE_DELETE(_playableCharacter);
-
-	if (_tileMaps.size())
-	{
-		for (unsigned int i = 0; i < _tileMaps.size(); i++)
-		{
-			TileMap* tileMap = _tileMaps[i];
-			if (tileMap) {
-				_objectManager.removeObject(tileMap);
-				delete tileMap;
-			}
-		}
-	}
-	_tileMaps.clear();
-
-	SAFE_DELETE(_tileSet);
-	SAFE_DELETE(_background);
-	SAFE_DELETE(_pixel);
-	SAFE_DELETE(_camera);
+	
+	_levelManager.shutdown(_objectManager, *this);
 
 	Engine2D::getGame()->getPlayers()->destroy(_player);
 

@@ -80,16 +80,27 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 }
 #endif
 
-void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
-
+void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) 
+{
 #if __APPLE__
-	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_TRUE);
-#else
+	// Unbundled CLI launches don't have a bundle identifier, so keep Cocoa from
+	// attempting menu/tab features that rely on one.
+	if ([NSWindow respondsToSelector:@selector(setAllowsAutomaticWindowTabbing:)]) {
+		[NSWindow setAllowsAutomaticWindowTabbing:NO];
+	}
 
+	// Keep menubar/dock integration enabled so the app can take focus and receive
+	// keyboard input when launched outside an app bundle.
+	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_TRUE);
 #endif
 	/* Initialize the library */
 	if (!glfwInit())
+	{
+		const char* err = nullptr;
+		glfwGetError(&err);
+		std::cerr << "glfwInit failed: " << (err ? err : "(unknown)") << std::endl;
 		return; // -1
+	}
 
 	if (requireVulkanSupport && glfwVulkanSupported() == GLFW_FALSE) {
 		std::cout << "Vulkan is not supported on this platform." << std::endl;
@@ -110,6 +121,9 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) {
 	/* Create a windowed mode window and its OpenGL context */
 	_window = glfwCreateWindow(m_nWidth, m_nHeight, m_szWindowTitle.c_str(), NULL, NULL);
 	if (!_window) {
+		const char* err = nullptr;
+		glfwGetError(&err);
+		std::cerr << "glfwCreateWindow failed: " << (err ? err : "(unknown)") << std::endl;
 		return glfwTerminate(); // -1 // Maybe throw an exception
 	}
 

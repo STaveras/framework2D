@@ -1,6 +1,6 @@
 #pragma once
 
-#define WINDOW_SIZE_MULTIPLIER 2
+#define WINDOW_SIZE_MULTIPLIER 3
 #define GAME_RES_X 336
 #define GAME_RES_Y 192
 

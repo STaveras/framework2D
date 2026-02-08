@@ -33,7 +33,7 @@ public:
 	void setIsConnected(bool connected) { _connected = connected; }
 	void setPadNumber(int padNumber) { _padNumber = padNumber; }
 
-	void addAction(Action action) { _actions.push_back(action); }
+	void addAction(Action action);
 	void removeAction(Action action);
 
 	bool buttonPressed(Action* action);

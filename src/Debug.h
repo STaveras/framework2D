@@ -9,7 +9,7 @@
 
 namespace Debug
 {
-    static struct _debugging
+    struct _debugging
     {
         static bool _bDebug;
 
@@ -21,13 +21,15 @@ namespace Debug
         static void enable(void) { _bDebug = true; }
         static void disable(void) { _bDebug = false; }
         
-    } Mode;
+    };
 
-    static bool dbgMouse = false;
-    static bool dbgObjects = false;
-    static bool dbgTiles = false;
-    static bool dbgMemory = false;
-    static bool dbgCollision = false;
+    extern _debugging Mode;
+
+    extern bool dbgMouse;
+    extern bool dbgObjects;
+    extern bool dbgTiles;
+    extern bool dbgMemory;
+    extern bool dbgCollision;
 }
 
 #ifndef _WIN32

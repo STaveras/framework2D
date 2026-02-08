@@ -1,0 +1,132 @@
+Tile Layer Reliability + One-Way Platform Flow
+Summary
+Fix multi-layer tile loading so all layers keep their own colliders and alignment, then add explicit per-layer collision policy (solid, one_way, none) with DOWN + JUMP drop-through for one-way platforms.
+
+This addresses your current bug directly:
+
+In PlayState.cpp, tile object names are reused per layer (t0..tN), so later layers overwrite earlier ones in ObjectManager collisions.
+In TileMap.h, layer placement metadata (startx/starty/x/y) is not applied, so multi-layer/chunk maps are not fully position-safe.
+Important API / Interface / Type Changes
+Add shared tile-layer collision policy type.
+New file: TileLayerConfig.h
+Add:
+enum class TileCollisionMode { None, Solid, OneWay };
+struct TileLayerConfig { int id; std::string name; int startX; int startY; float offsetX; float offsetY; TileCollisionMode collisionMode; int drawOrder; };
+Extend TileMap with layer metadata accessors.
+File: TileMap.h
+Add:
+const TileLayerConfig& getLayerConfig() const;
+Layer-aware constructor that accepts TileLayerConfig.
+Extend Tile with layer collision mode.
+File: Tile.h
+Add:
+void setLayerCollisionMode(TileCollisionMode mode);
+TileCollisionMode getLayerCollisionMode() const;
+bool isOneWay() const;
+bool isNonCollidingLayer() const;
+Override:
+bool shouldCollideWith(const GameObject& other) const to return false when layer mode is None.
+Extend Character collision filtering.
+Files:
+Character.h
+Character.cpp
+Add:
+float _dropThroughTimer = 0.0f;
+bool shouldCollideWith(const GameObject& other) const override;
+helper methods for one-way checks and drop-through request.
+Implementation Plan
+Fix layer object identity collisions (root cause fix).
+File: PlayState.cpp
+Replace non-unique tile names (t%u) with deterministic layer-scoped names:
+format: layer_<layerId>_<layerName>_tile_<index>
+Ensure every tile object across all layers is uniquely keyed in ObjectManager.
+Add safety guard against future key overwrite.
+File: ObjectManager.cpp
+In addObject, if key exists:
+emit debug warning with both pointers and key.
+append deterministic suffix (e.g. #2, #3) rather than overwriting.
+Keep existing API signature unchanged.
+Parse and apply layer metadata from TMJ tile layers.
+File: TileMap.h
+Parse each tilelayer:
+id, name, x, y, startx, starty, width, height, visible, properties.
+Parse collision_mode from properties:
+accepted values: solid, one_way, none (case-insensitive).
+unknown values log warning and fall back to default.
+User-chosen default: missing collision_mode => None.
+Correct coordinate mapping for chunked infinite layers.
+File: TileMap.h
+For chunked data:
+Compute local indices from chunk + layer start:
+localX = (chunkX + cx) - startX
+localY = (chunkY + cy) - startY
+For arranged world placement:
+worldX = tileMapPosition.x + offsetX + (localX + startX) * tileSize
+worldY = tileMapPosition.y + offsetY + (localY + startY) * tileSize
+Keep tile layer draw order as file order (vector push order remains the render insertion order).
+Propagate layer collision mode to tiles.
+Files:
+TileMap.h
+Tile.h
+On tile creation / setup, assign each tile its parent layer mode.
+In Tile::shouldCollideWith:
+if mode None, skip collisions entirely.
+otherwise preserve existing tile-vs-tile exclusion behavior.
+Implement one-way platform behavior in Character.
+Files:
+Character.h
+Character.cpp
+Add DOWN + JUMP drop-through:
+trigger only while grounded on one-way support.
+set _dropThroughTimer (e.g. 0.20f).
+clear one-way ground contacts and emit IN_AIR.
+Collision filtering:
+override Character::shouldCollideWith for tile objects.
+for None: never collide.
+for OneWay: collide only when not in drop-through timer and approaching from above (footline/top-surface check + vertical motion gate).
+Support sampling updates:
+_findGroundSupportTile ignores None always.
+ignores OneWay while _dropThroughTimer > 0.
+Keep state-command contract unchanged (GROUND_COLLISION, IN_AIR, JUMP_RELEASED, DEATH).
+Add DOWN action binding.
+File: PlayState.cpp
+Add controller actions:
+DOWN -> KBK_DOWN
+DOWN -> KBK_S
+No transition JSON schema changes required.
+Migrate map data to explicit layer modes (required because default is None).
+Files:
+testMap.tmj
+testMap_separate_layers.tmj
+Add collision_mode per tilelayer:
+ground gameplay layer: solid
+jump-through platform layer: one_way
+decorative foreground/background layers: none
+Leave object layers unchanged (still ignored in this pass).
+Test Cases and Validation Scenarios
+Multi-layer collision retention.
+Load testMap_separate_layers.tmj.
+Verify both ground and platform layers are present in ObjectManager simultaneously.
+Confirm no key overwrite logs for tile names.
+Layer alignment correctness.
+Verify tile visuals and colliders overlap on all layers after applying startx/starty/x/y + chunk.
+Confirm no per-layer drift when adding more tile layers.
+Collision mode behavior.
+solid: blocks normally.
+none: fully pass-through (no collision callbacks).
+one_way: pass from below, land from above.
+Drop-through behavior.
+On one-way layer, pressing DOWN + JUMP transitions to falling and passes through.
+Timer prevents immediate re-capture for configured duration.
+Background/foreground pass-through.
+Layers marked none never block movement or grounding.
+Regression checks.
+Existing state transitions still function.
+Flat ground behavior remains stable.
+Polygon slope support remains stable under layer modes.
+Assumptions and Defaults
+Default for missing collision_mode is None (per your selection), so maps must explicitly mark colliding layers.
+One-way platform behavior is top-contact-only; underside collisions are intentionally ignored.
+Drop-through input is DOWN + JUMP.
+Object-layer (objectgroup) collisions remain out of scope for this pass.
+No changes to transition JSON schema or collision broadphase complexity.

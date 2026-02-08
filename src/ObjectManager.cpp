@@ -11,6 +11,8 @@
 
 #include <unordered_set>
 #include <vector>
+#include <string>
+#include <cstdio>
 
 // How we should start thinking about events:
 // SYSTEM EVENTS: The backend, mechanical stuff that glues the ''engine'' together (out/in)
@@ -29,7 +31,10 @@ void ObjectManager::update(float fTime)
 			continue;
 		}
 
-		object->update(fTime);
+		const bool isStaticTile = object->getType() == GameObject::GAME_OBJ_TILE && object->isStatic();
+		if (!isStaticTile) {
+			object->update(fTime);
+		}
 
 		if (object->getType() == GameObject::GAME_OBJ_TILE)
 			continue;
@@ -63,7 +68,7 @@ void ObjectManager::removeObject(GameObject* object)
 
 				object->finish(); m_mObjects.erase(itr);
 
-				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object); 
+				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object, Event::event_priority_immediate); 
 				
 				break;
 			}
@@ -83,7 +88,7 @@ void ObjectManager::removeObject(const char* name)
 			{
 				object->finish(); m_mObjects.erase(itr);
 
-				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object); 
+				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object, Event::event_priority_immediate); 
 				
 				break;
 			}
@@ -93,7 +98,29 @@ void ObjectManager::removeObject(const char* name)
 
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
-	m_mObjects[name] = object;
+	std::string requestedName = (name && name[0] != '\0') ? std::string(name) : std::string("object");
+	std::string resolvedName = requestedName;
+
+	auto existing = m_mObjects.find(resolvedName);
+	if (existing != m_mObjects.end() && existing->second != object) {
+#if _DEBUG
+		char buffer[256];
+		sprintf_s(buffer, sizeof(buffer),
+			"ObjectManager key collision on '%s' (existing=%p incoming=%p). Auto-suffixing.\n",
+			resolvedName.c_str(),
+			existing->second,
+			object);
+		DEBUG_MSG(buffer);
+#endif
+
+		unsigned int suffix = 2;
+		do {
+			resolvedName = requestedName + "#" + std::to_string(suffix++);
+			existing = m_mObjects.find(resolvedName);
+		} while (existing != m_mObjects.end());
+	}
+
+	m_mObjects[resolvedName] = object;
 
 	Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_ADDED, object);
 }

@@ -3,6 +3,7 @@
 #include "GameObject.h"
 
 #include "TileSet.h"
+#include "TileLayerConfig.h"
 #include "Square.h"
 
 #include <algorithm>
@@ -14,6 +15,7 @@ class Tile : public GameObject
    int _tileIndex = -1; // How far in the tileSheet this block is
 
    TileSet* _tileSet = NULL;
+   TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
 
    // TODO: Move this to TileSet
    Factory<Image> _tileImages;
@@ -53,8 +55,44 @@ public:
       return _tileSet;
    }
 
+   void setLayerCollisionMode(TileCollisionMode mode) {
+      _layerCollisionMode = mode;
+   }
+
+   TileCollisionMode getLayerCollisionMode(void) const {
+      return _layerCollisionMode;
+   }
+
+   bool isOneWay(void) const {
+      return _layerCollisionMode == TileCollisionMode::OneWay;
+   }
+
+   bool isNonCollidingLayer(void) const {
+      return _layerCollisionMode == TileCollisionMode::None;
+   }
+
+   bool shouldCollideWith(const GameObject& other) const override
+   {
+      if (isNonCollidingLayer()) {
+         return false;
+      }
+
+      if (other.getType() == GAME_OBJ_TILE) {
+         return false;
+      }
+
+      return GameObject::shouldCollideWith(other);
+   }
+
    int getTileIndex(void) const {
       return _tileIndex;
+   }
+
+   TileSet::TileInfo getTileInfo(void) const {
+      if (_tileSet && _tileIndex >= 0) {
+         return _tileSet->getTileInfo(_tileIndex);
+      }
+      return TileSet::TileInfo();
    }
 
    std::string getTileType(void) const {
