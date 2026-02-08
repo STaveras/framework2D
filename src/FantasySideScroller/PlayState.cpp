@@ -49,7 +49,7 @@ void PlayState::onEnter(State* prev)
 
 	//_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
 	//_tileMap = (*TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).begin());
-	_tileMaps = TileMap::loadFromJSONFile(BasePath("testMap.tmj").c_str(), _tileSet);
+	_tileMaps = TileMap::loadFromJSONFile(BasePath("testMap_separate_layers.tmj").c_str(), _tileSet);
 
 	auto sanitizeLayerName = [](const std::string& value) -> std::string {
 		if (value.empty()) {
