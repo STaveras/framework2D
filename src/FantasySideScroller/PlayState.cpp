@@ -1,43 +1,13 @@
 // PlayState.cpp
 #include "PlayState.h"
 
-#include "../TileMap.h"
 #include "../Camera.h"
 
-#include "Resources.h"
 #include "Constants.h"
 #include "Character.h"
 
-#include <cctype>
-#include <string>
-
-namespace {
-std::string sanitizeLayerName(const std::string& value)
-{
-	if (value.empty()) {
-		return "unnamed";
-	}
-
-	std::string sanitized;
-	sanitized.reserve(value.size());
-	for (char c : value) {
-		if (std::isalnum((unsigned char)c)) {
-			sanitized.push_back(c);
-		}
-		else {
-			sanitized.push_back('_');
-		}
-	}
-	return sanitized;
-}
-}
-
 PlayState::PlayState()
     : _player(nullptr)
-    , _camera(nullptr)
-    , _background(nullptr)
-    , _pixel(nullptr)
-    , _tileSet(nullptr)
     , _playableCharacter(nullptr) {
 
 }
@@ -46,66 +16,20 @@ PlayState::~PlayState() {
     // ensure cleanup if exit wasn't called
 }
 
-std::vector<TileMap*> PlayState::loadTileMapsIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, const vector2& mapOffset)
-{
-	std::vector<TileMap*> tileMaps = TileMap::loadFromJSONFile(BasePath(mapFileName).c_str(), nullptr, false);
-
-	for (TileMap* tileMap : tileMaps) {
-		if (!tileMap) {
-			continue;
-		}
-
-		tileMap->setPosition(mapOffset);
-		tileMap->arrangeTiles();
-
-		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
-		const std::string safeLayerName = sanitizeLayerName(layerConfig.name);
-		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
-
-		unsigned int tileIndex = 0;
-		for (auto it = tileMap->getTiles().begin(); it != tileMap->getTiles().end(); ++it, ++tileIndex) {
-			Tile* tile = *it;
-			if (!tile || tile->getTileIndex() < 0) {
-				continue;
-			}
-
-			std::string objectName = layerPrefix + "_tile_" + std::to_string(tileIndex);
-			objectManager.addObject(objectName.c_str(), tile);
-		}
-	}
-
-	return tileMaps;
-}
-
 void PlayState::onEnter(State* prev)
 {
 	GameState::onEnter(prev);
 
 	_player = Engine2D::getGame()->getPlayers()->create();
-	_camera = new Camera();
-	_camera->setZoomAnchorMode(Camera::ZoomAnchorMode::TargetCenter);
-	_camera->setSnapToPixelGrid(true);
-
-	_pixel = new Image(BasePath("pixel.bmp").c_str());
-
-	_background = new Image(BasePath("Background/Background.png").c_str());
-	_background->center();
-
-#ifdef _DEBUG
-	_background->setVisibility(false);
-	//Renderer::get()->setBackgroundStatic(false);
-#endif
-	_renderList->push_back(_background);
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	// _tileMaps = loadTileMapsIntoObjectManager("mockup_tiles2.tmj", _objectManager, vector2(-60.0f, 0.0f));
-	_tileMaps = loadTileMapsIntoObjectManager("testMap_separate_layers.tmj", _objectManager, vector2(-60.0f, 0.0f));
+	// _levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, _renderList);
+	_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, _renderList);
 
 	_playableCharacter = new Character;
 	_playableCharacter->setPosition(START_POSITION);
 
 	_objectManager.addObject("Hero", _playableCharacter);
-	_objectManager.addObject("Camera", _camera);
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
@@ -122,13 +46,7 @@ void PlayState::onEnter(State* prev)
 	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
 	_player->setGameObject(_playableCharacter);
 
-	_cameraPlayerAttach.setSource(_camera);
-	_cameraPlayerAttach.follow(_objectManager.getGameObject("Hero"), true, true);
-	_cameraPlayerAttach.setEnabled(true);
-
-	_objectManager.pushOperator(&_cameraPlayerAttach);
-
-	Engine2D::getRenderer()->setCamera(_camera);
+	_levelManager.attachCameraTo(_objectManager.getGameObject("Hero"), _objectManager, true, true);
 }
 
 bool PlayState::onExecute(float time)
@@ -170,24 +88,29 @@ bool PlayState::onExecute(float time)
 	}
 
 	if (DEBUGGING) {
+		Camera* camera = _levelManager.getCamera();
+		if (!camera) {
+			return GameState::onExecute(time);
+		}
+
 		if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
-			_camera->setZoom(_camera->getZoom() + 0.1f);
+			camera->setZoom(camera->getZoom() + 0.1f);
 		}
 
 		if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
-			_camera->setZoom(1.0f);
+			camera->setZoom(1.0f);
 		}
 
 		if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
-			_camera->setZoom(_camera->getZoom() - 0.1f);
+			camera->setZoom(camera->getZoom() - 0.1f);
 		}
 
 		if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
 			const Camera::ZoomAnchorMode nextMode =
-				(_camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
+				(camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
 				Camera::ZoomAnchorMode::OriginLegacy :
 				Camera::ZoomAnchorMode::TargetCenter;
-			_camera->setZoomAnchorMode(nextMode);
+			camera->setZoomAnchorMode(nextMode);
 
 			char buffer[128]{ 0 };
 			sprintf_s(buffer, sizeof(buffer), "Camera Zoom Anchor: %s\n",
@@ -195,7 +118,7 @@ bool PlayState::onExecute(float time)
 			DEBUG_MSG(buffer);
 		}
 	}
-	_background->setPosition(_camera->getPosition());
+	_levelManager.update();
 
 	return GameState::onExecute(time);
 }
@@ -204,34 +127,11 @@ void PlayState::onExit(State* next)
 {
 	_player->finish();
 
-	_objectManager.removeObject("Camera");
-	_objectManager.removeObject("Hero");
+	_objectManager.removeObject(_playableCharacter);
 
 	SAFE_DELETE(_playableCharacter);
-
-	if (_tileMaps.size())
-	{
-		for (unsigned int i = 0; i < _tileMaps.size(); i++)
-		{
-			TileMap* tileMap = _tileMaps[i];
-			if (tileMap) {
-				for (auto it = tileMap->getTiles().begin(); it != tileMap->getTiles().end(); ++it) {
-					Tile* tile = *it;
-					if (!tile || tile->getTileIndex() < 0) {
-						continue;
-					}
-					_objectManager.removeObject(tile);
-				}
-				delete tileMap;
-			}
-		}
-	}
-	_tileMaps.clear();
-
-	SAFE_DELETE(_tileSet);
-	SAFE_DELETE(_background);
-	SAFE_DELETE(_pixel);
-	SAFE_DELETE(_camera);
+	
+	_levelManager.shutdown(_objectManager, _renderList);
 
 	Engine2D::getGame()->getPlayers()->destroy(_player);
 

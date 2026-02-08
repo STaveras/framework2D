@@ -68,7 +68,7 @@ void ObjectManager::removeObject(GameObject* object)
 
 				object->finish(); m_mObjects.erase(itr);
 
-				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object); 
+				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object, Event::event_priority_immediate); 
 				
 				break;
 			}
@@ -88,7 +88,7 @@ void ObjectManager::removeObject(const char* name)
 			{
 				object->finish(); m_mObjects.erase(itr);
 
-				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object); 
+				Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object, Event::event_priority_immediate); 
 				
 				break;
 			}
