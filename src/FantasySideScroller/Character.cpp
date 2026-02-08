@@ -975,9 +975,6 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		if (Renderable* renderable = tile->getRenderable()) {
 			renderable->setVisibility(false);
 		}
-		if (Collidable* collidable = tile->getCollidable()) {
-			collidable->setActive(false);
-		}
 	}
 }
 
@@ -992,8 +989,16 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 		return NULL;
 	}
 
-	if (tile->getTileType() == "key" && contact.phase == CollisionPhase::Enter) {
-		return "DEATH";
+	if (tile->getTileType() == "key") {
+
+		if (Collidable* collidable = tile->getCollidable()) {	
+
+			if (tile->getLayerCollisionMode() != TileCollisionMode::None && contact.phase == CollisionPhase::Enter) 
+			{
+				tile->setLayerCollisionMode(TileCollisionMode::None);
+				return "DEATH";
+			}
+		}
 	}
 
 	if (tile->getTileType() != "tile") {

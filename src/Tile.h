@@ -88,6 +88,13 @@ public:
       return _tileIndex;
    }
 
+   TileSet::TileInfo getTileInfo(void) const {
+      if (_tileSet && _tileIndex >= 0) {
+         return _tileSet->getTileInfo(_tileIndex);
+      }
+      return TileSet::TileInfo();
+   }
+
    std::string getTileType(void) const {
       return _tileSet->getTileInfo(_tileIndex)._typeName;
    }
