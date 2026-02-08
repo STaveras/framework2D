@@ -27,6 +27,14 @@ constexpr float kFootlineEpsilon = 0.001f;
 constexpr float kWallNormalThreshold = 0.55f;
 constexpr float kHorizontalSeparationEpsilon = 0.01f;
 constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
+constexpr float kStepUpAssistEpsilon = 0.05f;
+constexpr float kUpwardSnapMultiplier = 2.0f;
+constexpr float kUpwardSupportBias = 0.25f;
+constexpr float kSlopePriorityEpsilon = 0.25f;
+constexpr float kSlopeFootClearance = 0.1f;
+constexpr float kSupportSwitchHysteresis = 0.35f;
+constexpr float kUphillProbeDistance = 1.5f;
+constexpr float kUphillProbeMaxRise = 4.0f;
 
 bool isSquareOnlyCollidable(const Collidable* collidable)
 {
@@ -455,6 +463,111 @@ bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, flo
 	}
 }
 
+bool Character::_findSupportOnTile(const Tile* tile, float footY, float maxSnapDistance, float& outSupportY) const
+{
+	outSupportY = footY;
+	if (!tile || tile->getTileType() != "tile" || tile->isNonCollidingLayer()) {
+		return false;
+	}
+
+	if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
+		return false;
+	}
+
+	Collidable* body = ((Character*)this)->getCollidable();
+	if (!body || !body->isActive() || body->getType() != COL_OBJ_SQUARE) {
+		return false;
+	}
+
+	Collidable* tileCollidable = ((Tile*)tile)->getCollidable();
+	if (!tileCollidable || !tileCollidable->isActive()) {
+		return false;
+	}
+
+	Square* bodySquare = (Square*)body;
+	const vector2 bodyMin = bodySquare->getMin();
+	const vector2 bodyMax = bodySquare->getMax();
+	const float bodyWidth = bodyMax.x - bodyMin.x;
+	if (bodyWidth <= 0.0f) {
+		return false;
+	}
+
+	float sampleInset = std::min(kSupportSampleInset, bodyWidth * 0.45f);
+	if (sampleInset < 0.0f) {
+		sampleInset = 0.0f;
+	}
+
+	const float sampleXs[3] = {
+		bodyMin.x + sampleInset,
+		bodyMin.x + (bodyWidth * 0.5f),
+		bodyMax.x - sampleInset
+	};
+
+	struct TileSample {
+		bool hasSupport = false;
+		float supportY = 0.0f;
+		float deltaY = 0.0f;
+	};
+	TileSample samples[3];
+
+	const float maxUpwardSnapDistance = std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier);
+	const float maxDownwardSnapDistance = maxSnapDistance;
+	for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
+		float supportY = 0.0f;
+		if (!_sampleSupportY(tileCollidable, sampleXs[sampleIndex], supportY)) {
+			continue;
+		}
+
+		const float deltaY = supportY - footY;
+		if (deltaY < -maxUpwardSnapDistance || deltaY > maxDownwardSnapDistance) {
+			continue;
+		}
+
+		samples[sampleIndex].hasSupport = true;
+		samples[sampleIndex].supportY = supportY;
+		samples[sampleIndex].deltaY = deltaY;
+	}
+
+	int samplePriority[3] = { 1, 0, 2 };
+	const int horizontalIntent = _getHorizontalIntent();
+	if (horizontalIntent > 0) {
+		samplePriority[0] = 2;
+		samplePriority[1] = 1;
+		samplePriority[2] = 0;
+	}
+	else if (horizontalIntent < 0) {
+		samplePriority[0] = 0;
+		samplePriority[1] = 1;
+		samplePriority[2] = 2;
+	}
+
+	int bestDownwardSample = -1;
+	float bestDownwardDelta = std::numeric_limits<float>::max();
+	for (int i = 0; i < 3; ++i) {
+		const int sampleIndex = samplePriority[i];
+		if (!samples[sampleIndex].hasSupport) {
+			continue;
+		}
+
+		if (samples[sampleIndex].deltaY <= 0.0f) {
+			outSupportY = samples[sampleIndex].supportY;
+			return true;
+		}
+
+		if (samples[sampleIndex].deltaY < bestDownwardDelta) {
+			bestDownwardDelta = samples[sampleIndex].deltaY;
+			bestDownwardSample = sampleIndex;
+		}
+	}
+
+	if (bestDownwardSample >= 0) {
+		outSupportY = samples[bestDownwardSample].supportY;
+		return true;
+	}
+
+	return false;
+}
+
 Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, float& outSupportY)
 {
 	Collidable* body = this->getCollidable();
@@ -481,6 +594,20 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 		bodyMax.x - sampleInset
 	};
 
+	struct SupportCandidate {
+		Tile* upwardTile = NULL;
+		float upwardY = 0.0f;
+		float upwardDistance = std::numeric_limits<float>::max();
+		Tile* downwardTile = NULL;
+		float downwardY = 0.0f;
+		float downwardDelta = std::numeric_limits<float>::max();
+	};
+	SupportCandidate sampleCandidates[3];
+	for (SupportCandidate& candidate : sampleCandidates) {
+		candidate.upwardY = footY;
+		candidate.downwardY = footY;
+	}
+
 	Game* game = Engine2D::getGame();
 	if (!game || game->empty()) {
 		return NULL;
@@ -493,12 +620,17 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 	}
 
 	const auto& objects = activeGameState->getObjectManager()->getObjects();
-	Tile* bestUpwardSupportTile = NULL;
-	float bestUpwardSupportY = footY;
-	float bestUpwardDistance = std::numeric_limits<float>::max();
-	Tile* bestDownwardSupportTile = NULL;
-	float bestDownwardSupportY = footY;
-	float bestDownwardDelta = std::numeric_limits<float>::max();
+	const int horizontalIntent = _getHorizontalIntent();
+	const float maxUpwardSnapDistance = std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier);
+	const float maxDownwardSnapDistance = maxSnapDistance;
+	const bool useUphillProbe = horizontalIntent != 0;
+	const float uphillProbeX =
+		(horizontalIntent > 0) ?
+		(bodyMax.x + kUphillProbeDistance) :
+		(bodyMin.x - kUphillProbeDistance);
+	Tile* uphillProbeTile = NULL;
+	float uphillProbeY = footY;
+	float uphillProbeRise = std::numeric_limits<float>::max();
 
 	for (const auto& entry : objects) {
 		GameObject* object = entry.second;
@@ -524,14 +656,15 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 			continue;
 		}
 
-		for (float sampleX : sampleXs) {
+		for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
+			const float sampleX = sampleXs[sampleIndex];
 			float supportY = 0.0f;
 			if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
 				continue;
 			}
 
 			const float deltaY = supportY - footY;
-			if (deltaY < -maxSnapDistance || deltaY > maxSnapDistance) {
+			if (deltaY < -maxUpwardSnapDistance || deltaY > maxDownwardSnapDistance) {
 				continue;
 			}
 
@@ -539,28 +672,118 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 			// before supports that move the character farther downward.
 			if (deltaY <= 0.0f) {
 				const float distance = std::fabs(deltaY);
-				if (distance < bestUpwardDistance) {
-					bestUpwardDistance = distance;
-					bestUpwardSupportY = supportY;
-					bestUpwardSupportTile = tile;
+				if (distance < sampleCandidates[sampleIndex].upwardDistance) {
+					sampleCandidates[sampleIndex].upwardDistance = distance;
+					sampleCandidates[sampleIndex].upwardY = supportY;
+					sampleCandidates[sampleIndex].upwardTile = tile;
 				}
 			}
-			else if (deltaY < bestDownwardDelta) {
-				bestDownwardDelta = deltaY;
-				bestDownwardSupportY = supportY;
-				bestDownwardSupportTile = tile;
+			else if (deltaY < sampleCandidates[sampleIndex].downwardDelta) {
+				sampleCandidates[sampleIndex].downwardDelta = deltaY;
+				sampleCandidates[sampleIndex].downwardY = supportY;
+				sampleCandidates[sampleIndex].downwardTile = tile;
 			}
+		}
+
+		if (!useUphillProbe || isSquareOnlyCollidable(tileCollidable)) {
+			continue;
+		}
+
+		float probeSupportY = 0.0f;
+		if (!_sampleSupportY(tileCollidable, uphillProbeX, probeSupportY)) {
+			continue;
+		}
+
+		const float probeDeltaY = probeSupportY - footY;
+		if (probeDeltaY > -kStepUpAssistEpsilon || probeDeltaY < -maxUpwardSnapDistance) {
+			continue;
+		}
+
+		const float rise = std::fabs(probeDeltaY);
+		if (rise > kUphillProbeMaxRise) {
+			continue;
+		}
+
+		if (rise < uphillProbeRise) {
+			uphillProbeRise = rise;
+			uphillProbeY = probeSupportY;
+			uphillProbeTile = tile;
+		}
+	}
+	Tile* preferredTiles[3] = { NULL, NULL, NULL };
+	float preferredYs[3] = { footY, footY, footY };
+	bool hasPreferred[3] = { false, false, false };
+	for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
+		SupportCandidate& candidate = sampleCandidates[sampleIndex];
+		const bool hasUpwardCandidate = candidate.upwardTile != NULL;
+		const bool hasDownwardCandidate = candidate.downwardTile != NULL;
+		if (!hasUpwardCandidate && !hasDownwardCandidate) {
+			continue;
+		}
+
+		hasPreferred[sampleIndex] = true;
+		if (hasUpwardCandidate && hasDownwardCandidate) {
+			const bool preferUpward = candidate.upwardDistance <= (candidate.downwardDelta + kUpwardSupportBias);
+			if (preferUpward) {
+				preferredTiles[sampleIndex] = candidate.upwardTile;
+				preferredYs[sampleIndex] = candidate.upwardY;
+			}
+			else {
+				preferredTiles[sampleIndex] = candidate.downwardTile;
+				preferredYs[sampleIndex] = candidate.downwardY;
+			}
+			continue;
+		}
+
+		if (hasUpwardCandidate) {
+			preferredTiles[sampleIndex] = candidate.upwardTile;
+			preferredYs[sampleIndex] = candidate.upwardY;
+		}
+		else {
+			preferredTiles[sampleIndex] = candidate.downwardTile;
+			preferredYs[sampleIndex] = candidate.downwardY;
 		}
 	}
 
-	if (bestUpwardSupportTile) {
-		outSupportY = bestUpwardSupportY;
-		return bestUpwardSupportTile;
+	int samplePriority[3] = { 1, 0, 2 };
+	if (horizontalIntent > 0) {
+		samplePriority[0] = 2;
+		samplePriority[1] = 1;
+		samplePriority[2] = 0;
+
+		// When descending to the right, prefer center support to avoid embedding into slopes.
+		if (hasPreferred[1] && hasPreferred[2] && preferredYs[2] > (preferredYs[1] + kSlopePriorityEpsilon)) {
+			samplePriority[0] = 1;
+			samplePriority[1] = 2;
+			samplePriority[2] = 0;
+		}
+	}
+	else if (horizontalIntent < 0) {
+		samplePriority[0] = 0;
+		samplePriority[1] = 1;
+		samplePriority[2] = 2;
+
+		// Symmetric downhill behavior for leftward movement.
+		if (hasPreferred[1] && hasPreferred[0] && preferredYs[0] > (preferredYs[1] + kSlopePriorityEpsilon)) {
+			samplePriority[0] = 1;
+			samplePriority[1] = 0;
+			samplePriority[2] = 2;
+		}
 	}
 
-	if (bestDownwardSupportTile) {
-		outSupportY = bestDownwardSupportY;
-		return bestDownwardSupportTile;
+	if (uphillProbeTile) {
+		outSupportY = uphillProbeY;
+		return uphillProbeTile;
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		const int sampleIndex = samplePriority[i];
+		if (!hasPreferred[sampleIndex] || !preferredTiles[sampleIndex]) {
+			continue;
+		}
+
+		outSupportY = preferredYs[sampleIndex];
+		return preferredTiles[sampleIndex];
 	}
 
 	return NULL;
@@ -1000,8 +1223,8 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		tile->getTileType() == "tile" &&
 		!tile->isNonCollidingLayer() &&
 		(!_isOneWayTile(tile) || _canCollideWithOneWayTile(tile)) &&
-		contact.normal.has_value() &&
-		isSquareOnlyCollidable(contact.otherCollidable)) {
+		contact.normal.has_value()) {
+		const bool squareOnlySideContact = isSquareOnlyCollidable(contact.otherCollidable);
 		const int horizontalIntent = _getHorizontalIntent();
 		if (horizontalIntent != 0) {
 			const vector2 normal = contact.normal.value();
@@ -1011,16 +1234,56 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 					(horizontalIntent > 0 && normal.x > 0.0f) ||
 					(horizontalIntent < 0 && normal.x < 0.0f);
 				if (pushingIntoWall) {
-					float separationX = kHorizontalSeparationEpsilon;
-					if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
-						separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
+					float maxStepUpDistance = kDefaultMaxSnapPerFrame;
+					Tile* stepContextTile = tile ? tile : _tile;
+					if (stepContextTile && stepContextTile->getTileSet()) {
+						maxStepUpDistance = std::max(1.0f, stepContextTile->getTileSet()->getTileSize() * 0.5f);
 					}
-					separationX = std::min(separationX, kMaxHorizontalSeparationPerContact);
 
-					// Keep tile side contacts from letting horizontal motion push inside walls.
-					this->setPosition(
-						this->getPosition().x - std::copysign(separationX, normal.x),
-						this->getPosition().y);
+					float footY = this->getPosition().y;
+					if (Collidable* bodyCollidable = this->getCollidable()) {
+						if (bodyCollidable->getType() == COL_OBJ_SQUARE) {
+							Square* bodySquare = (Square*)bodyCollidable;
+							footY = bodySquare->getMax().y;
+						}
+					}
+
+					bool isGroundedForStepAssist = false;
+					if (_timeWithoutGroundContact < kGroundLossGraceSeconds) {
+						if (GameObjectState* currentState = this->getState()) {
+							const char* stateName = currentState->getName();
+							isGroundedForStepAssist =
+								_isGroundedLocomotionState(stateName) ||
+								!strcmp(stateName, "Attack01") ||
+								!strcmp(stateName, "Attack02");
+						}
+					}
+
+					if (isGroundedForStepAssist) {
+						float stepSupportY = footY;
+						Tile* stepSupportTile = _findGroundSupportTile(footY, maxStepUpDistance, stepSupportY);
+						const float stepDeltaY = stepSupportY - footY;
+						if (stepSupportTile && stepDeltaY < -kStepUpAssistEpsilon) {
+							// Help transition from flat square tops to uphill supports (slopes/stairs).
+							this->setPosition(
+								this->getPosition().x,
+								this->getPosition().y + std::max(-maxStepUpDistance, stepDeltaY));
+							return;
+						}
+					}
+
+					if (squareOnlySideContact) {
+						float separationX = kHorizontalSeparationEpsilon;
+						if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
+							separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
+						}
+						separationX = std::min(separationX, kMaxHorizontalSeparationPerContact);
+
+						// Keep tile side contacts from letting horizontal motion push inside walls.
+						this->setPosition(
+							this->getPosition().x - std::copysign(separationX, normal.x),
+							this->getPosition().y);
+					}
 				}
 			}
 		}
@@ -1183,6 +1446,15 @@ void Character::update(float time)
 
 	float supportY = footY;
 	Tile* supportTile = _findGroundSupportTile(footY, maxSnapPerFrame, supportY);
+	if (supportTile && _tile && supportTile != _tile) {
+		float stickySupportY = footY;
+		if (_findSupportOnTile(_tile, footY, maxSnapPerFrame, stickySupportY) &&
+			std::fabs(stickySupportY - supportY) <= kSupportSwitchHysteresis) {
+			supportTile = _tile;
+			supportY = stickySupportY;
+		}
+	}
+
 	bool hasGroundSupport = (supportTile != NULL);
 	if (supportTile) {
 		_tile = supportTile;
@@ -1207,7 +1479,17 @@ void Character::update(float time)
 			!strcmp(stateName, "Attack02");
 
 		if (hasGroundSupport && shouldApplyGroundSnap) {
-			float deltaY = supportY - footY;
+			float targetFootY = supportY;
+			if (supportTile) {
+				if (Collidable* supportCollidable = supportTile->getCollidable()) {
+					if (!isSquareOnlyCollidable(supportCollidable)) {
+						// Keep the character slightly above sloped/polygon supports to avoid visible embedding.
+						targetFootY -= kSlopeFootClearance;
+					}
+				}
+			}
+
+			float deltaY = targetFootY - footY;
 			if (std::fabs(deltaY) > 0.001f) {
 				deltaY = std::max(-maxSnapPerFrame, std::min(maxSnapPerFrame, deltaY));
 				this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
