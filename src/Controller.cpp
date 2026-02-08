@@ -1,6 +1,30 @@
 
 #include "Controller.h"
 
+void Controller::addAction(Action action)
+{
+	Action* existingAction = this->getAction(action.getActionName());
+	if (!existingAction) {
+		_actions.push_back(action);
+		return;
+	}
+
+	std::list<Keyboard::KEY>& existingAssignments = existingAction->getAssignments();
+	for (Keyboard::KEY assignment : action.getAssignments()) {
+		bool alreadyAssigned = false;
+		for (Keyboard::KEY existingAssignment : existingAssignments) {
+			if (existingAssignment == assignment) {
+				alreadyAssigned = true;
+				break;
+			}
+		}
+
+		if (!alreadyAssigned) {
+			existingAction->assign(assignment);
+		}
+	}
+}
+
 Action* Controller::getAction(std::string actionName)
 {
 	std::list<Action>::iterator itr = _actions.begin();
