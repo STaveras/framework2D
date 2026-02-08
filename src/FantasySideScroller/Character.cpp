@@ -21,7 +21,7 @@ constexpr float kSupportSampleInset = 2.0f;
 constexpr float kDefaultMaxSnapPerFrame = 8.0f;
 constexpr float kGroundNormalThreshold = 0.2f;
 constexpr float kOneWayTopApproachEpsilon = 1.0f;
-constexpr float kLocomotionFootLocalY = 22.0f;
+constexpr float kLocomotionFootLocalY = 24.0f;
 constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
 }
