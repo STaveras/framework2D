@@ -143,31 +143,23 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	D3DXVECTOR2 screenPosition = worldToScreen(m_pCamera, worldPosition);
 	const float cameraZoom = (m_pCamera && m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
 	const D3DXVECTOR2 spriteScale = image->getScale();
-	const float mirrorSignX = (spriteScale.x < 0.0f) ? -1.0f : 1.0f;
-	const float mirrorSignY = (spriteScale.y < 0.0f) ? -1.0f : 1.0f;
 
 	D3DXVECTOR3 position;
-	// Preserve legacy mirror semantics for DirectX sprites: mirrored axes
-	// use signed draw-position, while zoom is handled separately via scale.
-	position.x = screenPosition.x * mirrorSignX;
-	position.y = screenPosition.y * mirrorSignY;
+	position.x = screenPosition.x;
+	position.y = screenPosition.y;
 	position.z = zValue;
 
-	D3DXVECTOR2 rectCenter = image->getRectCenter();
 	D3DXVECTOR2 scale = spriteScale;
 	scale.x *= cameraZoom;
 	scale.y *= cameraZoom;
-	D3DXVECTOR2 center = image->getCenter();
+	D3DXVECTOR2 transformPivot(position.x, position.y);
 
 	D3DXMATRIX transform;
-	D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
+	// Important: scale/rotate around the sprite's resolved screen anchor,
+	// not a fixed rect-local point. This keeps tile spacing stable when zoom changes.
+	D3DXMatrixTransformation2D(&transform, &transformPivot, 0.0f, &scale, &transformPivot, image->getRotation(), NULL);
 
-	// Keep sprite pivot tied to sprite-local mirror/scale only.
-	// Camera zoom should affect transform scale, not draw-origin center.
-	D3DXVECTOR3 center3D = D3DXVECTOR3(
-		image->getCenter().x * image->getScale().x,
-		image->getCenter().y * image->getScale().y,
-		0.0f);
+	D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x, image->getCenter().y, 0.0f);
 
 	// No mipmaps, and nearest neighbor/point filtering 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
