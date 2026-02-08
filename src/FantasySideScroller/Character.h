@@ -18,7 +18,6 @@ class Character : public GameObject
 	float _timeWithoutGroundContact = 0.0f;
 	float _pendingTransitionFootCorrection = 0.0f;
 	float _dropThroughTimer = 0.0f;
-	bool _resolvedHorizontalPenetrationThisFrame = false;
 
 	// Initialize animation states and hitboxes
 	void _initStates();
@@ -30,6 +29,7 @@ class Character : public GameObject
 	bool _canCollideWithOneWayTile(const Tile* tile) const;
 	bool _isGroundContact(const CollisionContact& contact) const;
 	bool _isGroundedLocomotionState(const char* stateName) const;
+	int _getHorizontalIntent() const;
 	bool _getStateFootLocalY(const GameObjectState* state, float& outFootY) const;
 	void _refreshGroundTile();
 	bool _sampleSupportY(const Collidable* collidable, float sampleX, float& outY) const;

@@ -26,6 +26,34 @@ constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
 constexpr float kWallNormalThreshold = 0.55f;
 constexpr float kHorizontalSeparationEpsilon = 0.01f;
+constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
+
+bool isSquareOnlyCollidable(const Collidable* collidable)
+{
+	if (!collidable || !collidable->isActive()) {
+		return false;
+	}
+
+	switch (collidable->getType()) {
+	case COL_OBJ_SQUARE:
+		return true;
+	case COL_OBJ_GROUP: {
+		const CollidableGroup* group = (const CollidableGroup*)collidable;
+		if (!group || group->empty()) {
+			return false;
+		}
+
+		for (const Collidable* member : *group) {
+			if (!isSquareOnlyCollidable(member)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	default:
+		return false;
+	}
+}
 }
 
 Character::Character(void) : 
@@ -200,6 +228,38 @@ bool Character::_isGroundedLocomotionState(const char* stateName) const
 		!strcmp(stateName, "RunningLeft") ||
 		!strcmp(stateName, "RunningRight") ||
 		!strcmp(stateName, "Landing");
+}
+
+int Character::_getHorizontalIntent() const
+{
+	Game* game = Engine2D::getGame();
+	if (!game) {
+		return 0;
+	}
+
+	Player* player = game->getPlayerWith((GameObject*)this);
+	if (!player || !player->getController()) {
+		return 0;
+	}
+
+	Controller* controller = player->getController();
+	Action* leftAction = controller->getAction("LEFT");
+	Action* rightAction = controller->getAction("RIGHT");
+	const bool leftActive = leftAction && leftAction->isActive();
+	const bool rightActive = rightAction && rightAction->isActive();
+
+	if (leftActive == rightActive) {
+		const float vx = this->getVelocity().x;
+		if (vx > 0.001f) {
+			return 1;
+		}
+		if (vx < -0.001f) {
+			return -1;
+		}
+		return 0;
+	}
+
+	return rightActive ? 1 : -1;
 }
 
 bool Character::_getStateFootLocalY(const GameObjectState* state, float& outFootY) const
@@ -936,25 +996,33 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		_refreshGroundTile();
 	}
 
-	if (!_resolvedHorizontalPenetrationThisFrame &&
-		contact.overlapping &&
+	if (contact.overlapping &&
 		tile->getTileType() == "tile" &&
 		!tile->isNonCollidingLayer() &&
 		(!_isOneWayTile(tile) || _canCollideWithOneWayTile(tile)) &&
-		contact.normal.has_value()) {
-		const vector2 normal = contact.normal.value();
-		const float absNormalX = std::fabs(normal.x);
-		if (absNormalX > kWallNormalThreshold && absNormalX > std::fabs(normal.y)) {
-			float separationX = kHorizontalSeparationEpsilon;
-			if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
-				separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
-			}
+		contact.normal.has_value() &&
+		isSquareOnlyCollidable(contact.otherCollidable)) {
+		const int horizontalIntent = _getHorizontalIntent();
+		if (horizontalIntent != 0) {
+			const vector2 normal = contact.normal.value();
+			const float absNormalX = std::fabs(normal.x);
+			if (absNormalX > kWallNormalThreshold && absNormalX > std::fabs(normal.y)) {
+				const bool pushingIntoWall =
+					(horizontalIntent > 0 && normal.x > 0.0f) ||
+					(horizontalIntent < 0 && normal.x < 0.0f);
+				if (pushingIntoWall) {
+					float separationX = kHorizontalSeparationEpsilon;
+					if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
+						separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
+					}
+					separationX = std::min(separationX, kMaxHorizontalSeparationPerContact);
 
-			// Keep tile side contacts from letting horizontal motion push inside walls.
-			this->setPosition(
-				this->getPosition().x - std::copysign(separationX, normal.x),
-				this->getPosition().y);
-			_resolvedHorizontalPenetrationThisFrame = true;
+					// Keep tile side contacts from letting horizontal motion push inside walls.
+					this->setPosition(
+						this->getPosition().x - std::copysign(separationX, normal.x),
+						this->getPosition().y);
+				}
+			}
 		}
 	}
 
@@ -1071,7 +1139,6 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 
 void Character::update(float time)
 {
-	_resolvedHorizontalPenetrationThisFrame = false;
 	GameObject::update(time);
 
 	if (_dropThroughTimer > 0.0f) {
