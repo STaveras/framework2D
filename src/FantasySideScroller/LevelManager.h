@@ -48,6 +48,9 @@ class LevelManager
 	std::vector<IRenderer::RenderList*> _mapLayerRenderLists;
 	bool _hasSpawnPoint = false;
 	vector2 _spawnPoint;
+	bool _hasLevelBounds = false;
+	vector2 _levelBoundsMin;
+	vector2 _levelBoundsMax;
 	int _runtimeLayerIndex = -1;
 	std::vector<LevelTriggerDescriptor> _triggerDescriptors;
 	AttachObjectsOperator _cameraPlayerAttach;
@@ -55,6 +58,8 @@ class LevelManager
 
 	TileMapLoadResult loadMapDataIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, GameState& gameState, const vector2& mapOffset);
 	void clearCachedMapMetadata(void);
+	void refreshLevelBounds(const TileMapLoadResult& loadResult, const vector2& mapOffset);
+	void clampCameraToLevelBounds(void);
 
 public:
 	LevelManager(void);

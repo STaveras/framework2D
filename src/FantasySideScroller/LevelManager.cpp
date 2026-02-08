@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -52,6 +53,17 @@ bool isValidLayerIndex(int index, size_t size)
 {
 	return index >= 0 && (size_t)index < size;
 }
+
+float clampValue(float value, float minValue, float maxValue)
+{
+	if (value < minValue) {
+		return minValue;
+	}
+	if (value > maxValue) {
+		return maxValue;
+	}
+	return value;
+}
 }
 
 LevelManager::LevelManager(void) {}
@@ -62,8 +74,116 @@ void LevelManager::clearCachedMapMetadata(void)
 {
 	_hasSpawnPoint = false;
 	_spawnPoint = vector2(0.0f, 0.0f);
+	_hasLevelBounds = false;
+	_levelBoundsMin = vector2(0.0f, 0.0f);
+	_levelBoundsMax = vector2(0.0f, 0.0f);
 	_runtimeLayerIndex = -1;
 	_triggerDescriptors.clear();
+}
+
+void LevelManager::refreshLevelBounds(const TileMapLoadResult& loadResult, const vector2& mapOffset)
+{
+	_hasLevelBounds = false;
+	_levelBoundsMin = vector2(0.0f, 0.0f);
+	_levelBoundsMax = vector2(0.0f, 0.0f);
+
+	float minX = std::numeric_limits<float>::max();
+	float minY = std::numeric_limits<float>::max();
+	float maxX = std::numeric_limits<float>::lowest();
+	float maxY = std::numeric_limits<float>::lowest();
+
+	auto includeRect = [&](float left, float top, float right, float bottom) {
+		minX = std::min(minX, left);
+		minY = std::min(minY, top);
+		maxX = std::max(maxX, right);
+		maxY = std::max(maxY, bottom);
+		_hasLevelBounds = true;
+	};
+
+	for (TileMap* tileMap : loadResult.tileMaps) {
+		if (!tileMap) {
+			continue;
+		}
+
+		float tileWidth = tileMap->getTileSet() ? tileMap->getTileSet()->getTileSize() : 0.0f;
+		float tileHeight = tileWidth;
+		if (tileWidth <= 0.0f && loadResult.tileWidth > 0) {
+			tileWidth = (float)loadResult.tileWidth;
+		}
+		if (tileHeight <= 0.0f && loadResult.tileHeight > 0) {
+			tileHeight = (float)loadResult.tileHeight;
+		}
+		if (tileWidth <= 0.0f || tileHeight <= 0.0f) {
+			continue;
+		}
+
+		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
+		const float left = mapOffset.x + layerConfig.offsetX + ((float)layerConfig.startX * tileWidth);
+		const float top = mapOffset.y + layerConfig.offsetY + ((float)layerConfig.startY * tileHeight);
+		const float right = left + ((float)tileMap->getMapWidth() * tileWidth);
+		const float bottom = top + ((float)tileMap->getMapHeight() * tileHeight);
+
+		includeRect(
+			std::min(left, right),
+			std::min(top, bottom),
+			std::max(left, right),
+			std::max(top, bottom));
+	}
+
+	if (!_hasLevelBounds && loadResult.mapWidth > 0 && loadResult.mapHeight > 0) {
+		float tileWidth = (float)((loadResult.tileWidth > 0) ? loadResult.tileWidth : loadResult.tileHeight);
+		float tileHeight = (float)((loadResult.tileHeight > 0) ? loadResult.tileHeight : loadResult.tileWidth);
+		if (tileWidth > 0.0f && tileHeight > 0.0f) {
+			const float left = mapOffset.x;
+			const float top = mapOffset.y;
+			const float right = left + ((float)loadResult.mapWidth * tileWidth);
+			const float bottom = top + ((float)loadResult.mapHeight * tileHeight);
+
+			includeRect(
+				std::min(left, right),
+				std::min(top, bottom),
+				std::max(left, right),
+				std::max(top, bottom));
+		}
+	}
+
+	if (_hasLevelBounds) {
+		_levelBoundsMin = vector2(minX, minY);
+		_levelBoundsMax = vector2(maxX, maxY);
+	}
+}
+
+void LevelManager::clampCameraToLevelBounds(void)
+{
+	if (!_camera || !_hasLevelBounds) {
+		return;
+	}
+
+	const float zoom = (_camera->getZoom() > 0.0f) ? _camera->getZoom() : 1.0f;
+	const float halfScreenWidth = ((float)_camera->getScreenWidth() * 0.5f) / zoom;
+	const float halfScreenHeight = ((float)_camera->getScreenHeight() * 0.5f) / zoom;
+
+	const float minCameraX = _levelBoundsMin.x + halfScreenWidth;
+	const float maxCameraX = _levelBoundsMax.x - halfScreenWidth;
+	const float minCameraY = _levelBoundsMin.y + halfScreenHeight;
+	const float maxCameraY = _levelBoundsMax.y - halfScreenHeight;
+
+	vector2 cameraPosition = _camera->getPosition();
+	if (minCameraX <= maxCameraX) {
+		cameraPosition.x = clampValue(cameraPosition.x, minCameraX, maxCameraX);
+	}
+	else {
+		cameraPosition.x = (_levelBoundsMin.x + _levelBoundsMax.x) * 0.5f;
+	}
+
+	if (minCameraY <= maxCameraY) {
+		cameraPosition.y = clampValue(cameraPosition.y, minCameraY, maxCameraY);
+	}
+	else {
+		cameraPosition.y = (_levelBoundsMin.y + _levelBoundsMax.y) * 0.5f;
+	}
+
+	_camera->setPosition(cameraPosition);
 }
 
 TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, GameState& gameState, const vector2& mapOffset)
@@ -131,6 +251,8 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 			objectManager.addObject(objectName.c_str(), tile);
 		}
 	}
+
+	refreshLevelBounds(loadResult, mapOffset);
 
 	for (const MapLayerDescriptor& layer : loadResult.layers) {
 		if (layer.type != "objectgroup" || !isValidLayerIndex(layer.typedIndex, loadResult.objectLayers.size())) {
@@ -277,6 +399,8 @@ void LevelManager::attachCameraTo(GameObject* target, ObjectManager& objectManag
 
 void LevelManager::update(void)
 {
+	clampCameraToLevelBounds();
+
 	if (_background && _camera) {
 		_background->setPosition(_camera->getPosition());
 	}
