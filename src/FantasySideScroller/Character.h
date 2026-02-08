@@ -18,6 +18,7 @@ class Character : public GameObject
 	float _timeWithoutGroundContact = 0.0f;
 	float _pendingTransitionFootCorrection = 0.0f;
 	float _dropThroughTimer = 0.0f;
+	bool _resolvedHorizontalPenetrationThisFrame = false;
 
 	// Initialize animation states and hitboxes
 	void _initStates();

@@ -24,6 +24,8 @@ constexpr float kOneWayTopApproachEpsilon = 1.0f;
 constexpr float kLocomotionFootLocalY = 24.0f;
 constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
+constexpr float kWallNormalThreshold = 0.55f;
+constexpr float kHorizontalSeparationEpsilon = 0.01f;
 }
 
 Character::Character(void) : 
@@ -934,6 +936,28 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		_refreshGroundTile();
 	}
 
+	if (!_resolvedHorizontalPenetrationThisFrame &&
+		contact.overlapping &&
+		tile->getTileType() == "tile" &&
+		!tile->isNonCollidingLayer() &&
+		(!_isOneWayTile(tile) || _canCollideWithOneWayTile(tile)) &&
+		contact.normal.has_value()) {
+		const vector2 normal = contact.normal.value();
+		const float absNormalX = std::fabs(normal.x);
+		if (absNormalX > kWallNormalThreshold && absNormalX > std::fabs(normal.y)) {
+			float separationX = kHorizontalSeparationEpsilon;
+			if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
+				separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
+			}
+
+			// Keep tile side contacts from letting horizontal motion push inside walls.
+			this->setPosition(
+				this->getPosition().x - std::copysign(separationX, normal.x),
+				this->getPosition().y);
+			_resolvedHorizontalPenetrationThisFrame = true;
+		}
+	}
+
 #if _DEBUG
 	if (DEBUGGING && Debug::dbgCollision && Debug::dbgTiles)
 	{
@@ -1047,6 +1071,7 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 
 void Character::update(float time)
 {
+	_resolvedHorizontalPenetrationThisFrame = false;
 	GameObject::update(time);
 
 	if (_dropThroughTimer > 0.0f) {
