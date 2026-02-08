@@ -96,37 +96,35 @@ bool PlayState::onExecute(float time)
 		Engine2D::quit();
 	}
 
-	if (DEBUGGING) {
+	if (DEBUGGING) 
+	{
 		Camera* camera = _levelManager.getCamera();
-		if (!camera) {
-			return GameState::onExecute(time);
+		if (camera) {
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
+				camera->setZoom(camera->getZoom() + 0.1f);
+			}
+
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
+				camera->setZoom(1.0f);
+			}
+
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
+				camera->setZoom(camera->getZoom() - 0.1f);
+			}
+
+			if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
+				const Camera::ZoomAnchorMode nextMode =
+					(camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
+					Camera::ZoomAnchorMode::OriginLegacy :
+					Camera::ZoomAnchorMode::TargetCenter;
+				camera->setZoomAnchorMode(nextMode);
+
+				char buffer[128]{ 0 };
+				sprintf_s(buffer, sizeof(buffer), "Camera Zoom Anchor: %s\n",
+					(nextMode == Camera::ZoomAnchorMode::TargetCenter) ? "TargetCenter" : "OriginLegacy");
+				DEBUG_MSG(buffer);
+			}
 		}
-
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
-			camera->setZoom(camera->getZoom() + 0.1f);
-		}
-
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
-			camera->setZoom(1.0f);
-		}
-
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
-			camera->setZoom(camera->getZoom() - 0.1f);
-		}
-
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
-			const Camera::ZoomAnchorMode nextMode =
-				(camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
-				Camera::ZoomAnchorMode::OriginLegacy :
-				Camera::ZoomAnchorMode::TargetCenter;
-			camera->setZoomAnchorMode(nextMode);
-
-			char buffer[128]{ 0 };
-			sprintf_s(buffer, sizeof(buffer), "Camera Zoom Anchor: %s\n",
-				(nextMode == Camera::ZoomAnchorMode::TargetCenter) ? "TargetCenter" : "OriginLegacy");
-			DEBUG_MSG(buffer);
-		}
-
 		if (keyboard->keyPressed(keyboard->getKeys().KBK_F3)) {
 			Debug::dbgCollision = !Debug::dbgCollision;
 
@@ -136,9 +134,10 @@ bool PlayState::onExecute(float time)
 			DEBUG_MSG(buffer);
 		}
 	}
-	_levelManager.update();
 
-	return GameState::onExecute(time);
+	const bool keepRunning = GameState::onExecute(time);
+	_levelManager.update();
+	return keepRunning;
 }
 
 void PlayState::onExit(State* next)
