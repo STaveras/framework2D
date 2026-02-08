@@ -40,6 +40,12 @@
          "id":2,
          "name":"item",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"collision_mode",
+                 "type":"string",
+                 "value":"one_way"
+                }],
          "startx":0,
          "starty":0,
          "type":"tilelayer",
@@ -137,6 +143,12 @@
          "id":1,
          "name":"main",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"collision_mode",
+                 "type":"string",
+                 "value":"solid"
+                }],
          "startx":0,
          "starty":0,
          "type":"tilelayer",
