@@ -3,14 +3,16 @@
 
 #include "../Camera.h"
 #include "../Engine2D.h"
+#include "../GameState.h"
 #include "../ObjectManager.h"
 #include "../Renderer.h"
-#include "../TileMap.h"
 
 #include "Resources.h"
 
+#include <algorithm>
 #include <cctype>
 #include <string>
+#include <utility>
 
 namespace {
 std::string sanitizeLayerName(const std::string& value)
@@ -31,23 +33,86 @@ std::string sanitizeLayerName(const std::string& value)
 	}
 	return sanitized;
 }
+
+std::string toLowerCopy(const std::string& value)
+{
+	std::string lowered = value;
+	std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
+		return (char)std::tolower(c);
+	});
+	return lowered;
+}
+
+bool isSpawnType(const std::string& typeName)
+{
+	return toLowerCopy(typeName) == "spawn";
+}
+
+bool isValidLayerIndex(int index, size_t size)
+{
+	return index >= 0 && (size_t)index < size;
+}
 }
 
 LevelManager::LevelManager(void) {}
 
 LevelManager::~LevelManager(void) {}
 
-std::vector<TileMap*> LevelManager::loadTileMapsIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, const vector2& mapOffset)
+void LevelManager::clearCachedMapMetadata(void)
 {
-	std::vector<TileMap*> tileMaps = TileMap::loadFromJSONFile(BasePath(mapFileName).c_str(), nullptr, false);
+	_hasSpawnPoint = false;
+	_spawnPoint = vector2(0.0f, 0.0f);
+	_runtimeLayerIndex = -1;
+	_triggerDescriptors.clear();
+}
 
-	for (TileMap* tileMap : tileMaps) {
+TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, GameState& gameState, const vector2& mapOffset)
+{
+	TileMapLoadResult loadResult = TileMap::loadMapDataFromJSONFile(BasePath(mapFileName).c_str(), nullptr, false);
+	IRenderer* renderer = Engine2D::getRenderer();
+	if (!renderer) {
+		return loadResult;
+	}
+
+	for (size_t i = 0; i < loadResult.layers.size(); ++i) {
+		_mapLayerRenderLists.push_back(renderer->createRenderList());
+	}
+
+	_runtimeLayerIndex = -1;
+	for (const MapLayerDescriptor& layer : loadResult.layers) {
+		if (layer.type == "objectgroup") {
+			_runtimeLayerIndex = layer.traversalIndex;
+			break;
+		}
+	}
+	if (_runtimeLayerIndex < 0 && !_mapLayerRenderLists.empty()) {
+		_runtimeLayerIndex = (int)_mapLayerRenderLists.size() - 1;
+	}
+
+	IRenderer::RenderList* runtimeRenderList = gameState.getBaseRenderList();
+	if (isValidLayerIndex(_runtimeLayerIndex, _mapLayerRenderLists.size())) {
+		runtimeRenderList = _mapLayerRenderLists[(size_t)_runtimeLayerIndex];
+	}
+	gameState.setDefaultRenderList(runtimeRenderList);
+
+	for (const MapLayerDescriptor& layer : loadResult.layers) {
+		if (layer.type != "tilelayer" || !isValidLayerIndex(layer.typedIndex, loadResult.tileMaps.size())) {
+			continue;
+		}
+
+		TileMap* tileMap = loadResult.tileMaps[(size_t)layer.typedIndex];
 		if (!tileMap) {
 			continue;
 		}
 
+		_tileMaps.push_back(tileMap);
 		tileMap->setPosition(mapOffset);
 		tileMap->arrangeTiles();
+
+		IRenderer::RenderList* layerRenderList = gameState.getBaseRenderList();
+		if (isValidLayerIndex(layer.traversalIndex, _mapLayerRenderLists.size())) {
+			layerRenderList = _mapLayerRenderLists[(size_t)layer.traversalIndex];
+		}
 
 		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
 		const std::string safeLayerName = sanitizeLayerName(layerConfig.name);
@@ -60,19 +125,97 @@ std::vector<TileMap*> LevelManager::loadTileMapsIntoObjectManager(const char* ma
 				continue;
 			}
 
+			gameState.routeObjectToRenderList(tile, layerRenderList);
+
 			std::string objectName = layerPrefix + "_tile_" + std::to_string(tileIndex);
 			objectManager.addObject(objectName.c_str(), tile);
 		}
 	}
 
-	return tileMaps;
+	for (const MapLayerDescriptor& layer : loadResult.layers) {
+		if (layer.type != "objectgroup" || !isValidLayerIndex(layer.typedIndex, loadResult.objectLayers.size())) {
+			continue;
+		}
+
+		const TileObjectLayerDescriptor& objectLayer = loadResult.objectLayers[(size_t)layer.typedIndex];
+		for (const TileObjectDescriptor& object : objectLayer.objects) {
+			const vector2 worldPosition = mapOffset + vector2(object.x, object.y);
+			if (!_hasSpawnPoint && isSpawnType(object.typeName)) {
+				_hasSpawnPoint = true;
+				_spawnPoint = worldPosition;
+				continue;
+			}
+
+			if (isSpawnType(object.typeName)) {
+				continue;
+			}
+
+			LevelTriggerDescriptor trigger;
+			trigger.layerId = object.layerId;
+			trigger.layerName = object.layerName;
+			trigger.objectId = object.id;
+			trigger.name = object.name;
+			trigger.typeName = object.typeName;
+			trigger.gid = object.gid;
+			trigger.position = worldPosition;
+			trigger.size = vector2(object.width, object.height);
+			trigger.rotation = object.rotation;
+			trigger.visible = object.visible;
+			trigger.isPoint = object.isPoint;
+			trigger.isEllipse = object.isEllipse;
+			trigger.hasPolygon = object.hasPolygon;
+			trigger.hasPolyline = object.hasPolyline;
+			trigger.polygonPoints = object.polygonPoints;
+			trigger.polylinePoints = object.polylinePoints;
+			trigger.properties = object.properties;
+
+			_triggerDescriptors.push_back(std::move(trigger));
+		}
+	}
+
+	if (!_hasSpawnPoint) {
+		for (const MapLayerDescriptor& layer : loadResult.layers) {
+			if (layer.type != "tilelayer" || !isValidLayerIndex(layer.typedIndex, loadResult.tileMaps.size())) {
+				continue;
+			}
+
+			TileMap* tileMap = loadResult.tileMaps[(size_t)layer.typedIndex];
+			if (!tileMap) {
+				continue;
+			}
+
+			bool foundSpawn = false;
+			for (unsigned int y = 0; y < tileMap->getMapHeight() && !foundSpawn; ++y) {
+				for (unsigned int x = 0; x < tileMap->getMapWidth() && !foundSpawn; ++x) {
+					Tile* tile = tileMap->getTile(x, y);
+					if (!tile || tile->getTileIndex() < 0) {
+						continue;
+					}
+					if (!isSpawnType(tile->getTileType())) {
+						continue;
+					}
+
+					const float tileSize = tile->getTileSet() ? tile->getTileSet()->getTileSize() : (float)loadResult.tileWidth;
+					_spawnPoint = tile->getPosition() + vector2(tileSize * 0.5f, tileSize * 0.5f);
+					_hasSpawnPoint = true;
+					foundSpawn = true;
+				}
+			}
+
+			if (_hasSpawnPoint) {
+				break;
+			}
+		}
+	}
+
+	return loadResult;
 }
 
 void LevelManager::initialize(const char* mapFileName,
 	const vector2& mapOffset,
 	const char* backgroundFileName,
 	ObjectManager& objectManager,
-	IRenderer::RenderList* renderList)
+	GameState& gameState)
 {
 	if (!_camera) {
 		_camera = new Camera();
@@ -92,12 +235,22 @@ void LevelManager::initialize(const char* mapFileName,
 #endif
 	}
 
-	if (renderList && _background) {
-		renderList->push_back(_background);
+	if (IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList()) {
+		if (_background && std::find(baseRenderList->begin(), baseRenderList->end(), _background) == baseRenderList->end()) {
+			baseRenderList->push_back(_background);
+		}
 	}
 
 	if (_tileMaps.empty() && mapFileName && mapFileName[0] != '\0') {
-		_tileMaps = loadTileMapsIntoObjectManager(mapFileName, objectManager, mapOffset);
+		clearCachedMapMetadata();
+		(void)loadMapDataIntoObjectManager(mapFileName, objectManager, gameState, mapOffset);
+	}
+	else {
+		IRenderer::RenderList* runtimeRenderList = gameState.getBaseRenderList();
+		if (isValidLayerIndex(_runtimeLayerIndex, _mapLayerRenderLists.size())) {
+			runtimeRenderList = _mapLayerRenderLists[(size_t)_runtimeLayerIndex];
+		}
+		gameState.setDefaultRenderList(runtimeRenderList);
 	}
 
 	if (objectManager.getObjectName(_camera).empty()) {
@@ -129,7 +282,7 @@ void LevelManager::update(void)
 	}
 }
 
-void LevelManager::shutdown(ObjectManager& objectManager, IRenderer::RenderList* renderList)
+void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 {
 	_cameraPlayerAttach.setEnabled(false);
 	_cameraPlayerAttach.setSource(NULL);
@@ -146,16 +299,30 @@ void LevelManager::shutdown(ObjectManager& objectManager, IRenderer::RenderList*
 			if (!tile || tile->getTileIndex() < 0) {
 				continue;
 			}
+			gameState.clearObjectRenderRoute(tile);
 			objectManager.removeObject(tile);
 		}
 		delete tileMap;
 	}
 	_tileMaps.clear();
 
+	for (IRenderer::RenderList* renderList : _mapLayerRenderLists) {
+		if (renderList) {
+			Engine2D::getRenderer()->destroyRenderList(renderList);
+		}
+	}
+	_mapLayerRenderLists.clear();
+
+	gameState.setDefaultRenderList(gameState.getBaseRenderList());
+	gameState.clearRenderRoutes();
+	clearCachedMapMetadata();
+
 	objectManager.removeObject(_camera);
 
-	if (renderList && _background) {
-		renderList->remove(_background);
+	if (IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList()) {
+		if (_background) {
+			baseRenderList->remove(_background);
+		}
 	}
 
 	if (Engine2D::getRenderer() && Engine2D::getRenderer()->getCamera() == _camera) {
