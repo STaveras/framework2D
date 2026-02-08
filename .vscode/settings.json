@@ -1,4 +1,7 @@
 {
+    "cmake.useCMakePresets": "always",
+    "cmake.defaultConfigurePreset": "windows-debug",
+    "cmake.defaultBuildPreset": "windows-debug",
     "files.associations": {
         "vector": "cpp",
         "__bit_reference": "cpp",
