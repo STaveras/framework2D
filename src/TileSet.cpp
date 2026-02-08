@@ -60,6 +60,22 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 					return fallback;
 				};
 
+				auto resolveClassOrType = [](simdjson::dom::element tileElement) -> std::string {
+					if (!tileElement["class"].is_null() && tileElement["class"].is_string()) {
+						std::string_view className = tileElement["class"].get_string();
+						if (!className.empty()) {
+							return std::string(className);
+						}
+					}
+					if (!tileElement["type"].is_null() && tileElement["type"].is_string()) {
+						std::string_view typeName = tileElement["type"].get_string();
+						if (!typeName.empty()) {
+							return std::string(typeName);
+						}
+					}
+					return "";
+				};
+
 				if (!root["tiles"].is_null() && root["tiles"].is_array()) {
 					simdjson::dom::array tiles = root["tiles"].get_array();
 
@@ -78,10 +94,7 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 						TileSet::TileInfo tileInfo;
 
-						if (!tile["type"].is_null() && tile["type"].is_string()) {
-							std::string_view className = tile["type"].get_string();
-							tileInfo._typeName = std::string(className);
-						}
+						tileInfo._typeName = resolveClassOrType(tile);
 
 						if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
 							// Tile properties

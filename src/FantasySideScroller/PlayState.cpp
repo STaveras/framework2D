@@ -23,11 +23,16 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, _renderList);
-	//_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, _renderList);
+	_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	//_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
-	_playableCharacter->setPosition(START_POSITION);
+	if (_levelManager.hasSpawnPoint()) {
+		_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+	}
+	else {
+		_playableCharacter->setPosition(START_POSITION);
+	}
 
 	_objectManager.addObject("Hero", _playableCharacter);
 
@@ -75,9 +80,13 @@ bool PlayState::onExecute(float time)
 	{
 		_playableCharacter->clearEvents();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
-		_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120);
 
-		//if (_playableCharacter->tile)
+		if (_levelManager.hasSpawnPoint()) {
+			_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+		}
+		else {
+			_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
+		}
 	}
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
@@ -140,7 +149,7 @@ void PlayState::onExit(State* next)
 
 	SAFE_DELETE(_playableCharacter);
 	
-	_levelManager.shutdown(_objectManager, _renderList);
+	_levelManager.shutdown(_objectManager, *this);
 
 	Engine2D::getGame()->getPlayers()->destroy(_player);
 

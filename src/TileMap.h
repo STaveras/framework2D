@@ -9,12 +9,79 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 #ifndef _TILEMAP_H_
 #define _TILEMAP_H_
+
+class TileMap;
+
+struct TileMapPropertyDescriptor
+{
+	std::string name;
+	std::string type;
+	std::string value;
+};
+
+struct TileObjectDescriptor
+{
+	int layerId = -1;
+	std::string layerName;
+	int id = -1;
+	std::string name;
+	std::string typeName;
+	int64_t gid = 0;
+	float x = 0.0f;
+	float y = 0.0f;
+	float width = 0.0f;
+	float height = 0.0f;
+	float rotation = 0.0f;
+	bool visible = true;
+	bool isPoint = false;
+	bool isEllipse = false;
+	bool hasPolygon = false;
+	bool hasPolyline = false;
+	std::vector<vector2> polygonPoints;
+	std::vector<vector2> polylinePoints;
+	std::vector<TileMapPropertyDescriptor> properties;
+};
+
+struct TileObjectLayerDescriptor
+{
+	int id = -1;
+	std::string name;
+	bool visible = true;
+	int traversalIndex = -1;
+	std::vector<TileObjectDescriptor> objects;
+};
+
+struct MapLayerDescriptor
+{
+	int id = -1;
+	std::string name;
+	std::string type;
+	bool visible = true;
+	int traversalIndex = -1;
+	int typedIndex = -1;
+};
+
+struct TileMapLoadResult
+{
+	int mapWidth = 0;
+	int mapHeight = 0;
+	int tileWidth = 0;
+	int tileHeight = 0;
+	std::vector<MapLayerDescriptor> layers;
+	std::vector<TileMap*> tileMaps;
+	std::vector<TileObjectLayerDescriptor> objectLayers;
+};
 
 class TileMap : public Tile
 {
@@ -228,15 +295,26 @@ public:
 
 	static std::vector<TileMap*> loadFromJSONFile(const char* filePath, TileSet* fallbackTileSet, bool arrangeLayerTiles = true)
 	{
-		if (!FileSystem::FileExists(filePath))
-			return {};
+		TileMapLoadResult loadResult = loadMapDataFromJSONFile(filePath, fallbackTileSet, arrangeLayerTiles);
+		return std::move(loadResult.tileMaps);
+	}
 
-		std::vector<TileMap*> tileMaps;
+	static TileMapLoadResult loadMapDataFromJSONFile(const char* filePath)
+	{
+		return loadMapDataFromJSONFile(filePath, nullptr, true);
+	}
+
+	static TileMapLoadResult loadMapDataFromJSONFile(const char* filePath, TileSet* fallbackTileSet, bool arrangeLayerTiles = true)
+	{
+		TileMapLoadResult result;
+		if (!FileSystem::FileExists(filePath))
+			return result;
+
 		simdjson::dom::parser parser;
 		simdjson::dom::element json = parser.load(filePath);
 
 		if (!json.is_object()) {
-			return tileMaps;
+			return result;
 		}
 
 		auto readFloat = [](auto element, float fallback = 0.0f) -> float {
@@ -275,6 +353,22 @@ public:
 			return fallback;
 		};
 
+		auto readBool = [](auto element, bool fallback = true) -> bool {
+			if (element.is_null()) {
+				return fallback;
+			}
+			if (element.is_bool()) {
+				return (bool)element.get_bool();
+			}
+			if (element.is_int64()) {
+				return element.get_int64() != 0;
+			}
+			if (element.is_uint64()) {
+				return element.get_uint64() != 0;
+			}
+			return fallback;
+		};
+
 		auto normalizeModeString = [](const std::string& value) -> std::string {
 			std::string normalized = value;
 			std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char c) {
@@ -297,8 +391,56 @@ public:
 			return fallback;
 		};
 
-		const int rootWidth = readInt(json["width"], 0);
-		const int rootHeight = readInt(json["height"], 0);
+		auto normalizeGid = [](int64_t rawGid) -> int64_t {
+			const uint32_t rawValue = (uint32_t)(rawGid & 0xFFFFFFFFLL);
+			return (int64_t)(rawValue & 0x1FFFFFFFu);
+		};
+
+		auto resolveClassOrType = [](auto classElement, auto typeElement) -> std::string {
+			if (!classElement.is_null() && classElement.is_string()) {
+				std::string classValue = std::string((std::string_view)classElement.get_string());
+				if (!classValue.empty()) {
+					return classValue;
+				}
+			}
+			if (!typeElement.is_null() && typeElement.is_string()) {
+				std::string typeValue = std::string((std::string_view)typeElement.get_string());
+				if (!typeValue.empty()) {
+					return typeValue;
+				}
+			}
+			return "";
+		};
+
+		auto propertyValueToString = [](auto element) -> std::string {
+			if (element.is_null()) {
+				return "";
+			}
+			if (element.is_string()) {
+				return std::string((std::string_view)element.get_string());
+			}
+			if (element.is_bool()) {
+				return (bool)element.get_bool() ? "true" : "false";
+			}
+			if (element.is_int64()) {
+				return std::to_string((int64_t)element.get_int64());
+			}
+			if (element.is_uint64()) {
+				return std::to_string((uint64_t)element.get_uint64());
+			}
+			if (element.is_double()) {
+				std::ostringstream stream;
+				stream << (double)element.get_double();
+				return stream.str();
+			}
+			return "";
+		};
+
+		result.mapWidth = readInt(json["width"], 0);
+		result.mapHeight = readInt(json["height"], 0);
+		result.tileWidth = readInt(json["tilewidth"], 0);
+		result.tileHeight = readInt(json["tileheight"], 0);
+
 		const std::string mapDirectory = FileSystem::File::GetFilePath(filePath);
 
 		struct MapTileSetEntry {
@@ -333,7 +475,7 @@ public:
 					sprintf_s(
 						buffer,
 						sizeof(buffer),
-						"TileMap::loadFromJSONFile missing tileset source '%s' (resolved='%s')\n",
+						"TileMap::loadMapDataFromJSONFile missing tileset source '%s' (resolved='%s')\n",
 						sourcePath.c_str(),
 						resolvedSourcePath.c_str());
 					DEBUG_MSG(buffer);
@@ -358,15 +500,16 @@ public:
 		auto resolveTileFromGid = [&](int64_t gid, TileSet*& outTileSet, int& outTileIndex) -> bool {
 			outTileSet = nullptr;
 			outTileIndex = -1;
-			if (gid <= 0) {
+			const int64_t normalizedGid = normalizeGid(gid);
+			if (normalizedGid <= 0) {
 				return false;
 			}
 
 			if (!mapTileSets.empty()) {
 				for (int i = (int)mapTileSets.size() - 1; i >= 0; --i) {
-					if (gid >= mapTileSets[i].firstGid) {
+					if (normalizedGid >= mapTileSets[i].firstGid) {
 						outTileSet = mapTileSets[i].tileSet;
-						outTileIndex = (int)(gid - mapTileSets[i].firstGid);
+						outTileIndex = (int)(normalizedGid - mapTileSets[i].firstGid);
 						return outTileSet != nullptr && outTileIndex >= 0;
 					}
 				}
@@ -375,191 +518,263 @@ public:
 
 			if (fallbackTileSet) {
 				outTileSet = fallbackTileSet;
-				outTileIndex = (int)(gid - 1);
+				outTileIndex = (int)(normalizedGid - 1);
 				return outTileIndex >= 0;
 			}
 
 			return false;
 		};
 
-		for (auto layer : json["layers"]) {
-			const char* type = nullptr;
-			if (layer["type"].is_string()) {
-				type = layer["type"].get_c_str();
-			}
+		if (!json["layers"].is_null() && json["layers"].is_array()) {
+			int traversalIndex = 0;
+			for (auto layer : json["layers"]) {
+				MapLayerDescriptor layerDescriptor;
+				layerDescriptor.id = readInt(layer["id"], -1);
+				layerDescriptor.name = layer["name"].is_string() ? std::string((std::string_view)layer["name"].get_string()) : "";
+				layerDescriptor.visible = readBool(layer["visible"], true);
+				layerDescriptor.traversalIndex = traversalIndex++;
 
-			if (!type) {
-				continue;
-			}
+				const std::string layerType = layer["type"].is_string() ? std::string((std::string_view)layer["type"].get_string()) : "";
+				layerDescriptor.type = layerType;
 
-			if (strcmp(type, "tilelayer") == 0) {
-				const int mapWidth = readInt(layer["width"], rootWidth);
-				const int mapHeight = readInt(layer["height"], rootHeight);
-				if (mapWidth <= 0 || mapHeight <= 0) {
-					continue;
-				}
+				if (layerType == "tilelayer") {
+					const int mapWidth = readInt(layer["width"], result.mapWidth);
+					const int mapHeight = readInt(layer["height"], result.mapHeight);
+					if (mapWidth > 0 && mapHeight > 0) {
+						TileLayerConfig layerConfig;
+						layerConfig.id = layerDescriptor.id;
+						layerConfig.name = layerDescriptor.name;
+						layerConfig.startX = readInt(layer["startx"], 0);
+						layerConfig.startY = readInt(layer["starty"], 0);
+						layerConfig.offsetX = readFloat(layer["x"], 0.0f);
+						layerConfig.offsetY = readFloat(layer["y"], 0.0f);
+						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
-				TileLayerConfig layerConfig;
-				layerConfig.id = readInt(layer["id"], -1);
-				layerConfig.name = layer["name"].is_string() ? std::string((std::string_view)layer["name"].get_string()) : "";
-				layerConfig.startX = readInt(layer["startx"], 0);
-				layerConfig.startY = readInt(layer["starty"], 0);
-				layerConfig.offsetX = readFloat(layer["x"], 0.0f);
-				layerConfig.offsetY = readFloat(layer["y"], 0.0f);
-				layerConfig.drawOrder = (int)tileMaps.size();
+						// User-selected default for missing property is non-colliding.
+						layerConfig.collisionMode = TileCollisionMode::None;
 
-				// User-selected default for missing property is non-colliding.
-				layerConfig.collisionMode = TileCollisionMode::None;
+						if (!layer["properties"].is_null() && layer["properties"].is_array()) {
+							for (auto property : layer["properties"]) {
+								if (!property["name"].is_string()) {
+									continue;
+								}
 
-				if (!layer["properties"].is_null() && layer["properties"].is_array()) {
-					for (auto property : layer["properties"]) {
-						if (!property["name"].is_string()) {
-							continue;
-						}
+								std::string propertyName = std::string((std::string_view)property["name"].get_string());
+								std::transform(propertyName.begin(), propertyName.end(), propertyName.begin(), [](unsigned char c) {
+									return (char)std::tolower(c);
+								});
+								if (propertyName != "collision_mode") {
+									continue;
+								}
 
-						std::string propertyName = std::string((std::string_view)property["name"].get_string());
-						std::transform(propertyName.begin(), propertyName.end(), propertyName.begin(), [](unsigned char c) {
-							return (char)std::tolower(c);
-						});
-						if (propertyName != "collision_mode") {
-							continue;
-						}
-
-						if (!property["value"].is_string()) {
+								if (!property["value"].is_string()) {
 #if _DEBUG
-							char buffer[256];
-							sprintf_s(buffer, sizeof(buffer),
-								"Tile layer '%s' has non-string collision_mode; defaulting to 'none'\n",
-								layerConfig.name.c_str());
-							DEBUG_MSG(buffer);
+									char buffer[256];
+									sprintf_s(buffer, sizeof(buffer),
+										"Tile layer '%s' has non-string collision_mode; defaulting to 'none'\n",
+										layerConfig.name.c_str());
+									DEBUG_MSG(buffer);
 #endif
-							continue;
+									continue;
+								}
+
+								const std::string rawMode = std::string((std::string_view)property["value"].get_string());
+								const TileCollisionMode parsedMode = parseCollisionMode(rawMode, TileCollisionMode::None);
+								if (parsedMode == TileCollisionMode::None && normalizeModeString(rawMode) != "none") {
+#if _DEBUG
+									char buffer[256];
+									sprintf_s(buffer, sizeof(buffer),
+										"Unknown collision_mode '%s' on layer '%s'; defaulting to 'none'\n",
+										rawMode.c_str(),
+										layerConfig.name.c_str());
+									DEBUG_MSG(buffer);
+#endif
+								}
+								layerConfig.collisionMode = parsedMode;
+							}
 						}
 
-						const std::string rawMode = std::string((std::string_view)property["value"].get_string());
-						const TileCollisionMode parsedMode = parseCollisionMode(rawMode, TileCollisionMode::None);
-						if (parsedMode == TileCollisionMode::None && normalizeModeString(rawMode) != "none") {
-#if _DEBUG
-							char buffer[256];
-							sprintf_s(buffer, sizeof(buffer),
-								"Unknown collision_mode '%s' on layer '%s'; defaulting to 'none'\n",
-								rawMode.c_str(),
-								layerConfig.name.c_str());
-							DEBUG_MSG(buffer);
-#endif
+						TileSet* defaultTileSet = fallbackTileSet;
+						if (!defaultTileSet && !mapTileSets.empty()) {
+							defaultTileSet = mapTileSets.front().tileSet;
 						}
-						layerConfig.collisionMode = parsedMode;
+
+						TileMap* tileMap = new TileMap((unsigned int)mapWidth, (unsigned int)mapHeight, defaultTileSet, layerConfig);
+						if (!mapTileSets.empty()) {
+							tileMap->setOwnedTileSetRegistry(ownedTileSets);
+						}
+
+						if (!layer["chunks"].is_null() && layer["chunks"].is_array()) {
+							for (auto chunk : layer["chunks"]) {
+								auto data = chunk["data"].get_array();
+								const int chunkW = readInt(chunk["width"], 0);
+								const int chunkH = readInt(chunk["height"], 0);
+								const int chunkXoff = readInt(chunk["x"], 0);
+								const int chunkYoff = readInt(chunk["y"], 0);
+								if (chunkW <= 0 || chunkH <= 0) {
+									continue;
+								}
+
+								int index = 0;
+								const int maxChunkCells = chunkW * chunkH;
+								for (auto gidElement : data) {
+									if (index >= maxChunkCells) {
+										break;
+									}
+
+									const int cx = index % chunkW;
+									const int cy = index / chunkW;
+									++index;
+
+									const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+									if (gid == 0) {
+										continue;
+									}
+
+									const int layerX = cx + chunkXoff;
+									const int layerY = cy + chunkYoff;
+									const int localX = layerX - layerConfig.startX;
+									const int localY = layerY - layerConfig.startY;
+									if (localX < 0 || localY < 0 || localX >= mapWidth || localY >= mapHeight) {
+										continue;
+									}
+
+									TileSet* resolvedTileSet = nullptr;
+									int resolvedTileIndex = -1;
+									if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
+#if _DEBUG
+										char buffer[256];
+										sprintf_s(buffer, sizeof(buffer), "Skipping unresolved gid %lld on layer '%s'\n", (long long)gid, layerConfig.name.c_str());
+										DEBUG_MSG(buffer);
+#endif
+										continue;
+									}
+
+									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+								}
+							}
+						}
+						else if (!layer["data"].is_null() && layer["data"].is_array()) {
+							auto data = layer["data"].get_array();
+							const int maxLayerCells = mapWidth * mapHeight;
+							int index = 0;
+							for (auto gidElement : data) {
+								if (index >= maxLayerCells) {
+									break;
+								}
+
+								const int localX = index % mapWidth;
+								const int localY = index / mapWidth;
+								++index;
+
+								const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+								if (gid == 0) {
+									continue;
+								}
+
+								TileSet* resolvedTileSet = nullptr;
+								int resolvedTileIndex = -1;
+								if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
+#if _DEBUG
+									char buffer[256];
+									sprintf_s(buffer, sizeof(buffer), "Skipping unresolved gid %lld on layer '%s'\n", (long long)gid, layerConfig.name.c_str());
+									DEBUG_MSG(buffer);
+#endif
+									continue;
+								}
+
+								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+							}
+						}
+
+						if (arrangeLayerTiles) {
+							tileMap->arrangeTiles();
+						}
+
+						layerDescriptor.typedIndex = (int)result.tileMaps.size();
+						result.tileMaps.push_back(tileMap);
 					}
 				}
+				else if (layerType == "objectgroup") {
+					TileObjectLayerDescriptor objectLayer;
+					objectLayer.id = layerDescriptor.id;
+					objectLayer.name = layerDescriptor.name;
+					objectLayer.visible = layerDescriptor.visible;
+					objectLayer.traversalIndex = layerDescriptor.traversalIndex;
 
-				TileSet* defaultTileSet = fallbackTileSet;
-				if (!defaultTileSet && !mapTileSets.empty()) {
-					defaultTileSet = mapTileSets.front().tileSet;
-				}
+					const float layerOffsetX = readFloat(layer["x"], 0.0f);
+					const float layerOffsetY = readFloat(layer["y"], 0.0f);
+					if (!layer["objects"].is_null() && layer["objects"].is_array()) {
+						for (auto object : layer["objects"]) {
+							TileObjectDescriptor descriptor;
+							descriptor.layerId = objectLayer.id;
+							descriptor.layerName = objectLayer.name;
+							descriptor.id = readInt(object["id"], -1);
+							descriptor.name = object["name"].is_string() ? std::string((std::string_view)object["name"].get_string()) : "";
+							descriptor.gid = normalizeGid(readInt64(object["gid"], 0));
+							descriptor.x = layerOffsetX + readFloat(object["x"], 0.0f);
+							descriptor.y = layerOffsetY + readFloat(object["y"], 0.0f);
+							descriptor.width = readFloat(object["width"], 0.0f);
+							descriptor.height = readFloat(object["height"], 0.0f);
+							descriptor.rotation = readFloat(object["rotation"], 0.0f);
+							descriptor.visible = readBool(object["visible"], true);
+							descriptor.isPoint = readBool(object["point"], false);
+							descriptor.isEllipse = readBool(object["ellipse"], false);
+							descriptor.typeName = resolveClassOrType(object["class"], object["type"]);
 
-				TileMap* tileMap = new TileMap((unsigned int)mapWidth, (unsigned int)mapHeight, defaultTileSet, layerConfig);
-				if (!mapTileSets.empty()) {
-					tileMap->setOwnedTileSetRegistry(ownedTileSets);
-				}
-
-				if (!layer["chunks"].is_null() && layer["chunks"].is_array()) {
-					for (auto chunk : layer["chunks"]) {
-						auto data = chunk["data"].get_array();
-						const int chunkW = readInt(chunk["width"], 0);
-						const int chunkH = readInt(chunk["height"], 0);
-						const int chunkXoff = readInt(chunk["x"], 0);
-						const int chunkYoff = readInt(chunk["y"], 0);
-						if (chunkW <= 0 || chunkH <= 0) {
-							continue;
-						}
-
-						int index = 0;
-						const int maxChunkCells = chunkW * chunkH;
-						for (auto gidElement : data) {
-							if (index >= maxChunkCells) {
-								break;
+							if (descriptor.typeName.empty() && descriptor.gid > 0) {
+								TileSet* resolvedTileSet = nullptr;
+								int resolvedTileIndex = -1;
+								if (resolveTileFromGid(descriptor.gid, resolvedTileSet, resolvedTileIndex) && resolvedTileSet && resolvedTileIndex >= 0) {
+									descriptor.typeName = resolvedTileSet->getTileInfo(resolvedTileIndex)._typeName;
+								}
 							}
 
-							const int cx = index % chunkW;
-							const int cy = index / chunkW;
-							++index;
-
-							int64_t gid = readInt64(gidElement, 0);
-							if (gid == 0) {
-								continue;
+							if (!object["polygon"].is_null() && object["polygon"].is_array()) {
+								descriptor.hasPolygon = true;
+								for (auto point : object["polygon"]) {
+									descriptor.polygonPoints.push_back(vector2(
+										readFloat(point["x"], 0.0f),
+										readFloat(point["y"], 0.0f)));
+								}
 							}
 
-							const int layerX = cx + chunkXoff;
-							const int layerY = cy + chunkYoff;
-							const int localX = layerX - layerConfig.startX;
-							const int localY = layerY - layerConfig.startY;
-							if (localX < 0 || localY < 0 || localX >= mapWidth || localY >= mapHeight) {
-								continue;
+							if (!object["polyline"].is_null() && object["polyline"].is_array()) {
+								descriptor.hasPolyline = true;
+								for (auto point : object["polyline"]) {
+									descriptor.polylinePoints.push_back(vector2(
+										readFloat(point["x"], 0.0f),
+										readFloat(point["y"], 0.0f)));
+								}
 							}
 
-							TileSet* resolvedTileSet = nullptr;
-							int resolvedTileIndex = -1;
-							if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
-#if _DEBUG
-								char buffer[256];
-								sprintf_s(buffer, sizeof(buffer), "Skipping unresolved gid %lld on layer '%s'\n", (long long)gid, layerConfig.name.c_str());
-								DEBUG_MSG(buffer);
-#endif
-								continue;
+							if (!object["properties"].is_null() && object["properties"].is_array()) {
+								for (auto property : object["properties"]) {
+									if (!property["name"].is_string()) {
+										continue;
+									}
+
+									TileMapPropertyDescriptor propertyDescriptor;
+									propertyDescriptor.name = std::string((std::string_view)property["name"].get_string());
+									propertyDescriptor.type = property["type"].is_string() ? std::string((std::string_view)property["type"].get_string()) : "";
+									propertyDescriptor.value = propertyValueToString(property["value"]);
+									descriptor.properties.push_back(propertyDescriptor);
+								}
 							}
 
-							tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+							objectLayer.objects.push_back(descriptor);
 						}
 					}
-				}
-				else if (!layer["data"].is_null() && layer["data"].is_array()) {
-					auto data = layer["data"].get_array();
-					const int maxLayerCells = mapWidth * mapHeight;
-					int index = 0;
-					for (auto gidElement : data) {
-						if (index >= maxLayerCells) {
-							break;
-						}
 
-						const int localX = index % mapWidth;
-						const int localY = index / mapWidth;
-						++index;
-
-						int64_t gid = readInt64(gidElement, 0);
-						if (gid == 0) {
-							continue;
-						}
-
-						TileSet* resolvedTileSet = nullptr;
-						int resolvedTileIndex = -1;
-						if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
-#if _DEBUG
-							char buffer[256];
-							sprintf_s(buffer, sizeof(buffer), "Skipping unresolved gid %lld on layer '%s'\n", (long long)gid, layerConfig.name.c_str());
-							DEBUG_MSG(buffer);
-#endif
-							continue;
-						}
-
-						tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
-					}
+					layerDescriptor.typedIndex = (int)result.objectLayers.size();
+					result.objectLayers.push_back(std::move(objectLayer));
 				}
 
-				if (arrangeLayerTiles) {
-					tileMap->arrangeTiles();
-				}
-				tileMaps.push_back(tileMap);
-			}
-			else if (strcmp(type, "objectgroup") == 0) {
-				// TODO: parse object layers in a dedicated pass.
-				continue;
-			}
-			else if (strcmp(type, "imagelayer") == 0) {
-				continue;
+				result.layers.push_back(std::move(layerDescriptor));
 			}
 		}
 
-		return tileMaps;
+		return result;
 	}
 };
 
