@@ -281,6 +281,7 @@
     <ClInclude Include="src\FantasySideScroller\Character.h" />
     <ClInclude Include="src\FantasySideScroller\Constants.h" />
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h" />
+    <ClInclude Include="src\FantasySideScroller\LevelManager.h" />
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
     <ClInclude Include="src\FantasySideScroller\Resources.h" />
     <ClInclude Include="src\KeyboardDI.h" />
@@ -397,6 +398,7 @@
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\FantasySideScroller\Character.cpp" />
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp" />
+    <ClCompile Include="src\FantasySideScroller\LevelManager.cpp" />
     <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />
