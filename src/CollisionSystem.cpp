@@ -2,16 +2,19 @@
 
 #include "Collidable.h"
 #include "CollidableGroup.h"
+#include "Debug.h"
 #include "GameObject.h"
 #include "Polygon.h"
 #include "Renderable.h"
 #include "Square.h"
+#include "Tile.h"
 
 #include <algorithm>
 #include <cmath>
 #include <functional>
 #include <limits>
 #include <map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -469,10 +472,14 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 		std::optional<float> penetrationDepth;
 	};
 
+	const bool collectDebugData = DEBUGGING && Debug::dbgCollision;
+
 	std::vector<GameObject*> activeObjects;
 	activeObjects.reserve(objects.size());
 
-	std::set<GameObject*> activeObjectSet;
+	std::unordered_set<GameObject*> activeObjectSet;
+	activeObjectSet.reserve(objects.size());
+
 	_debugShapes.clear();
 	_debugContacts.clear();
 
@@ -486,26 +493,61 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 		activeObjectSet.insert(object);
 	}
 
-	_debugShapes.reserve(activeObjects.size());
-	std::map<GameObject*, size_t> shapeIndexByObject;
-	for (GameObject* object : activeObjects) {
+	std::vector<Collidable*> activeCollidables(activeObjects.size(), nullptr);
+	std::vector<size_t> dynamicCollidableObjectIndices;
+	std::vector<size_t> staticCollidableObjectIndices;
+	dynamicCollidableObjectIndices.reserve(activeObjects.size());
+	staticCollidableObjectIndices.reserve(activeObjects.size());
+
+	for (size_t i = 0; i < activeObjects.size(); ++i) {
+		GameObject* object = activeObjects[i];
 		if (!object) {
 			continue;
 		}
 
-		CollisionDebugShape shape;
-		shape.object = object;
-		shape.objectPosition = object->getPosition();
-		shape.collisionAnchor = object->getCollisionAnchor();
-
-		if (GameObject::GameObjectState* state = object->getState()) {
-			if (Renderable* renderable = state->getRenderable()) {
-				shape.renderableOffset = renderable->getOffset();
+		if (object->getType() == GameObject::GAME_OBJ_TILE) {
+			const Tile* tile = (const Tile*)object;
+			if (tile->isNonCollidingLayer()) {
+				continue;
 			}
 		}
 
-		shape.anchorWithRenderableOffset = shape.objectPosition + shape.renderableOffset;
-			shape.collidable = object->getCollidable();
+		Collidable* collidable = object->getCollidable();
+		if (!collidable || !collidable->isActive()) {
+			continue;
+		}
+
+		activeCollidables[i] = collidable;
+		if (object->isStatic()) {
+			staticCollidableObjectIndices.push_back(i);
+		}
+		else {
+			dynamicCollidableObjectIndices.push_back(i);
+		}
+	}
+
+	std::map<GameObject*, size_t> shapeIndexByObject;
+	if (collectDebugData) {
+		_debugShapes.reserve(activeObjects.size());
+		for (size_t i = 0; i < activeObjects.size(); ++i) {
+			GameObject* object = activeObjects[i];
+			if (!object) {
+				continue;
+			}
+
+			CollisionDebugShape shape;
+			shape.object = object;
+			shape.objectPosition = object->getPosition();
+			shape.collisionAnchor = object->getCollisionAnchor();
+
+			if (GameObject::GameObjectState* state = object->getState()) {
+				if (Renderable* renderable = state->getRenderable()) {
+					shape.renderableOffset = renderable->getOffset();
+				}
+			}
+
+			shape.anchorWithRenderableOffset = shape.objectPosition + shape.renderableOffset;
+			shape.collidable = activeCollidables[i];
 
 			if (shape.collidable) {
 				shape.collidableActive = shape.collidable->isActive();
@@ -514,8 +556,9 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 				shape.hasPolygon = !shape.polygonLoops.empty();
 			}
 
-		shapeIndexByObject[object] = _debugShapes.size();
-		_debugShapes.push_back(shape);
+			shapeIndexByObject[object] = _debugShapes.size();
+			_debugShapes.push_back(shape);
+		}
 	}
 
 	for (auto itr = _activePairs.begin(); itr != _activePairs.end();) {
@@ -531,48 +574,48 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 	std::set<CollisionPairKey> currentPairs;
 	std::vector<PendingDispatch> pendingDispatches;
 
-	for (size_t i = 0; i < activeObjects.size(); ++i) {
-		GameObject* object = activeObjects[i];
-		if (!object) {
-			continue;
+	auto enqueuePairIfOverlapping = [&](size_t firstIndex, size_t secondIndex) {
+		GameObject* object = activeObjects[firstIndex];
+		GameObject* otherObject = activeObjects[secondIndex];
+		if (!object || !otherObject) {
+			return;
 		}
 
-		Collidable* collidable = object->getCollidable();
-		if (!collidable || !collidable->isActive()) {
-			continue;
+		Collidable* collidable = activeCollidables[firstIndex];
+		Collidable* otherCollidable = activeCollidables[secondIndex];
+		if (!collidable || !otherCollidable) {
+			return;
 		}
 
-		for (size_t j = i + 1; j < activeObjects.size(); ++j) {
-			GameObject* otherObject = activeObjects[j];
-			if (!otherObject) {
-				continue;
-			}
+		if (!object->shouldCollideWith(*otherObject) || !otherObject->shouldCollideWith(*object)) {
+			return;
+		}
 
-			if (!object->shouldCollideWith(*otherObject) || !otherObject->shouldCollideWith(*object)) {
-				continue;
-			}
+		const bool overlapping = collidable->collidesWith(otherCollidable) || otherCollidable->collidesWith(collidable);
+		if (!overlapping) {
+			return;
+		}
 
-			Collidable* otherCollidable = otherObject->getCollidable();
-			if (!otherCollidable || !otherCollidable->isActive()) {
-				continue;
-			}
+		CollisionPairKey key = makePairKey(object, otherObject);
+		currentPairs.insert(key);
 
-				const bool overlapping = collidable->collidesWith(otherCollidable) || otherCollidable->collidesWith(collidable);
-				if (!overlapping) {
-					continue;
-				}
+		PendingDispatch pending;
+		pending.first = object;
+		pending.second = otherObject;
+		pending.phase = (_activePairs.find(key) == _activePairs.end()) ? CollisionPhase::Enter : CollisionPhase::Stay;
+		pending.overlapping = true;
+		computeGeometryHints(collidable, otherCollidable, pending.normal, pending.penetrationDepth);
+		pendingDispatches.push_back(pending);
+	};
 
-			CollisionPairKey key = makePairKey(object, otherObject);
-			currentPairs.insert(key);
+	for (size_t i = 0; i < dynamicCollidableObjectIndices.size(); ++i) {
+		const size_t firstIndex = dynamicCollidableObjectIndices[i];
+		for (size_t j = i + 1; j < dynamicCollidableObjectIndices.size(); ++j) {
+			enqueuePairIfOverlapping(firstIndex, dynamicCollidableObjectIndices[j]);
+		}
 
-			CollisionPhase phase = (_activePairs.find(key) == _activePairs.end()) ? CollisionPhase::Enter : CollisionPhase::Stay;
-			PendingDispatch pending;
-			pending.first = object;
-			pending.second = otherObject;
-			pending.phase = phase;
-				pending.overlapping = true;
-			computeGeometryHints(collidable, otherCollidable, pending.normal, pending.penetrationDepth);
-			pendingDispatches.push_back(pending);
+		for (size_t staticIndex : staticCollidableObjectIndices) {
+			enqueuePairIfOverlapping(firstIndex, staticIndex);
 		}
 	}
 
@@ -594,39 +637,41 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects)
 		pendingDispatches.push_back(pending);
 	}
 
-	std::map<GameObject*, CollisionPhase> contactPhasesByObject;
-	_debugContacts.reserve(pendingDispatches.size());
-	for (const PendingDispatch& pending : pendingDispatches) {
-		if (!pending.first || !pending.second) {
-			continue;
+	if (collectDebugData) {
+		std::map<GameObject*, CollisionPhase> contactPhasesByObject;
+		_debugContacts.reserve(pendingDispatches.size());
+		for (const PendingDispatch& pending : pendingDispatches) {
+			if (!pending.first || !pending.second) {
+				continue;
+			}
+
+			updateContactPhase(contactPhasesByObject, pending.first, pending.phase);
+			updateContactPhase(contactPhasesByObject, pending.second, pending.phase);
+
+			CollisionDebugContact debugContact;
+			debugContact.first = pending.first;
+			debugContact.second = pending.second;
+			debugContact.phase = pending.phase;
+			debugContact.overlapping = pending.overlapping;
+			debugContact.normal = pending.normal;
+			debugContact.penetrationDepth = pending.penetrationDepth;
+
+			Collidable* firstCollidable = pending.first->getCollidable();
+			Collidable* secondCollidable = pending.second->getCollidable();
+			debugContact.midpoint = computeContactMidpoint(firstCollidable, secondCollidable, pending.overlapping);
+			_debugContacts.push_back(debugContact);
 		}
 
-		updateContactPhase(contactPhasesByObject, pending.first, pending.phase);
-		updateContactPhase(contactPhasesByObject, pending.second, pending.phase);
+		for (const auto& objectPhase : contactPhasesByObject) {
+			auto shapeItr = shapeIndexByObject.find(objectPhase.first);
+			if (shapeItr == shapeIndexByObject.end()) {
+				continue;
+			}
 
-		CollisionDebugContact debugContact;
-		debugContact.first = pending.first;
-		debugContact.second = pending.second;
-		debugContact.phase = pending.phase;
-		debugContact.overlapping = pending.overlapping;
-		debugContact.normal = pending.normal;
-		debugContact.penetrationDepth = pending.penetrationDepth;
-
-		Collidable* firstCollidable = pending.first->getCollidable();
-		Collidable* secondCollidable = pending.second->getCollidable();
-		debugContact.midpoint = computeContactMidpoint(firstCollidable, secondCollidable, pending.overlapping);
-		_debugContacts.push_back(debugContact);
-	}
-
-	for (const auto& objectPhase : contactPhasesByObject) {
-		auto shapeItr = shapeIndexByObject.find(objectPhase.first);
-		if (shapeItr == shapeIndexByObject.end()) {
-			continue;
+			CollisionDebugShape& shape = _debugShapes[shapeItr->second];
+			shape.hasContact = true;
+			shape.phase = objectPhase.second;
 		}
-
-		CollisionDebugShape& shape = _debugShapes[shapeItr->second];
-		shape.hasContact = true;
-		shape.phase = objectPhase.second;
 	}
 
 	for (const PendingDispatch& pending : pendingDispatches) {
