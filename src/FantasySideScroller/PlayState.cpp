@@ -11,6 +11,27 @@
 #include <cctype>
 #include <string>
 
+namespace {
+std::string sanitizeLayerName(const std::string& value)
+{
+	if (value.empty()) {
+		return "unnamed";
+	}
+
+	std::string sanitized;
+	sanitized.reserve(value.size());
+	for (char c : value) {
+		if (std::isalnum((unsigned char)c)) {
+			sanitized.push_back(c);
+		}
+		else {
+			sanitized.push_back('_');
+		}
+	}
+	return sanitized;
+}
+}
+
 PlayState::PlayState()
     : _player(nullptr)
     , _camera(nullptr)
@@ -23,6 +44,37 @@ PlayState::PlayState()
 
 PlayState::~PlayState() {
     // ensure cleanup if exit wasn't called
+}
+
+std::vector<TileMap*> PlayState::loadTileMapsIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, const vector2& mapOffset)
+{
+	std::vector<TileMap*> tileMaps = TileMap::loadFromJSONFile(BasePath(mapFileName).c_str(), nullptr, false);
+
+	for (TileMap* tileMap : tileMaps) {
+		if (!tileMap) {
+			continue;
+		}
+
+		tileMap->setPosition(mapOffset);
+		tileMap->arrangeTiles();
+
+		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
+		const std::string safeLayerName = sanitizeLayerName(layerConfig.name);
+		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
+
+		unsigned int tileIndex = 0;
+		for (auto it = tileMap->getTiles().begin(); it != tileMap->getTiles().end(); ++it, ++tileIndex) {
+			Tile* tile = *it;
+			if (!tile || tile->getTileIndex() < 0) {
+				continue;
+			}
+
+			std::string objectName = layerPrefix + "_tile_" + std::to_string(tileIndex);
+			objectManager.addObject(objectName.c_str(), tile);
+		}
+	}
+
+	return tileMaps;
 }
 
 void PlayState::onEnter(State* prev)
@@ -41,53 +93,13 @@ void PlayState::onEnter(State* prev)
 
 #ifdef _DEBUG
 	_background->setVisibility(false);
-	Renderer::get()->setBackgroundStatic(false);
+	//Renderer::get()->setBackgroundStatic(false);
 #endif
 	_renderList->push_back(_background);
 
-	_tileSet = TileSet::loadFromFile(BasePath("Assets/fantasyTiles.tsj").c_str());
-
-	//_tileMap = TileMap::loadFromCSVFile(BASE_DIRECTORY"testMap.csv", _tileSet);
-	//_tileMap = (*TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).begin());
-	_tileMaps = TileMap::loadFromJSONFile(BasePath("testMap_separate_layers.tmj").c_str(), _tileSet);
-
-	auto sanitizeLayerName = [](const std::string& value) -> std::string {
-		if (value.empty()) {
-			return "unnamed";
-		}
-
-		std::string sanitized;
-		sanitized.reserve(value.size());
-		for (char c : value) {
-			if (std::isalnum((unsigned char)c)) {
-				sanitized.push_back(c);
-			}
-			else {
-				sanitized.push_back('_');
-			}
-		}
-		return sanitized;
-	};
-
-	for (unsigned int j = 0; j < _tileMaps.size(); j++)
-	{
-		TileMap* tileMap = _tileMaps[j];
-		if (!tileMap) {
-			continue;
-		}
-
-		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
-		const std::string safeLayerName = sanitizeLayerName(layerConfig.name);
-		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
-
-		for (unsigned int i = 0; i < (unsigned int)tileMap->getTiles().size(); i++) {
-			std::string objectName = layerPrefix + "_tile_" + std::to_string(i);
-			_objectManager.addObject(objectName.c_str(), tileMap->getTiles()[i]);
-		}
-
-		tileMap->setPosition(-60, 0);
-		tileMap->arrangeTiles();
-	}
+	// Preferred: map-declared tilesets from the .tmj file.
+	// _tileMaps = loadTileMapsIntoObjectManager("mockup_tiles2.tmj", _objectManager, vector2(-60.0f, 0.0f));
+	_tileMaps = loadTileMapsIntoObjectManager("testMap_separate_layers.tmj", _objectManager, vector2(-60.0f, 0.0f));
 
 	_playableCharacter = new Character;
 	_playableCharacter->setPosition(START_POSITION);
@@ -203,7 +215,13 @@ void PlayState::onExit(State* next)
 		{
 			TileMap* tileMap = _tileMaps[i];
 			if (tileMap) {
-				_objectManager.removeObject(tileMap);
+				for (auto it = tileMap->getTiles().begin(); it != tileMap->getTiles().end(); ++it) {
+					Tile* tile = *it;
+					if (!tile || tile->getTileIndex() < 0) {
+						continue;
+					}
+					_objectManager.removeObject(tile);
+				}
 				delete tileMap;
 			}
 		}

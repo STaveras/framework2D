@@ -27,6 +27,9 @@ class PlayState : public GameState
 
 	Character* _playableCharacter = NULL;
 
+private:
+	std::vector<TileMap*> loadTileMapsIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, const vector2& mapOffset);
+
 public:
 	PlayState(void);
 	virtual ~PlayState(void);
