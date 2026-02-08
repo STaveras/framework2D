@@ -32,9 +32,10 @@ constexpr float kUpwardSnapMultiplier = 2.0f;
 constexpr float kUpwardSupportBias = 0.25f;
 constexpr float kSlopePriorityEpsilon = 0.25f;
 constexpr float kSlopeFootClearance = 0.1f;
-constexpr float kSupportSwitchHysteresis = 0.35f;
+constexpr float kSupportSwitchHysteresisUp = 1.0f;
+constexpr float kSupportSwitchHysteresisDown = 0.25f;
 constexpr float kUphillProbeDistance = 1.5f;
-constexpr float kUphillProbeMaxRise = 4.0f;
+constexpr float kUphillProbeMaxRise = 6.0f;
 
 bool isSquareOnlyCollidable(const Collidable* collidable)
 {
@@ -1448,10 +1449,16 @@ void Character::update(float time)
 	Tile* supportTile = _findGroundSupportTile(footY, maxSnapPerFrame, supportY);
 	if (supportTile && _tile && supportTile != _tile) {
 		float stickySupportY = footY;
-		if (_findSupportOnTile(_tile, footY, maxSnapPerFrame, stickySupportY) &&
-			std::fabs(stickySupportY - supportY) <= kSupportSwitchHysteresis) {
-			supportTile = _tile;
-			supportY = stickySupportY;
+		if (_findSupportOnTile(_tile, footY, maxSnapPerFrame, stickySupportY)) {
+			const float switchDelta = supportY - stickySupportY;
+			const float hysteresis =
+				(switchDelta < 0.0f) ?
+				kSupportSwitchHysteresisUp :
+				kSupportSwitchHysteresisDown;
+			if (std::fabs(switchDelta) <= hysteresis) {
+				supportTile = _tile;
+				supportY = stickySupportY;
+			}
 		}
 	}
 
