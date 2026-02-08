@@ -24,9 +24,16 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 	if (!root.is_null()) {
 
 		std::string workingDirectory = FileSystem::File::GetFilePath(fileName);
-		std::string_view imageName = root["image"].get_string();
+		std::string_view imageName = "";
+		if (root["image"].is_string()) {
+			imageName = root["image"].get_string();
+		}
 
-		if (!imageName.empty()) {
+		const bool hasTileWidth = !root["tilewidth"].is_null() && (root["tilewidth"].is_int64() || root["tilewidth"].is_uint64());
+		const bool hasTileHeight = !root["tileheight"].is_null() && (root["tileheight"].is_int64() || root["tileheight"].is_uint64());
+		const bool hasTileCount = !root["tilecount"].is_null() && (root["tilecount"].is_int64() || root["tilecount"].is_uint64());
+
+		if (!imageName.empty() && hasTileWidth && hasTileHeight && hasTileCount) {
 
 			int64_t tileWidth = root["tilewidth"].get_int64();
 			int64_t tileHeight = root["tileheight"].get_int64();
@@ -37,7 +44,10 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 			tileSet = new TileSet(Engine2D::getRenderer()->createTexture(imagePath.c_str()), (unsigned int)tileWidth);
 
-				simdjson::dom::array tiles = root["tiles"].get_array();
+				simdjson::dom::array tiles;
+				if (!root["tiles"].is_null() && root["tiles"].is_array()) {
+					tiles = root["tiles"].get_array();
+				}
 				auto readFloat = [](simdjson::dom::element element, float fallback = 0.0f) -> float {
 					if (element.is_null()) {
 						return fallback;
@@ -165,6 +175,17 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 					continue;
 			}
 		}
+#if _DEBUG
+		else {
+			char buffer[512];
+			sprintf_s(
+				buffer,
+				sizeof(buffer),
+				"TileSet::loadFromFile invalid or missing required field(s) in '%s' (image/tilewidth/tileheight/tilecount)\n",
+				fileName ? fileName : "(null)");
+			DEBUG_MSG(buffer);
+		}
+#endif
 	}
 
 	return tileSet;

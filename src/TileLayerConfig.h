@@ -2,6 +2,7 @@
 
 #include <string>
 
+// TODO: Make these state keys that correspond to states that are built-in to tiles
 enum class TileCollisionMode
 {
 	None,

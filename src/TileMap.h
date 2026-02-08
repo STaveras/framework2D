@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <memory>
 #include <vector>
 
 #ifndef _TILEMAP_H_
@@ -17,12 +18,46 @@
 
 class TileMap : public Tile
 {
+	struct OwnedTileSetRegistry {
+		std::vector<TileSet*> tileSets;
+		~OwnedTileSetRegistry() {
+			for (TileSet* tileSet : tileSets) {
+				delete tileSet;
+			}
+			tileSets.clear();
+		}
+	};
+
 	unsigned int _mapWidth;
 	unsigned int _mapHeight;
 
 	TileSet* _tileSet;
 	Factory<Tile> _tiles;
+	std::vector<Tile*> _tileGrid;
 	TileLayerConfig _layerConfig;
+	std::shared_ptr<OwnedTileSetRegistry> _ownedTileSets;
+
+	size_t tileGridIndex(unsigned int x, unsigned int y) const {
+		return (size_t)x + ((size_t)y * (size_t)_mapWidth);
+	}
+
+	Tile* ensureTile(unsigned int x, unsigned int y) {
+		if (x >= _mapWidth || y >= _mapHeight) {
+			return nullptr;
+		}
+
+		const size_t index = tileGridIndex(x, y);
+		Tile* tile = _tileGrid[index];
+		if (!tile) {
+			tile = _tiles.create();
+			tile->setLayerCollisionMode(_layerConfig.collisionMode);
+			if (_tileSet) {
+				tile->setTileSet(_tileSet);
+			}
+			_tileGrid[index] = tile;
+		}
+		return tile;
+	}
 
 public:
 	explicit TileMap(
@@ -35,24 +70,37 @@ public:
 		_mapHeight(mapHeight),
 		_tileSet(tileSet),
 		_layerConfig(layerConfig) {
-
-		if (_tileSet) {
-			for (unsigned int i = 0; i < mapWidth; i++) {
-				for (unsigned int j = 0; j < mapHeight; j++) {
-					Tile* tile = _tiles.create();
-					tile->setTileSet(_tileSet);
-					tile->setLayerCollisionMode(_layerConfig.collisionMode);
-				}
-			}
-		}
+		_tileGrid.resize((size_t)mapWidth * (size_t)mapHeight, nullptr);
 	}
 
 	virtual ~TileMap(void) {
+		_tileGrid.clear();
 		_tiles.clear();
 	}
 
 	void setTileIndex(unsigned int x, unsigned int y, int tileIndex) {
-		if (Tile* tile = this->getTile(x, y)) {
+		if (tileIndex < 0) {
+			if (Tile* tile = this->getTile(x, y)) {
+				tile->setTileIndex(tileIndex);
+			}
+			return;
+		}
+
+		if (Tile* tile = this->ensureTile(x, y)) {
+			tile->setTileIndex(tileIndex);
+			tile->setLayerCollisionMode(_layerConfig.collisionMode);
+		}
+	}
+
+	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex) {
+		if (tileIndex < 0 && !this->getTile(x, y)) {
+			return;
+		}
+
+		if (Tile* tile = this->ensureTile(x, y)) {
+			if (tileSet) {
+				tile->setTileSet(tileSet);
+			}
 			tile->setTileIndex(tileIndex);
 			tile->setLayerCollisionMode(_layerConfig.collisionMode);
 		}
@@ -77,10 +125,10 @@ public:
 	const TileLayerConfig& getLayerConfig(void) const { return _layerConfig; }
 
 	Tile* getTile(unsigned int x, unsigned int y) {
-		if (_tileSet && x < _mapWidth && y < _mapHeight) {
-			const unsigned int index = x + y * _mapWidth;
-			if (index < _tiles.size()) {
-				return _tiles[index];
+		if (x < _mapWidth && y < _mapHeight) {
+			const size_t index = tileGridIndex(x, y);
+			if (index < _tileGrid.size()) {
+				return _tileGrid[index];
 			}
 		}
 
@@ -89,11 +137,16 @@ public:
 
 	void setMapWidth(unsigned int mapWidth) { _mapWidth = mapWidth; }
 	void setMapHeight(unsigned int mapHeight) { _mapHeight = mapHeight; }
+	void setOwnedTileSetRegistry(const std::shared_ptr<OwnedTileSetRegistry>& ownedTileSets) { _ownedTileSets = ownedTileSets; }
 
 	void arrangeTiles(void) {
-		for (unsigned int x = 0; x < _mapWidth; x++) {
-			for (unsigned int y = 0; y < _mapHeight; y++) {
+		for (unsigned int y = 0; y < _mapHeight; y++) {
+			for (unsigned int x = 0; x < _mapWidth; x++) {
 				if (Tile* tile = getTile(x, y)) {
+					if (tile->getTileIndex() < 0 || !tile->getTileSet()) {
+						continue;
+					}
+
 					unsigned int tileSize = (unsigned int)tile->getTileSet()->getTileSize();
 					const int layerTileX = (int)x + _layerConfig.startX;
 					const int layerTileY = (int)y + _layerConfig.startY;
@@ -168,7 +221,12 @@ public:
 		return tileMap;
 	}
 
-	static std::vector<TileMap*> loadFromJSONFile(const char* filePath, TileSet* tileSet)
+	static std::vector<TileMap*> loadFromJSONFile(const char* filePath)
+	{
+		return loadFromJSONFile(filePath, nullptr, true);
+	}
+
+	static std::vector<TileMap*> loadFromJSONFile(const char* filePath, TileSet* fallbackTileSet, bool arrangeLayerTiles = true)
 	{
 		if (!FileSystem::FileExists(filePath))
 			return {};
@@ -181,7 +239,7 @@ public:
 			return tileMaps;
 		}
 
-		auto readFloat = [](simdjson::dom::element element, float fallback = 0.0f) -> float {
+		auto readFloat = [](auto element, float fallback = 0.0f) -> float {
 			if (element.is_null()) {
 				return fallback;
 			}
@@ -197,8 +255,24 @@ public:
 			return fallback;
 		};
 
-		auto readInt = [&](simdjson::dom::element element, int fallback = 0) -> int {
+		auto readInt = [&](auto element, int fallback = 0) -> int {
 			return (int)std::round(readFloat(element, (float)fallback));
+		};
+
+		auto readInt64 = [](auto element, int64_t fallback = 0) -> int64_t {
+			if (element.is_null()) {
+				return fallback;
+			}
+			if (element.is_int64()) {
+				return (int64_t)element.get_int64();
+			}
+			if (element.is_uint64()) {
+				return (int64_t)element.get_uint64();
+			}
+			if (element.is_double()) {
+				return (int64_t)std::llround((double)element.get_double());
+			}
+			return fallback;
 		};
 
 		auto normalizeModeString = [](const std::string& value) -> std::string {
@@ -225,6 +299,88 @@ public:
 
 		const int rootWidth = readInt(json["width"], 0);
 		const int rootHeight = readInt(json["height"], 0);
+		const std::string mapDirectory = FileSystem::File::GetFilePath(filePath);
+
+		struct MapTileSetEntry {
+			int firstGid = 1;
+			TileSet* tileSet = nullptr;
+			std::string source;
+		};
+
+		std::vector<MapTileSetEntry> mapTileSets;
+		std::shared_ptr<OwnedTileSetRegistry> ownedTileSets = std::make_shared<OwnedTileSetRegistry>();
+
+		if (!json["tilesets"].is_null() && json["tilesets"].is_array()) {
+			for (auto mapTileSet : json["tilesets"]) {
+				const int firstGid = readInt(mapTileSet["firstgid"], -1);
+				if (firstGid <= 0) {
+					continue;
+				}
+
+				if (!mapTileSet["source"].is_string()) {
+					continue;
+				}
+
+				std::string sourcePath = std::string((std::string_view)mapTileSet["source"].get_string());
+				if (sourcePath.empty()) {
+					continue;
+				}
+
+				std::string resolvedSourcePath = FileSystem::Path::ResolveFromBaseOrParent(sourcePath, mapDirectory);
+				if (!FileSystem::FileExists(resolvedSourcePath)) {
+#if _DEBUG
+					char buffer[512];
+					sprintf_s(
+						buffer,
+						sizeof(buffer),
+						"TileMap::loadFromJSONFile missing tileset source '%s' (resolved='%s')\n",
+						sourcePath.c_str(),
+						resolvedSourcePath.c_str());
+					DEBUG_MSG(buffer);
+#endif
+					continue;
+				}
+
+				TileSet* loadedTileSet = TileSet::loadFromFile(resolvedSourcePath.c_str());
+				if (!loadedTileSet) {
+					continue;
+				}
+
+				mapTileSets.push_back({ firstGid, loadedTileSet, sourcePath });
+				ownedTileSets->tileSets.push_back(loadedTileSet);
+			}
+		}
+
+		std::sort(mapTileSets.begin(), mapTileSets.end(), [](const MapTileSetEntry& lhs, const MapTileSetEntry& rhs) {
+			return lhs.firstGid < rhs.firstGid;
+		});
+
+		auto resolveTileFromGid = [&](int64_t gid, TileSet*& outTileSet, int& outTileIndex) -> bool {
+			outTileSet = nullptr;
+			outTileIndex = -1;
+			if (gid <= 0) {
+				return false;
+			}
+
+			if (!mapTileSets.empty()) {
+				for (int i = (int)mapTileSets.size() - 1; i >= 0; --i) {
+					if (gid >= mapTileSets[i].firstGid) {
+						outTileSet = mapTileSets[i].tileSet;
+						outTileIndex = (int)(gid - mapTileSets[i].firstGid);
+						return outTileSet != nullptr && outTileIndex >= 0;
+					}
+				}
+				return false;
+			}
+
+			if (fallbackTileSet) {
+				outTileSet = fallbackTileSet;
+				outTileIndex = (int)(gid - 1);
+				return outTileIndex >= 0;
+			}
+
+			return false;
+		};
 
 		for (auto layer : json["layers"]) {
 			const char* type = nullptr;
@@ -296,7 +452,15 @@ public:
 					}
 				}
 
-				TileMap* tileMap = new TileMap((unsigned int)mapWidth, (unsigned int)mapHeight, tileSet, layerConfig);
+				TileSet* defaultTileSet = fallbackTileSet;
+				if (!defaultTileSet && !mapTileSets.empty()) {
+					defaultTileSet = mapTileSets.front().tileSet;
+				}
+
+				TileMap* tileMap = new TileMap((unsigned int)mapWidth, (unsigned int)mapHeight, defaultTileSet, layerConfig);
+				if (!mapTileSets.empty()) {
+					tileMap->setOwnedTileSetRegistry(ownedTileSets);
+				}
 
 				if (!layer["chunks"].is_null() && layer["chunks"].is_array()) {
 					for (auto chunk : layer["chunks"]) {
@@ -305,53 +469,85 @@ public:
 						const int chunkH = readInt(chunk["height"], 0);
 						const int chunkXoff = readInt(chunk["x"], 0);
 						const int chunkYoff = readInt(chunk["y"], 0);
+						if (chunkW <= 0 || chunkH <= 0) {
+							continue;
+						}
+
 						int index = 0;
-
-						for (int cy = 0; cy < chunkH; ++cy) {
-							for (int cx = 0; cx < chunkW; ++cx, ++index) {
-								if (index >= (int)data.size()) {
-									break;
-								}
-
-								int64_t gid = data.at(index).get_int64();
-								if (gid == 0) {
-									continue;
-								}
-
-								const int layerX = cx + chunkXoff;
-								const int layerY = cy + chunkYoff;
-								const int localX = layerX - layerConfig.startX;
-								const int localY = layerY - layerConfig.startY;
-								if (localX < 0 || localY < 0 || localX >= mapWidth || localY >= mapHeight) {
-									continue;
-								}
-
-								const int tileIndex = (int)(gid - 1);
-								tileMap->setTileIndex((unsigned int)localX, (unsigned int)localY, tileIndex);
+						const int maxChunkCells = chunkW * chunkH;
+						for (auto gidElement : data) {
+							if (index >= maxChunkCells) {
+								break;
 							}
+
+							const int cx = index % chunkW;
+							const int cy = index / chunkW;
+							++index;
+
+							int64_t gid = readInt64(gidElement, 0);
+							if (gid == 0) {
+								continue;
+							}
+
+							const int layerX = cx + chunkXoff;
+							const int layerY = cy + chunkYoff;
+							const int localX = layerX - layerConfig.startX;
+							const int localY = layerY - layerConfig.startY;
+							if (localX < 0 || localY < 0 || localX >= mapWidth || localY >= mapHeight) {
+								continue;
+							}
+
+							TileSet* resolvedTileSet = nullptr;
+							int resolvedTileIndex = -1;
+							if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
+#if _DEBUG
+								char buffer[256];
+								sprintf_s(buffer, sizeof(buffer), "Skipping unresolved gid %lld on layer '%s'\n", (long long)gid, layerConfig.name.c_str());
+								DEBUG_MSG(buffer);
+#endif
+								continue;
+							}
+
+							tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
 						}
 					}
 				}
 				else if (!layer["data"].is_null() && layer["data"].is_array()) {
 					auto data = layer["data"].get_array();
-					for (int localY = 0; localY < mapHeight; ++localY) {
-						for (int localX = 0; localX < mapWidth; ++localX) {
-							const int index = localX + localY * mapWidth;
-							if (index >= (int)data.size()) {
-								continue;
-							}
-
-							int64_t gid = data.at(index).get_int64();
-							if (gid == 0) {
-								continue;
-							}
-
-							tileMap->setTileIndex((unsigned int)localX, (unsigned int)localY, (int)(gid - 1));
+					const int maxLayerCells = mapWidth * mapHeight;
+					int index = 0;
+					for (auto gidElement : data) {
+						if (index >= maxLayerCells) {
+							break;
 						}
+
+						const int localX = index % mapWidth;
+						const int localY = index / mapWidth;
+						++index;
+
+						int64_t gid = readInt64(gidElement, 0);
+						if (gid == 0) {
+							continue;
+						}
+
+						TileSet* resolvedTileSet = nullptr;
+						int resolvedTileIndex = -1;
+						if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
+#if _DEBUG
+							char buffer[256];
+							sprintf_s(buffer, sizeof(buffer), "Skipping unresolved gid %lld on layer '%s'\n", (long long)gid, layerConfig.name.c_str());
+							DEBUG_MSG(buffer);
+#endif
+							continue;
+						}
+
+						tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
 					}
 				}
 
-				tileMap->arrangeTiles();
+				if (arrangeLayerTiles) {
+					tileMap->arrangeTiles();
+				}
 				tileMaps.push_back(tileMap);
 			}
 			else if (strcmp(type, "objectgroup") == 0) {
