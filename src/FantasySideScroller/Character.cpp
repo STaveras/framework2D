@@ -16,9 +16,11 @@
 
 namespace {
 constexpr float kGroundLossGraceSeconds = 0.06f;
+constexpr float kDropThroughDurationSeconds = 0.20f;
 constexpr float kSupportSampleInset = 2.0f;
 constexpr float kDefaultMaxSnapPerFrame = 8.0f;
 constexpr float kGroundNormalThreshold = 0.2f;
+constexpr float kOneWayTopApproachEpsilon = 1.0f;
 constexpr float kLocomotionFootLocalY = 22.0f;
 constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
@@ -41,6 +43,123 @@ Character::Character(void) :
 
 Character::~Character() {}
 
+bool Character::_isOneWayTile(const Tile* tile) const
+{
+	return tile &&
+		tile->getTileType() == "tile" &&
+		tile->isOneWay();
+}
+
+bool Character::_isDropThroughRequested() const
+{
+	Game* game = Engine2D::getGame();
+	if (!game) {
+		return false;
+	}
+
+	Player* player = game->getPlayerWith((GameObject*)this);
+	if (!player || !player->getController()) {
+		return false;
+	}
+
+	Controller* controller = player->getController();
+	Action* jumpAction = controller->getAction("JUMP");
+	Action* downAction = controller->getAction("DOWN");
+	if (!jumpAction || !downAction) {
+		return false;
+	}
+
+	return controller->buttonPressed(jumpAction) && controller->buttonDown(downAction);
+}
+
+void Character::_startDropThrough()
+{
+	_dropThroughTimer = kDropThroughDurationSeconds;
+
+	for (auto itr = _groundContacts.begin(); itr != _groundContacts.end();) {
+		Tile* tile = *itr;
+		if (_isOneWayTile(tile)) {
+			itr = _groundContacts.erase(itr);
+			continue;
+		}
+		++itr;
+	}
+
+	_refreshGroundTile();
+	_timeWithoutGroundContact = kGroundLossGraceSeconds;
+
+	if (GameObjectState* state = this->getState()) {
+		const char* stateName = state->getName();
+		if (_isGroundedLocomotionState(stateName) || !strcmp(stateName, "Attack01") || !strcmp(stateName, "Attack02")) {
+			this->sendInput("IN_AIR");
+		}
+	}
+}
+
+bool Character::_canCollideWithOneWayTile(const Tile* tile) const
+{
+	if (!_isOneWayTile(tile)) {
+		return true;
+	}
+
+	if (_dropThroughTimer > 0.0f) {
+		return false;
+	}
+
+	if (this->getVelocity().y < 0.0f) {
+		return false;
+	}
+
+	Collidable* selfCollidable = ((Character*)this)->getCollidable();
+	Collidable* tileCollidable = ((Tile*)tile)->getCollidable();
+	if (!selfCollidable || !tileCollidable || !selfCollidable->isActive() || !tileCollidable->isActive()) {
+		return true;
+	}
+
+	if (selfCollidable->getType() != COL_OBJ_SQUARE) {
+		return true;
+	}
+
+	Square* bodySquare = (Square*)selfCollidable;
+	const vector2 bodyMin = bodySquare->getMin();
+	const vector2 bodyMax = bodySquare->getMax();
+	const float sampleX = bodyMin.x + ((bodyMax.x - bodyMin.x) * 0.5f);
+
+	float supportY = 0.0f;
+	if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
+		return true;
+	}
+
+	const float bodyTop = bodyMin.y;
+	return bodyTop < (supportY + kOneWayTopApproachEpsilon);
+}
+
+bool Character::shouldCollideWith(const GameObject& other) const
+{
+	if (!GameObject::shouldCollideWith(other)) {
+		return false;
+	}
+
+	if (other.getType() != GAME_OBJ_TILE) {
+		return true;
+	}
+
+	const Tile* tile = (const Tile*)(&other);
+	if (!tile) {
+		return false;
+	}
+
+	if (tile->isNonCollidingLayer()) {
+		return false;
+	}
+
+	if (_isOneWayTile(tile)) {
+		return _canCollideWithOneWayTile(tile);
+	}
+
+	return true;
+}
+
 bool Character::_isGroundContact(const CollisionContact& contact) const
 {
 	if (!contact.other || contact.phase == CollisionPhase::Exit || contact.other->getType() != GAME_OBJ_TILE) {
@@ -49,6 +168,14 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 
 	Tile* tile = (Tile*)contact.other;
 	if (!tile || tile->getTileType() != "tile") {
+		return false;
+	}
+
+	if (tile->isNonCollidingLayer()) {
+		return false;
+	}
+
+	if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
 		return false;
 	}
 
@@ -167,6 +294,16 @@ void Character::_refreshGroundTile()
 
 	for (Tile* tile : _groundContacts) {
 		if (!tile || tile->getTileType() != "tile") {
+			staleTiles.push_back(tile);
+			continue;
+		}
+
+		if (tile->isNonCollidingLayer()) {
+			staleTiles.push_back(tile);
+			continue;
+		}
+
+		if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
 			staleTiles.push_back(tile);
 			continue;
 		}
@@ -309,6 +446,14 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 
 		Tile* tile = (Tile*)object;
 		if (!tile || tile->getTileType() != "tile") {
+			continue;
+		}
+
+		if (tile->isNonCollidingLayer()) {
+			continue;
+		}
+
+		if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
 			continue;
 		}
 
@@ -898,7 +1043,29 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 void Character::update(float time)
 {
 	GameObject::update(time);
+
+	if (_dropThroughTimer > 0.0f) {
+		_dropThroughTimer = std::max(0.0f, _dropThroughTimer - time);
+	}
+
 	_refreshGroundTile();
+
+	if (_isDropThroughRequested()) {
+		bool groundedOnOneWay = _isOneWayTile(_tile);
+
+		if (!groundedOnOneWay) {
+			for (Tile* contactTile : _groundContacts) {
+				if (_isOneWayTile(contactTile) && _canCollideWithOneWayTile(contactTile)) {
+					groundedOnOneWay = true;
+					break;
+				}
+			}
+		}
+
+		if (groundedOnOneWay) {
+			_startDropThrough();
+		}
+	}
 
 	float baseSnapPerFrame = kDefaultMaxSnapPerFrame;
 	if (_tile && _tile->getTileSet()) {

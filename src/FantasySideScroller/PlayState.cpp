@@ -8,6 +8,9 @@
 #include "Constants.h"
 #include "Character.h"
 
+#include <cctype>
+#include <string>
+
 PlayState::PlayState()
     : _player(nullptr)
     , _camera(nullptr)
@@ -48,17 +51,42 @@ void PlayState::onEnter(State* prev)
 	//_tileMap = (*TileMap::loadFromJSONFile(BASE_DIRECTORY"fantasyTestMap.tmj", _tileSet).begin());
 	_tileMaps = TileMap::loadFromJSONFile(BasePath("testMap.tmj").c_str(), _tileSet);
 
-	for (unsigned int j = 0; j < _tileMaps.size(); j++)
-	{
-		TileMap* _tileMap = _tileMaps[j];
-
-		for (unsigned int i = 0; i < (unsigned int)_tileMap->getTiles().size(); i++) {
-			char buffer[32]{ 0 }; sprintf_s(buffer, 32, "t%u", i);
-			_objectManager.addObject(buffer, _tileMap->getTiles()[i]);
+	auto sanitizeLayerName = [](const std::string& value) -> std::string {
+		if (value.empty()) {
+			return "unnamed";
 		}
 
-		_tileMap->setPosition(-60, 0);
-		_tileMap->arrangeTiles();
+		std::string sanitized;
+		sanitized.reserve(value.size());
+		for (char c : value) {
+			if (std::isalnum((unsigned char)c)) {
+				sanitized.push_back(c);
+			}
+			else {
+				sanitized.push_back('_');
+			}
+		}
+		return sanitized;
+	};
+
+	for (unsigned int j = 0; j < _tileMaps.size(); j++)
+	{
+		TileMap* tileMap = _tileMaps[j];
+		if (!tileMap) {
+			continue;
+		}
+
+		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
+		const std::string safeLayerName = sanitizeLayerName(layerConfig.name);
+		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
+
+		for (unsigned int i = 0; i < (unsigned int)tileMap->getTiles().size(); i++) {
+			std::string objectName = layerPrefix + "_tile_" + std::to_string(i);
+			_objectManager.addObject(objectName.c_str(), tileMap->getTiles()[i]);
+		}
+
+		tileMap->setPosition(-60, 0);
+		tileMap->arrangeTiles();
 	}
 
 	_playableCharacter = new Character;
@@ -77,6 +105,8 @@ void PlayState::onEnter(State* prev)
 	_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
 	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
 	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
+	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
+	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
 	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
 	_player->setGameObject(_playableCharacter);
 
