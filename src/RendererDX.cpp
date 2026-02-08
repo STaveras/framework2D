@@ -142,14 +142,19 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	vector2 worldPosition = image->getPosition() + vector2(offset.x, offset.y);
 	D3DXVECTOR2 screenPosition = worldToScreen(m_pCamera, worldPosition);
 	const float cameraZoom = (m_pCamera && m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+	const D3DXVECTOR2 spriteScale = image->getScale();
+	const float mirrorSignX = (spriteScale.x < 0.0f) ? -1.0f : 1.0f;
+	const float mirrorSignY = (spriteScale.y < 0.0f) ? -1.0f : 1.0f;
 
 	D3DXVECTOR3 position;
-	position.x = screenPosition.x;
-	position.y = screenPosition.y;
+	// Preserve legacy mirror semantics for DirectX sprites: mirrored axes
+	// use signed draw-position, while zoom is handled separately via scale.
+	position.x = screenPosition.x * mirrorSignX;
+	position.y = screenPosition.y * mirrorSignY;
 	position.z = zValue;
 
 	D3DXVECTOR2 rectCenter = image->getRectCenter();
-	D3DXVECTOR2 scale = image->getScale();
+	D3DXVECTOR2 scale = spriteScale;
 	scale.x *= cameraZoom;
 	scale.y *= cameraZoom;
 	D3DXVECTOR2 center = image->getCenter();
@@ -157,8 +162,12 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	D3DXMATRIX transform;
 	D3DXMatrixTransformation2D(&transform, &rectCenter, 0.0f, &scale, &center, image->getRotation(), NULL);
 
-	// Depth for some reason? 
-	D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x * scale.x, image->getCenter().y * scale.y, 0.0f);
+	// Keep sprite pivot tied to sprite-local mirror/scale only.
+	// Camera zoom should affect transform scale, not draw-origin center.
+	D3DXVECTOR3 center3D = D3DXVECTOR3(
+		image->getCenter().x * image->getScale().x,
+		image->getCenter().y * image->getScale().y,
+		0.0f);
 
 	// No mipmaps, and nearest neighbor/point filtering 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
