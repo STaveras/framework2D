@@ -935,7 +935,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 	}
 
 #if _DEBUG
-	if (DEBUGGING && Debug::dbgCollision)
+	if (DEBUGGING && Debug::dbgCollision && Debug::dbgTiles)
 	{
 		char buffer[256];
 		sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", tile->getTileIndex(), tile->_position.x, tile->_position.y);
