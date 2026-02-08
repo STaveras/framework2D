@@ -117,6 +117,15 @@ bool PlayState::onExecute(float time)
 				(nextMode == Camera::ZoomAnchorMode::TargetCenter) ? "TargetCenter" : "OriginLegacy");
 			DEBUG_MSG(buffer);
 		}
+
+		if (keyboard->keyPressed(keyboard->getKeys().KBK_F3)) {
+			Debug::dbgCollision = !Debug::dbgCollision;
+
+			char buffer[128]{ 0 };
+			sprintf_s(buffer, sizeof(buffer), "Collision Debug: %s\n",
+				Debug::dbgCollision ? "ON" : "OFF");
+			DEBUG_MSG(buffer);
+		}
 	}
 	_levelManager.update();
 
