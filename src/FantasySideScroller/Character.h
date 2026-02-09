@@ -21,6 +21,9 @@ class Character : public GameObject
 	float _stamina = 100.0f;
 	float _maxStamina = 100.0f;
 	bool _runBoostActive = false;
+	float _longJumpMomentumSpeed = 0.0f;
+	int _longJumpMomentumDirection = 0;
+	bool _longJumpMomentumActive = false;
 
 protected:
 	// Initialize animation states and hitboxes
