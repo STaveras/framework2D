@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 cd "$(dirname "$0")"
-pwd
-./framework2D --fps --vsync
+exec ./framework2D --fps --vsync "$@"

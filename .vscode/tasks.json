@@ -13,7 +13,7 @@
             },
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true
             },
             "problemMatcher": [
                 "$gcc"
@@ -152,7 +152,7 @@
             "preset": "windows-debug",
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             },
             "dependsOn": [
                 "CMake: configure (windows-debug)"
