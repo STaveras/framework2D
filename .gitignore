@@ -26,3 +26,4 @@ build/**
 out/
 out-test/
 framework/
+*.app/**
