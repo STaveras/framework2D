@@ -114,15 +114,16 @@ class TileMap : public Tile
 		}
 
 		const size_t index = tileGridIndex(x, y);
-		Tile* tile = _tileGrid[index];
-		if (!tile) {
-			tile = _tiles.create();
-			tile->setLayerCollisionMode(_layerConfig.collisionMode);
-			if (_tileSet) {
-				tile->setTileSet(_tileSet);
+			Tile* tile = _tileGrid[index];
+			if (!tile) {
+				tile = _tiles.create();
+				tile->setLayerCollisionMode(_layerConfig.collisionMode);
+				tile->setLayerName(_layerConfig.name);
+				if (_tileSet) {
+					tile->setTileSet(_tileSet);
+				}
+				_tileGrid[index] = tile;
 			}
-			_tileGrid[index] = tile;
-		}
 		return tile;
 	}
 
@@ -153,25 +154,27 @@ public:
 			return;
 		}
 
-		if (Tile* tile = this->ensureTile(x, y)) {
-			tile->setTileIndex(tileIndex);
-			tile->setLayerCollisionMode(_layerConfig.collisionMode);
+			if (Tile* tile = this->ensureTile(x, y)) {
+				tile->setTileIndex(tileIndex);
+				tile->setLayerCollisionMode(_layerConfig.collisionMode);
+				tile->setLayerName(_layerConfig.name);
+			}
 		}
-	}
 
 	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex) {
 		if (tileIndex < 0 && !this->getTile(x, y)) {
 			return;
 		}
 
-		if (Tile* tile = this->ensureTile(x, y)) {
-			if (tileSet) {
-				tile->setTileSet(tileSet);
+			if (Tile* tile = this->ensureTile(x, y)) {
+				if (tileSet) {
+					tile->setTileSet(tileSet);
+				}
+				tile->setTileIndex(tileIndex);
+				tile->setLayerCollisionMode(_layerConfig.collisionMode);
+				tile->setLayerName(_layerConfig.name);
 			}
-			tile->setTileIndex(tileIndex);
-			tile->setLayerCollisionMode(_layerConfig.collisionMode);
 		}
-	}
 
 	int getTileIndex(unsigned int x, unsigned int y) {
 		if (Tile* tile = this->getTile(x, y)) {
@@ -217,15 +220,28 @@ public:
 					unsigned int tileSize = (unsigned int)tile->getTileSet()->getTileSize();
 					const int layerTileX = (int)x + _layerConfig.startX;
 					const int layerTileY = (int)y + _layerConfig.startY;
-					tile->setPosition(this->getPosition() + vector2{
-						_layerConfig.offsetX + (float)(layerTileX * (int)tileSize),
-						_layerConfig.offsetY + (float)(layerTileY * (int)tileSize)
-					});
-					tile->setLayerCollisionMode(_layerConfig.collisionMode);
-					tile->update(0);
+							tile->setPosition(this->getPosition() + vector2{
+								_layerConfig.offsetX + (float)(layerTileX * (int)tileSize),
+								_layerConfig.offsetY + (float)(layerTileY * (int)tileSize)
+							});
+							tile->setLayerCollisionMode(_layerConfig.collisionMode);
+							tile->setLayerName(_layerConfig.name);
+							tile->update(0);
 #if _DEBUG
-					if (Debug::dbgTiles) {
-						if (Collidable* collidable = tile->getCollidable()) {
+						if (_layerConfig.collisionMode != TileCollisionMode::None && !tile->getCollidable()) {
+							char buffer[256];
+							sprintf_s(
+								buffer,
+								sizeof(buffer),
+								"TileMap::arrangeTiles layer '%s' tileIndex=%d has collidable layer but no collision shape\n",
+								_layerConfig.name.c_str(),
+								tile->getTileIndex());
+							DEBUG_MSG(buffer);
+						}
+#endif
+#if _DEBUG
+						if (Debug::dbgTiles) {
+							if (Collidable* collidable = tile->getCollidable()) {
 							char buffer[128];
 							sprintf_s(buffer, sizeof(buffer), "pos{%f, %f}\tcpos{%f, %f}\n", tile->_x, tile->_y, collidable->_position.x, collidable->_position.y);
 							DEBUG_MSG(buffer);
@@ -377,19 +393,31 @@ public:
 			return normalized;
 		};
 
-		auto parseCollisionMode = [&](const std::string& value, TileCollisionMode fallback) -> TileCollisionMode {
-			const std::string normalized = normalizeModeString(value);
-			if (normalized == "solid") {
-				return TileCollisionMode::Solid;
+			auto parseCollisionMode = [&](const std::string& value, TileCollisionMode fallback) -> TileCollisionMode {
+				const std::string normalized = normalizeModeString(value);
+				if (normalized == "solid") {
+					return TileCollisionMode::Solid;
 			}
 			if (normalized == "one_way" || normalized == "oneway") {
 				return TileCollisionMode::OneWay;
 			}
 			if (normalized == "none") {
 				return TileCollisionMode::None;
-			}
-			return fallback;
-		};
+				}
+				return fallback;
+			};
+
+			auto collisionModeToString = [](TileCollisionMode mode) -> const char* {
+				switch (mode) {
+				case TileCollisionMode::Solid:
+					return "solid";
+				case TileCollisionMode::OneWay:
+					return "one_way";
+				case TileCollisionMode::None:
+				default:
+					return "none";
+				}
+			};
 
 		auto normalizeGid = [](int64_t rawGid) -> int64_t {
 			const uint32_t rawValue = (uint32_t)(rawGid & 0xFFFFFFFFLL);
@@ -594,19 +622,21 @@ public:
 							}
 						}
 
-						TileSet* defaultTileSet = fallbackTileSet;
-						if (!defaultTileSet && !mapTileSets.empty()) {
-							defaultTileSet = mapTileSets.front().tileSet;
-						}
+							TileSet* defaultTileSet = fallbackTileSet;
+							if (!defaultTileSet && !mapTileSets.empty()) {
+								defaultTileSet = mapTileSets.front().tileSet;
+							}
 
-						TileMap* tileMap = new TileMap((unsigned int)mapWidth, (unsigned int)mapHeight, defaultTileSet, layerConfig);
-						if (!mapTileSets.empty()) {
-							tileMap->setOwnedTileSetRegistry(ownedTileSets);
-						}
+							TileMap* tileMap = new TileMap((unsigned int)mapWidth, (unsigned int)mapHeight, defaultTileSet, layerConfig);
+							if (!mapTileSets.empty()) {
+								tileMap->setOwnedTileSetRegistry(ownedTileSets);
+							}
 
-						if (!layer["chunks"].is_null() && layer["chunks"].is_array()) {
-							for (auto chunk : layer["chunks"]) {
-								auto data = chunk["data"].get_array();
+							int nonEmptyTileCount = 0;
+
+							if (!layer["chunks"].is_null() && layer["chunks"].is_array()) {
+								for (auto chunk : layer["chunks"]) {
+									auto data = chunk["data"].get_array();
 								const int chunkW = readInt(chunk["width"], 0);
 								const int chunkH = readInt(chunk["height"], 0);
 								const int chunkXoff = readInt(chunk["x"], 0);
@@ -626,13 +656,14 @@ public:
 									const int cy = index / chunkW;
 									++index;
 
-									const int64_t gid = normalizeGid(readInt64(gidElement, 0));
-									if (gid == 0) {
-										continue;
-									}
+										const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+										if (gid == 0) {
+											continue;
+										}
+										++nonEmptyTileCount;
 
-									const int layerX = cx + chunkXoff;
-									const int layerY = cy + chunkYoff;
+										const int layerX = cx + chunkXoff;
+										const int layerY = cy + chunkYoff;
 									const int localX = layerX - layerConfig.startX;
 									const int localY = layerY - layerConfig.startY;
 									if (localX < 0 || localY < 0 || localX >= mapWidth || localY >= mapHeight) {
@@ -667,13 +698,14 @@ public:
 								const int localY = index / mapWidth;
 								++index;
 
-								const int64_t gid = normalizeGid(readInt64(gidElement, 0));
-								if (gid == 0) {
-									continue;
-								}
+									const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+									if (gid == 0) {
+										continue;
+									}
+									++nonEmptyTileCount;
 
-								TileSet* resolvedTileSet = nullptr;
-								int resolvedTileIndex = -1;
+									TileSet* resolvedTileSet = nullptr;
+									int resolvedTileIndex = -1;
 								if (!resolveTileFromGid(gid, resolvedTileSet, resolvedTileIndex)) {
 #if _DEBUG
 									char buffer[256];
@@ -685,11 +717,26 @@ public:
 
 								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
 							}
-						}
+							}
 
-						if (arrangeLayerTiles) {
-							tileMap->arrangeTiles();
-						}
+#if _DEBUG
+							{
+								char buffer[320];
+								sprintf_s(
+									buffer,
+									sizeof(buffer),
+									"TileMap::load layer '%s' mode=%s nonempty=%d visible=%s\\n",
+									layerConfig.name.c_str(),
+									collisionModeToString(layerConfig.collisionMode),
+									nonEmptyTileCount,
+									layerDescriptor.visible ? "true" : "false");
+								DEBUG_MSG(buffer);
+							}
+#endif
+
+							if (arrangeLayerTiles) {
+								tileMap->arrangeTiles();
+							}
 
 						layerDescriptor.typedIndex = (int)result.tileMaps.size();
 						result.tileMaps.push_back(tileMap);

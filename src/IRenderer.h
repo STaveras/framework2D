@@ -10,6 +10,7 @@
 #include "ITexture.h"
 #include <list>
 #include <unordered_map>
+#include <vector>
 
 class Camera;
 
@@ -37,6 +38,9 @@ protected:
 	void _backgroundColorShift(void);
 
 	bool m_bStaticBG; // For demoing
+	std::vector<Color> m_BackgroundColorPoints;
+	size_t m_BackgroundColorStage;
+	float m_BackgroundColorProgress;
 	bool m_bFullScreen;
 	bool m_bVerticalSync;
 	int m_nWidth;
@@ -56,6 +60,16 @@ public:
 				 bool fullscreen = false, 
 				 bool vsync = false) :
 		m_bStaticBG(false),
+		m_BackgroundColorPoints({
+			Color(0xFFFF0000), // red
+			Color(0xFFFFA500), // orange
+			Color(0xFFFFFF00), // yellow
+			Color(0xFF00FF00), // green
+			Color(0xFF0000FF), // blue
+			Color(0xFF800080)  // purple
+			}),
+		m_BackgroundColorStage(0),
+		m_BackgroundColorProgress(0.0f),
 		m_bFullScreen(fullscreen),
 		m_bVerticalSync(vsync),
 		m_nWidth(nWidth), m_nHeight(nHeight),
@@ -70,6 +84,9 @@ public:
 
 	bool isBackgroundStatic(void) const { return m_bStaticBG; }
 	void setBackgroundStatic(bool isStatic) { m_bStaticBG = isStatic; }
+	const std::vector<Color>& getBackgroundColorPoints(void) const { return m_BackgroundColorPoints; }
+	void setBackgroundColorPoints(const std::vector<Color>& points);
+	void resetBackgroundColorShift(void);
 
 	bool isFullScreen(void) const { return m_bFullScreen; }
 	bool verticalSyncEnabled(void) const { return m_bVerticalSync; };

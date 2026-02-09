@@ -4,7 +4,6 @@
 
 #include "../Animation.h"
 #include "../CollidableGroup.h"
-#include "../GameState.h"
 #include "../Polygon.h"
 #include "../Square.h"
 
@@ -13,29 +12,18 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <string>
 #include <vector>
 
 namespace {
 constexpr float kGroundLossGraceSeconds = 0.06f;
 constexpr float kDropThroughDurationSeconds = 0.20f;
-constexpr float kSupportSampleInset = 2.0f;
-constexpr float kDefaultMaxSnapPerFrame = 8.0f;
 constexpr float kGroundNormalThreshold = 0.2f;
 constexpr float kOneWayTopApproachEpsilon = 1.0f;
+constexpr float kGroundSupportSnapDistance = 2.0f;
 constexpr float kLocomotionFootLocalY = 24.0f;
 constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
-constexpr float kWallNormalThreshold = 0.55f;
-constexpr float kHorizontalSeparationEpsilon = 0.01f;
-constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
-constexpr float kStepUpAssistEpsilon = 0.05f;
-constexpr float kUpwardSnapMultiplier = 2.0f;
-constexpr float kUpwardSupportBias = 0.25f;
-constexpr float kSlopePriorityEpsilon = 0.25f;
-constexpr float kSlopeFootClearance = 0.1f;
-constexpr float kSupportSwitchHysteresis = 0.35f;
-constexpr float kUphillProbeDistance = 1.5f;
-constexpr float kUphillProbeMaxRise = 4.0f;
 constexpr float kWalkMaxHorizontalSpeed = 95.0f;
 constexpr float kRunMaxHorizontalSpeed = 130.0f;
 constexpr float kAirMaxHorizontalSpeed = 112.0f;
@@ -52,32 +40,73 @@ constexpr float kStaminaRegenPerSecond = 40.0f;
 constexpr float kRunAnimationSpeed = 1.1f;
 constexpr float kRunBoostAnimationSpeed = 1.35f;
 constexpr float kHorizontalVelocityEpsilon = 0.01f;
-constexpr float kHorizontalSnapTravelPadding = 2.0f;
 constexpr float kFastFallAcceleration = 900.0f;
 constexpr float kFastFallMaxSpeed = 300.0f;
+constexpr float kGravityAcceleration = 760.0f;
+constexpr float kNormalFallMaxSpeed = 260.0f;
 constexpr float kLongJumpLaunchSpeedThreshold = 110.0f;
 constexpr float kLongJumpMomentumDecayPerSecond = 45.0f;
 
-bool isSquareOnlyCollidable(const Collidable* collidable)
+bool tryGetCollidableBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
 {
 	if (!collidable || !collidable->isActive()) {
 		return false;
 	}
 
 	switch (collidable->getType()) {
-	case COL_OBJ_SQUARE:
+	case COL_OBJ_SQUARE: {
+		const Square* square = (const Square*)collidable;
+		if (!square) {
+			return false;
+		}
+		outMin = square->getMin();
+		outMax = square->getMax();
 		return true;
+	}
+	case COL_OBJ_POLYGON: {
+		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+		if (!polygon || !polygon->isValid()) {
+			return false;
+		}
+		outMin = polygon->getMin();
+		outMax = polygon->getMax();
+		return true;
+	}
 	case COL_OBJ_GROUP: {
 		const CollidableGroup* group = (const CollidableGroup*)collidable;
 		if (!group || group->empty()) {
 			return false;
 		}
 
+		bool foundAny = false;
+		vector2 minBounds(0.0f, 0.0f);
+		vector2 maxBounds(0.0f, 0.0f);
 		for (const Collidable* member : *group) {
-			if (!isSquareOnlyCollidable(member)) {
-				return false;
+			vector2 memberMin(0.0f, 0.0f);
+			vector2 memberMax(0.0f, 0.0f);
+			if (!member || !tryGetCollidableBounds(member, memberMin, memberMax)) {
+				continue;
 			}
+
+			if (!foundAny) {
+				minBounds = memberMin;
+				maxBounds = memberMax;
+				foundAny = true;
+				continue;
+			}
+
+			minBounds.x = std::min(minBounds.x, memberMin.x);
+			minBounds.y = std::min(minBounds.y, memberMin.y);
+			maxBounds.x = std::max(maxBounds.x, memberMax.x);
+			maxBounds.y = std::max(maxBounds.y, memberMax.y);
 		}
+
+		if (!foundAny) {
+			return false;
+		}
+
+		outMin = minBounds;
+		outMax = maxBounds;
 		return true;
 	}
 	default:
@@ -106,10 +135,23 @@ Character::Character(void) :
 
 Character::~Character() {}
 
+void Character::resetForRespawn(void)
+{
+	_tile = NULL;
+	_groundContacts.clear();
+	_timeWithoutGroundContact = 0.0f;
+	_pendingTransitionFootCorrection = 0.0f;
+	_dropThroughTimer = 0.0f;
+	_runBoostActive = false;
+	_longJumpMomentumActive = false;
+	_longJumpMomentumDirection = 0;
+	_longJumpMomentumSpeed = 0.0f;
+	this->setVelocity(vector2(0.0f, 0.0f));
+}
+
 bool Character::_isOneWayTile(const Tile* tile) const
 {
 	return tile &&
-		tile->getTileType() == "tile" &&
 		tile->isOneWay();
 }
 
@@ -230,7 +272,7 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 	}
 
 	Tile* tile = (Tile*)contact.other;
-	if (!tile || tile->getTileType() != "tile") {
+	if (!tile) {
 		return false;
 	}
 
@@ -242,13 +284,47 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 		return false;
 	}
 
-	if (contact.normal.has_value()) {
-		return contact.normal->y > kGroundNormalThreshold;
+	if (contact.normal.has_value() && contact.normal->y > kGroundNormalThreshold) {
+		return true;
 	}
 
-	vector2 directionToObject = tile->getPosition() - this->getPosition();
-	directionToObject.normalize();
-	return directionToObject.y > 0.0f;
+	// Resolver-provided separation is a useful fallback when SAT normals on slopes are noisy.
+	if (contact.separation.has_value() && contact.separation->y < -kGroundNormalThreshold) {
+		return true;
+	}
+
+	// Non-overlap "touching" contacts should already provide a touching normal.
+	// Sampling fallback below is only reliable for true overlap.
+	if (!contact.overlapping) {
+		return false;
+	}
+
+	const Collidable* selfCollidable = contact.selfCollidable;
+	const Collidable* tileCollidable = contact.otherCollidable ? contact.otherCollidable : tile->getCollidable();
+	if (!selfCollidable) {
+		return false;
+	}
+
+	vector2 selfMin(0.0f, 0.0f);
+	vector2 selfMax(0.0f, 0.0f);
+	if (!tileCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+		return false;
+	}
+
+	const float sampleX = selfMin.x + ((selfMax.x - selfMin.x) * 0.5f);
+	float supportY = 0.0f;
+	if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
+		return false;
+	}
+
+	const float bodyBottom = selfMax.y;
+	const float bodyCenterY = selfMin.y + ((selfMax.y - selfMin.y) * 0.5f);
+	const float supportDelta = bodyBottom - supportY;
+	const bool nearTopSurface =
+		supportDelta >= -kOneWayTopApproachEpsilon &&
+		supportDelta <= kGroundSupportSnapDistance;
+
+	return nearTopSurface;
 }
 
 bool Character::_isGroundedLocomotionState(const char* stateName) const
@@ -416,7 +492,7 @@ void Character::_refreshGroundTile()
 	std::vector<Tile*> staleTiles;
 
 	for (Tile* tile : _groundContacts) {
-		if (!tile || tile->getTileType() != "tile") {
+		if (!tile) {
 			staleTiles.push_back(tile);
 			continue;
 		}
@@ -514,332 +590,6 @@ bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, flo
 	default:
 		return false;
 	}
-}
-
-bool Character::_findSupportOnTile(const Tile* tile, float footY, float maxSnapDistance, float& outSupportY) const
-{
-	outSupportY = footY;
-	if (!tile || tile->getTileType() != "tile" || tile->isNonCollidingLayer()) {
-		return false;
-	}
-
-	if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
-		return false;
-	}
-
-	Collidable* body = ((Character*)this)->getCollidable();
-	if (!body || !body->isActive() || body->getType() != COL_OBJ_SQUARE) {
-		return false;
-	}
-
-	Collidable* tileCollidable = ((Tile*)tile)->getCollidable();
-	if (!tileCollidable || !tileCollidable->isActive()) {
-		return false;
-	}
-
-	Square* bodySquare = (Square*)body;
-	const vector2 bodyMin = bodySquare->getMin();
-	const vector2 bodyMax = bodySquare->getMax();
-	const float bodyWidth = bodyMax.x - bodyMin.x;
-	if (bodyWidth <= 0.0f) {
-		return false;
-	}
-
-	float sampleInset = std::min(kSupportSampleInset, bodyWidth * 0.45f);
-	if (sampleInset < 0.0f) {
-		sampleInset = 0.0f;
-	}
-
-	const float sampleXs[3] = {
-		bodyMin.x + sampleInset,
-		bodyMin.x + (bodyWidth * 0.5f),
-		bodyMax.x - sampleInset
-	};
-
-	struct TileSample {
-		bool hasSupport = false;
-		float supportY = 0.0f;
-		float deltaY = 0.0f;
-	};
-	TileSample samples[3];
-
-	const float maxUpwardSnapDistance = std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier);
-	const float maxDownwardSnapDistance = maxSnapDistance;
-	for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
-		float supportY = 0.0f;
-		if (!_sampleSupportY(tileCollidable, sampleXs[sampleIndex], supportY)) {
-			continue;
-		}
-
-		const float deltaY = supportY - footY;
-		if (deltaY < -maxUpwardSnapDistance || deltaY > maxDownwardSnapDistance) {
-			continue;
-		}
-
-		samples[sampleIndex].hasSupport = true;
-		samples[sampleIndex].supportY = supportY;
-		samples[sampleIndex].deltaY = deltaY;
-	}
-
-	int samplePriority[3] = { 1, 0, 2 };
-	const int horizontalIntent = _getHorizontalIntent();
-	if (horizontalIntent > 0) {
-		samplePriority[0] = 2;
-		samplePriority[1] = 1;
-		samplePriority[2] = 0;
-	}
-	else if (horizontalIntent < 0) {
-		samplePriority[0] = 0;
-		samplePriority[1] = 1;
-		samplePriority[2] = 2;
-	}
-
-	int bestDownwardSample = -1;
-	float bestDownwardDelta = std::numeric_limits<float>::max();
-	for (int i = 0; i < 3; ++i) {
-		const int sampleIndex = samplePriority[i];
-		if (!samples[sampleIndex].hasSupport) {
-			continue;
-		}
-
-		if (samples[sampleIndex].deltaY <= 0.0f) {
-			outSupportY = samples[sampleIndex].supportY;
-			return true;
-		}
-
-		if (samples[sampleIndex].deltaY < bestDownwardDelta) {
-			bestDownwardDelta = samples[sampleIndex].deltaY;
-			bestDownwardSample = sampleIndex;
-		}
-	}
-
-	if (bestDownwardSample >= 0) {
-		outSupportY = samples[bestDownwardSample].supportY;
-		return true;
-	}
-
-	return false;
-}
-
-Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, float& outSupportY)
-{
-	Collidable* body = this->getCollidable();
-	if (!body || !body->isActive() || body->getType() != COL_OBJ_SQUARE) {
-		return NULL;
-	}
-
-	Square* bodySquare = (Square*)body;
-	const vector2 bodyMin = bodySquare->getMin();
-	const vector2 bodyMax = bodySquare->getMax();
-	const float bodyWidth = bodyMax.x - bodyMin.x;
-	if (bodyWidth <= 0.0f) {
-		return NULL;
-	}
-
-	float sampleInset = std::min(kSupportSampleInset, bodyWidth * 0.45f);
-	if (sampleInset < 0.0f) {
-		sampleInset = 0.0f;
-	}
-
-	const float sampleXs[3] = {
-		bodyMin.x + sampleInset,
-		bodyMin.x + (bodyWidth * 0.5f),
-		bodyMax.x - sampleInset
-	};
-
-	struct SupportCandidate {
-		Tile* upwardTile = NULL;
-		float upwardY = 0.0f;
-		float upwardDistance = std::numeric_limits<float>::max();
-		Tile* downwardTile = NULL;
-		float downwardY = 0.0f;
-		float downwardDelta = std::numeric_limits<float>::max();
-	};
-	SupportCandidate sampleCandidates[3];
-	for (SupportCandidate& candidate : sampleCandidates) {
-		candidate.upwardY = footY;
-		candidate.downwardY = footY;
-	}
-
-	Game* game = Engine2D::getGame();
-	if (!game || game->empty()) {
-		return NULL;
-	}
-
-	ProgramState* activeProgramState = game->top();
-	GameState* activeGameState = dynamic_cast<GameState*>(activeProgramState);
-	if (!activeGameState) {
-		return NULL;
-	}
-
-	const auto& objects = activeGameState->getObjectManager()->getObjects();
-	const int horizontalIntent = _getHorizontalIntent();
-	const float maxUpwardSnapDistance = std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier);
-	const float maxDownwardSnapDistance = maxSnapDistance;
-	const bool useUphillProbe = horizontalIntent != 0;
-	const float uphillProbeX =
-		(horizontalIntent > 0) ?
-		(bodyMax.x + kUphillProbeDistance) :
-		(bodyMin.x - kUphillProbeDistance);
-	Tile* uphillProbeTile = NULL;
-	float uphillProbeY = footY;
-	float uphillProbeRise = std::numeric_limits<float>::max();
-
-	for (const auto& entry : objects) {
-		GameObject* object = entry.second;
-		if (!object || object == this || object->getType() != GAME_OBJ_TILE) {
-			continue;
-		}
-
-		Tile* tile = (Tile*)object;
-		if (!tile || tile->getTileType() != "tile") {
-			continue;
-		}
-
-		if (tile->isNonCollidingLayer()) {
-			continue;
-		}
-
-		if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
-			continue;
-		}
-
-		Collidable* tileCollidable = tile->getCollidable();
-		if (!tileCollidable || !tileCollidable->isActive()) {
-			continue;
-		}
-
-		for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
-			const float sampleX = sampleXs[sampleIndex];
-			float supportY = 0.0f;
-			if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
-				continue;
-			}
-
-			const float deltaY = supportY - footY;
-			if (deltaY < -maxUpwardSnapDistance || deltaY > maxDownwardSnapDistance) {
-				continue;
-			}
-
-			// Prefer supports that resolve penetration (support at/above current footline)
-			// before supports that move the character farther downward.
-			if (deltaY <= 0.0f) {
-				const float distance = std::fabs(deltaY);
-				if (distance < sampleCandidates[sampleIndex].upwardDistance) {
-					sampleCandidates[sampleIndex].upwardDistance = distance;
-					sampleCandidates[sampleIndex].upwardY = supportY;
-					sampleCandidates[sampleIndex].upwardTile = tile;
-				}
-			}
-			else if (deltaY < sampleCandidates[sampleIndex].downwardDelta) {
-				sampleCandidates[sampleIndex].downwardDelta = deltaY;
-				sampleCandidates[sampleIndex].downwardY = supportY;
-				sampleCandidates[sampleIndex].downwardTile = tile;
-			}
-		}
-
-		if (!useUphillProbe || isSquareOnlyCollidable(tileCollidable)) {
-			continue;
-		}
-
-		float probeSupportY = 0.0f;
-		if (!_sampleSupportY(tileCollidable, uphillProbeX, probeSupportY)) {
-			continue;
-		}
-
-		const float probeDeltaY = probeSupportY - footY;
-		if (probeDeltaY > -kStepUpAssistEpsilon || probeDeltaY < -maxUpwardSnapDistance) {
-			continue;
-		}
-
-		const float rise = std::fabs(probeDeltaY);
-		if (rise > kUphillProbeMaxRise) {
-			continue;
-		}
-
-		if (rise < uphillProbeRise) {
-			uphillProbeRise = rise;
-			uphillProbeY = probeSupportY;
-			uphillProbeTile = tile;
-		}
-	}
-	Tile* preferredTiles[3] = { NULL, NULL, NULL };
-	float preferredYs[3] = { footY, footY, footY };
-	bool hasPreferred[3] = { false, false, false };
-	for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
-		SupportCandidate& candidate = sampleCandidates[sampleIndex];
-		const bool hasUpwardCandidate = candidate.upwardTile != NULL;
-		const bool hasDownwardCandidate = candidate.downwardTile != NULL;
-		if (!hasUpwardCandidate && !hasDownwardCandidate) {
-			continue;
-		}
-
-		hasPreferred[sampleIndex] = true;
-		if (hasUpwardCandidate && hasDownwardCandidate) {
-			const bool preferUpward = candidate.upwardDistance <= (candidate.downwardDelta + kUpwardSupportBias);
-			if (preferUpward) {
-				preferredTiles[sampleIndex] = candidate.upwardTile;
-				preferredYs[sampleIndex] = candidate.upwardY;
-			}
-			else {
-				preferredTiles[sampleIndex] = candidate.downwardTile;
-				preferredYs[sampleIndex] = candidate.downwardY;
-			}
-			continue;
-		}
-
-		if (hasUpwardCandidate) {
-			preferredTiles[sampleIndex] = candidate.upwardTile;
-			preferredYs[sampleIndex] = candidate.upwardY;
-		}
-		else {
-			preferredTiles[sampleIndex] = candidate.downwardTile;
-			preferredYs[sampleIndex] = candidate.downwardY;
-		}
-	}
-
-	int samplePriority[3] = { 1, 0, 2 };
-	if (horizontalIntent > 0) {
-		samplePriority[0] = 2;
-		samplePriority[1] = 1;
-		samplePriority[2] = 0;
-
-		// When descending to the right, prefer center support to avoid embedding into slopes.
-		if (hasPreferred[1] && hasPreferred[2] && preferredYs[2] > (preferredYs[1] + kSlopePriorityEpsilon)) {
-			samplePriority[0] = 1;
-			samplePriority[1] = 2;
-			samplePriority[2] = 0;
-		}
-	}
-	else if (horizontalIntent < 0) {
-		samplePriority[0] = 0;
-		samplePriority[1] = 1;
-		samplePriority[2] = 2;
-
-		// Symmetric downhill behavior for leftward movement.
-		if (hasPreferred[1] && hasPreferred[0] && preferredYs[0] > (preferredYs[1] + kSlopePriorityEpsilon)) {
-			samplePriority[0] = 1;
-			samplePriority[1] = 0;
-			samplePriority[2] = 2;
-		}
-	}
-
-	if (uphillProbeTile) {
-		outSupportY = uphillProbeY;
-		return uphillProbeTile;
-	}
-
-	for (int i = 0; i < 3; ++i) {
-		const int sampleIndex = samplePriority[i];
-		if (!hasPreferred[sampleIndex] || !preferredTiles[sampleIndex]) {
-			continue;
-		}
-
-		outSupportY = preferredYs[sampleIndex];
-		return preferredTiles[sampleIndex];
-	}
-
-	return NULL;
 }
 
 void Character::_initStates() {
@@ -968,7 +718,7 @@ void Character::_initStates() {
 	GameObjectState* falling = this->addState("Falling");
 	falling->setPreserveScaling(true);
 	falling->setDirection(vector2(0.0f, 1.0f));
-	falling->setForce((MOVE_UNITS * JUMP_MULTIPLIER) * 0.5);
+	falling->setForce(0.0f);
 
 	falling->setRenderable(jumpAnimation);
 
@@ -1324,75 +1074,9 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		_timeWithoutGroundContact = 0.0f;
 		_refreshGroundTile();
 	}
-
-	if (contact.overlapping &&
-		tile->getTileType() == "tile" &&
-		!tile->isNonCollidingLayer() &&
-		(!_isOneWayTile(tile) || _canCollideWithOneWayTile(tile)) &&
-		contact.normal.has_value()) {
-		const bool squareOnlySideContact = isSquareOnlyCollidable(contact.otherCollidable);
-		const int horizontalIntent = _getHorizontalInput();
-		if (horizontalIntent != 0) {
-			const vector2 normal = contact.normal.value();
-			const float absNormalX = std::fabs(normal.x);
-			if (absNormalX > kWallNormalThreshold && absNormalX > std::fabs(normal.y)) {
-				const bool pushingIntoWall =
-					(horizontalIntent > 0 && normal.x > 0.0f) ||
-					(horizontalIntent < 0 && normal.x < 0.0f);
-				if (pushingIntoWall) {
-					float maxStepUpDistance = kDefaultMaxSnapPerFrame;
-					Tile* stepContextTile = tile ? tile : _tile;
-					if (stepContextTile && stepContextTile->getTileSet()) {
-						maxStepUpDistance = std::max(1.0f, stepContextTile->getTileSet()->getTileSize() * 0.5f);
-					}
-
-					float footY = this->getPosition().y;
-					if (Collidable* bodyCollidable = this->getCollidable()) {
-						if (bodyCollidable->getType() == COL_OBJ_SQUARE) {
-							Square* bodySquare = (Square*)bodyCollidable;
-							footY = bodySquare->getMax().y;
-						}
-					}
-
-					bool isGroundedForStepAssist = false;
-					if (_timeWithoutGroundContact < kGroundLossGraceSeconds) {
-						if (GameObjectState* currentState = this->getState()) {
-							const char* stateName = currentState->getName();
-							isGroundedForStepAssist =
-								_isGroundedLocomotionState(stateName) ||
-								!strcmp(stateName, "Attack01") ||
-								!strcmp(stateName, "Attack02");
-						}
-					}
-
-					if (isGroundedForStepAssist) {
-						float stepSupportY = footY;
-						Tile* stepSupportTile = _findGroundSupportTile(footY, maxStepUpDistance, stepSupportY);
-						const float stepDeltaY = stepSupportY - footY;
-						if (stepSupportTile && stepDeltaY < -kStepUpAssistEpsilon) {
-							// Help transition from flat square tops to uphill supports (slopes/stairs).
-							this->setPosition(
-								this->getPosition().x,
-								this->getPosition().y + std::max(-maxStepUpDistance, stepDeltaY));
-							return;
-						}
-					}
-
-					if (squareOnlySideContact) {
-						float separationX = kHorizontalSeparationEpsilon;
-						if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
-							separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
-						}
-						separationX = std::min(separationX, kMaxHorizontalSeparationPerContact);
-
-						// Keep tile side contacts from letting horizontal motion push inside walls.
-						this->setPosition(
-							this->getPosition().x - std::copysign(separationX, normal.x),
-							this->getPosition().y);
-					}
-				}
-			}
-		}
+	else {
+		_groundContacts.erase(tile);
+		_refreshGroundTile();
 	}
 
 #if _DEBUG
@@ -1462,42 +1146,20 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 		}
 	}
 
-	if (tile->getTileType() != "tile") {
-		return NULL;
+	if (contact.normal && contact.normal->y < -0.5f) {
+		return "JUMP_RELEASED";
 	}
 
-	if (contact.normal) {
-		if (contact.normal->y < -0.5f) {
-			return "JUMP_RELEASED";
+	const bool isGroundContact = _isGroundContact(contact);
+
+	if (isGroundContact) {
+		if (contact.phase == CollisionPhase::Enter) {
+			return "GROUND_COLLISION";
 		}
-		if (contact.normal->y > kGroundNormalThreshold) {
-			if (contact.phase == CollisionPhase::Enter) {
-				return "GROUND_COLLISION";
-			}
-			if (contact.phase == CollisionPhase::Stay) {
-				if (GameObjectState* state = this->getState()) {
-					if (!strcmp(state->getName(), "Falling")) {
-						return "GROUND_COLLISION";
-					}
-				}
-			}
-		}
-	}
-	else {
-		vector2 directionToObject = tile->getPosition() - this->getPosition();
-		directionToObject.normalize();
-		if (directionToObject.y < -0.5f) {
-			return "JUMP_RELEASED";
-		}
-		if (directionToObject.y > kGroundNormalThreshold) {
-			if (contact.phase == CollisionPhase::Enter) {
-				return "GROUND_COLLISION";
-			}
-			if (contact.phase == CollisionPhase::Stay) {
-				if (GameObjectState* state = this->getState()) {
-					if (!strcmp(state->getName(), "Falling")) {
-						return "GROUND_COLLISION";
-					}
+		if (contact.phase == CollisionPhase::Stay) {
+			if (GameObjectState* state = this->getState()) {
+				if (!strcmp(state->getName(), "Falling")) {
+					return "GROUND_COLLISION";
 				}
 			}
 		}
@@ -1548,40 +1210,7 @@ void Character::update(float time)
 		}
 	}
 
-	float baseSnapPerFrame = kDefaultMaxSnapPerFrame;
-	if (_tile && _tile->getTileSet()) {
-		baseSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
-	}
-	float maxSnapPerFrame = baseSnapPerFrame;
-	if (_pendingTransitionFootCorrection > 0.0f) {
-		maxSnapPerFrame = std::max(baseSnapPerFrame, _pendingTransitionFootCorrection + 1.0f);
-	}
-	const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
-	maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
-
-	float footY = this->getPosition().y;
-	if (Collidable* bodyCollidable = this->getCollidable()) {
-		if (bodyCollidable->getType() == COL_OBJ_SQUARE) {
-			Square* bodySquare = (Square*)bodyCollidable;
-			footY = bodySquare->getMax().y;
-		}
-	}
-
-	float supportY = footY;
-	Tile* supportTile = _findGroundSupportTile(footY, maxSnapPerFrame, supportY);
-	if (supportTile && _tile && supportTile != _tile) {
-		float stickySupportY = footY;
-		if (_findSupportOnTile(_tile, footY, maxSnapPerFrame, stickySupportY) &&
-			std::fabs(stickySupportY - supportY) <= kSupportSwitchHysteresis) {
-			supportTile = _tile;
-			supportY = stickySupportY;
-		}
-	}
-
-	bool hasGroundSupport = (supportTile != NULL);
-	if (supportTile) {
-		_tile = supportTile;
-	}
+	const bool hasGroundSupport = (_tile != NULL);
 
 	GameObjectState* state = this->getState();
 
@@ -1604,30 +1233,7 @@ void Character::update(float time)
 			stateName = state->getName();
 		}
 
-		const bool groundedLocomotionState = _isGroundedLocomotionState(stateName);
-		const bool shouldApplyGroundSnap =
-			groundedLocomotionState ||
-			!strcmp(stateName, "Attack01") ||
-			!strcmp(stateName, "Attack02");
-
-		if (hasGroundSupport && shouldApplyGroundSnap) {
-			float targetFootY = supportY;
-			if (supportTile) {
-				if (Collidable* supportCollidable = supportTile->getCollidable()) {
-					if (!isSquareOnlyCollidable(supportCollidable)) {
-						// Keep the character slightly above sloped/polygon supports to avoid visible embedding.
-						targetFootY -= kSlopeFootClearance;
-					}
-				}
-			}
-
-			float deltaY = targetFootY - footY;
-			if (std::fabs(deltaY) > 0.001f) {
-				deltaY = std::max(-maxSnapPerFrame, std::min(maxSnapPerFrame, deltaY));
-				this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
-				footY += deltaY;
-			}
-		}
+			const bool groundedLocomotionState = _isGroundedLocomotionState(stateName);
 
 		const bool canInputMove =
 			!strcmp(stateName, "RunningLeft") ||
@@ -1766,6 +1372,12 @@ void Character::update(float time)
 			this->setVelocity(velocity);
 		}
 
+		if (!groundedForMovement && isAerialState) {
+			velocity = this->getVelocity();
+			velocity.y = std::min(kNormalFallMaxSpeed, velocity.y + (kGravityAcceleration * time));
+			this->setVelocity(velocity);
+		}
+
 		if (!groundedForMovement && isAerialState && downHeld && velocity.y > 0.0f) {
 			velocity.y = std::min(kFastFallMaxSpeed, velocity.y + (kFastFallAcceleration * time));
 			this->setVelocity(velocity);
@@ -1809,6 +1421,38 @@ void Character::update(float time)
 		} // if (Player)
 	}
 	_pendingTransitionFootCorrection = 0.0f;
+#if _DEBUG
+	if (DEBUGGING && Debug::dbgCollision) {
+		static float collisionTelemetryTimer = 0.0f;
+		collisionTelemetryTimer += std::max(0.0f, time);
+		if (collisionTelemetryTimer >= 0.25f) {
+			collisionTelemetryTimer = 0.0f;
+			const vector2 pos = this->getPosition();
+			const vector2 vel = this->getVelocity();
+			const Tile* groundTile = _tile;
+			const int groundTileIndex = groundTile ? groundTile->getTileIndex() : -1;
+			const std::string groundLayerName =
+				(groundTile && !groundTile->getLayerName().empty()) ? groundTile->getLayerName() : "(none)";
+			char buffer[320];
+			sprintf_s(
+				buffer,
+				sizeof(buffer),
+				"Hero dbg: pos={%.2f,%.2f} vel={%.2f,%.2f} state=%s support=%s contacts=%zu groundTile=%d@%s noGroundT=%.3f dropT=%.3f\n",
+				pos.x,
+				pos.y,
+				vel.x,
+				vel.y,
+				this->getState() ? this->getState()->getName() : "(null)",
+				(_tile != NULL) ? "yes" : "no",
+				_groundContacts.size(),
+				groundTileIndex,
+				groundLayerName.c_str(),
+				_timeWithoutGroundContact,
+				_dropThroughTimer);
+			DEBUG_MSG(buffer);
+		}
+	}
+#endif
 #if _DEBUG
 	if (DEBUGGING && Debug::dbgObjects)
 	{

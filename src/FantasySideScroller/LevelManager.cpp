@@ -188,6 +188,7 @@ void LevelManager::clampCameraToLevelBounds(void)
 
 TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, GameState& gameState, const vector2& mapOffset)
 {
+	TileSet::resetCollisionLoadStats();
 	TileMapLoadResult loadResult = TileMap::loadMapDataFromJSONFile(BasePath(mapFileName).c_str(), nullptr, false);
 	IRenderer* renderer = Engine2D::getRenderer();
 	if (!renderer) {

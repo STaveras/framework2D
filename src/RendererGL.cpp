@@ -13,6 +13,7 @@
 #include "Sprite.h"
 #include "TextureGL.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace {
@@ -131,11 +132,17 @@ void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 			}
 		}
 
-		if (shape.hasBounds) {
+		// For polygon/group colliders, the SAT loop is the source of truth.
+		// Drawing both polygon loops and AABB boxes makes it look like there are
+		// extra square collision volumes around ramps.
+		if (shape.hasBounds && !shape.hasPolygon) {
 			drawRect(shape.min, shape.max, r, g, b, a);
 		}
 		for (const std::vector<vector2>& polygonLoop : shape.polygonLoops) {
 			drawPolygonLoop(polygonLoop, r, g, b, a);
+		}
+		if (shape.hasSweep) {
+			drawLine(shape.sweepStart, shape.sweepEnd, 0.15f, 0.75f, 1.0f, 0.8f);
 		}
 		drawCross(shape.objectPosition, 2.0f, 1.0f, 1.0f, 1.0f, 0.9f);
 		drawCross(shape.collisionAnchor, 2.0f, 0.0f, 1.0f, 1.0f, 0.9f);
@@ -154,16 +161,23 @@ void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 		const vector2& midpoint = contact.midpoint.value();
 		drawCross(midpoint, 2.0f, 1.0f, 0.4f, 0.0f, 0.9f);
 
-		if (contact.normal.has_value()) {
-			vector2 normal = contact.normal.value();
-			float normalLength = std::sqrt((normal.x * normal.x) + (normal.y * normal.y));
-			if (normalLength > 0.0f) {
-				normal = vector2(normal.x / normalLength, normal.y / normalLength);
-				float lineLength = 12.0f + (contact.penetrationDepth.value_or(0.0f) * 4.0f);
-				drawLine(midpoint, midpoint + (normal * lineLength), 1.0f, 0.4f, 0.0f, 1.0f);
+			if (contact.normal.has_value()) {
+				vector2 normal = contact.normal.value();
+				float normalLength = std::sqrt((normal.x * normal.x) + (normal.y * normal.y));
+				if (normalLength > 0.0f) {
+					normal = vector2(normal.x / normalLength, normal.y / normalLength);
+					float lineLength = 12.0f + (contact.penetrationDepth.value_or(0.0f) * 4.0f);
+					if (contact.timeOfImpact.has_value()) {
+						lineLength += std::max(0.0f, (1.0f - contact.timeOfImpact.value())) * 6.0f;
+					}
+					drawLine(midpoint, midpoint + (normal * lineLength), 1.0f, 0.4f, 0.0f, 1.0f);
+				}
+			}
+
+			if (contact.separation.has_value()) {
+				drawLine(midpoint, midpoint + contact.separation.value(), 0.15f, 0.9f, 0.2f, 0.9f);
 			}
 		}
-	}
 
 	glEnable(GL_TEXTURE_2D);
 }
