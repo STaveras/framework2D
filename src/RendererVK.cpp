@@ -624,8 +624,8 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 
 	// We need a shader loader that automatically reads and compiles shaders from files.
 	// auto vertShaderCode = FileSystem::File::Read("./data/cache/shader/tri.v.spv");
-	auto vertShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "/cache/shader/tri.v.spv");
-	auto fragShaderCode = FileSystem::File::Read(std::string(System::GlobalDataPath()) + "/cache/shader/tri.f.spv");
+	auto vertShaderCode = FileSystem::File::Read("../cache/shader/tri.v.spv");
+	auto fragShaderCode = FileSystem::File::Read("../cache/shader/tri.f.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
