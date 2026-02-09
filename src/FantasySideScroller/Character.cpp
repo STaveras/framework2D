@@ -1231,6 +1231,31 @@ void Character::onStateDidEnter(State* previous, State* current)
 		return;
 	}
 
+	const char* currentStateName = currentState->getName();
+	vector2 currentVelocity = this->getVelocity();
+	bool velocityAdjusted = false;
+
+	const bool lockHorizontalVelocity =
+		!strcmp(currentStateName, "Attack01") ||
+		!strcmp(currentStateName, "Attack02") ||
+		!strcmp(currentStateName, "Dead");
+	if (lockHorizontalVelocity && std::fabs(currentVelocity.x) > kHorizontalVelocityEpsilon) {
+		currentVelocity.x = 0.0f;
+		velocityAdjusted = true;
+	}
+
+	const bool resetDownwardVelocityForJumpStart =
+		!strcmp(currentStateName, "Rising") ||
+		!strcmp(currentStateName, "Jump");
+	if (resetDownwardVelocityForJumpStart && currentVelocity.y > 0.0f) {
+		currentVelocity.y = 0.0f;
+		velocityAdjusted = true;
+	}
+
+	if (velocityAdjusted) {
+		this->setVelocity(currentVelocity);
+	}
+
 	float previousFootLocalY = 0.0f;
 	float currentFootLocalY = 0.0f;
 	if (!_getStateFootLocalY(previousState, previousFootLocalY) ||
@@ -1453,6 +1478,21 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 
 void Character::update(float time)
 {
+	if (GameObjectState* preUpdateState = this->getState()) {
+		const char* preUpdateStateName = preUpdateState->getName();
+		const bool freezeHorizontalPreUpdate =
+			!strcmp(preUpdateStateName, "Attack01") ||
+			!strcmp(preUpdateStateName, "Attack02") ||
+			!strcmp(preUpdateStateName, "Dead");
+		if (freezeHorizontalPreUpdate) {
+			vector2 preUpdateVelocity = this->getVelocity();
+			if (std::fabs(preUpdateVelocity.x) > kHorizontalVelocityEpsilon) {
+				preUpdateVelocity.x = 0.0f;
+				this->setVelocity(preUpdateVelocity);
+			}
+		}
+	}
+
 	GameObject::update(time);
 
 	if (_dropThroughTimer > 0.0f) {
@@ -1523,8 +1563,17 @@ void Character::update(float time)
 	}
 
 	if (state) {
-
 		const char* stateName = state->getName();
+		if (hasGroundSupport && !strcmp(stateName, "Falling")) {
+			this->sendInput("GROUND_COLLISION");
+			state = this->getState();
+			if (!state) {
+				_pendingTransitionFootCorrection = 0.0f;
+				return;
+			}
+			stateName = state->getName();
+		}
+
 		const bool groundedLocomotionState = _isGroundedLocomotionState(stateName);
 		const bool shouldApplyGroundSnap =
 			groundedLocomotionState ||
@@ -1560,6 +1609,10 @@ void Character::update(float time)
 			canInputMove ||
 			!strcmp(stateName, "Idle") ||
 			!strcmp(stateName, "Landing");
+		const bool isAerialState =
+			!strcmp(stateName, "Falling") ||
+			!strcmp(stateName, "Jump") ||
+			!strcmp(stateName, "Rising");
 		const bool groundedForMovement = hasGroundSupport || (_timeWithoutGroundContact < kGroundLossGraceSeconds);
 
 		const int horizontalInput = canInputMove ? _getHorizontalInput() : 0;
@@ -1639,7 +1692,19 @@ void Character::update(float time)
 		vector2 velocity = this->getVelocity();
 		velocity.x = horizontalVelocity;
 		this->setVelocity(velocity);
-		if (!groundedForMovement && downHeld && velocity.y > 0.0f) {
+
+		const bool lockDownwardVelocityOnGround =
+			hasGroundSupport &&
+			(groundedLocomotionState ||
+			 !strcmp(stateName, "Attack01") ||
+			 !strcmp(stateName, "Attack02") ||
+			 !strcmp(stateName, "Dead"));
+		if (lockDownwardVelocityOnGround && velocity.y > 0.0f) {
+			velocity.y = 0.0f;
+			this->setVelocity(velocity);
+		}
+
+		if (!groundedForMovement && isAerialState && downHeld && velocity.y > 0.0f) {
 			velocity.y = std::min(kFastFallMaxSpeed, velocity.y + (kFastFallAcceleration * time));
 			this->setVelocity(velocity);
 		}
