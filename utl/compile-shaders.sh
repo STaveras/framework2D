@@ -1,3 +1,3 @@
-mkdir -p bin/data/cache/shader/
-glslc bin/data/shaders/triangle.vert -o bin/data/cache/shader/tri.v.spv
-glslc bin/data/shaders/triangle.frag -o bin/data/cache/shader/tri.f.spv
+mkdir -p bin/cache/shader/
+glslc bin/fantasySideScroller/Shaders/triangle.vert -o bin/cache/shader/tri.v.spv
+glslc bin/fantasySideScroller/Shaders/triangle.frag -o bin/cache/shader/tri.f.spv
