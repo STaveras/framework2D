@@ -36,20 +36,25 @@ constexpr float kSlopeFootClearance = 0.1f;
 constexpr float kSupportSwitchHysteresis = 0.35f;
 constexpr float kUphillProbeDistance = 1.5f;
 constexpr float kUphillProbeMaxRise = 4.0f;
-constexpr float kWalkMaxHorizontalSpeed = 100.0f;
-constexpr float kRunMaxHorizontalSpeed = 150.0f;
-constexpr float kWalkGroundAcceleration = 420.0f;
-constexpr float kRunGroundAcceleration = 620.0f;
-constexpr float kGroundDeceleration = 900.0f;
-constexpr float kAirAcceleration = 300.0f;
-constexpr float kAirDeceleration = 220.0f;
+constexpr float kWalkMaxHorizontalSpeed = 95.0f;
+constexpr float kRunMaxHorizontalSpeed = 130.0f;
+constexpr float kAirMaxHorizontalSpeed = 112.0f;
+constexpr float kWalkGroundAcceleration = 650.0f;
+constexpr float kRunGroundAcceleration = 860.0f;
+constexpr float kGroundTurnAcceleration = 1300.0f;
+constexpr float kGroundDeceleration = 1450.0f;
+constexpr float kAirAcceleration = 360.0f;
+constexpr float kAirTurnAcceleration = 520.0f;
+constexpr float kAirDeceleration = 280.0f;
 constexpr float kStaminaMax = 100.0f;
 constexpr float kStaminaDrainPerSecond = 25.0f;
 constexpr float kStaminaRegenPerSecond = 40.0f;
 constexpr float kRunAnimationSpeed = 1.1f;
-constexpr float kRunBoostAnimationSpeed = 1.45f;
+constexpr float kRunBoostAnimationSpeed = 1.35f;
 constexpr float kHorizontalVelocityEpsilon = 0.01f;
 constexpr float kHorizontalSnapTravelPadding = 2.0f;
+constexpr float kFastFallAcceleration = 900.0f;
+constexpr float kFastFallMaxSpeed = 300.0f;
 
 bool isSquareOnlyCollidable(const Collidable* collidable)
 {
@@ -1555,10 +1560,11 @@ void Character::update(float time)
 			canInputMove ||
 			!strcmp(stateName, "Idle") ||
 			!strcmp(stateName, "Landing");
+		const bool groundedForMovement = hasGroundSupport || (_timeWithoutGroundContact < kGroundLossGraceSeconds);
 
 		const int horizontalInput = canInputMove ? _getHorizontalInput() : 0;
 		const bool hasDirectionalIntent = horizontalInput != 0;
-		const bool runRequested = canInputMove && _isRunRequested();
+		const bool runRequested = canInputMove && groundedForMovement && _isRunRequested();
 		_runBoostActive = runRequested && hasDirectionalIntent && _stamina > 0.0f;
 
 		if (_runBoostActive) {
@@ -1572,19 +1578,33 @@ void Character::update(float time)
 			_runBoostActive = false;
 		}
 
+		Player* player = Engine2D::getGame()->getPlayerWith(this);
+		bool downHeld = false;
+		if (player && player->getController()) {
+			if (Action* downAction = player->getController()->getAction("DOWN")) {
+				downHeld = downAction->isActive();
+			}
+		}
+
 		float horizontalVelocity = this->getVelocity().x;
+		const float startingAbsHorizontalSpeed = std::fabs(horizontalVelocity);
 		if (canResidualMove) {
-			const bool groundedForMovement = hasGroundSupport || (_timeWithoutGroundContact < kGroundLossGraceSeconds);
-			const float activeMaxSpeed = _runBoostActive ? kRunMaxHorizontalSpeed : kWalkMaxHorizontalSpeed;
-			const float targetVelocityX = hasDirectionalIntent ? ((float)horizontalInput * activeMaxSpeed) : 0.0f;
+			const float groundedMaxSpeed = _runBoostActive ? kRunMaxHorizontalSpeed : kWalkMaxHorizontalSpeed;
+			const float targetVelocityX = hasDirectionalIntent ?
+				((float)horizontalInput * (groundedForMovement ? groundedMaxSpeed : kAirMaxHorizontalSpeed)) :
+				0.0f;
+			const bool reversingInput =
+				hasDirectionalIntent && ((horizontalVelocity * (float)horizontalInput) < -kHorizontalVelocityEpsilon);
 
 			float acceleration = 0.0f;
 			if (hasDirectionalIntent) {
 				if (groundedForMovement) {
-					acceleration = _runBoostActive ? kRunGroundAcceleration : kWalkGroundAcceleration;
+					acceleration = reversingInput ?
+						kGroundTurnAcceleration :
+						(_runBoostActive ? kRunGroundAcceleration : kWalkGroundAcceleration);
 				}
 				else {
-					acceleration = kAirAcceleration;
+					acceleration = reversingInput ? kAirTurnAcceleration : kAirAcceleration;
 				}
 			}
 			else {
@@ -1599,7 +1619,14 @@ void Character::update(float time)
 				horizontalVelocity = std::max(horizontalVelocity - maxDelta, targetVelocityX);
 			}
 
-			horizontalVelocity = std::max(-activeMaxSpeed, std::min(activeMaxSpeed, horizontalVelocity));
+			if (groundedForMovement) {
+				horizontalVelocity = std::max(-groundedMaxSpeed, std::min(groundedMaxSpeed, horizontalVelocity));
+			}
+			else {
+				const float airSpeedClamp = std::max(kAirMaxHorizontalSpeed, startingAbsHorizontalSpeed);
+				horizontalVelocity = std::max(-airSpeedClamp, std::min(airSpeedClamp, horizontalVelocity));
+			}
+
 			if (!hasDirectionalIntent && std::fabs(horizontalVelocity) < kHorizontalVelocityEpsilon) {
 				horizontalVelocity = 0.0f;
 			}
@@ -1612,6 +1639,10 @@ void Character::update(float time)
 		vector2 velocity = this->getVelocity();
 		velocity.x = horizontalVelocity;
 		this->setVelocity(velocity);
+		if (!groundedForMovement && downHeld && velocity.y > 0.0f) {
+			velocity.y = std::min(kFastFallMaxSpeed, velocity.y + (kFastFallAcceleration * time));
+			this->setVelocity(velocity);
+		}
 
 		if (canInputMove && hasDirectionalIntent && this->getRenderable()) {
 			vector2 scale = this->getRenderable()->getScale();
@@ -1629,7 +1660,7 @@ void Character::update(float time)
 			}
 		}
 
-		if (Player* player = Engine2D::getGame()->getPlayerWith(this)) {
+		if (player) {
 //#if _DEBUG
 			if (KEYBOARD) {
 				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {
@@ -1637,8 +1668,6 @@ void Character::update(float time)
 				}
 			}
 //#endif
-			(void)player;
-
 			// Having this idea about conditional state changes,
 			// like having a "KEEP_ALIVE" condition in the event queue, and in the lack of that condition,
 			// the character will fall or otherwise change state
