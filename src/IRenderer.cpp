@@ -8,6 +8,7 @@
 #include "Timer.h"
 
 #include "Engine2D.h"
+#include <algorithm>
 
 IRenderer::~IRenderer() {
 	m_Textures.clear();
@@ -16,60 +17,39 @@ IRenderer::~IRenderer() {
 // NOTE: Initial test demo
 void IRenderer::_backgroundColorShift(void)
 {
-	if (!m_bStaticBG)
-	{
-		// static Timer timer;
-		Timer* timer = Engine2D::getTimer();
-
-		static bool bReverse = false;
-		static short nStage = 0;
-		static float fAccum = 0.0f;
-
-		Color colors[] = {
-			0xFF000000, // Black
-			0xFFFF0000, // Red
-			0xFFFFFF00, // Yellow
-			0xFF00FF00, // Green
-			0xFF0000FF, // Blue
-			0xFFFF00FF, // Purple
-			0xFFFFFFFF, // White
-			m_ClearColor
-		};
-
-		colors[7].r = (byte)(colors[nStage].r + fAccum * (colors[nStage + 1].r - colors[nStage].r));
-		colors[7].g = (byte)(colors[nStage].g + fAccum * (colors[nStage + 1].g - colors[nStage].g));
-		colors[7].b = (byte)(colors[nStage].b + fAccum * (colors[nStage + 1].b - colors[nStage].b));
-		colors[7].a = (byte)(colors[nStage].a + fAccum * (colors[nStage + 1].a - colors[nStage].a));
-
-		fAccum += (float)(bReverse ? -(timer->getDeltaTime()) : timer->getDeltaTime());
-
-		if (fAccum >= 1.0f)
-		{
-			nStage++;
-
-			if (nStage >= 6)
-			{
-				nStage = 6;
-				bReverse = !bReverse;
-			}
-
-			fAccum = 0.0f;
-		}
-		else if (fAccum <= 0.0f)
-		{
-			fAccum = 1.0f;
-
-			if (nStage <= 0)
-			{
-				nStage = 0;
-				bReverse = !bReverse;
-			}
-
-			nStage--;
-		}
-
-		m_ClearColor = colors[7];
+	if (m_bStaticBG || m_BackgroundColorPoints.size() < 2) {
+		return;
 	}
+
+	Timer* timer = Engine2D::getTimer();
+	if (!timer) {
+		return;
+	}
+
+	m_BackgroundColorProgress += timer->getDeltaTime();
+	while (m_BackgroundColorProgress >= 1.0f)
+	{
+		m_BackgroundColorProgress -= 1.0f;
+		m_BackgroundColorStage = (m_BackgroundColorStage + 1) % m_BackgroundColorPoints.size();
+	}
+
+	const size_t nextStage = (m_BackgroundColorStage + 1) % m_BackgroundColorPoints.size();
+	const Color startColor = m_BackgroundColorPoints[m_BackgroundColorStage];
+	const Color endColor = m_BackgroundColorPoints[nextStage];
+
+	const float t = std::clamp(m_BackgroundColorProgress, 0.0f, 1.0f);
+	Color interpolatedColor = m_ClearColor;
+
+	const auto lerpChannel = [t](byte start, byte end) -> byte {
+		return static_cast<byte>(static_cast<float>(start) + (static_cast<float>(end) - static_cast<float>(start)) * t);
+	};
+
+	interpolatedColor.r = lerpChannel(startColor.r, endColor.r);
+	interpolatedColor.g = lerpChannel(startColor.g, endColor.g);
+	interpolatedColor.b = lerpChannel(startColor.b, endColor.b);
+	interpolatedColor.a = lerpChannel(startColor.a, endColor.a);
+
+	m_ClearColor = interpolatedColor;
 }
 
 ITexture* IRenderer::_textureExists(const char* szFilename)
@@ -89,6 +69,23 @@ void IRenderer::setClearColor(Color clearColor)
 {
 	m_ClearColor = clearColor;
 	//m_bStaticBG = true;
+}
+
+void IRenderer::setBackgroundColorPoints(const std::vector<Color>& points)
+{
+	if (points.size() < 2) {
+		return;
+	}
+
+	m_BackgroundColorPoints = points;
+	resetBackgroundColorShift();
+}
+
+void IRenderer::resetBackgroundColorShift(void)
+{
+	m_BackgroundColorStage = 0;
+	m_BackgroundColorProgress = 0.0f;
+	m_ClearColor = m_BackgroundColorPoints.front();
 }
 
 void IRenderer::setCamera(Camera* pCamera)
@@ -122,7 +119,5 @@ bool IRenderer::destroyTexture(const ITexture* pTexture)
 }
 
 void IRenderer::render(void) {
-	if (DEBUGGING) {
-		_backgroundColorShift();
-	}
+	_backgroundColorShift();
 }

@@ -1276,10 +1276,6 @@ void RendererVK::shutdown(void)
 
 void RendererVK::render(void)
 {
-#if _DEBUG
-	m_bStaticBG = false;
-#endif
-
 	const std::vector<Vertex> vertices = {
 		 {{0.0f, -0.5f, 0.0f}, {0, 0}, {1.0f, 1.0f, 0.0f, 0.0f}},
 		 {{0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 1.0f, 0.0f}},

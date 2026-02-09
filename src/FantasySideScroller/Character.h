@@ -42,8 +42,6 @@ protected:
 	bool _getStateFootLocalY(const GameObjectState* state, float& outFootY) const;
 	void _refreshGroundTile();
 	bool _sampleSupportY(const Collidable* collidable, float sampleX, float& outY) const;
-	bool _findSupportOnTile(const Tile* tile, float footY, float maxSnapDistance, float& outSupportY) const;
-	Tile* _findGroundSupportTile(float footY, float maxSnapDistance, float& outSupportY);
 	virtual void handleCollisionContact(const CollisionContact& contact) override;
 	virtual void onStateDidEnter(State* previous, State* current) override;
 	virtual const char* mapCollisionToCommand(const CollisionContact& contact) const override;
@@ -51,6 +49,7 @@ protected:
 public:
 	Character(void);
 	virtual ~Character(void);
+	void resetForRespawn(void);
 
 	float getStamina() const { return _stamina; }
 	float getMaxStamina() const { return _maxStamina; }

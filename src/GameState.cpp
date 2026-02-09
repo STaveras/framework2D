@@ -114,7 +114,7 @@ bool GameState::onExecute(float time)
 {
 	_inputManager.update(time);
 	_objectManager.update(time);
-	_collisionSystem.update(_objectManager.getObjects());
+	_collisionSystem.update(_objectManager.getObjects(), time);
 
 	return true; // We're still updating!!! ...Right?
 }
