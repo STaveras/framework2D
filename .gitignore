@@ -24,4 +24,5 @@ bin/framework2D
 bin/framework2D_d
 build/**
 out/
+out-test/
 framework/
