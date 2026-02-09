@@ -881,7 +881,7 @@ void Character::_initStates() {
 
 	GameObjectState* jump = this->addState("Jump");
 	jump->setPreserveScaling(true);
-	jump->setExecuteTime(0.2);
+	jump->setExecuteTime(0.25);
 	jump->setDirection(vector2(0.0f, -1.0f));
 	jump->setForce(MOVE_UNITS * (JUMP_MULTIPLIER * 0.67));
 

@@ -109,20 +109,10 @@ typedef struct rect {
 
 #endif
 
-#include <simdjson.h>
-#include <tinyxml2.h>
-
 #if defined(__APPLE__)
 #include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
-#endif
-
-#if defined(_MSC_VER)
-#pragma comment(lib, "simdjson.lib")
-#pragma comment(lib, "tinyxml2.lib")
-#pragma comment(lib, "opengl32.lib")
-#pragma warning(pop)
+#include <GL/glew.h>
 #endif
 
 #ifndef _DEBUG
@@ -136,6 +126,9 @@ typedef struct rect {
 
 #include <GLFW/glfw3.h>
 
+#include <simdjson.h>
+#include <tinyxml2.h>
+
 //union rekt {
 //   struct {
 //      int32_t left, top, right, bottom;
@@ -147,7 +140,13 @@ typedef struct rect {
 //};
 
 #ifdef _WIN32
+#pragma warning(pop)
+#if defined(_MSC_VER)
+#pragma comment(lib, "simdjson.lib")
+#pragma comment(lib, "tinyxml2.lib")
+#pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3.lib")
+#endif
 #else
 #include <GLFW/glfw3native.h>
 #endif

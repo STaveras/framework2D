@@ -20,7 +20,7 @@
 // from C++ source files. I'd like to be able to load a DLL with game classes and bundle scripts in the data folder that
 // load assets, levels, and other miscellaneous data. Like a more modern MUGEN 
 
-#if defined(_WIN32) & !defined(_DEBUG)
+#if defined(_WIN32) && !defined(_DEBUG)
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
@@ -51,9 +51,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	}
 #else
 
-#if defined(_WIN32) & defined(_DEBUG )
+#if defined(_WIN32) && defined(_DEBUG)
 
+#if __has_include(<vld.h>)
 #include <vld.h>
+#define FRAMEWORK_HAS_VLD 1
+#else
+#define FRAMEWORK_HAS_VLD 0
+#endif
 
 HINSTANCE hInstance = GetModuleHandle(NULL);
 LPSTR lpCmdLine = GetCommandLine();
@@ -78,7 +83,7 @@ int main(int argc, const char *argv[])
    if (Debug::Mode.isEnabled()) {
       // Check for game data
       FileSystem::ListDirectoryContents(System::GlobalDataPath());
-#if _WIN32
+#if defined(_WIN32) && FRAMEWORK_HAS_VLD
       if (Debug::dbgMemory) {
          VLDEnable();
       }
