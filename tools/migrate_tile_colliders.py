@@ -315,6 +315,29 @@ def has_collision_object(tile_obj: Dict[str, Any]) -> bool:
     return any(is_collision_object(obj) for obj in objects)
 
 
+def tile_marked_non_colliding(tile_obj: Dict[str, Any]) -> bool:
+    properties = tile_obj.get("properties")
+    if not isinstance(properties, list):
+        return False
+
+    for prop in properties:
+        if not isinstance(prop, dict):
+            continue
+        name = str(prop.get("name", "")).strip().lower()
+        if name == "collision_mode":
+            if canonical_collision_mode(prop.get("value", "")) == "none":
+                return True
+        elif name == "collision_disabled":
+            value = prop.get("value", False)
+            if isinstance(value, bool):
+                if value:
+                    return True
+            elif str(value).strip().lower() in ("1", "true", "yes", "on"):
+                return True
+
+    return False
+
+
 def next_object_id(objectgroup: Dict[str, Any]) -> int:
     max_id = 0
     objects = objectgroup.get("objects", [])
@@ -407,6 +430,9 @@ def migrate_tileset(
             tile_by_id[tile_id] = tile_obj
             changed = True
 
+        if tile_marked_non_colliding(tile_obj):
+            continue
+
         if has_collision_object(tile_obj):
             report.existing_colliders += 1
             continue
@@ -443,6 +469,19 @@ def migrate_tileset(
         report.manual_colliders_kept += manual_count
 
         if auto_count <= 0:
+            continue
+
+        if tile_marked_non_colliding(entry):
+            filtered_objects = [
+                obj
+                for obj in objects
+                if not (is_collision_object(obj) and is_auto_full_tile_object(obj))
+            ]
+            removed_count = len(objects) - len(filtered_objects)
+            if removed_count > 0:
+                objectgroup["objects"] = filtered_objects
+                report.auto_colliders_pruned += removed_count
+                changed = True
             continue
 
         if tile_id in used_tile_ids or not prune_auto:

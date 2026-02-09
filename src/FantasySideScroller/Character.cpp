@@ -488,8 +488,23 @@ bool Character::_getStateFootLocalY(const GameObjectState* state, float& outFoot
 void Character::_refreshGroundTile()
 {
 	Tile* bestTile = NULL;
+	bool bestTileHasSupportSample = false;
+	float bestSupportDeltaAbs = std::numeric_limits<float>::max();
 	float bestDistance = std::numeric_limits<float>::max();
 	std::vector<Tile*> staleTiles;
+
+	float sampleX = 0.0f;
+	float bodyBottom = 0.0f;
+	bool hasBodySupportSample = false;
+	if (Collidable* selfCollidable = this->getCollidable()) {
+		vector2 selfMin(0.0f, 0.0f);
+		vector2 selfMax(0.0f, 0.0f);
+		if (tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+			sampleX = selfMin.x + ((selfMax.x - selfMin.x) * 0.5f);
+			bodyBottom = selfMax.y;
+			hasBodySupportSample = true;
+		}
+	}
 
 	for (Tile* tile : _groundContacts) {
 		if (!tile) {
@@ -513,11 +528,40 @@ void Character::_refreshGroundTile()
 			continue;
 		}
 
+		bool hasSupportSample = false;
+		float supportDeltaAbs = std::numeric_limits<float>::max();
+		if (hasBodySupportSample) {
+			float supportY = 0.0f;
+			if (_sampleSupportY(collidable, sampleX, supportY)) {
+				const float supportDelta = bodyBottom - supportY;
+				const bool nearTopSurface =
+					supportDelta >= -(kOneWayTopApproachEpsilon * 2.0f) &&
+					supportDelta <= (kGroundSupportSnapDistance * 2.0f);
+				if (nearTopSurface) {
+					hasSupportSample = true;
+					supportDeltaAbs = std::fabs(supportDelta);
+				}
+			}
+		}
+
 		vector2 delta(
 			tile->getPosition().x - this->getPosition().x,
 			tile->getPosition().y - this->getPosition().y);
 		float distance = delta.norm();
-		if (distance < bestDistance) {
+
+		if (hasSupportSample) {
+			if (!bestTileHasSupportSample ||
+				supportDeltaAbs < bestSupportDeltaAbs ||
+				(std::fabs(supportDeltaAbs - bestSupportDeltaAbs) <= kFootlineEpsilon && distance < bestDistance)) {
+				bestTileHasSupportSample = true;
+				bestSupportDeltaAbs = supportDeltaAbs;
+				bestDistance = distance;
+				bestTile = tile;
+			}
+			continue;
+		}
+
+		if (!bestTileHasSupportSample && distance < bestDistance) {
 			bestDistance = distance;
 			bestTile = tile;
 		}
@@ -683,7 +727,7 @@ void Character::_initStates() {
 
 	GameObjectState* jump = this->addState("Jump");
 	jump->setPreserveScaling(true);
-	jump->setExecuteTime(0.25);
+	jump->setExecuteTime(0.5);
 	jump->setDirection(vector2(0.0f, -1.0f));
 	jump->setForce(MOVE_UNITS * (JUMP_MULTIPLIER * 0.67));
 
@@ -1370,6 +1414,34 @@ void Character::update(float time)
 		if (lockDownwardVelocityOnGround && velocity.y > 0.0f) {
 			velocity.y = 0.0f;
 			this->setVelocity(velocity);
+		}
+
+		if (hasGroundSupport && _tile) {
+			Collidable* selfCollidable = this->getCollidable();
+			Collidable* groundCollidable = _tile->getCollidable();
+			vector2 selfMin(0.0f, 0.0f);
+			vector2 selfMax(0.0f, 0.0f);
+			if (selfCollidable &&
+				groundCollidable &&
+				tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+				const float sampleX = selfMin.x + ((selfMax.x - selfMin.x) * 0.5f);
+				float supportY = 0.0f;
+				if (_sampleSupportY(groundCollidable, sampleX, supportY)) {
+					const float bodyBottom = selfMax.y;
+					const float correctionY = supportY - bodyBottom;
+					if (std::fabs(correctionY) <= kGroundSupportSnapDistance) {
+						if (std::fabs(correctionY) > kFootlineEpsilon) {
+							this->setPosition(this->getPosition().x, this->getPosition().y + correctionY);
+						}
+
+						vector2 snappedVelocity = this->getVelocity();
+						if (snappedVelocity.y > 0.0f || std::fabs(snappedVelocity.y) <= kHorizontalVelocityEpsilon) {
+							snappedVelocity.y = 0.0f;
+							this->setVelocity(snappedVelocity);
+						}
+					}
+				}
+			}
 		}
 
 		if (!groundedForMovement && isAerialState) {
