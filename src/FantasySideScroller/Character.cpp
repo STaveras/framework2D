@@ -55,6 +55,8 @@ constexpr float kHorizontalVelocityEpsilon = 0.01f;
 constexpr float kHorizontalSnapTravelPadding = 2.0f;
 constexpr float kFastFallAcceleration = 900.0f;
 constexpr float kFastFallMaxSpeed = 300.0f;
+constexpr float kLongJumpLaunchSpeedThreshold = 110.0f;
+constexpr float kLongJumpMomentumDecayPerSecond = 45.0f;
 
 bool isSquareOnlyCollidable(const Collidable* collidable)
 {
@@ -1256,6 +1258,34 @@ void Character::onStateDidEnter(State* previous, State* current)
 		this->setVelocity(currentVelocity);
 	}
 
+	const bool enteringAerialState =
+		!strcmp(currentStateName, "Rising") ||
+		!strcmp(currentStateName, "Jump") ||
+		!strcmp(currentStateName, "Falling");
+	if (!enteringAerialState) {
+		_longJumpMomentumActive = false;
+		_longJumpMomentumDirection = 0;
+		_longJumpMomentumSpeed = 0.0f;
+	}
+	else {
+		const char* previousStateName = previousState->getName();
+		const bool launchedFromRunState =
+			previousStateName &&
+			(!strcmp(previousStateName, "RunningLeft") || !strcmp(previousStateName, "RunningRight"));
+		const float horizontalLaunchSpeed = std::fabs(currentVelocity.x);
+		const int launchDirection =
+			(currentVelocity.x > kHorizontalVelocityEpsilon) ? 1 :
+			((currentVelocity.x < -kHorizontalVelocityEpsilon) ? -1 : 0);
+		if (launchedFromRunState &&
+			_isRunRequested() &&
+			launchDirection != 0 &&
+			horizontalLaunchSpeed >= kLongJumpLaunchSpeedThreshold) {
+			_longJumpMomentumActive = true;
+			_longJumpMomentumDirection = launchDirection;
+			_longJumpMomentumSpeed = horizontalLaunchSpeed;
+		}
+	}
+
 	float previousFootLocalY = 0.0f;
 	float currentFootLocalY = 0.0f;
 	if (!_getStateFootLocalY(previousState, previousFootLocalY) ||
@@ -1687,6 +1717,38 @@ void Character::update(float time)
 		else {
 			horizontalVelocity = 0.0f;
 			_runBoostActive = false;
+		}
+
+		if (!groundedForMovement && isAerialState && _longJumpMomentumActive) {
+			const bool oppositeDirectionInput =
+				hasDirectionalIntent && (horizontalInput != _longJumpMomentumDirection);
+			const bool wrongDirectionVelocity =
+				(horizontalVelocity * (float)_longJumpMomentumDirection) < -kHorizontalVelocityEpsilon;
+
+			if (oppositeDirectionInput || wrongDirectionVelocity || _longJumpMomentumDirection == 0) {
+				_longJumpMomentumActive = false;
+				_longJumpMomentumDirection = 0;
+				_longJumpMomentumSpeed = 0.0f;
+			}
+			else {
+				_longJumpMomentumSpeed = std::max(0.0f, _longJumpMomentumSpeed - (kLongJumpMomentumDecayPerSecond * time));
+				const float signedMomentumSpeed = (float)_longJumpMomentumDirection * _longJumpMomentumSpeed;
+				const float signedHorizontalSpeed = horizontalVelocity * (float)_longJumpMomentumDirection;
+				if (signedHorizontalSpeed < _longJumpMomentumSpeed) {
+					horizontalVelocity = signedMomentumSpeed;
+				}
+
+				if (_longJumpMomentumSpeed <= kWalkMaxHorizontalSpeed) {
+					_longJumpMomentumActive = false;
+					_longJumpMomentumDirection = 0;
+					_longJumpMomentumSpeed = 0.0f;
+				}
+			}
+		}
+		else if (groundedForMovement && _longJumpMomentumActive) {
+			_longJumpMomentumActive = false;
+			_longJumpMomentumDirection = 0;
+			_longJumpMomentumSpeed = 0.0f;
 		}
 
 		vector2 velocity = this->getVelocity();
