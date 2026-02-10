@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(framework2D LANGUAGES CXX)
+get_filename_component(ROOT_DIR_NAME "${CMAKE_SOURCE_DIR}" NAME)
+project(${ROOT_DIR_NAME} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -200,38 +201,47 @@ if(APPLE)
   list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
 endif()
 
-add_executable(MyProject ${SOURCES})
+add_executable(${ROOT_DIR_NAME} ${SOURCES})
 
-target_include_directories(MyProject PRIVATE
+# Place the executable in the project's bin/ directory so relative data paths work
+set_target_properties(${ROOT_DIR_NAME} PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_SOURCE_DIR}/bin"
+)
+
+target_include_directories(${ROOT_DIR_NAME} PRIVATE
   "${CMAKE_SOURCE_DIR}/ext/inc"
   "${CMAKE_SOURCE_DIR}/ext/inc/metal-cpp"
 )
 
 if(GLM_INCLUDE_DIR)
-  target_include_directories(MyProject PRIVATE "${GLM_INCLUDE_DIR}")
+  target_include_directories(${ROOT_DIR_NAME} PRIVATE "${GLM_INCLUDE_DIR}")
 endif()
 
 if(TINYXML2_INCLUDE_DIR)
-  target_include_directories(MyProject PRIVATE "${TINYXML2_INCLUDE_DIR}")
+  target_include_directories(${ROOT_DIR_NAME} PRIVATE "${TINYXML2_INCLUDE_DIR}")
 endif()
 
 if(SIMDJSON_INCLUDE_DIR)
-  target_include_directories(MyProject PRIVATE "${SIMDJSON_INCLUDE_DIR}")
+  target_include_directories(${ROOT_DIR_NAME} PRIVATE "${SIMDJSON_INCLUDE_DIR}")
 endif()
 
 if(GLFW3_INCLUDE_DIR)
-  target_include_directories(MyProject PRIVATE "${GLFW3_INCLUDE_DIR}")
+  target_include_directories(${ROOT_DIR_NAME} PRIVATE "${GLFW3_INCLUDE_DIR}")
 endif()
 
 foreach(HEADER_DIRECTORY ${HEADER_DIRECTORIES})
   if(IS_DIRECTORY ${HEADER_DIRECTORY})
-    target_include_directories(MyProject PRIVATE ${HEADER_DIRECTORY})
+    target_include_directories(${ROOT_DIR_NAME} PRIVATE ${HEADER_DIRECTORY})
   endif()
 endforeach()
 
 if(APPLE)
-  target_compile_options(MyProject PRIVATE -stdlib=libc++ -x objective-c++ -DGL_SILENCE_DEPRECATION)
-  target_link_options(MyProject PRIVATE -stdlib=libc++)
+  target_compile_options(${ROOT_DIR_NAME} PRIVATE -stdlib=libc++ -x objective-c++ -DGL_SILENCE_DEPRECATION)
+  target_link_options(${ROOT_DIR_NAME} PRIVATE -stdlib=libc++)
 endif()
 
 set(PROJECT_LIBS
@@ -277,7 +287,7 @@ endif()
 
 if(WIN32)
   if(DEFINED ENV{DXSDK_DIR} AND EXISTS "$ENV{DXSDK_DIR}/Include")
-    target_include_directories(MyProject PRIVATE "$ENV{DXSDK_DIR}/Include")
+    target_include_directories(${ROOT_DIR_NAME} PRIVATE "$ENV{DXSDK_DIR}/Include")
 
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(_dxsdk_lib_dir "$ENV{DXSDK_DIR}/Lib/x64")
@@ -286,7 +296,7 @@ if(WIN32)
     endif()
 
     if(EXISTS "${_dxsdk_lib_dir}")
-      target_link_directories(MyProject PRIVATE "${_dxsdk_lib_dir}")
+      target_link_directories(${ROOT_DIR_NAME} PRIVATE "${_dxsdk_lib_dir}")
     endif()
 
     list(APPEND PROJECT_LIBS d3d9 d3dx9 dxguid dinput8)
@@ -306,24 +316,25 @@ if(APPLE)
     ${COCOA_FRAMEWORK}
   )
 
-  target_link_options(MyProject PRIVATE
+  target_link_options(${ROOT_DIR_NAME} PRIVATE
     "-Wl,-rpath,/opt/homebrew/lib"
     "-Wl,-rpath,/usr/local/lib"
   )
 endif()
 
-target_link_libraries(MyProject PRIVATE ${PROJECT_LIBS})
+target_link_libraries(${ROOT_DIR_NAME} PRIVATE ${PROJECT_LIBS})
 
 if(WIN32)
   add_custom_command(
-    TARGET MyProject POST_BUILD
+    TARGET ${ROOT_DIR_NAME} POST_BUILD
     COMMAND ${CMAKE_SOURCE_DIR}/utl/compile-shaders.bat
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 else()
   add_custom_command(
-    TARGET MyProject POST_BUILD
+    TARGET ${ROOT_DIR_NAME} POST_BUILD
     COMMAND ${CMAKE_SOURCE_DIR}/utl/compile-shaders.sh
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 endif()
+
