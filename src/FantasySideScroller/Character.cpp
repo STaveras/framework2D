@@ -20,7 +20,9 @@ constexpr float kGroundLossGraceSeconds = 0.06f;
 constexpr float kDropThroughDurationSeconds = 0.20f;
 constexpr float kGroundNormalThreshold = 0.2f;
 constexpr float kOneWayTopApproachEpsilon = 1.0f;
-constexpr float kGroundSupportSnapDistance = 2.0f;
+// Heuristic: larger snap distance to tolerate steeper polygon slopes and
+// minor sampling misalignment. Keep conservative but allow more leeway.
+constexpr float kGroundSupportSnapDistance = 50.0f;
 constexpr float kLocomotionFootLocalY = 24.0f;
 constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
@@ -241,13 +243,28 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 
 bool Character::shouldCollideWith(const GameObject& other) const
 {
-	if (!GameObject::shouldCollideWith(other)) {
-		return false;
-	}
+    // During attack states the character is invincible to non‑terrain collisions.
+    // We still need a collidable to remain grounded, but we should ignore
+    // interactions with enemies or hazards while attacking.  To accomplish this
+    // we early out here and only allow collisions with tiles when the current
+    // state is an attack.
+    if (const GameObjectState* state = this->getState()) {
+        const char* stateName = state->getName();
+        if (stateName && (!std::strcmp(stateName, "Attack01") || !std::strcmp(stateName, "Attack02"))) {
+            // Only collide with tiles while attacking
+            if (other.getType() != GAME_OBJ_TILE) {
+                return false;
+            }
+        }
+    }
 
-	if (other.getType() != GAME_OBJ_TILE) {
-		return true;
-	}
+    if (!GameObject::shouldCollideWith(other)) {
+        return false;
+    }
+
+    if (other.getType() != GAME_OBJ_TILE) {
+        return true;
+    }
 
 	const Tile* tile = (const Tile*)(&other);
 	if (!tile) {
@@ -284,47 +301,109 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 		return false;
 	}
 
+	// DEBUG: Log all polygon contacts
+	static float polyLogTimer = 0.0f;
+	polyLogTimer += 0.016f;
+	bool shouldLogPoly = (polyLogTimer >= 0.5f);
+	
 	if (contact.normal.has_value() && contact.normal->y > kGroundNormalThreshold) {
+		if (shouldLogPoly) {
+			polyLogTimer = 0.0f;
+			float ny = contact.normal.value().y;
+			printf("[GROUND] Tile %d: normal.y=%.4f YES\n", tile->getTileIndex(), ny);
+		}
 		return true;
 	}
 
 	// Resolver-provided separation is a useful fallback when SAT normals on slopes are noisy.
 	if (contact.separation.has_value() && contact.separation->y < -kGroundNormalThreshold) {
+		if (shouldLogPoly) {
+			polyLogTimer = 0.0f;
+			float sep = contact.separation->y;
+			printf("[GROUND] Tile %d: sep=%.4f YES\n", tile->getTileIndex(), sep);
+		}
 		return true;
 	}
 
-	// Non-overlap "touching" contacts should already provide a touching normal.
-	// Sampling fallback below is only reliable for true overlap.
-	if (!contact.overlapping) {
-		return false;
-	}
+    // Sampling fallback may be necessary on shallow polygon slopes even when the contact
+    // is not flagged as overlapping.  The original implementation would skip sampling
+    // if the contact was not overlapping and the normal was missing or pointed away
+    // from the character.  However, some convex polygon tiles (especially those with
+    // vertices ordered clockwise) can produce contacts with no normal or with a
+    // downward‑facing normal even when they are valid walkable surfaces.  In those
+    // situations the character would repeatedly lose and regain ground contact when
+    // moving up or down the slope, causing visible “thrashing” in the physics
+    // simulation.  To make ground detection more robust for polygonal surfaces, we
+    // always attempt a support sample when we have a potential contact.  The
+    // subsequent support sampling and supportDelta check will ensure that only
+    // surfaces near the character’s feet are treated as ground.  Walls and ceilings
+    // still return false if the sampled support is too far away or does not exist.
 
 	const Collidable* selfCollidable = contact.selfCollidable;
 	const Collidable* tileCollidable = contact.otherCollidable ? contact.otherCollidable : tile->getCollidable();
 	if (!selfCollidable) {
+		if (shouldLogPoly) {
+			polyLogTimer = 0.0f;
+			printf("[GROUND] Tile %d: no selfCollidable\n", tile->getTileIndex());
+		}
 		return false;
 	}
 
 	vector2 selfMin(0.0f, 0.0f);
 	vector2 selfMax(0.0f, 0.0f);
 	if (!tileCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+		if (shouldLogPoly) {
+			polyLogTimer = 0.0f;
+			printf("[GROUND] Tile %d: no bounds\n", tile->getTileIndex());
+		}
 		return false;
 	}
 
-	const float sampleX = selfMin.x + ((selfMax.x - selfMin.x) * 0.5f);
-	float supportY = 0.0f;
-	if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
-		return false;
-	}
-
+    // Sample the supporting surface at several points across the width of the character.
+    // Sampling only at the horizontal midpoint can miss narrow polygon slopes when the
+    // midpoint happens to lie outside the polygon’s horizontal span.  To improve
+    // robustness we take multiple samples along the X‑axis and treat the contact as
+    // ground if any sample finds a valid support within the allowed vertical
+    // tolerance.
 	const float bodyBottom = selfMax.y;
-	const float bodyCenterY = selfMin.y + ((selfMax.y - selfMin.y) * 0.5f);
-	const float supportDelta = bodyBottom - supportY;
-	const bool nearTopSurface =
-		supportDelta >= -kOneWayTopApproachEpsilon &&
-		supportDelta <= kGroundSupportSnapDistance;
+	const float bodyWidth = selfMax.x - selfMin.x;
+	// Denser sampling across the character width and small horizontal sweep
+	// to avoid missing narrow polygon spans or slight misalignments.
+	const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+	const float sampleOffsets[] = { -5.0f, -3.0f, -1.0f, 0.0f, 1.0f, 3.0f, 5.0f };
+    
+		if (shouldLogPoly) {
+			polyLogTimer = 0.0f;
+			printf("[GROUND] Tile %d SAMPLING: bottom=%.1f width=%.1f\n",
+				tile->getTileIndex(), bodyBottom, bodyWidth);
+		}
+    
+	for (float frac : sampleFractions) {
+		for (float off : sampleOffsets) {
+			const float sampleX = selfMin.x + (bodyWidth * frac) + off;
+			float supportY = 0.0f;
+			if (_sampleSupportY(tileCollidable, sampleX, supportY)) {
+				const float supportDelta = bodyBottom - supportY;
+				if (shouldLogPoly) {
+					printf("  frac=%.2f off=%.1f sampleX=%.1f supportY=%.1f delta=%.2f [%.1f,%.1f] %s\n",
+						frac, off, sampleX, supportY, supportDelta,
+						-kOneWayTopApproachEpsilon, kGroundSupportSnapDistance,
+						(supportDelta >= -kOneWayTopApproachEpsilon && supportDelta <= kGroundSupportSnapDistance) ? "YES" : "NO");
+				}
+				if (supportDelta >= -kOneWayTopApproachEpsilon && supportDelta <= kGroundSupportSnapDistance) {
+					return true;
+				}
+			} else {
+				printf("  frac=%.2f off=%.1f sampleX=%.1f NO_SUPPORT\n", frac, off, sampleX);
+			}
+		}
+	}
 
-	return nearTopSurface;
+    // If no sample indicated a valid support within tolerance, this is not ground.
+		if (shouldLogPoly) {
+			printf("[GROUND] Tile %d: REJECTED\n", tile->getTileIndex());
+		}
+    return false;
 }
 
 bool Character::_isGroundedLocomotionState(const char* stateName) const
@@ -531,15 +610,38 @@ void Character::_refreshGroundTile()
 		bool hasSupportSample = false;
 		float supportDeltaAbs = std::numeric_limits<float>::max();
 		if (hasBodySupportSample) {
-			float supportY = 0.0f;
-			if (_sampleSupportY(collidable, sampleX, supportY)) {
-				const float supportDelta = bodyBottom - supportY;
-				const bool nearTopSurface =
-					supportDelta >= -(kOneWayTopApproachEpsilon * 2.0f) &&
-					supportDelta <= (kGroundSupportSnapDistance * 2.0f);
-				if (nearTopSurface) {
-					hasSupportSample = true;
-					supportDeltaAbs = std::fabs(supportDelta);
+			// Use multi-sample sweep across the character width, not just center
+			const Collidable* selfCollidable = this->getCollidable();
+			if (selfCollidable) {
+				vector2 selfMin(0.0f, 0.0f), selfMax(0.0f, 0.0f);
+				if (tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+					const float bodyWidth = selfMax.x - selfMin.x;
+					const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+					const float sampleOffsets[] = { -5.0f, -3.0f, -1.0f, 0.0f, 1.0f, 3.0f, 5.0f };
+					
+					// Try to find support at any sampled point
+					for (float frac : sampleFractions) {
+						for (float off : sampleOffsets) {
+							const float testX = selfMin.x + (bodyWidth * frac) + off;
+							float supportY = 0.0f;
+							if (_sampleSupportY(collidable, testX, supportY)) {
+								const float supportDelta = bodyBottom - supportY;
+								// Very loose tolerance for persistent ground retention on narrow tiles
+								const bool nearTopSurface =
+									supportDelta >= -100.0f &&  // Allow surface even significantly above feet
+									supportDelta <= kGroundSupportSnapDistance;
+								if (nearTopSurface) {
+									hasSupportSample = true;
+									const float deltaAbs = std::fabs(supportDelta);
+									if (deltaAbs < supportDeltaAbs) {
+										supportDeltaAbs = deltaAbs;
+									}
+									break;  // Found support at this fraction, move to next
+								}
+							}
+						}
+						if (hasSupportSample) break;  // Found support, no need to check other fractions
+					}
 				}
 			}
 		}
@@ -599,9 +701,31 @@ bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, flo
 	}
 	case COL_OBJ_POLYGON: {
 		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
-		if (!polygon || !polygon->isValid()) {
+		if (!polygon) {
 			return false;
 		}
+		
+		// Even if the polygon isn't marked as "valid" (convex + consistent winding),
+		// we should still check if there's support there - the decomposition process
+		// may have issues that don't prevent walkable surfaces from being present
+		if (!polygon->isValid()) {
+			static float logTimer = 0.0f;
+			logTimer += 0.016f;
+			if (logTimer >= 0.5f) {
+				logTimer = 0.0f;
+				printf("[POLYGON_INVALID] Attempting support sample on invalid polygon: sampleX=%.2f vertices=%zu convex=%d\n",
+					sampleX, polygon->getLocalVertices().size(), (int)polygon->isConvex());
+			}
+			
+			// Try anyway - the surface might still have topography we can sample
+			float supportY = 0.0f;
+			if (polygon->findTopSurfaceYAtX(sampleX, supportY)) {
+				outY = supportY;
+				return true;
+			}
+			return false;
+		}
+		
 		return polygon->findTopSurfaceYAtX(sampleX, outY);
 	}
 	case COL_OBJ_GROUP: {
@@ -868,9 +992,23 @@ void Character::_initStates() {
 		Animations::createFramesForAnimation(attack01Animation, attackSheet, attackDimensions, _spriteManager, 0, 5);
 		attack01Animation->setFrameRate(60);
 	}
-	attack01Animation->setName(attack01->getName());
-	attack01Animation->center();
-	attack01->setRenderable(attack01Animation);
+    attack01Animation->setName(attack01->getName());
+    attack01Animation->center();
+    attack01->setRenderable(attack01Animation);
+    // Provide a collidable for attack animations. Without a collidable the
+    // character temporarily loses its collision geometry during an attack,
+    // which breaks ground detection and causes the character to enter the
+    // falling state after the attack finishes. We reuse a slender hit box
+    // similar to idle/running states so the character continues to collide with
+    // terrain while attacking. Invincibility from enemies is handled in
+    // shouldCollideWith.
+    static Square attackHitBox({ -10.0f, kLocomotionFootLocalY - 48.0f }, 20.0f, 48.0f);
+    for (unsigned int i = 0; i < attack01Animation->getFrameCount(); i++) {
+        Frame* frame = (*attack01Animation)[i];
+        if (frame) {
+            frame->setCollidable(&attackHitBox);
+        }
+    }
 
 	Animation* attack02Animation = getAnimation("Attack02", attack02Loaded);
 	if (!attack02Loaded) {
@@ -880,6 +1018,13 @@ void Character::_initStates() {
 	attack02Animation->setName(attack02->getName());
 	attack02Animation->center();
 	attack02->setRenderable(attack02Animation);
+    // Apply the same hit box to the secondary attack animation frames.
+    for (unsigned int i = 0; i < attack02Animation->getFrameCount(); i++) {
+        Frame* frame = (*attack02Animation)[i];
+        if (frame) {
+            frame->setCollidable(&attackHitBox);
+        }
+    }
 
 	/////////////////////////////////////////
 
@@ -1231,6 +1376,57 @@ void Character::update(float time)
 
 	GameObject::update(time);
 
+	// Auto-test: simulate holding RIGHT to reproduce slope traversal when
+	// environment variable AUTO_SLOPE_TEST=1 is set. Also emit compact telemetry.
+	const char* autoTest = std::getenv("AUTO_SLOPE_TEST");
+	if (autoTest && std::strcmp(autoTest, "1") == 0) {
+		Player* p = Engine2D::getGame()->getPlayerWith(this);
+		if (p && p->getController()) {
+			Action* right = p->getController()->getAction("RIGHT");
+			Action* left = p->getController()->getAction("LEFT");
+			if (right) right->setActive(true);
+			if (left) left->setActive(false);
+		}
+
+		const char* stateName = this->getState() ? this->getState()->getName() : "(null)";
+		vector2 pos = this->getPosition();
+		vector2 vel = this->getVelocity();
+		int groundTileIndex = _tile ? _tile->getTileIndex() : -1;
+		printf("[AUTO] state=%s pos={%.2f,%.2f} vel={%.2f,%.2f} ground=%d contacts=%zu\n",
+			stateName, pos.x, pos.y, vel.x, vel.y, groundTileIndex, _groundContacts.size());
+
+		// Per-frame sampling telemetry for the current ground tile (if any)
+		if (_tile) {
+			Collidable* groundCollidable = _tile->getCollidable();
+			Collidable* selfCollidable = this->getCollidable();
+			if (groundCollidable && selfCollidable) {
+				vector2 selfMin(0.0f, 0.0f), selfMax(0.0f, 0.0f);
+				if (tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+					const float bodyWidth = selfMax.x - selfMin.x;
+					const float sampleFracs[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+					const float sampleOffsets[] = { -2.0f, -1.0f, 0.0f, 1.0f, 2.0f };
+					for (float frac : sampleFracs) {
+						for (float off : sampleOffsets) {
+							const float sampleX = selfMin.x + (bodyWidth * frac) + off;
+							float supportY = 0.0f;
+							bool ok = _sampleSupportY(groundCollidable, sampleX, supportY);
+							int colType = groundCollidable->getType();
+							if (colType == COL_OBJ_POLYGON) {
+								const PolygonCollider* poly = (const PolygonCollider*)groundCollidable;
+								printf("[AUTO_SAMP] tile=%d frac=%.2f off=%.1f sampleX=%.2f ok=%d supportY=%.2f type=POLY valid=%d convex=%d verts=%zu\n",
+									_tile->getTileIndex(), frac, off, sampleX, ok ? 1 : 0, supportY,
+									poly->isValid() ? 1 : 0, poly->isConvex() ? 1 : 0, poly->getLocalVertices().size());
+							} else {
+								printf("[AUTO_SAMP] tile=%d frac=%.2f off=%.1f sampleX=%.2f ok=%d supportY=%.2f type=%d\n",
+									_tile->getTileIndex(), frac, off, sampleX, ok ? 1 : 0, supportY, colType);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if (_dropThroughTimer > 0.0f) {
 		_dropThroughTimer = std::max(0.0f, _dropThroughTimer - time);
 	}
@@ -1424,21 +1620,62 @@ void Character::update(float time)
 			if (selfCollidable &&
 				groundCollidable &&
 				tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
-				const float sampleX = selfMin.x + ((selfMax.x - selfMin.x) * 0.5f);
-				float supportY = 0.0f;
-				if (_sampleSupportY(groundCollidable, sampleX, supportY)) {
-					const float bodyBottom = selfMax.y;
-					const float correctionY = supportY - bodyBottom;
-					if (std::fabs(correctionY) <= kGroundSupportSnapDistance) {
-						if (std::fabs(correctionY) > kFootlineEpsilon) {
-							this->setPosition(this->getPosition().x, this->getPosition().y + correctionY);
-						}
+				// Sample at multiple points to find the best support, especially important for steep slopes
+				const float bodyBottom = selfMax.y;
+				const float bodyWidth = selfMax.x - selfMin.x;
+				const float sampleFracs[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+				const float sampleOffsetsLocal[] = { -5.0f, -3.0f, -1.0f, 0.0f, 1.0f, 3.0f, 5.0f };
 
-						vector2 snappedVelocity = this->getVelocity();
-						if (snappedVelocity.y > 0.0f || std::fabs(snappedVelocity.y) <= kHorizontalVelocityEpsilon) {
-							snappedVelocity.y = 0.0f;
-							this->setVelocity(snappedVelocity);
+				float bestSupportY = std::numeric_limits<float>::lowest();
+				bool foundSupport = false;
+				float correctionY = 0.0f;
+				bool appliedSnap = false;
+
+				for (float frac : sampleFracs) {
+					for (float off : sampleOffsetsLocal) {
+						const float sampleX = selfMin.x + (bodyWidth * frac) + off;
+						float supportY = 0.0f;
+						if (_sampleSupportY(groundCollidable, sampleX, supportY)) {
+							const float supportDelta = bodyBottom - supportY;
+
+							// Track the best (topmost) supportY (largest Y, closest to body bottom)
+							if (!foundSupport || supportY > bestSupportY) {
+								bestSupportY = supportY;
+								foundSupport = true;
+							}
+
+							// Immediate snap if within strict snap distance
+							if (supportDelta >= -kOneWayTopApproachEpsilon && supportDelta <= kGroundSupportSnapDistance) {
+								correctionY = supportY - bodyBottom;
+								appliedSnap = true;
+								break;
+							}
+						} else {
+							printf("  frac=%.2f off=%.1f sampleX=%.1f NO_SUPPORT\n", frac, off, sampleX);
 						}
+					}
+					if (appliedSnap) break;
+				}
+
+				if (!appliedSnap && foundSupport) {
+					// Allow a slightly larger tolerance for non-exact samples
+					const float bestSupportDelta = bodyBottom - bestSupportY;
+					if (bestSupportDelta <= (kGroundSupportSnapDistance * 2.0f)) {
+						correctionY = bestSupportY - bodyBottom;
+						appliedSnap = true;
+					}
+				}
+
+				if (appliedSnap) {
+					if (std::fabs(correctionY) > kFootlineEpsilon) {
+						this->setPosition(this->getPosition().x, this->getPosition().y + correctionY);
+					}
+
+					// Only zero Y velocity if it's pushing into the ground (positive/downward)
+					vector2 snappedVelocity = this->getVelocity();
+					if (snappedVelocity.y > kHorizontalVelocityEpsilon) {
+						snappedVelocity.y = 0.0f;
+						this->setVelocity(snappedVelocity);
 					}
 				}
 			}

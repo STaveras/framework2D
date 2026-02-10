@@ -406,12 +406,12 @@ void RendererGL::render(void)
 					break;
 					case RENDERABLE_TYPE_ANIMATION:
 					{
-					Animation* animation = (Animation*)(*o);
-					if (animation->getFrameCount()) {
-						_drawImage(animation->getCurrentFrame()->getSprite(),
-									animation->getCurrentFrame()->getSprite()->getTintColor(),
-									animation->getOffset());
-					}
+						Animation* animation = (Animation*)(*o);
+						if (animation->getFrameCount()) {
+							_drawImage(animation->getCurrentFrame()->getSprite(),
+									   animation->getCurrentFrame()->getSprite()->getTintColor(),
+									   animation->getOffset());
+						}
 					}
 					break;
 					}
