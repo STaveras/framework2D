@@ -203,6 +203,21 @@ endif()
 
 add_executable(${ROOT_DIR_NAME} ${SOURCES})
 
+# Ensure Debug configuration defines _DEBUG and Release-like configs define NDEBUG
+# Works across generators (including Xcode) and on Windows/MSVC
+# Remove any accidental NDEBUG in Debug and add _DEBUG; add NDEBUG for non-Debug
+if(MSVC OR WIN32)
+  target_compile_definitions(${ROOT_DIR_NAME} PRIVATE
+    $<$<CONFIG:Debug>:_DEBUG>
+    $<$<NOT:$<CONFIG:Debug>>:NDEBUG>
+  )
+else()
+  # For non-Windows, many compilers implicitly set NDEBUG in Release, but ensure consistency
+  target_compile_definitions(${ROOT_DIR_NAME} PRIVATE
+    $<$<CONFIG:Debug>:_DEBUG>
+  )
+endif()
+
 # Place the executable in the project's bin/ directory so relative data paths work
 set_target_properties(${ROOT_DIR_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
