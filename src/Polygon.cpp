@@ -186,6 +186,7 @@ void PolygonCollider::rebuildValidation(void)
 		return;
 	}
 
+	// Check for non-zero cross product (non-degenerate polygon)
 	float sign = 0.0f;
 	bool hasNonZeroCross = false;
 	for (size_t i = 0; i < _localVertices.size(); ++i) {
@@ -203,7 +204,12 @@ void PolygonCollider::rebuildValidation(void)
 			continue;
 		}
 
+		// If cross products have different signs, polygon is concave, but still valid for walking
+		// We just can't use SAT collision detection on it
 		if ((sign > 0.0f && cZ < 0.0f) || (sign < 0.0f && cZ > 0.0f)) {
+			// Mark as valid for surface sampling, but not convex for SAT collision
+			_isValid = true;
+			_isConvex = false;
 			return;
 		}
 	}
@@ -212,6 +218,7 @@ void PolygonCollider::rebuildValidation(void)
 		return;
 	}
 
+	// All cross products had the same sign - polygon is convex
 	_isConvex = true;
 	_isValid = true;
 }
@@ -364,7 +371,10 @@ bool PolygonCollider::collidesWith(const Collidable* collidable)
 
 bool PolygonCollider::findTopSurfaceYAtX(float x, float& outY) const
 {
-	if (!_isValid || !_isConvex) {
+	// Allow sampling even for non-convex but valid polygons. Non-convex
+	// polygons can still provide a meaningful top surface at a given X,
+	// so only reject entirely invalid/degenerate polygons here.
+	if (!_isValid) {
 		return false;
 	}
 

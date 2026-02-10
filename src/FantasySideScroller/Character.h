@@ -10,11 +10,13 @@
 #include "Resources.h"
 
 #include <unordered_set>
+#include <unordered_map>
 
 class Character : public GameObject
 {
 	Tile* _tile = NULL; // The tile the character is on
 	std::unordered_set<Tile*> _groundContacts;
+	std::unordered_map<Tile*, int> _groundContactFrameCount;  // Hysteresis: frames since contact started
 	float _timeWithoutGroundContact = 0.0f;
 	float _pendingTransitionFootCorrection = 0.0f;
 	float _dropThroughTimer = 0.0f;

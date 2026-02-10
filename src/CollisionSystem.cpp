@@ -61,6 +61,7 @@ bool tryGetPolygonBounds(const Collidable* collidable, vector2& outMin, vector2&
 	}
 
 	const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+	// Allow both convex and non-convex (but valid) polygons - we can still sample their surfaces
 	if (!polygon || !polygon->isValid()) {
 		return false;
 	}
