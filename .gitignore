@@ -23,6 +23,8 @@ bin/data/cache/**
 bin/framework2D
 bin/framework2D_d
 build/**
+build-*/**
 out/
 out-test/
 framework/
+*.app/**
