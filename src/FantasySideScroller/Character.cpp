@@ -2,6 +2,7 @@
 
 #include "Character.h"
 
+#include "../Animation.h"
 #include "../CollidableGroup.h"
 #include "../GameState.h"
 #include "../Polygon.h"
@@ -36,6 +37,27 @@ constexpr float kSupportSwitchHysteresisUp = 1.0f;
 constexpr float kSupportSwitchHysteresisDown = 0.25f;
 constexpr float kUphillProbeDistance = 1.5f;
 constexpr float kUphillProbeMaxRise = 6.0f;
+constexpr float kWalkMaxHorizontalSpeed = 95.0f;
+constexpr float kRunMaxHorizontalSpeed = 130.0f;
+constexpr float kAirMaxHorizontalSpeed = 112.0f;
+constexpr float kWalkGroundAcceleration = 650.0f;
+constexpr float kRunGroundAcceleration = 860.0f;
+constexpr float kGroundTurnAcceleration = 1300.0f;
+constexpr float kGroundDeceleration = 1450.0f;
+constexpr float kAirAcceleration = 360.0f;
+constexpr float kAirTurnAcceleration = 520.0f;
+constexpr float kAirDeceleration = 280.0f;
+constexpr float kStaminaMax = 100.0f;
+constexpr float kStaminaDrainPerSecond = 25.0f;
+constexpr float kStaminaRegenPerSecond = 40.0f;
+constexpr float kRunAnimationSpeed = 1.1f;
+constexpr float kRunBoostAnimationSpeed = 1.35f;
+constexpr float kHorizontalVelocityEpsilon = 0.01f;
+constexpr float kHorizontalSnapTravelPadding = 2.0f;
+constexpr float kFastFallAcceleration = 900.0f;
+constexpr float kFastFallMaxSpeed = 300.0f;
+constexpr float kLongJumpLaunchSpeedThreshold = 110.0f;
+constexpr float kLongJumpMomentumDecayPerSecond = 45.0f;
 
 bool isSquareOnlyCollidable(const Collidable* collidable)
 {
@@ -78,6 +100,9 @@ Character::Character(void) :
 	this->setBuffered(false);
 	this->setState("Falling");
 	this->setMass(100);
+	_maxStamina = kStaminaMax;
+	_stamina = _maxStamina;
+	_runBoostActive = false;
 }
 
 Character::~Character() {}
@@ -241,6 +266,24 @@ bool Character::_isGroundedLocomotionState(const char* stateName) const
 
 int Character::_getHorizontalIntent() const
 {
+	const int horizontalInput = _getHorizontalInput();
+	if (horizontalInput != 0) {
+		return horizontalInput;
+	}
+
+	const float vx = this->getVelocity().x;
+	if (vx > 0.001f) {
+		return 1;
+	}
+	if (vx < -0.001f) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int Character::_getHorizontalInput() const
+{
 	Game* game = Engine2D::getGame();
 	if (!game) {
 		return 0;
@@ -258,17 +301,27 @@ int Character::_getHorizontalIntent() const
 	const bool rightActive = rightAction && rightAction->isActive();
 
 	if (leftActive == rightActive) {
-		const float vx = this->getVelocity().x;
-		if (vx > 0.001f) {
-			return 1;
-		}
-		if (vx < -0.001f) {
-			return -1;
-		}
 		return 0;
 	}
 
 	return rightActive ? 1 : -1;
+}
+
+bool Character::_isRunRequested() const
+{
+	Game* game = Engine2D::getGame();
+	if (!game) {
+		return false;
+	}
+
+	Player* player = game->getPlayerWith((GameObject*)this);
+	if (!player || !player->getController()) {
+		return false;
+	}
+
+	Controller* controller = player->getController();
+	Action* runAction = controller->getAction("RUN");
+	return runAction && runAction->isActive();
 }
 
 bool Character::_getStateFootLocalY(const GameObjectState* state, float& outFootY) const
@@ -956,8 +1009,8 @@ void Character::_initStates() {
 	runningLeft->setDirection({ -1.0, 0.0 });
 	runningRight->setDirection({ 1.0, 0.0 });
 
-	runningLeft->setForce(100);
-	runningRight->setForce(100);
+	runningLeft->setForce(0.0f);
+	runningRight->setForce(0.0f);
 
 	bool runningLeftLoaded = false;
 	bool runningRightLoaded = false;
@@ -1181,6 +1234,59 @@ void Character::onStateDidEnter(State* previous, State* current)
 		return;
 	}
 
+	const char* currentStateName = currentState->getName();
+	vector2 currentVelocity = this->getVelocity();
+	bool velocityAdjusted = false;
+
+	const bool lockHorizontalVelocity =
+		!strcmp(currentStateName, "Attack01") ||
+		!strcmp(currentStateName, "Attack02") ||
+		!strcmp(currentStateName, "Dead");
+	if (lockHorizontalVelocity && std::fabs(currentVelocity.x) > kHorizontalVelocityEpsilon) {
+		currentVelocity.x = 0.0f;
+		velocityAdjusted = true;
+	}
+
+	const bool resetDownwardVelocityForJumpStart =
+		!strcmp(currentStateName, "Rising") ||
+		!strcmp(currentStateName, "Jump");
+	if (resetDownwardVelocityForJumpStart && currentVelocity.y > 0.0f) {
+		currentVelocity.y = 0.0f;
+		velocityAdjusted = true;
+	}
+
+	if (velocityAdjusted) {
+		this->setVelocity(currentVelocity);
+	}
+
+	const bool enteringAerialState =
+		!strcmp(currentStateName, "Rising") ||
+		!strcmp(currentStateName, "Jump") ||
+		!strcmp(currentStateName, "Falling");
+	if (!enteringAerialState) {
+		_longJumpMomentumActive = false;
+		_longJumpMomentumDirection = 0;
+		_longJumpMomentumSpeed = 0.0f;
+	}
+	else {
+		const char* previousStateName = previousState->getName();
+		const bool launchedFromRunState =
+			previousStateName &&
+			(!strcmp(previousStateName, "RunningLeft") || !strcmp(previousStateName, "RunningRight"));
+		const float horizontalLaunchSpeed = std::fabs(currentVelocity.x);
+		const int launchDirection =
+			(currentVelocity.x > kHorizontalVelocityEpsilon) ? 1 :
+			((currentVelocity.x < -kHorizontalVelocityEpsilon) ? -1 : 0);
+		if (launchedFromRunState &&
+			_isRunRequested() &&
+			launchDirection != 0 &&
+			horizontalLaunchSpeed >= kLongJumpLaunchSpeedThreshold) {
+			_longJumpMomentumActive = true;
+			_longJumpMomentumDirection = launchDirection;
+			_longJumpMomentumSpeed = horizontalLaunchSpeed;
+		}
+	}
+
 	float previousFootLocalY = 0.0f;
 	float currentFootLocalY = 0.0f;
 	if (!_getStateFootLocalY(previousState, previousFootLocalY) ||
@@ -1226,7 +1332,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		(!_isOneWayTile(tile) || _canCollideWithOneWayTile(tile)) &&
 		contact.normal.has_value()) {
 		const bool squareOnlySideContact = isSquareOnlyCollidable(contact.otherCollidable);
-		const int horizontalIntent = _getHorizontalIntent();
+		const int horizontalIntent = _getHorizontalInput();
 		if (horizontalIntent != 0) {
 			const vector2 normal = contact.normal.value();
 			const float absNormalX = std::fabs(normal.x);
@@ -1403,6 +1509,21 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
 
 void Character::update(float time)
 {
+	if (GameObjectState* preUpdateState = this->getState()) {
+		const char* preUpdateStateName = preUpdateState->getName();
+		const bool freezeHorizontalPreUpdate =
+			!strcmp(preUpdateStateName, "Attack01") ||
+			!strcmp(preUpdateStateName, "Attack02") ||
+			!strcmp(preUpdateStateName, "Dead");
+		if (freezeHorizontalPreUpdate) {
+			vector2 preUpdateVelocity = this->getVelocity();
+			if (std::fabs(preUpdateVelocity.x) > kHorizontalVelocityEpsilon) {
+				preUpdateVelocity.x = 0.0f;
+				this->setVelocity(preUpdateVelocity);
+			}
+		}
+	}
+
 	GameObject::update(time);
 
 	if (_dropThroughTimer > 0.0f) {
@@ -1436,6 +1557,8 @@ void Character::update(float time)
 	if (_pendingTransitionFootCorrection > 0.0f) {
 		maxSnapPerFrame = std::max(baseSnapPerFrame, _pendingTransitionFootCorrection + 1.0f);
 	}
+	const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
+	maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
 
 	float footY = this->getPosition().y;
 	if (Collidable* bodyCollidable = this->getCollidable()) {
@@ -1477,8 +1600,17 @@ void Character::update(float time)
 	}
 
 	if (state) {
-
 		const char* stateName = state->getName();
+		if (hasGroundSupport && !strcmp(stateName, "Falling")) {
+			this->sendInput("GROUND_COLLISION");
+			state = this->getState();
+			if (!state) {
+				_pendingTransitionFootCorrection = 0.0f;
+				return;
+			}
+			stateName = state->getName();
+		}
+
 		const bool groundedLocomotionState = _isGroundedLocomotionState(stateName);
 		const bool shouldApplyGroundSnap =
 			groundedLocomotionState ||
@@ -1504,7 +1636,165 @@ void Character::update(float time)
 			}
 		}
 
-		if (Player* player = Engine2D::getGame()->getPlayerWith(this)) {
+		const bool canInputMove =
+			!strcmp(stateName, "RunningLeft") ||
+			!strcmp(stateName, "RunningRight") ||
+			!strcmp(stateName, "Falling") ||
+			!strcmp(stateName, "Jump") ||
+			!strcmp(stateName, "Rising");
+		const bool canResidualMove =
+			canInputMove ||
+			!strcmp(stateName, "Idle") ||
+			!strcmp(stateName, "Landing");
+		const bool isAerialState =
+			!strcmp(stateName, "Falling") ||
+			!strcmp(stateName, "Jump") ||
+			!strcmp(stateName, "Rising");
+		const bool groundedForMovement = hasGroundSupport || (_timeWithoutGroundContact < kGroundLossGraceSeconds);
+
+		const int horizontalInput = canInputMove ? _getHorizontalInput() : 0;
+		const bool hasDirectionalIntent = horizontalInput != 0;
+		const bool runRequested = canInputMove && groundedForMovement && _isRunRequested();
+		_runBoostActive = runRequested && hasDirectionalIntent && _stamina > 0.0f;
+
+		if (_runBoostActive) {
+			_stamina = std::max(0.0f, _stamina - (kStaminaDrainPerSecond * time));
+		}
+		else {
+			_stamina = std::min(_maxStamina, _stamina + (kStaminaRegenPerSecond * time));
+		}
+
+		if (_stamina <= 0.0f) {
+			_runBoostActive = false;
+		}
+
+		Player* player = Engine2D::getGame()->getPlayerWith(this);
+		bool downHeld = false;
+		if (player && player->getController()) {
+			if (Action* downAction = player->getController()->getAction("DOWN")) {
+				downHeld = downAction->isActive();
+			}
+		}
+
+		float horizontalVelocity = this->getVelocity().x;
+		const float startingAbsHorizontalSpeed = std::fabs(horizontalVelocity);
+		if (canResidualMove) {
+			const float groundedMaxSpeed = _runBoostActive ? kRunMaxHorizontalSpeed : kWalkMaxHorizontalSpeed;
+			const float targetVelocityX = hasDirectionalIntent ?
+				((float)horizontalInput * (groundedForMovement ? groundedMaxSpeed : kAirMaxHorizontalSpeed)) :
+				0.0f;
+			const bool reversingInput =
+				hasDirectionalIntent && ((horizontalVelocity * (float)horizontalInput) < -kHorizontalVelocityEpsilon);
+
+			float acceleration = 0.0f;
+			if (hasDirectionalIntent) {
+				if (groundedForMovement) {
+					acceleration = reversingInput ?
+						kGroundTurnAcceleration :
+						(_runBoostActive ? kRunGroundAcceleration : kWalkGroundAcceleration);
+				}
+				else {
+					acceleration = reversingInput ? kAirTurnAcceleration : kAirAcceleration;
+				}
+			}
+			else {
+				acceleration = groundedForMovement ? kGroundDeceleration : kAirDeceleration;
+			}
+
+			const float maxDelta = acceleration * time;
+			if (horizontalVelocity < targetVelocityX) {
+				horizontalVelocity = std::min(horizontalVelocity + maxDelta, targetVelocityX);
+			}
+			else if (horizontalVelocity > targetVelocityX) {
+				horizontalVelocity = std::max(horizontalVelocity - maxDelta, targetVelocityX);
+			}
+
+			if (groundedForMovement) {
+				horizontalVelocity = std::max(-groundedMaxSpeed, std::min(groundedMaxSpeed, horizontalVelocity));
+			}
+			else {
+				const float airSpeedClamp = std::max(kAirMaxHorizontalSpeed, startingAbsHorizontalSpeed);
+				horizontalVelocity = std::max(-airSpeedClamp, std::min(airSpeedClamp, horizontalVelocity));
+			}
+
+			if (!hasDirectionalIntent && std::fabs(horizontalVelocity) < kHorizontalVelocityEpsilon) {
+				horizontalVelocity = 0.0f;
+			}
+		}
+		else {
+			horizontalVelocity = 0.0f;
+			_runBoostActive = false;
+		}
+
+		if (!groundedForMovement && isAerialState && _longJumpMomentumActive) {
+			const bool oppositeDirectionInput =
+				hasDirectionalIntent && (horizontalInput != _longJumpMomentumDirection);
+			const bool wrongDirectionVelocity =
+				(horizontalVelocity * (float)_longJumpMomentumDirection) < -kHorizontalVelocityEpsilon;
+
+			if (oppositeDirectionInput || wrongDirectionVelocity || _longJumpMomentumDirection == 0) {
+				_longJumpMomentumActive = false;
+				_longJumpMomentumDirection = 0;
+				_longJumpMomentumSpeed = 0.0f;
+			}
+			else {
+				_longJumpMomentumSpeed = std::max(0.0f, _longJumpMomentumSpeed - (kLongJumpMomentumDecayPerSecond * time));
+				const float signedMomentumSpeed = (float)_longJumpMomentumDirection * _longJumpMomentumSpeed;
+				const float signedHorizontalSpeed = horizontalVelocity * (float)_longJumpMomentumDirection;
+				if (signedHorizontalSpeed < _longJumpMomentumSpeed) {
+					horizontalVelocity = signedMomentumSpeed;
+				}
+
+				if (_longJumpMomentumSpeed <= kWalkMaxHorizontalSpeed) {
+					_longJumpMomentumActive = false;
+					_longJumpMomentumDirection = 0;
+					_longJumpMomentumSpeed = 0.0f;
+				}
+			}
+		}
+		else if (groundedForMovement && _longJumpMomentumActive) {
+			_longJumpMomentumActive = false;
+			_longJumpMomentumDirection = 0;
+			_longJumpMomentumSpeed = 0.0f;
+		}
+
+		vector2 velocity = this->getVelocity();
+		velocity.x = horizontalVelocity;
+		this->setVelocity(velocity);
+
+		const bool lockDownwardVelocityOnGround =
+			hasGroundSupport &&
+			(groundedLocomotionState ||
+			 !strcmp(stateName, "Attack01") ||
+			 !strcmp(stateName, "Attack02") ||
+			 !strcmp(stateName, "Dead"));
+		if (lockDownwardVelocityOnGround && velocity.y > 0.0f) {
+			velocity.y = 0.0f;
+			this->setVelocity(velocity);
+		}
+
+		if (!groundedForMovement && isAerialState && downHeld && velocity.y > 0.0f) {
+			velocity.y = std::min(kFastFallMaxSpeed, velocity.y + (kFastFallAcceleration * time));
+			this->setVelocity(velocity);
+		}
+
+		if (canInputMove && hasDirectionalIntent && this->getRenderable()) {
+			vector2 scale = this->getRenderable()->getScale();
+			const float absScaleX = std::fabs(scale.x);
+			this->getRenderable()->setScale((horizontalInput > 0) ? absScaleX : -absScaleX, scale.y);
+		}
+
+		if ((!strcmp(stateName, "RunningLeft") || !strcmp(stateName, "RunningRight")) &&
+			state->getRenderable() &&
+			state->getRenderable()->getRenderableType() == RENDERABLE_TYPE_ANIMATION) {
+			Animation* runAnimation = (Animation*)state->getRenderable();
+			const float targetAnimationSpeed = _runBoostActive ? kRunBoostAnimationSpeed : kRunAnimationSpeed;
+			if (std::fabs(runAnimation->getSpeed() - targetAnimationSpeed) > 0.001f) {
+				runAnimation->setSpeed(targetAnimationSpeed);
+			}
+		}
+
+		if (player) {
 //#if _DEBUG
 			if (KEYBOARD) {
 				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {
@@ -1512,18 +1802,6 @@ void Character::update(float time)
 				}
 			}
 //#endif
-			if (!strcmp(stateName, "Jump") || !strcmp(stateName, "Falling"))
-			{
-				if (player->getController()->getAction("LEFT")->isActive()) {
-					this->setPosition(this->getPosition().x - MOVE_UNITS * time, this->getPosition().y);
-					this->getRenderable()->setScale(-abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
-				}
-				else if (player->getController()->getAction("RIGHT")->isActive()) {
-					this->setPosition(this->getPosition().x + MOVE_UNITS * time, this->getPosition().y);
-					this->getRenderable()->setScale(abs(this->getRenderable()->getScale().x), this->getRenderable()->getScale().y);
-				}
-			}
-
 			// Having this idea about conditional state changes,
 			// like having a "KEEP_ALIVE" condition in the event queue, and in the lack of that condition,
 			// the character will fall or otherwise change state
