@@ -180,7 +180,9 @@ bool PlayState::onExecute(float time)
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
+		_collisionSystem.reset();
 		_playableCharacter->clearEvents();
+		_playableCharacter->resetForRespawn();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
 
 		if (_levelManager.hasSpawnPoint()) {
@@ -189,6 +191,15 @@ bool PlayState::onExecute(float time)
 		else {
 			_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
 		}
+#if _DEBUG
+		if (DEBUGGING && Debug::dbgCollision) {
+			const vector2 pos = _playableCharacter->getPosition();
+			char buffer[192];
+			sprintf_s(buffer, sizeof(buffer), "Respawn: pos={%.2f,%.2f} state=%s\n", pos.x, pos.y,
+				_playableCharacter->getState() ? _playableCharacter->getState()->getName() : "(null)");
+			DEBUG_MSG(buffer);
+		}
+#endif
 	}
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {

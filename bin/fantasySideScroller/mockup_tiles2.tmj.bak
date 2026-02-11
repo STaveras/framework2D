@@ -36,7 +36,7 @@
                 {
                  "name":"collision_mode",
                  "type":"string",
-                 "value":"none"
+                 "value":"one_way"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -74,12 +74,6 @@
          "id":10,
          "name":"objects_2",
          "opacity":1,
-         "properties":[
-                {
-                 "name":"collision_mode",
-                 "type":"string",
-                 "value":"none"
-                }],
          "type":"tilelayer",
          "visible":true,
          "width":42,
@@ -319,12 +313,6 @@
          "id":9,
          "name":"details_2",
          "opacity":1,
-         "properties":[
-                {
-                 "name":"collision_mode",
-                 "type":"string",
-                 "value":"none"
-                }],
          "type":"tilelayer",
          "visible":true,
          "width":42,
@@ -365,7 +353,7 @@
                 {
                  "name":"collision_mode",
                  "type":"string",
-                 "value":"none"
+                 "value":"solid"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -407,7 +395,7 @@
                 {
                  "name":"collision_mode",
                  "type":"string",
-                 "value":"one_way"
+                 "value":"solid"
                 }],
          "type":"tilelayer",
          "visible":true,

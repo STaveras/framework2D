@@ -103,6 +103,19 @@ namespace System
        return false;
     }
 
+    static bool checkArgumentsForStaticBackground(int argc, const char** argv)
+    {
+       if (argc > 1) {
+
+          for (int i = 0; i < argc; i++) {
+             if (!strcmp(argv[i], "--static-bg")) {
+                return true;
+             }
+          }
+       }
+       return false;
+    }
+
     static bool checkArgumentsForWindowed(int argc, const char** argv) 
     {
         if (argc > 1) {
