@@ -19,6 +19,12 @@ class TileSet
    vector2 _tileCounts;
 
 public:
+   struct CollisionLoadStats {
+      int explicitColliders = 0;
+      int missingColliders = 0;
+      int decomposedConcavePolygons = 0;
+   };
+
    struct TileInfo {
       std::string _typeName;
       Collidable* _collisionInfo = NULL;
@@ -50,6 +56,8 @@ public:
    }
 
    static TileSet* loadFromFile(const char* fileName);
+   static CollisionLoadStats getCollisionLoadStats(void);
+   static void resetCollisionLoadStats(void);
 };
 
 #endif

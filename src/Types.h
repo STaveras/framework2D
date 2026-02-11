@@ -1,7 +1,7 @@
 // File: Types.h
 // Author: Stanley Taveras
 // Created: 2/20/2010
-// Modified: 5/24/2022
+// Modified: 2/08/2026
 
 #if !defined(_TYPES_H_)
 #define _TYPES_H_
@@ -9,7 +9,7 @@
 #include <cstdint>
 
 // Version should at some point be managed by some build management/CI system (e.g. Jenkins, Travis, etc.)
-#define FRAMEWORK_VERSION "0.06"
+#define FRAMEWORK_VERSION "0.10"
 
 #define DEFAULT_DATA_PATH "./data/"
 

@@ -31,6 +31,8 @@ struct CollisionContact
 	bool overlapping = false;
 	std::optional<vector2> normal;
 	std::optional<float> penetrationDepth;
+	std::optional<float> timeOfImpact;
+	std::optional<vector2> separation;
 };
 
 struct CollisionDebugShape
@@ -45,6 +47,9 @@ struct CollisionDebugShape
 	vector2 min = vector2(0.0f, 0.0f);
 	vector2 max = vector2(0.0f, 0.0f);
 	vector2 objectPosition = vector2(0.0f, 0.0f);
+	bool hasSweep = false;
+	vector2 sweepStart = vector2(0.0f, 0.0f);
+	vector2 sweepEnd = vector2(0.0f, 0.0f);
 	vector2 collisionAnchor = vector2(0.0f, 0.0f);
 	vector2 renderableOffset = vector2(0.0f, 0.0f);
 	vector2 anchorWithRenderableOffset = vector2(0.0f, 0.0f);
@@ -59,6 +64,8 @@ struct CollisionDebugContact
 	bool overlapping = false;
 	std::optional<vector2> normal;
 	std::optional<float> penetrationDepth;
+	std::optional<float> timeOfImpact;
+	std::optional<vector2> separation;
 	std::optional<vector2> midpoint;
 };
 
@@ -75,6 +82,7 @@ class CollisionSystem
 	std::set<CollisionPairKey> _activePairs;
 	std::vector<CollisionDebugShape> _debugShapes;
 	std::vector<CollisionDebugContact> _debugContacts;
+	std::map<GameObject*, vector2> _previousPositions;
 
 	static CollisionPairKey makePairKey(GameObject* a, GameObject* b);
 	static void computeGeometryHints(const Collidable* a, const Collidable* b, std::optional<vector2>& normal, std::optional<float>& penetrationDepth);
@@ -86,11 +94,13 @@ class CollisionSystem
 		CollisionPhase phase,
 		bool overlapping,
 		const std::optional<vector2>& normalHint = std::nullopt,
-		const std::optional<float>& penetrationHint = std::nullopt) const;
+		const std::optional<float>& penetrationHint = std::nullopt,
+		const std::optional<float>& timeOfImpact = std::nullopt,
+		const std::optional<vector2>& separation = std::nullopt) const;
 
 public:
 	void reset(void);
-	void update(const std::map<std::string, GameObject*>& objects);
+	void update(const std::map<std::string, GameObject*>& objects, float dt);
 
 	const std::vector<CollisionDebugShape>& getDebugShapes(void) const { return _debugShapes; }
 	const std::vector<CollisionDebugContact>& getDebugContacts(void) const { return _debugContacts; }

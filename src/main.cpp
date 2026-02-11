@@ -105,6 +105,7 @@ int main(int argc, const char *argv[])
 
    const bool useVulkan = System::checkArgumentsForVulkan(argc, argv);
    const bool useOpenGL = System::checkArgumentsForOpenGL(argc, argv);
+   const bool useStaticBackground = System::checkArgumentsForStaticBackground(argc, argv);
 
    if (useOpenGL) {
       window.initialize(Window::ClientAPI::OpenGL);
@@ -134,6 +135,10 @@ int main(int argc, const char *argv[])
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #endif
+
+   if (pRenderer) {
+      pRenderer->setBackgroundStatic(useStaticBackground);
+   }
 
    // We need to only call setFullscreen or setVericalSync when the command line argument for either is present
    if (System::checkArgumentsForFullscreen(argc, argv))

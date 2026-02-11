@@ -7,6 +7,7 @@
 #include "Square.h"
 
 #include <algorithm>
+#include <string>
 #include <vector>
 
 // Just to get something on the screen...
@@ -16,6 +17,7 @@ class Tile : public GameObject
 
    TileSet* _tileSet = NULL;
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
+   std::string _layerName;
 
    // TODO: Move this to TileSet
    Factory<Image> _tileImages;
@@ -63,12 +65,24 @@ public:
       return _layerCollisionMode;
    }
 
+   void setLayerName(const std::string& layerName) {
+      _layerName = layerName;
+   }
+
+   const std::string& getLayerName(void) const {
+      return _layerName;
+   }
+
    bool isOneWay(void) const {
       return _layerCollisionMode == TileCollisionMode::OneWay;
    }
 
    bool isNonCollidingLayer(void) const {
       return _layerCollisionMode == TileCollisionMode::None;
+   }
+
+   bool isCollidableLayer(void) const {
+      return _layerCollisionMode != TileCollisionMode::None;
    }
 
    bool shouldCollideWith(const GameObject& other) const override
@@ -103,11 +117,14 @@ public:
    {
       _tileIndex = tileIndex;
 
+      GameObjectState* state = this->getState();
+      if (state && _tileIndex < 0) {
+         state->setCollidable(NULL);
+      }
+
       if (_tileSet && _tileIndex >= 0) {
 
          if (_tileIndex < _tileSet->getTileCounts().x * _tileSet->getTileCounts().y) {
-
-            GameObjectState* state = this->getState();
 
             if (state) {
 
@@ -143,6 +160,9 @@ public:
                if (tileInfo._collisionInfo != NULL) {
                   state->setCollidable(_tileSet->getTileInfo(tileIndex)._collisionInfo);
                }
+               else {
+                  state->setCollidable(NULL);
+               }
                // Originally we created new Collision objects here... But now, we entirely rely on the TileSet for these objects
             }
          }
@@ -159,7 +179,8 @@ public:
    }
 
 #ifdef _DEBUG
-   void update(float time) {
+   void update(float time) override 
+   {
       GameObject::update(time);
 
       if (Debug::dbgTiles) 
