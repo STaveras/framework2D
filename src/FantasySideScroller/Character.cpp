@@ -560,27 +560,12 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 		return false;
 	}
 
-	// DEBUG: Log all polygon contacts
-	static float polyLogTimer = 0.0f;
-	polyLogTimer += 0.016f;
-	bool shouldLogPoly = (polyLogTimer >= 0.5f);
-	
 	if (contact.normal.has_value() && contact.normal->y > kGroundNormalThreshold) {
-		if (shouldLogPoly) {
-			polyLogTimer = 0.0f;
-			float ny = contact.normal.value().y;
-			printf("[GROUND] Tile %d: normal.y=%.4f YES\n", tile->getTileIndex(), ny);
-		}
 		return true;
 	}
 
 	// Resolver-provided separation is a useful fallback when SAT normals on slopes are noisy.
 	if (contact.separation.has_value() && contact.separation->y < -kGroundNormalThreshold) {
-		if (shouldLogPoly) {
-			polyLogTimer = 0.0f;
-			float sep = contact.separation->y;
-			printf("[GROUND] Tile %d: sep=%.4f YES\n", tile->getTileIndex(), sep);
-		}
 		return true;
 	}
 
@@ -601,20 +586,12 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 	const Collidable* selfCollidable = contact.selfCollidable;
 	const Collidable* tileCollidable = contact.otherCollidable ? contact.otherCollidable : tile->getCollidable();
 	if (!selfCollidable) {
-		if (shouldLogPoly) {
-			polyLogTimer = 0.0f;
-			printf("[GROUND] Tile %d: no selfCollidable\n", tile->getTileIndex());
-		}
 		return false;
 	}
 
 	vector2 selfMin(0.0f, 0.0f);
 	vector2 selfMax(0.0f, 0.0f);
 	if (!tileCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
-		if (shouldLogPoly) {
-			polyLogTimer = 0.0f;
-			printf("[GROUND] Tile %d: no bounds\n", tile->getTileIndex());
-		}
 		return false;
 	}
 
@@ -631,39 +608,21 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 	const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
 	const float sampleOffsets[] = { -5.0f, -3.0f, -1.0f, 0.0f, 1.0f, 3.0f, 5.0f };
     
-		if (shouldLogPoly) {
-			polyLogTimer = 0.0f;
-			printf("[GROUND] Tile %d SAMPLING: bottom=%.1f width=%.1f\n",
-				tile->getTileIndex(), bodyBottom, bodyWidth);
-		}
-    
 	for (float frac : sampleFractions) {
 		for (float off : sampleOffsets) {
 			const float sampleX = selfMin.x + (bodyWidth * frac) + off;
 			float supportY = 0.0f;
 			if (_sampleSupportY(tileCollidable, sampleX, supportY)) {
 				const float supportDelta = bodyBottom - supportY;
-				if (shouldLogPoly) {
-					printf("  frac=%.2f off=%.1f sampleX=%.1f supportY=%.1f delta=%.2f [%.1f,%.1f] %s\n",
-						frac, off, sampleX, supportY, supportDelta,
-						-kOneWayTopApproachEpsilon, kGroundSupportSnapDistance,
-						(supportDelta >= -kOneWayTopApproachEpsilon && supportDelta <= kGroundSupportSnapDistance) ? "YES" : "NO");
-				}
 				if (supportDelta >= -kOneWayTopApproachEpsilon && supportDelta <= kGroundSupportSnapDistance) {
 					return true;
 				}
 			}
-			else if (shouldLogPoly) {
-				printf("  frac=%.2f off=%.1f sampleX=%.1f NO_SUPPORT\n", frac, off, sampleX);
-			}
 		}
 	}
 
-    // If no sample indicated a valid support within tolerance, this is not ground.
-		if (shouldLogPoly) {
-			printf("[GROUND] Tile %d: REJECTED\n", tile->getTileIndex());
-		}
-	    return false;
+	// If no sample indicated a valid support within tolerance, this is not ground.
+	return false;
 }
 
 bool Character::_isWallBlockingContact(const CollisionContact& contact, int horizontalIntent, float footY, float maxStepUpDistance) const
@@ -1039,20 +998,10 @@ bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, flo
 		if (!polygon) {
 			return false;
 		}
-		
-		// Even if the polygon isn't marked as "valid" (convex + consistent winding),
-		// we should still check if there's support there - the decomposition process
-		// may have issues that don't prevent walkable surfaces from being present
+
+		// Even if the polygon isn't marked as valid, attempt sampling to tolerate
+		// imperfectly authored decomposition data.
 		if (!polygon->isValid()) {
-			static float logTimer = 0.0f;
-			logTimer += 0.016f;
-			if (logTimer >= 0.5f) {
-				logTimer = 0.0f;
-				printf("[POLYGON_INVALID] Attempting support sample on invalid polygon: sampleX=%.2f vertices=%zu convex=%d\n",
-					sampleX, polygon->getLocalVertices().size(), (int)polygon->isConvex());
-			}
-			
-			// Try anyway - the surface might still have topography we can sample
 			float supportY = 0.0f;
 			if (polygon->findTopSurfaceYAtX(sampleX, supportY)) {
 				outY = supportY;
@@ -1060,7 +1009,7 @@ bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, flo
 			}
 			return false;
 		}
-		
+
 		return polygon->findTopSurfaceYAtX(sampleX, outY);
 	}
 	case COL_OBJ_GROUP: {
@@ -1899,13 +1848,20 @@ void Character::onStateDidEnter(State* previous, State* current)
 	const char* currentStateName = currentState->getName();
 	vector2 currentVelocity = this->getVelocity();
 	bool velocityAdjusted = false;
+	const bool stateHasCollisionShape = currentState->getCollidable() != NULL;
 
 	const bool lockHorizontalVelocity =
 		!strcmp(currentStateName, "Attack01") ||
-		!strcmp(currentStateName, "Attack02") ||
-		!strcmp(currentStateName, "Dead");
+		!strcmp(currentStateName, "Attack02");
 	if (lockHorizontalVelocity && std::fabs(currentVelocity.x) > kHorizontalVelocityEpsilon) {
 		currentVelocity.x = 0.0f;
+		velocityAdjusted = true;
+	}
+
+	if (!stateHasCollisionShape &&
+		(std::fabs(currentVelocity.x) > kHorizontalVelocityEpsilon ||
+		 std::fabs(currentVelocity.y) > kHorizontalVelocityEpsilon)) {
+		currentVelocity = vector2(0.0f, 0.0f);
 		velocityAdjusted = true;
 	}
 
@@ -2180,14 +2136,19 @@ void Character::update(float time)
 
 	if (GameObjectState* preUpdateState = this->getState()) {
 		const char* preUpdateStateName = preUpdateState->getName();
+		const bool preUpdateStateHasCollisionShape = preUpdateState->getCollidable() != NULL;
 		const bool freezeHorizontalPreUpdate =
 			!strcmp(preUpdateStateName, "Attack01") ||
-			!strcmp(preUpdateStateName, "Attack02") ||
-			!strcmp(preUpdateStateName, "Dead");
-		if (freezeHorizontalPreUpdate) {
+			!strcmp(preUpdateStateName, "Attack02");
+		if (freezeHorizontalPreUpdate || !preUpdateStateHasCollisionShape) {
 			vector2 preUpdateVelocity = this->getVelocity();
-			if (std::fabs(preUpdateVelocity.x) > kHorizontalVelocityEpsilon) {
+			const bool shouldFreezeVertical = !preUpdateStateHasCollisionShape;
+			if (std::fabs(preUpdateVelocity.x) > kHorizontalVelocityEpsilon ||
+				(shouldFreezeVertical && std::fabs(preUpdateVelocity.y) > kHorizontalVelocityEpsilon)) {
 				preUpdateVelocity.x = 0.0f;
+				if (shouldFreezeVertical) {
+					preUpdateVelocity.y = 0.0f;
+				}
 				this->setVelocity(preUpdateVelocity);
 			}
 		}
