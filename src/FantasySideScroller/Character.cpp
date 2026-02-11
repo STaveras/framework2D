@@ -38,6 +38,8 @@ constexpr float kLocomotionFootLocalY = 24.0f;
 constexpr float kFootlineTolerance = 0.5f;
 constexpr float kFootlineEpsilon = 0.001f;
 constexpr float kWallNormalThreshold = 0.55f;
+constexpr float kGroundRejectWallNormalX = 0.90f;
+constexpr float kGroundRejectWallNormalY = 0.25f;
 constexpr float kHorizontalSeparationEpsilon = 0.01f;
 constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
 constexpr float kStepUpAssistEpsilon = 0.05f;
@@ -558,6 +560,26 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 
 	if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
 		return false;
+	}
+
+	// Reject near-vertical wall contacts as ground before running support sampling.
+	// Without this guard, jumping into a wall while holding horizontal input can
+	// keep ground-contact grace alive and effectively "stick" the character mid-air.
+	if (contact.normal.has_value()) {
+		const vector2 normal = contact.normal.value();
+		const float absNormalX = std::fabs(normal.x);
+		const float absNormalY = std::fabs(normal.y);
+		if (absNormalX >= kGroundRejectWallNormalX && absNormalY <= kGroundRejectWallNormalY) {
+			return false;
+		}
+	}
+	if (contact.separation.has_value()) {
+		const vector2 separation = contact.separation.value();
+		const float absSepX = std::fabs(separation.x);
+		const float absSepY = std::fabs(separation.y);
+		if (absSepX > (absSepY + kHorizontalSeparationEpsilon) && absSepX > kHorizontalSeparationEpsilon) {
+			return false;
+		}
 	}
 
 	if (contact.normal.has_value() && contact.normal->y > kGroundNormalThreshold) {
