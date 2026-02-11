@@ -1036,7 +1036,7 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 		}
 
 		const float probeDeltaY = probeSupportY - footY;
-		if (probeDeltaY > -kStepUpAssistEpsilon || probeDeltaY < -maxUpwardSnapDistance) {
+		if (probeDeltaY > -kStepUpAssistEpsilon * 1.25f || probeDeltaY < -maxUpwardSnapDistance * 1.25f) {
 			continue;
 		}
 
@@ -1109,6 +1109,19 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 			samplePriority[0] = 1;
 			samplePriority[1] = 0;
 			samplePriority[2] = 2;
+		}
+	}
+
+	// Bias: if both edge and center are available and center is close to edge,
+	// prefer center to reduce oscillation on polygon slopes.
+	if (hasPreferred[1]) {
+		for (int edge : {0, 2}) {
+			if (hasPreferred[edge] && std::fabs(preferredYs[edge] - preferredYs[1]) <= kSlopePriorityEpsilon) {
+				samplePriority[0] = 1;
+				samplePriority[1] = edge;
+				samplePriority[2] = (edge == 0 ? 2 : 0);
+				break;
+			}
 		}
 	}
 
@@ -1253,12 +1266,13 @@ void Character::_initStates() {
 
 	/////////////////////////////////////////
 
-	GameObjectState* falling = this->addState("Falling");
-	falling->setPreserveScaling(true);
-	falling->setDirection(vector2(0.0f, 1.0f));
-	falling->setForce((MOVE_UNITS * JUMP_MULTIPLIER) * 0.5);
+    GameObjectState* falling = this->addState("Falling");
+    falling->setPreserveScaling(true);
+    falling->setDirection(vector2(0.0f, 1.0f));
+    // Use zero initial force for falling; gravity and momentum are handled in update().
+    falling->setForce(0.0f);
 
-	falling->setRenderable(jumpAnimation);
+    falling->setRenderable(jumpAnimation);
 
 	/////////////////////////////////////////
 
@@ -1754,18 +1768,41 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 						}
 					}
 
-					if (squareOnlySideContact) {
-						float separationX = kHorizontalSeparationEpsilon;
-						if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
-							separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
-						}
-						separationX = std::min(separationX, kMaxHorizontalSeparationPerContact);
-
-						// Keep tile side contacts from letting horizontal motion push inside walls.
-						this->setPosition(
-							this->getPosition().x - std::copysign(separationX, normal.x),
-							this->getPosition().y);
-					}
+                    if (squareOnlySideContact) {
+                        // Before pushing horizontally away from the wall, check if we
+                        // can step up onto support this frame. If so, prefer stepping
+                        // to avoid the uphill treadmill effect.
+                        float maxStepUpDistance = kDefaultMaxSnapPerFrame;
+                        if (Tile* t = tile ? tile : _tile) {
+                            if (t->getTileSet()) {
+                                maxStepUpDistance = std::max(1.0f, t->getTileSet()->getTileSize() * 0.5f);
+                            }
+                        }
+                        float footYNow = this->getPosition().y;
+                        if (Collidable* bodyCol = this->getCollidable()) {
+                            if (bodyCol->getType() == COL_OBJ_SQUARE) {
+                                Square* b = (Square*)bodyCol;
+                                footYNow = b->getMax().y;
+                            }
+                        }
+                        float stepY = footYNow;
+                        Tile* stepTile = _findGroundSupportTile(footYNow, maxStepUpDistance, stepY);
+                        const float stepDeltaY = stepY - footYNow;
+                        const bool canStepUp = (stepTile && stepDeltaY < -kStepUpAssistEpsilon);
+                        if (canStepUp) {
+                            this->setPosition(this->getPosition().x, this->getPosition().y + std::max(-maxStepUpDistance, stepDeltaY));
+                        } else {
+                            float separationX = kHorizontalSeparationEpsilon;
+                            if (contact.penetrationDepth.has_value() && contact.penetrationDepth.value() > 0.0f) {
+                                separationX += contact.penetrationDepth.value() / std::max(absNormalX, 0.001f);
+                            }
+                            separationX = std::min(separationX, kMaxHorizontalSeparationPerContact);
+                            // Keep tile side contacts from letting horizontal motion push inside walls.
+                            this->setPosition(
+                                this->getPosition().x - std::copysign(separationX, normal.x),
+                                this->getPosition().y);
+                        }
+                    }
 				}
 			}
 		}
@@ -1834,56 +1871,56 @@ void Character::update(float time)
 
 	GameObject::update(time);
 
-	// // Auto-test: simulate holding RIGHT to reproduce slope traversal when
-	// // environment variable AUTO_SLOPE_TEST=1 is set. Also emit compact telemetry.
-	// const char* autoTest = std::getenv("AUTO_SLOPE_TEST");
-	// if (autoTest && std::strcmp(autoTest, "1") == 0) {
-	// 	Player* p = Engine2D::getGame()->getPlayerWith(this);
-	// 	if (p && p->getController()) {
-	// 		Action* right = p->getController()->getAction("RIGHT");
-	// 		Action* left = p->getController()->getAction("LEFT");
-	// 		if (right) right->setActive(true);
-	// 		if (left) left->setActive(false);
-	// 	}
+    // Proactive ground sampling before relying on collision contacts. This
+    // helps start levels grounded even if no collision Event has fired yet.
+    // Skip this sampling for aerial states (jumping or falling) to avoid
+    // snapping the character back down when they are in the air.  It is
+    // performed only when the previous state is not an aerial state.
+    {
+        bool doPreSupportSample = true;
+        if (GameObjectState* preState = this->getState()) {
+            const char* name = preState->getName();
+            // Identify aerial states where we do not want to snap to ground
+            if (!std::strcmp(name, "Rising") || !std::strcmp(name, "Jump") || !std::strcmp(name, "Falling")) {
+                doPreSupportSample = false;
+            }
+        }
+        if (doPreSupportSample) {
+            float baseSnapPerFrame = kDefaultMaxSnapPerFrame;
+            if (_tile && _tile->getTileSet()) {
+                baseSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
+            }
+            float maxSnapPerFrame = baseSnapPerFrame;
+            if (_pendingTransitionFootCorrection > 0.0f) {
+                maxSnapPerFrame = std::max(baseSnapPerFrame, _pendingTransitionFootCorrection + 1.0f);
+            }
+            const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
+            maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
 
-	// 	const char* stateName = this->getState() ? this->getState()->getName() : "(null)";
-	// 	vector2 pos = this->getPosition();
-	// 	vector2 vel = this->getVelocity();
-	// 	int groundTileIndex = _tile ? _tile->getTileIndex() : -1;
-	// 	printf("[AUTO] state=%s pos={%.2f,%.2f} vel={%.2f,%.2f} ground=%d contacts=%zu\n",
-	// 		stateName, pos.x, pos.y, vel.x, vel.y, groundTileIndex, _groundContacts.size());
+            float footY = this->getPosition().y;
+            if (Collidable* bodyCollidable = this->getCollidable()) {
+                if (bodyCollidable->getType() == COL_OBJ_SQUARE) {
+                    Square* bodySquare = (Square*)bodyCollidable;
+                    footY = bodySquare->getMax().y;
+                }
+            }
 
-	// 	// Per-frame sampling telemetry for the current ground tile (if any)
-	// 	if (_tile) {
-	// 		Collidable* groundCollidable = _tile->getCollidable();
-	// 		Collidable* selfCollidable = this->getCollidable();
-	// 		if (groundCollidable && selfCollidable) {
-	// 			vector2 selfMin(0.0f, 0.0f), selfMax(0.0f, 0.0f);
-	// 			if (tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
-	// 				const float bodyWidth = selfMax.x - selfMin.x;
-	// 				const float sampleFracs[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
-	// 				const float sampleOffsets[] = { -2.0f, -1.0f, 0.0f, 1.0f, 2.0f };
-	// 				for (float frac : sampleFracs) {
-	// 					for (float off : sampleOffsets) {
-	// 						const float sampleX = selfMin.x + (bodyWidth * frac) + off;
-	// 						float supportY = 0.0f;
-	// 						bool ok = _sampleSupportY(groundCollidable, sampleX, supportY);
-	// 						int colType = groundCollidable->getType();
-	// 						if (colType == COL_OBJ_POLYGON) {
-	// 							const PolygonCollider* poly = (const PolygonCollider*)groundCollidable;
-	// 							printf("[AUTO_SAMP] tile=%d frac=%.2f off=%.1f sampleX=%.2f ok=%d supportY=%.2f type=POLY valid=%d convex=%d verts=%zu\n",
-	// 								_tile->getTileIndex(), frac, off, sampleX, ok ? 1 : 0, supportY,
-	// 								poly->isValid() ? 1 : 0, poly->isConvex() ? 1 : 0, poly->getLocalVertices().size());
-	// 						} else {
-	// 							printf("[AUTO_SAMP] tile=%d frac=%.2f off=%.1f sampleX=%.2f ok=%d supportY=%.2f type=%d\n",
-	// 								_tile->getTileIndex(), frac, off, sampleX, ok ? 1 : 0, supportY, colType);
-	// 						}
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
+            float preSupportY = footY;
+            Tile* preSupportTile = _findGroundSupportTile(footY, maxSnapPerFrame, preSupportY);
+            if (preSupportTile) {
+                // Establish support before processing inputs, so we don't float
+                // for a frame at scene start or after teleports.
+                _tile = preSupportTile;
+                const float targetFootY = preSupportY;
+                float deltaY = targetFootY - footY;
+                if (std::fabs(deltaY) > 0.001f) {
+                    deltaY = std::max(-maxSnapPerFrame, std::min(maxSnapPerFrame, deltaY));
+                    this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
+                }
+                _timeWithoutGroundContact = 0.0f;
+            }
+        }
+    }
 
 	if (_dropThroughTimer > 0.0f) {
 		_dropThroughTimer = std::max(0.0f, _dropThroughTimer - time);
@@ -2128,15 +2165,31 @@ void Character::update(float time)
 			 !strcmp(stateName, "Attack01") ||
 			 !strcmp(stateName, "Attack02") ||
 			 !strcmp(stateName, "Dead"));
-		if (lockDownwardVelocityOnGround && velocity.y > 0.0f) {
-			velocity.y = 0.0f;
-			this->setVelocity(velocity);
-		}
+        if (lockDownwardVelocityOnGround && velocity.y > 0.0f) {
+            velocity.y = 0.0f;
+            this->setVelocity(velocity);
+        }
 
-		if (!groundedForMovement && isAerialState && downHeld && velocity.y > 0.0f) {
-			velocity.y = std::min(kFastFallMaxSpeed, velocity.y + (kFastFallAcceleration * time));
-			this->setVelocity(velocity);
-		}
+        // Apply gravity when the character is airborne.  Without this the hero
+        // retains whatever vertical velocity was applied at jump start and
+        // never accelerates downward, which prevents normal jumping and
+        // falling behaviour.  Only apply gravity when we no longer have
+        // ground support (with grace) and are in an aerial state (Rising,
+        // Jump, Falling).
+        if (!groundedForMovement && isAerialState) {
+            vector2 v = this->getVelocity();
+            // Gravity acceleration increases the downward velocity (positive Y)
+            v.y = std::min(kNormalFallMaxSpeed, v.y + (kGravityAcceleration * time));
+            this->setVelocity(v);
+        }
+
+        // Apply fast fall acceleration when holding down while airborne and
+        // already falling downward.  This builds upon the gravity update above.
+        if (!groundedForMovement && isAerialState && downHeld && this->getVelocity().y > 0.0f) {
+            vector2 v = this->getVelocity();
+            v.y = std::min(kFastFallMaxSpeed, v.y + (kFastFallAcceleration * time));
+            this->setVelocity(v);
+        }
 
 		if (canInputMove && hasDirectionalIntent && this->getRenderable()) {
 			vector2 scale = this->getRenderable()->getScale();
