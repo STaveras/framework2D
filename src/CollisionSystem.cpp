@@ -27,6 +27,9 @@ constexpr float kTouchContactEpsilon = 0.01f;
 constexpr float kCcdStepPixels = 2.5f;
 constexpr int kCcdMaxSubsteps = 16;
 constexpr int kResolveIterations = 8;
+constexpr float kSupportProbeFootAboveTolerance = 2.0f;
+constexpr float kSupportProbeFootBelowTolerance = 16.0f;
+constexpr int kMinimumSupportSamplesForWalkable = 1;
 
 int phasePriority(CollisionPhase phase)
 {
@@ -435,6 +438,84 @@ bool trySampleSupportY(const Collidable* collidable, float sampleX, float& outY)
 	default:
 		return false;
 	}
+}
+
+bool hasWalkableSupportNearFoot(
+	const Collidable* supportCollidable,
+	float footMinX,
+	float footMaxX,
+	float footY,
+	float& outSupportY)
+{
+	if (!supportCollidable || footMaxX <= footMinX) {
+		return false;
+	}
+
+	const float width = footMaxX - footMinX;
+	const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+	bool foundSupport = false;
+	int supportSampleCount = 0;
+	float bestDeltaMagnitude = std::numeric_limits<float>::max();
+	float bestSupportY = 0.0f;
+
+	for (float fraction : sampleFractions) {
+		const float sampleX = footMinX + (width * fraction);
+		float supportY = 0.0f;
+		if (!trySampleSupportY(supportCollidable, sampleX, supportY)) {
+			continue;
+		}
+
+		const float supportDelta = footY - supportY;
+		if (supportDelta < -kSupportProbeFootAboveTolerance || supportDelta > kSupportProbeFootBelowTolerance) {
+			continue;
+		}
+
+		++supportSampleCount;
+		const float deltaMagnitude = std::fabs(supportDelta);
+		if (!foundSupport || deltaMagnitude < bestDeltaMagnitude) {
+			foundSupport = true;
+			bestDeltaMagnitude = deltaMagnitude;
+			bestSupportY = supportY;
+		}
+	}
+
+	if (!foundSupport || supportSampleCount < kMinimumSupportSamplesForWalkable) {
+		return false;
+	}
+
+	outSupportY = bestSupportY;
+	return true;
+}
+
+bool shouldForceVerticalSeparationForWalkablePolygon(
+	GameObject* dynamicObject,
+	GameObject* staticObject,
+	const Collidable* dynamicCollidable,
+	const Collidable* staticCollidable,
+	const vector2& axis)
+{
+	if (!dynamicObject || !staticObject || !dynamicCollidable || !staticCollidable) {
+		return false;
+	}
+
+	if (staticObject->getType() != GameObject::GAME_OBJ_TILE) {
+		return false;
+	}
+
+	(void)axis;
+
+	vector2 dynamicMin(0.0f, 0.0f);
+	vector2 dynamicMax(0.0f, 0.0f);
+	if (!tryGetBounds(dynamicCollidable, dynamicMin, dynamicMax)) {
+		return false;
+	}
+
+	float supportY = 0.0f;
+	if (!hasWalkableSupportNearFoot(staticCollidable, dynamicMin.x, dynamicMax.x, dynamicMax.y, supportY)) {
+		return false;
+	}
+
+	return true;
 }
 
 bool shouldResolveAsOneWay(
@@ -875,49 +956,73 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 					return;
 				}
 
-				const bool firstStatic = first->isStatic();
-				const bool secondStatic = second->isStatic();
-				if (firstStatic && secondStatic) {
-					return;
-				}
+					const bool firstStatic = first->isStatic();
+					const bool secondStatic = second->isStatic();
+					if (firstStatic && secondStatic) {
+						return;
+					}
 
-				vector2 moveFirst(0.0f, 0.0f);
-				vector2 moveSecond(0.0f, 0.0f);
-				if (firstStatic) {
-					moveSecond = axis * depth;
-				}
-				else if (secondStatic) {
-					moveFirst = vector2(-axis.x, -axis.y) * depth;
-				}
-				else {
-					const float firstMass = std::max(0.0001f, first->getMass());
-					const float secondMass = std::max(0.0001f, second->getMass());
-					const float firstInvMass = 1.0f / firstMass;
-					const float secondInvMass = 1.0f / secondMass;
-					const float totalInvMass = std::max(0.0001f, firstInvMass + secondInvMass);
+					vector2 resolveAxis = axis;
+					if (secondStatic && !firstStatic &&
+						shouldForceVerticalSeparationForWalkablePolygon(
+							first,
+							second,
+							firstCollidable,
+							secondCollidable,
+							axis)) {
+						resolveAxis = vector2(0.0f, 1.0f);
+					}
+					else if (firstStatic && !secondStatic &&
+							 shouldForceVerticalSeparationForWalkablePolygon(
+								 second,
+								 first,
+								 secondCollidable,
+								 firstCollidable,
+								 vector2(-axis.x, -axis.y))) {
+						resolveAxis = vector2(0.0f, -1.0f);
+					}
 
-					const float firstShare = firstInvMass / totalInvMass;
-					const float secondShare = secondInvMass / totalInvMass;
-					moveFirst = vector2(-axis.x, -axis.y) * (depth * firstShare);
-					moveSecond = axis * (depth * secondShare);
-				}
+					vector2 moveFirst(0.0f, 0.0f);
+					vector2 moveSecond(0.0f, 0.0f);
+					if (firstStatic) {
+						moveSecond = resolveAxis * depth;
+					}
+					else if (secondStatic) {
+						moveFirst = vector2(-resolveAxis.x, -resolveAxis.y) * depth;
+					}
+					else {
+						const float firstMass = std::max(0.0001f, first->getMass());
+						const float secondMass = std::max(0.0001f, second->getMass());
+						const float firstInvMass = 1.0f / firstMass;
+						const float secondInvMass = 1.0f / secondMass;
+						const float totalInvMass = std::max(0.0001f, firstInvMass + secondInvMass);
 
-				if (!firstStatic && moveFirst.length() > 0.0f) {
-					first->setPosition(first->getPosition() + moveFirst);
-					maxCorrectionMagnitude = std::max(maxCorrectionMagnitude, moveFirst.length());
-					clipVelocityAlongAxis(first, axis);
-				}
+						const float firstShare = firstInvMass / totalInvMass;
+						const float secondShare = secondInvMass / totalInvMass;
+						moveFirst = vector2(-resolveAxis.x, -resolveAxis.y) * (depth * firstShare);
+						moveSecond = resolveAxis * (depth * secondShare);
+					}
 
-				if (!secondStatic && moveSecond.length() > 0.0f) {
-					second->setPosition(second->getPosition() + moveSecond);
-					maxCorrectionMagnitude = std::max(maxCorrectionMagnitude, moveSecond.length());
-					clipVelocityAlongAxis(second, vector2(-axis.x, -axis.y));
-				}
+					if (!firstStatic && moveFirst.length() > 0.0f) {
+						first->setPosition(first->getPosition() + moveFirst);
+						maxCorrectionMagnitude = std::max(maxCorrectionMagnitude, moveFirst.length());
+						if (!(secondStatic && second->getType() == GameObject::GAME_OBJ_TILE)) {
+							clipVelocityAlongAxis(first, resolveAxis);
+						}
+					}
 
-				vector2 axisForKeyOrder = axis;
-				if (key.first != first) {
-					axisForKeyOrder = vector2(-axis.x, -axis.y);
-				}
+					if (!secondStatic && moveSecond.length() > 0.0f) {
+						second->setPosition(second->getPosition() + moveSecond);
+						maxCorrectionMagnitude = std::max(maxCorrectionMagnitude, moveSecond.length());
+						if (!(firstStatic && first->getType() == GameObject::GAME_OBJ_TILE)) {
+							clipVelocityAlongAxis(second, vector2(-resolveAxis.x, -resolveAxis.y));
+						}
+					}
+
+					vector2 axisForKeyOrder = resolveAxis;
+					if (key.first != first) {
+						axisForKeyOrder = vector2(-resolveAxis.x, -resolveAxis.y);
+					}
 
 				pairInfo.normal = axisForKeyOrder;
 				pairInfo.penetrationDepth = penetrationDepth;

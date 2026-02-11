@@ -79,6 +79,18 @@ int main(int argc, const char *argv[])
       Debug::dbgTiles = System::checkArgumentsForTileDebug(argc, argv);
    }
 
+   const bool deterministicMode =
+      System::checkArgumentsForDeterministic(argc, argv) ||
+      System::checkEnvironmentFlag("AUTO_DETERMINISTIC");
+
+   double fixedDtMs = System::checkArgumentsForFixedDtMs(argc, argv, 0.0);
+   if (fixedDtMs <= 0.0) {
+      fixedDtMs = System::checkEnvironmentDouble("AUTO_FIXED_DT_MS", 16.6667);
+   }
+   if (fixedDtMs <= 0.0) {
+      fixedDtMs = 16.6667;
+   }
+
 #if _DEBUG
    if (Debug::Mode.isEnabled()) {
       // Check for game data
@@ -148,6 +160,8 @@ int main(int argc, const char *argv[])
       pRenderer->setVerticalSync(true);
 
    Engine2D *engine = Engine2D::getInstance();
+   engine->setDeterministicMode(deterministicMode);
+   engine->setFixedDeltaSeconds(fixedDtMs / 1000.0);
    engine->setInputInterface(pInput);
    engine->setRenderer(pRenderer);
    engine->setGame(&game);

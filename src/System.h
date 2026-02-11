@@ -6,12 +6,98 @@
 #include "Types.h"
 #include "Renderer.h"
 
+#include <algorithm>
+#include <cctype>
+#include <cstdlib>
+
 namespace System
 {
    // When we implement a in-game developer console (for issuing commands), \
    // the command line arguments for the executable should eventually use the same parser as the console, \
    // to directly get and set the same variables
     const char* checkArgumentsForDataPath(int argc, const char** argv);
+
+    static bool isTruthyValue(const char* value)
+    {
+        if (!value || value[0] == '\0') {
+            return false;
+        }
+
+        std::string lowered(value);
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
+            return (char)std::tolower(c);
+        });
+
+        return lowered == "1" ||
+            lowered == "true" ||
+            lowered == "yes" ||
+            lowered == "on";
+    }
+
+    static bool checkEnvironmentFlag(const char* name)
+    {
+        if (!name || name[0] == '\0') {
+            return false;
+        }
+        return isTruthyValue(std::getenv(name));
+    }
+
+    static double checkEnvironmentDouble(const char* name, double fallbackValue)
+    {
+        if (!name || name[0] == '\0') {
+            return fallbackValue;
+        }
+
+        const char* envValue = std::getenv(name);
+        if (!envValue || envValue[0] == '\0') {
+            return fallbackValue;
+        }
+
+        char* endPtr = nullptr;
+        const double parsedValue = std::strtod(envValue, &endPtr);
+        if (endPtr == envValue) {
+            return fallbackValue;
+        }
+        return parsedValue;
+    }
+
+    static bool checkArgumentsForDeterministic(int argc, const char** argv)
+    {
+        if (argc > 1) {
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--deterministic")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    static double checkArgumentsForFixedDtMs(int argc, const char** argv, double fallbackValue = 0.0)
+    {
+        if (argc <= 1) {
+            return fallbackValue;
+        }
+
+        for (int i = 0; i < argc; i++) {
+            if (strcmp(argv[i], "--fixed-dt-ms") != 0) {
+                continue;
+            }
+
+            if ((i + 1) >= argc) {
+                return fallbackValue;
+            }
+
+            char* endPtr = nullptr;
+            const double parsedValue = std::strtod(argv[i + 1], &endPtr);
+            if (endPtr == argv[i + 1]) {
+                return fallbackValue;
+            }
+            return parsedValue;
+        }
+
+        return fallbackValue;
+    }
 
     static bool checkArgumentsForCocoa(int argc, const char** argv) 
     {

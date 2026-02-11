@@ -1,5 +1,6 @@
 
 #include "Controller.h"
+#include "InputTapeRecorder.h"
 
 void Controller::addAction(Action action)
 {
@@ -118,27 +119,69 @@ bool Controller::buttonUp(Action* action)
 void Controller::update(float time)
 {
 	_elapsedTime += time;
+	const uint64_t simulationTick = Engine2D::getSimulationTick();
+	InputTapeRecorder::onControllerTickStart(this, simulationTick, _elapsedTime);
 
 	for (Action& action : this->getActions()) {
+		const std::string actionName = action.getActionName();
+		const bool replayControlled = InputTapeRecorder::isReplayControlledAction(actionName);
+		const bool previousActive = action.isActive();
 
-		if (this->buttonDown(&action)) {
+		bool isDown = false;
+		bool isUp = false;
+		bool isPressed = false;
+		bool isReleased = false;
+
+		if (replayControlled) {
+			const bool replayState = InputTapeRecorder::getReplayActionState(actionName, previousActive);
+			isDown = replayState;
+			isUp = !replayState;
+			isPressed = replayState && !previousActive;
+			isReleased = !replayState && previousActive;
+		}
+		else {
+			isDown = this->buttonDown(&action);
+			isUp = !isDown;
+			isPressed = isDown && !previousActive;
+			isReleased = isUp && previousActive;
+		}
+
+		if (isDown) {
 			action.setActive(true);
-			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYDOWN, this, _elapsedTime, action.getActionName()));
+			_eventSystem->sendEvent<InputEvent>(
+				InputEvent(EVT_KEYDOWN, this, _elapsedTime, actionName),
+				nullptr,
+				Event::event_priority_immediate);
+			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYDOWN, true);
 		}
-		else if (this->buttonUp(&action)) {
+		else if (isUp) {
 			action.setActive(false);
-			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYUP, this, _elapsedTime, action.getActionName()));
+			_eventSystem->sendEvent<InputEvent>(
+				InputEvent(EVT_KEYUP, this, _elapsedTime, actionName),
+				nullptr,
+				Event::event_priority_immediate);
+			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYUP, false);
 		}
 
-		if (this->buttonPressed(&action))
+		if (isPressed)
 		{
 			action.setActive(true);
-			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYPRESSED, this, _elapsedTime, action.getActionName()));
+			_eventSystem->sendEvent<InputEvent>(
+				InputEvent(EVT_KEYPRESSED, this, _elapsedTime, actionName),
+				nullptr,
+				Event::event_priority_immediate);
+			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYPRESSED, true);
 		}
-		else if (this->buttonReleased(&action))
+		else if (isReleased)
 		{
 			action.setActive(false);
-			_eventSystem->sendEvent<InputEvent>(InputEvent(EVT_KEYRELEASED, this, _elapsedTime, action.getActionName()));
+			_eventSystem->sendEvent<InputEvent>(
+				InputEvent(EVT_KEYRELEASED, this, _elapsedTime, actionName),
+				nullptr,
+				Event::event_priority_immediate);
+			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYRELEASED, false);
 		}
+
+		InputTapeRecorder::recordActionSnapshot(simulationTick, actionName, action.isActive());
 	}
 }
