@@ -30,6 +30,7 @@ constexpr int kResolveIterations = 8;
 constexpr float kSupportProbeFootAboveTolerance = 2.0f;
 constexpr float kSupportProbeFootBelowTolerance = 20.0f;
 constexpr int kMinimumSupportSamplesForWalkable = 1;
+constexpr float kMaxSquareStepUpForVerticalSeparation = 8.0f;
 
 int phasePriority(CollisionPhase phase)
 {
@@ -508,14 +509,6 @@ bool shouldForceVerticalSeparationForWalkablePolygon(
 
 	(void)axis;
 
-	// Only force vertical-only separation on polygonal walkable surfaces.
-	// Square tile steps should remain hard ledges so they require a jump.
-	std::vector<std::vector<vector2>> polygonLoops;
-	collectPolygonLoops(staticCollidable, polygonLoops);
-	if (polygonLoops.empty()) {
-		return false;
-	}
-
 	vector2 dynamicMin(0.0f, 0.0f);
 	vector2 dynamicMax(0.0f, 0.0f);
 	if (!tryGetBounds(dynamicCollidable, dynamicMin, dynamicMax)) {
@@ -527,7 +520,17 @@ bool shouldForceVerticalSeparationForWalkablePolygon(
 		return false;
 	}
 
-	return true;
+	const float supportDelta = dynamicMax.y - supportY;
+
+	std::vector<std::vector<vector2>> polygonLoops;
+	collectPolygonLoops(staticCollidable, polygonLoops);
+	if (!polygonLoops.empty()) {
+		return true;
+	}
+
+	// Allow small square ledges to resolve vertically so movement doesn't get
+	// hung on tiny bumps, while still preventing full-height pit auto-climbs.
+	return supportDelta >= 0.0f && supportDelta <= kMaxSquareStepUpForVerticalSeparation;
 }
 
 bool shouldResolveAsOneWay(
