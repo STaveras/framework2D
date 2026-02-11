@@ -44,6 +44,8 @@ constexpr float kHorizontalSeparationEpsilon = 0.01f;
 constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
 constexpr float kStepUpAssistEpsilon = 0.05f;
 constexpr float kUpwardSnapMultiplier = 2.0f;
+constexpr float kMaxAutoStepUpDistance = 6.0f;
+constexpr float kFallingLandingDebounceSeconds = 0.04f;
 constexpr float kUpwardSupportBias = 0.25f;
 constexpr float kSlopePriorityEpsilon = 0.25f;
 constexpr float kSlopeFootClearance = 0.1f;
@@ -399,6 +401,7 @@ void Character::resetForRespawn(void)
 	_timeWithoutGroundContact = 0.0f;
 	_pendingTransitionFootCorrection = 0.0f;
 	_dropThroughTimer = 0.0f;
+	_fallingLandingDebounceTimer = 0.0f;
 	_runBoostActive = false;
 	_longJumpMomentumActive = false;
 	_longJumpMomentumDirection = 0;
@@ -724,6 +727,11 @@ bool Character::_isGroundedLocomotionState(const char* stateName) const
 		!strcmp(stateName, "RunningLeft") ||
 		!strcmp(stateName, "RunningRight") ||
 		!strcmp(stateName, "Landing");
+}
+
+bool Character::_canTriggerGroundCollisionFromFalling() const
+{
+	return _fallingLandingDebounceTimer <= 0.0f;
 }
 
 int Character::_getHorizontalIntent() const
@@ -1113,7 +1121,9 @@ bool Character::_findSupportOnTile(const Tile* tile, float footY, float maxSnapD
 	};
 	TileSample samples[3];
 
-	const float maxUpwardSnapDistance = std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier);
+	const float maxUpwardSnapDistance = std::min(
+		kMaxAutoStepUpDistance,
+		std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier));
 	const float maxDownwardSnapDistance = maxSnapDistance;
 	for (int sampleIndex = 0; sampleIndex < 3; ++sampleIndex) {
 		float supportY = 0.0f;
@@ -1231,7 +1241,9 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 
 	const auto& objects = activeGameState->getObjectManager()->getObjects();
 	const int horizontalIntent = _getHorizontalIntent();
-	const float maxUpwardSnapDistance = std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier);
+	const float maxUpwardSnapDistance = std::min(
+		kMaxAutoStepUpDistance,
+		std::max(maxSnapDistance, maxSnapDistance * kUpwardSnapMultiplier));
 	const float maxDownwardSnapDistance = maxSnapDistance;
 	const bool useUphillProbe = horizontalIntent != 0;
 	const float uphillProbeX =
@@ -1868,6 +1880,12 @@ void Character::onStateDidEnter(State* previous, State* current)
 	}
 
 	const char* currentStateName = currentState->getName();
+	if (!strcmp(currentStateName, "Falling")) {
+		_fallingLandingDebounceTimer = kFallingLandingDebounceSeconds;
+	}
+	else {
+		_fallingLandingDebounceTimer = 0.0f;
+	}
 	vector2 currentVelocity = this->getVelocity();
 	bool velocityAdjusted = false;
 	const bool stateHasCollisionShape = currentState->getCollidable() != NULL;
@@ -1967,14 +1985,19 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
         return NULL;
     }
 
-    if (contact.normal) {
-        if (contact.normal->y < -0.5f) {
-            return "JUMP_RELEASED";
-        }
-        if (contact.normal->y > kGroundNormalThreshold) {
-            if (contact.phase == CollisionPhase::Enter) {
-                return "GROUND_COLLISION";
-            }
+	    if (contact.normal) {
+	        if (contact.normal->y < -0.5f) {
+	            return "JUMP_RELEASED";
+	        }
+	        if (contact.normal->y > kGroundNormalThreshold) {
+	            if (GameObjectState* state = this->getState()) {
+	                if (!strcmp(state->getName(), "Falling") && !_canTriggerGroundCollisionFromFalling()) {
+	                    return NULL;
+	                }
+	            }
+	            if (contact.phase == CollisionPhase::Enter) {
+	                return "GROUND_COLLISION";
+	            }
             if (contact.phase == CollisionPhase::Stay) {
                 if (GameObjectState* state = this->getState()) {
                     if (!strcmp(state->getName(), "Falling")) {
@@ -1989,10 +2012,15 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
         if (directionToObject.y < -0.5f) {
             return "JUMP_RELEASED";
         }
-        if (directionToObject.y > kGroundNormalThreshold) {
-            if (contact.phase == CollisionPhase::Enter) {
-                return "GROUND_COLLISION";
-            }
+	        if (directionToObject.y > kGroundNormalThreshold) {
+	            if (GameObjectState* state = this->getState()) {
+	                if (!strcmp(state->getName(), "Falling") && !_canTriggerGroundCollisionFromFalling()) {
+	                    return NULL;
+	                }
+	            }
+	            if (contact.phase == CollisionPhase::Enter) {
+	                return "GROUND_COLLISION";
+	            }
             if (contact.phase == CollisionPhase::Stay) {
                 if (GameObjectState* state = this->getState()) {
                     if (!strcmp(state->getName(), "Falling")) {
@@ -2050,6 +2078,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 			if (stepContextTile && stepContextTile->getTileSet()) {
 				maxStepUpDistance = std::max(1.0f, stepContextTile->getTileSet()->getTileSize() * 0.5f * kUpwardSnapMultiplier);
 			}
+			maxStepUpDistance = std::min(maxStepUpDistance, kMaxAutoStepUpDistance);
 
 			float footY = this->getPosition().y;
 			if (Collidable* bodyCollidable = this->getCollidable()) {
@@ -2155,6 +2184,9 @@ void Character::update(float time)
 	_telemetryPendingGroundContacts = 0;
 	_telemetryLastWallContacts = _telemetryPendingWallContacts;
 	_telemetryPendingWallContacts = 0;
+	if (_fallingLandingDebounceTimer > 0.0f) {
+		_fallingLandingDebounceTimer = std::max(0.0f, _fallingLandingDebounceTimer - time);
+	}
 
 	if (GameObjectState* preUpdateState = this->getState()) {
 		const char* preUpdateStateName = preUpdateState->getName();
@@ -2202,7 +2234,9 @@ void Character::update(float time)
             }
             const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
             maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
-            const float maxUpwardSnapPerFrame = std::max(maxSnapPerFrame, baseSnapPerFrame * kUpwardSnapMultiplier);
+	            const float maxUpwardSnapPerFrame = std::min(
+	                kMaxAutoStepUpDistance,
+	                std::max(maxSnapPerFrame, baseSnapPerFrame * kUpwardSnapMultiplier));
 
             float footY = this->getPosition().y;
             if (Collidable* bodyCollidable = this->getCollidable()) {
@@ -2267,7 +2301,9 @@ void Character::update(float time)
 	}
 	const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
 	maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
-	const float maxUpwardSnapPerFrame = std::max(maxSnapPerFrame, baseSnapPerFrame * kUpwardSnapMultiplier);
+	const float maxUpwardSnapPerFrame = std::min(
+		kMaxAutoStepUpDistance,
+		std::max(maxSnapPerFrame, baseSnapPerFrame * kUpwardSnapMultiplier));
 
 	float footY = this->getPosition().y;
 	if (Collidable* bodyCollidable = this->getCollidable()) {
@@ -2297,11 +2333,17 @@ void Character::update(float time)
 	}
 
 	bool hasGroundSupport = (supportTile != NULL);
+	GameObjectState* state = this->getState();
+	if (state && !strcmp(state->getName(), "Falling") && !_canTriggerGroundCollisionFromFalling()) {
+		// Ignore transient support right after entering Falling to prevent
+		// edge-corner collider jitter from pinning the character to the ledge.
+		hasGroundSupport = false;
+		supportTile = NULL;
+		supportSampleSource = (int)AutoSupportSource::None;
+	}
 	if (supportTile) {
 		_tile = supportTile;
 	}
-
-	GameObjectState* state = this->getState();
 
 	if (!hasGroundSupport) {
 		_timeWithoutGroundContact += time;
@@ -2312,7 +2354,7 @@ void Character::update(float time)
 
 	if (state) {
 		const char* stateName = state->getName();
-		if (hasGroundSupport && !strcmp(stateName, "Falling")) {
+		if (hasGroundSupport && !strcmp(stateName, "Falling") && _canTriggerGroundCollisionFromFalling()) {
 			this->sendInput("GROUND_COLLISION");
 			state = this->getState();
 			if (!state) {

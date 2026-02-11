@@ -508,6 +508,14 @@ bool shouldForceVerticalSeparationForWalkablePolygon(
 
 	(void)axis;
 
+	// Only force vertical-only separation on polygonal walkable surfaces.
+	// Square tile steps should remain hard ledges so they require a jump.
+	std::vector<std::vector<vector2>> polygonLoops;
+	collectPolygonLoops(staticCollidable, polygonLoops);
+	if (polygonLoops.empty()) {
+		return false;
+	}
+
 	vector2 dynamicMin(0.0f, 0.0f);
 	vector2 dynamicMax(0.0f, 0.0f);
 	if (!tryGetBounds(dynamicCollidable, dynamicMin, dynamicMax)) {

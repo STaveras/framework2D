@@ -20,6 +20,7 @@ class Character : public GameObject
 	float _timeWithoutGroundContact = 0.0f;
 	float _pendingTransitionFootCorrection = 0.0f;
 	float _dropThroughTimer = 0.0f;
+	float _fallingLandingDebounceTimer = 0.0f;
 	float _stamina = 100.0f;
 	float _maxStamina = 100.0f;
 	bool _runBoostActive = false;
@@ -45,6 +46,7 @@ protected:
 	bool _isGroundContact(const CollisionContact& contact) const;
 	bool _isWallBlockingContact(const CollisionContact& contact, int horizontalIntent, float footY, float maxStepUpDistance) const;
 	bool _isGroundedLocomotionState(const char* stateName) const;
+	bool _canTriggerGroundCollisionFromFalling() const;
 	int _getHorizontalInput() const;
 	int _getHorizontalIntent() const;
 	bool _isRunRequested() const;
