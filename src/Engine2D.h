@@ -8,6 +8,9 @@
 #include "System.h"
 #include "Renderer.h"
 #include "Debug.h"
+
+#include <cstdint>
+
 class Game;
 class IInput;
 class Engine2D : public ISingleton<Engine2D>
@@ -18,6 +21,11 @@ class Engine2D : public ISingleton<Engine2D>
    Game* _game;
    IInput* _input;
    IRenderer* _renderer;
+   bool _deterministicMode;
+   double _fixedDeltaSeconds;
+   double _frameAccumulatorSeconds;
+   uint64_t _simulationTick;
+   double _simulationElapsedSeconds;
 
 public:
    Engine2D(void);
@@ -38,6 +46,12 @@ public:
 
    static IInput* getInput(void) { return Engine2D::getInstance()->_input; } // Add support for multiple devices...?
    static void setInputInterface(IInput* pInput) { Engine2D::getInstance()->_input = pInput; }
+   static bool isDeterministicMode(void) { return Engine2D::getInstance()->_deterministicMode; }
+   static void setDeterministicMode(bool enabled) { Engine2D::getInstance()->_deterministicMode = enabled; }
+   static double getFixedDeltaSeconds(void) { return Engine2D::getInstance()->_fixedDeltaSeconds; }
+   static void setFixedDeltaSeconds(double seconds);
+   static uint64_t getSimulationTick(void) { return Engine2D::getInstance()->_simulationTick; }
+   static double getSimulationElapsedSeconds(void) { return Engine2D::getInstance()->_simulationElapsedSeconds; }
 
    void initialize(void);
    void update(void);

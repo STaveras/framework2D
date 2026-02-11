@@ -19,6 +19,8 @@
 class Timer
 {
 	double _timeMultiplier;
+	double _manualDeltaTime;
+	bool _hasManualDeltaTime;
 
 	double			_delta;
 	double			_frameCap;
@@ -52,8 +54,12 @@ public:
 
 	double getTimeMultiplier(void) const { return _timeMultiplier; }
 	unsigned int getFPS(void) const { return _framesPerSecond; }
-	double getDeltaTime(void) const { return _delta * _timeMultiplier; }
+	double getDeltaTime(void) const { return (_hasManualDeltaTime ? _manualDeltaTime : _delta) * _timeMultiplier; }
 	double getElapsedTime(void) const;
+	double getRawDeltaTime(void) const { return _delta; }
+	void setManualDeltaTime(double deltaSeconds);
+	void clearManualDeltaTime(void) { _hasManualDeltaTime = false; _manualDeltaTime = 0.0; }
+	bool hasManualDeltaTime(void) const { return _hasManualDeltaTime; }
 
 	void limitFrameRate(unsigned int uiFrameRate);
 

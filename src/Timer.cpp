@@ -2,6 +2,7 @@
 #include "Timer.h"
 #include "Types.h"
 
+#include <algorithm>
 #include <sstream>
 
 // I'm just realizing that this timer has been based on fractional seconds, instead of milliseconds...
@@ -13,6 +14,8 @@ using ms = duration<double, std::milli>;
 
 Timer::Timer(void) :
 					 _timeMultiplier(1.0),
+					 _manualDeltaTime(0.0),
+					 _hasManualDeltaTime(false),
 					 _delta(0.0),
 					 _frameCap(0.0),
 					 _ticks(0),
@@ -118,6 +121,12 @@ void Timer::update(void)
 	m_dNow = _Seconds();
 	m_dElapsed += _delta;
 #endif
+}
+
+void Timer::setManualDeltaTime(double deltaSeconds)
+{
+	_manualDeltaTime = std::max(0.0, deltaSeconds);
+	_hasManualDeltaTime = true;
 }
 
 void Timer::reset(void) { 
