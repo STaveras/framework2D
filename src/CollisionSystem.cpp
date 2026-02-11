@@ -28,7 +28,7 @@ constexpr float kCcdStepPixels = 2.5f;
 constexpr int kCcdMaxSubsteps = 16;
 constexpr int kResolveIterations = 8;
 constexpr float kSupportProbeFootAboveTolerance = 2.0f;
-constexpr float kSupportProbeFootBelowTolerance = 16.0f;
+constexpr float kSupportProbeFootBelowTolerance = 20.0f;
 constexpr int kMinimumSupportSamplesForWalkable = 1;
 
 int phasePriority(CollisionPhase phase)
@@ -452,30 +452,34 @@ bool hasWalkableSupportNearFoot(
 	}
 
 	const float width = footMaxX - footMinX;
-	const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+	const float sampleFractions[] = { 0.0f, 0.08f, 0.22f, 0.50f, 0.78f, 0.92f, 1.0f };
+	const float sampleOffsets[] = { -1.5f, 0.0f, 1.5f };
 	bool foundSupport = false;
 	int supportSampleCount = 0;
 	float bestDeltaMagnitude = std::numeric_limits<float>::max();
 	float bestSupportY = 0.0f;
 
 	for (float fraction : sampleFractions) {
-		const float sampleX = footMinX + (width * fraction);
-		float supportY = 0.0f;
-		if (!trySampleSupportY(supportCollidable, sampleX, supportY)) {
-			continue;
-		}
+		const float baseSampleX = footMinX + (width * fraction);
+		for (float offset : sampleOffsets) {
+			const float sampleX = std::clamp(baseSampleX + offset, footMinX, footMaxX);
+			float supportY = 0.0f;
+			if (!trySampleSupportY(supportCollidable, sampleX, supportY)) {
+				continue;
+			}
 
-		const float supportDelta = footY - supportY;
-		if (supportDelta < -kSupportProbeFootAboveTolerance || supportDelta > kSupportProbeFootBelowTolerance) {
-			continue;
-		}
+			const float supportDelta = footY - supportY;
+			if (supportDelta < -kSupportProbeFootAboveTolerance || supportDelta > kSupportProbeFootBelowTolerance) {
+				continue;
+			}
 
-		++supportSampleCount;
-		const float deltaMagnitude = std::fabs(supportDelta);
-		if (!foundSupport || deltaMagnitude < bestDeltaMagnitude) {
-			foundSupport = true;
-			bestDeltaMagnitude = deltaMagnitude;
-			bestSupportY = supportY;
+			++supportSampleCount;
+			const float deltaMagnitude = std::fabs(supportDelta);
+			if (!foundSupport || deltaMagnitude < bestDeltaMagnitude) {
+				foundSupport = true;
+				bestDeltaMagnitude = deltaMagnitude;
+				bestSupportY = supportY;
+			}
 		}
 	}
 
