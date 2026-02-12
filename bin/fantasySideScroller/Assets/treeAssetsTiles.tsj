@@ -1,0 +1,15 @@
+{
+ "columns": 21,
+ "image": "Tree-Assets.png",
+ "imageheight": 400,
+ "imagewidth": 336,
+ "margin": 0,
+ "name": "treeAssetsTiles",
+ "spacing": 0,
+ "tilecount": 525,
+ "tiledversion": "1.11.2",
+ "tileheight": 16,
+ "tilewidth": 16,
+ "type": "tileset",
+ "version": "1.10"
+}

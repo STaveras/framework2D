@@ -121,7 +121,8 @@ void PlayState::onEnter(State* prev)
 
 	// Preferred: map-declared tilesets from the .tmj file.
 	//_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
-	_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize("testMap.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	// _levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
 	if (_levelManager.hasSpawnPoint()) {
