@@ -102,6 +102,116 @@ def slope_metrics(rows: List[Dict[str, object]]) -> Dict[str, float]:
     }
 
 
+def rows_in_tick_range(
+    rows: List[Dict[str, object]], start_tick: int, end_tick: int
+) -> List[Dict[str, object]]:
+    return [r for r in rows if start_tick <= int(r["tick"]) <= end_tick]
+
+
+def _parse_optional_float(value: str) -> Optional[float]:
+    text = (value or "").strip()
+    if text == "":
+        return None
+    return _parse_float(text)
+
+
+def load_segments(path: Path) -> List[Dict[str, object]]:
+    segments: List[Dict[str, object]] = []
+    with path.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        for idx, raw in enumerate(reader):
+            name = (raw.get("name", "") or "").strip() or f"segment_{idx + 1}"
+            start_tick_text = (raw.get("start_tick", "") or "").strip()
+            end_tick_text = (raw.get("end_tick", "") or "").strip()
+            if not start_tick_text or not end_tick_text:
+                raise ValueError(
+                    f"segment '{name}' is missing required start_tick/end_tick"
+                )
+            start_tick = _parse_int(start_tick_text, 0)
+            end_tick = _parse_int(end_tick_text, start_tick)
+            if end_tick < start_tick:
+                raise ValueError(
+                    f"segment '{name}' has end_tick < start_tick ({end_tick} < {start_tick})"
+                )
+
+            segments.append(
+                {
+                    "name": name,
+                    "start_tick": start_tick,
+                    "end_tick": end_tick,
+                    "min_polygon_net_dx": _parse_optional_float(
+                        raw.get("min_polygon_net_dx", "")
+                    ),
+                    "max_polygon_backward_ratio": _parse_optional_float(
+                        raw.get("max_polygon_backward_ratio", "")
+                    ),
+                    "min_polygon_samples": _parse_optional_float(
+                        raw.get("min_polygon_samples", "")
+                    ),
+                    "max_polygon_wall_correction_abs": _parse_optional_float(
+                        raw.get("max_polygon_wall_correction_abs", "")
+                    ),
+                }
+            )
+    return segments
+
+
+def evaluate_segment_thresholds(
+    segment: Dict[str, object],
+    metrics: Dict[str, float],
+    default_min_polygon_net_dx: float,
+    default_max_backward_ratio: float,
+) -> List[str]:
+    failures: List[str] = []
+    name = str(segment["name"])
+    min_polygon_samples = segment.get("min_polygon_samples")
+    min_samples = (
+        float(min_polygon_samples)
+        if isinstance(min_polygon_samples, float)
+        else 0.0
+    )
+    if metrics["polygon_samples"] < min_samples:
+        failures.append(
+            f"{name}: polygon_samples {metrics['polygon_samples']:.6f} < {min_samples:.6f}"
+        )
+        return failures
+
+    if metrics["polygon_samples"] <= 0.0:
+        return failures
+
+    min_polygon_net_dx = segment.get("min_polygon_net_dx")
+    max_polygon_backward_ratio = segment.get("max_polygon_backward_ratio")
+    max_polygon_wall_correction_abs = segment.get("max_polygon_wall_correction_abs")
+
+    net_dx_threshold = (
+        float(min_polygon_net_dx)
+        if isinstance(min_polygon_net_dx, float)
+        else default_min_polygon_net_dx
+    )
+    if metrics["polygon_net_dx"] < net_dx_threshold:
+        failures.append(
+            f"{name}: polygon_net_dx {metrics['polygon_net_dx']:.6f} < {net_dx_threshold:.6f}"
+        )
+
+    backward_ratio_threshold = (
+        float(max_polygon_backward_ratio)
+        if isinstance(max_polygon_backward_ratio, float)
+        else default_max_backward_ratio
+    )
+    if metrics["polygon_backward_ratio"] > backward_ratio_threshold:
+        failures.append(
+            f"{name}: polygon_backward_ratio {metrics['polygon_backward_ratio']:.6f} > {backward_ratio_threshold:.6f}"
+        )
+
+    if isinstance(max_polygon_wall_correction_abs, float):
+        if metrics["polygon_wall_correction_abs"] > max_polygon_wall_correction_abs:
+            failures.append(
+                f"{name}: polygon_wall_correction_abs {metrics['polygon_wall_correction_abs']:.6f} > {max_polygon_wall_correction_abs:.6f}"
+            )
+
+    return failures
+
+
 def state_hash(rows: List[Dict[str, object]], max_tick: Optional[int] = None) -> str:
     packed = "|".join(
         f"{int(r['tick'])}:{r['state']}"
@@ -188,11 +298,16 @@ def main() -> int:
         action="store_true",
         help="Fail deterministic compare when telemetry row counts differ.",
     )
+    parser.add_argument(
+        "--segments",
+        help="Optional CSV with segment thresholds: name,start_tick,end_tick[,min_polygon_net_dx,max_polygon_backward_ratio,min_polygon_samples,max_polygon_wall_correction_abs]",
+    )
     args = parser.parse_args()
 
     run_a_path = Path(args.run_a)
     run_b_path = Path(args.run_b) if args.run_b else None
     tape_path = Path(args.tape) if args.tape else None
+    segments_path = Path(args.segments) if args.segments else None
 
     run_a = load_telemetry(run_a_path)
     if not run_a:
@@ -212,6 +327,26 @@ def main() -> int:
         if metrics_a["polygon_backward_ratio"] > args.max_backward_ratio:
             failures.append(
                 f"polygon_backward_ratio {metrics_a['polygon_backward_ratio']:.6f} > {args.max_backward_ratio:.6f}"
+            )
+
+    if segments_path:
+        segments = load_segments(segments_path)
+        if not segments:
+            failures.append(f"segments file {segments_path} has no rows")
+        for segment in segments:
+            segment_rows = rows_in_tick_range(
+                run_a, int(segment["start_tick"]), int(segment["end_tick"])
+            )
+            segment_metrics = slope_metrics(segment_rows)
+            label = f"Run A segment '{segment['name']}' [{segment['start_tick']},{segment['end_tick']}]"
+            print_metrics(label, segment_metrics)
+            failures.extend(
+                evaluate_segment_thresholds(
+                    segment,
+                    segment_metrics,
+                    args.min_polygon_net_dx,
+                    args.max_backward_ratio,
+                )
             )
 
     if run_b_path:
