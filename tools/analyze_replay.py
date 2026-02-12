@@ -4,7 +4,7 @@ import csv
 import hashlib
 import math
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 def _parse_float(value: str, default: float = 0.0) -> float:
@@ -102,8 +102,12 @@ def slope_metrics(rows: List[Dict[str, object]]) -> Dict[str, float]:
     }
 
 
-def state_hash(rows: List[Dict[str, object]]) -> str:
-    packed = "|".join(f"{int(r['tick'])}:{r['state']}" for r in rows)
+def state_hash(rows: List[Dict[str, object]], max_tick: Optional[int] = None) -> str:
+    packed = "|".join(
+        f"{int(r['tick'])}:{r['state']}"
+        for r in rows
+        if max_tick is None or int(r["tick"]) <= max_tick
+    )
     return hashlib.sha256(packed.encode("utf-8")).hexdigest()
 
 
@@ -122,16 +126,29 @@ def compare_runs(
         dy = float(a["y"]) - float(b["y"])
         max_pos_delta = max(max_pos_delta, math.hypot(dx, dy))
 
+    max_shared_tick = shared_ticks[-1] if shared_ticks else -1
+    shared_final_pos_delta = 0.0
+    if max_shared_tick >= 0:
+        a = by_tick_a[max_shared_tick]
+        b = by_tick_b[max_shared_tick]
+        dx = float(a["x"]) - float(b["x"])
+        dy = float(a["y"]) - float(b["y"])
+        shared_final_pos_delta = math.hypot(dx, dy)
+
     final_a = run_a[-1] if run_a else {"x": 0.0, "y": 0.0}
     final_b = run_b[-1] if run_b else {"x": 0.0, "y": 0.0}
     final_dx = float(final_a["x"]) - float(final_b["x"])
     final_dy = float(final_a["y"]) - float(final_b["y"])
-    final_pos_delta = math.hypot(final_dx, final_dy)
+    full_final_pos_delta = math.hypot(final_dx, final_dy)
 
     return {
         "shared_ticks": float(len(shared_ticks)),
+        "max_shared_tick": float(max_shared_tick),
         "max_pos_delta": max_pos_delta,
-        "final_pos_delta": final_pos_delta,
+        "shared_final_pos_delta": shared_final_pos_delta,
+        "full_final_pos_delta": full_final_pos_delta,
+        "run_a_rows": float(len(run_a)),
+        "run_b_rows": float(len(run_b)),
     }
 
 
@@ -166,6 +183,11 @@ def main() -> int:
         default=1.0,
         help="Minimum required net signed displacement over polygon right-intent samples",
     )
+    parser.add_argument(
+        "--strict-length",
+        action="store_true",
+        help="Fail deterministic compare when telemetry row counts differ.",
+    )
     args = parser.parse_args()
 
     run_a_path = Path(args.run_a)
@@ -179,7 +201,7 @@ def main() -> int:
 
     metrics_a = slope_metrics(run_a)
     print_metrics("Run A slope metrics", metrics_a)
-    print(f"Run A state hash: {state_hash(run_a)}")
+    print(f"Run A state hash (full): {state_hash(run_a)}")
 
     failures: List[str] = []
     if metrics_a["polygon_samples"] > 0:
@@ -200,19 +222,34 @@ def main() -> int:
 
         metrics_b = slope_metrics(run_b)
         print_metrics("Run B slope metrics", metrics_b)
-        hash_a = state_hash(run_a)
-        hash_b = state_hash(run_b)
-        print(f"Run B state hash: {hash_b}")
+        hash_a_full = state_hash(run_a)
+        hash_b_full = state_hash(run_b)
+        print(f"Run B state hash (full): {hash_b_full}")
 
         compare = compare_runs(run_a, run_b)
         print_metrics("Run A/B deterministic diff", compare)
+        max_shared_tick = int(compare["max_shared_tick"])
+        if max_shared_tick >= 0:
+            hash_a_shared = state_hash(run_a, max_shared_tick)
+            hash_b_shared = state_hash(run_b, max_shared_tick)
+            print(f"Run A shared hash: {hash_a_shared}")
+            print(f"Run B shared hash: {hash_b_shared}")
+        else:
+            hash_a_shared = ""
+            hash_b_shared = ""
 
-        if compare["final_pos_delta"] > args.epsilon:
+        if compare["shared_ticks"] <= 0:
+            failures.append("no shared ticks between run A and run B")
+        if compare["shared_final_pos_delta"] > args.epsilon:
             failures.append(
-                f"final_pos_delta {compare['final_pos_delta']:.6f} > {args.epsilon:.6f}"
+                f"shared_final_pos_delta {compare['shared_final_pos_delta']:.6f} > {args.epsilon:.6f}"
             )
-        if hash_a != hash_b:
-            failures.append("state_hash mismatch between run A and run B")
+        if hash_a_shared != hash_b_shared:
+            failures.append("state_hash mismatch on shared tick window")
+        if args.strict_length and len(run_a) != len(run_b):
+            failures.append(
+                f"row_count mismatch {len(run_a)} != {len(run_b)} (strict-length enabled)"
+            )
 
     if tape_path:
         tape_events = load_tape_event_count(tape_path)

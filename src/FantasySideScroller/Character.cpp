@@ -5,6 +5,8 @@
 #include "../Animation.h"
 #include "../CollidableGroup.h"
 #include "../GameState.h"
+#include "../Telemetry2D.h"
+#include "../Kinematics2D.h"
 #include "../Polygon.h"
 #include "../Square.h"
 
@@ -78,7 +80,6 @@ constexpr float kGravityAcceleration = 760.0f;
 constexpr float kNormalFallMaxSpeed = 260.0f;
 constexpr float kLongJumpLaunchSpeedThreshold = 110.0f;
 constexpr float kLongJumpMomentumDecayPerSecond = 45.0f;
-constexpr float kAutoSummaryIntervalSeconds = 1.0f;
 constexpr const char* kAutoDefaultTelemetryPath = "tmp/auto_slope_telemetry.csv";
 
 enum class AutoGroundShape {
@@ -97,73 +98,12 @@ enum class AutoSupportSource {
 	Sticky = 4
 };
 
-struct AutoTestRuntime {
-	bool initialized = false;
-	bool enabled = false;
-	bool telemetryEnabled = false;
-	double elapsedSeconds = 0.0;
-	double summaryTimerSeconds = 0.0;
-	double previousTelemetryTime = 0.0;
-	bool hasPreviousTelemetry = false;
-	vector2 previousTelemetryPosition = vector2(0.0f, 0.0f);
-	std::ofstream telemetryOut;
-	std::string telemetryPath;
-	double squareDxSpeedSum = 0.0;
-	double squarePathSpeedSum = 0.0;
-	size_t squareSampleCount = 0;
-	double polygonDxSpeedSum = 0.0;
-	double polygonPathSpeedSum = 0.0;
-	size_t polygonSampleCount = 0;
-	double maxHorizontalJitter = 0.0;
-	double netDxAccum = 0.0;
-	int groundDropouts = 0;
-	bool previousGrounded = false;
-};
+using AutoTestRuntime = Telemetry2D::Runtime;
 
 AutoTestRuntime& getAutoTestRuntime()
 {
 	static AutoTestRuntime runtime;
 	return runtime;
-}
-
-bool isTruthyEnvValue(const char* value)
-{
-	if (!value || value[0] == '\0') {
-		return false;
-	}
-
-	std::string lowered(value);
-	std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
-		return (char)std::tolower(c);
-	});
-
-	return lowered == "1" ||
-		lowered == "true" ||
-		lowered == "yes" ||
-		lowered == "on";
-}
-
-std::string getEnvOrDefault(const char* key, const char* fallbackValue)
-{
-	std::string owned;
-	const char* value = System::getenv_platform(key, owned);
-	if (value && value[0] != '\0') {
-		return std::string(value);
-	}
-	return std::string(fallbackValue ? fallbackValue : "");
-}
-
-bool ensureParentDirectory(const std::string& filePath)
-{
-	std::filesystem::path path(filePath);
-	const std::filesystem::path parent = path.parent_path();
-	if (parent.empty()) {
-		return true;
-	}
-
-	std::error_code ec;
-	std::filesystem::create_directories(parent, ec);
-	return !ec;
 }
 
 bool collidableHasPolygonSurface(const Collidable* collidable)
@@ -251,36 +191,7 @@ const char* toAutoSupportSourceString(AutoSupportSource source)
 
 void initializeAutoTestRuntime(AutoTestRuntime& runtime)
 {
-	if (runtime.initialized) {
-		return;
-	}
-	runtime.initialized = true;
-
-	std::string owned;
-
-	runtime.telemetryEnabled =
-		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TELEMETRY", owned)) ||
-		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TEST", owned));
-
-	runtime.telemetryPath = getEnvOrDefault("AUTO_SLOPE_LOG_PATH", kAutoDefaultTelemetryPath);
-
-	runtime.enabled = runtime.telemetryEnabled;
-	if (!runtime.enabled) {
-		return;
-	}
-
-	if (runtime.telemetryEnabled) {
-		if (ensureParentDirectory(runtime.telemetryPath)) {
-			runtime.telemetryOut.open(runtime.telemetryPath, std::ios::out | std::ios::trunc);
-			if (runtime.telemetryOut.is_open()) {
-				runtime.telemetryOut
-					<< "time,dt,replay_tick,state,pos_x,pos_y,vel_x,vel_y,intent,"
-					<< "dx_signed,dx_abs,net_dx_accum,dx_speed,path_speed,wall_correction_x,"
-					<< "support_source,contact_class,ground_tile,ground_shape,grounded,contacts,dropouts,jitter,"
-					<< "square_dx_avg,polygon_dx_avg,square_path_avg,polygon_path_avg\n";
-			}
-		}
-	}
+	Telemetry2D::initialize(runtime, kAutoDefaultTelemetryPath);
 }
 
 bool isSquareOnlyCollidable(const Collidable* collidable)
@@ -392,34 +303,47 @@ Character::Character(void) :
 	this->setBuffered(false);
 	this->setState("Falling");
 	this->setMass(100);
+	Physical::KinematicConfig2D kinematicConfig = this->getKinematicConfig2D();
+	kinematicConfig.enabled = true;
+	kinematicConfig.groundNormalThreshold = kGroundNormalThreshold;
+	kinematicConfig.wallNormalThreshold = kWallNormalThreshold;
+	kinematicConfig.oneWayEpsilon = kOneWayTopApproachEpsilon;
+	kinematicConfig.supportProbeFootAboveTolerance = kOneWayTopApproachEpsilon;
+	kinematicConfig.supportProbeFootBelowTolerance = kGroundSupportSnapDistance;
+	kinematicConfig.minimumSupportSamples = 1;
+	kinematicConfig.maxStepHeight = kMaxAutoStepUpDistance;
+	kinematicConfig.dropThroughDefaultDuration = kDropThroughDurationSeconds;
+	this->setKinematicConfig2D(kinematicConfig);
+	this->resetKinematicState2D();
 	_maxStamina = kStaminaMax;
 	_stamina = _maxStamina;
 	_runBoostActive = false;
 }
 
-Character::~Character() {}
+Character::~Character()
+{
+	Telemetry2D::shutdown(getAutoTestRuntime());
+}
+
+Physical::KinematicState2D& Character::_kinematic2DState()
+{
+	return this->getKinematicState2D();
+}
+
+const Physical::KinematicState2D& Character::_kinematic2DState() const
+{
+	return this->getKinematicState2D();
+}
 
 void Character::resetForRespawn(void)
 {
 	_tile = NULL;
-	_groundContacts.clear();
-	_timeWithoutGroundContact = 0.0f;
-	_pendingTransitionFootCorrection = 0.0f;
-	_dropThroughTimer = 0.0f;
-	_dropThroughJumpWasDown = false;
-	_dropThroughResumePending = false;
-	_dropThroughResumeTopY = 0.0f;
-	_fallingLandingDebounceTimer = 0.0f;
+	_kinematic2DState().groundContacts.clear();
+	this->resetKinematicState2D();
 	_runBoostActive = false;
 	_longJumpMomentumActive = false;
 	_longJumpMomentumDirection = 0;
 	_longJumpMomentumSpeed = 0.0f;
-	_telemetryPendingWallCorrectionX = 0.0f;
-	_telemetryLastWallCorrectionX = 0.0f;
-	_telemetryPendingGroundContacts = 0;
-	_telemetryPendingWallContacts = 0;
-	_telemetryLastGroundContacts = 0;
-	_telemetryLastWallContacts = 0;
 	this->setVelocity(vector2(0.0f, 0.0f));
 }
 
@@ -433,13 +357,13 @@ bool Character::_isDropThroughRequested()
 {
 	Game* game = Engine2D::getGame();
 	if (!game) {
-		_dropThroughJumpWasDown = false;
+		_kinematic2DState().dropThroughJumpWasDown = false;
 		return false;
 	}
 
 	Player* player = game->getPlayerWith((GameObject*)this);
 	if (!player || !player->getController()) {
-		_dropThroughJumpWasDown = false;
+		_kinematic2DState().dropThroughJumpWasDown = false;
 		return false;
 	}
 
@@ -447,20 +371,20 @@ bool Character::_isDropThroughRequested()
 	Action* jumpAction = controller->getAction("JUMP");
 	Action* downAction = controller->getAction("DOWN");
 	if (!jumpAction || !downAction) {
-		_dropThroughJumpWasDown = false;
+		_kinematic2DState().dropThroughJumpWasDown = false;
 		return false;
 	}
 
 	const bool jumpDown = jumpAction->isActive();
-	const bool jumpPressed = jumpDown && !_dropThroughJumpWasDown;
-	_dropThroughJumpWasDown = jumpDown;
+	const bool jumpPressed = jumpDown && !_kinematic2DState().dropThroughJumpWasDown;
+	_kinematic2DState().dropThroughJumpWasDown = jumpDown;
 	return jumpPressed && downAction->isActive();
 }
 
 void Character::_startDropThrough()
 {
-	_dropThroughTimer = kDropThroughDurationSeconds;
-	_dropThroughResumePending = false;
+	_kinematic2DState().dropThroughTimer = kDropThroughDurationSeconds;
+	_kinematic2DState().dropThroughResumePending = false;
 	float dropThroughResumeTopY = 0.0f;
 	bool hasDropThroughResumeTopY = false;
 
@@ -484,18 +408,18 @@ void Character::_startDropThrough()
 
 	collectTileBottomY(_tile);
 
-	for (auto itr = _groundContacts.begin(); itr != _groundContacts.end();) {
-		Tile* tile = *itr;
+	for (auto itr = _kinematic2DState().groundContacts.begin(); itr != _kinematic2DState().groundContacts.end();) {
+		Tile* tile = dynamic_cast<Tile*>(*itr);
 		if (_isOneWayTile(tile)) {
 			collectTileBottomY(tile);
-			itr = _groundContacts.erase(itr);
+			itr = _kinematic2DState().groundContacts.erase(itr);
 			continue;
 		}
 		++itr;
 	}
 
 	_refreshGroundTile();
-	_timeWithoutGroundContact = kGroundLossGraceSeconds;
+	_kinematic2DState().timeWithoutGroundContact = kGroundLossGraceSeconds;
 
 	if (GameObjectState* state = this->getState()) {
 		const char* stateName = state->getName();
@@ -516,16 +440,16 @@ void Character::_startDropThrough()
 	if (hasDropThroughResumeTopY) {
 		// Keep one-way tiles disabled until our top is fully below the previous
 		// one-way tile body. This avoids side pushback when dropping through.
-		_dropThroughResumeTopY = dropThroughResumeTopY + kOneWayTopApproachEpsilon;
-		_dropThroughResumePending = true;
+		_kinematic2DState().dropThroughResumeTopY = dropThroughResumeTopY + kOneWayTopApproachEpsilon;
+		_kinematic2DState().dropThroughResumePending = true;
 	}
 	else {
 		Collidable* selfCollidable = this->getCollidable();
 		vector2 selfMin(0.0f, 0.0f);
 		vector2 selfMax(0.0f, 0.0f);
 		if (selfCollidable && tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
-			_dropThroughResumeTopY = selfMax.y + kOneWayTopApproachEpsilon;
-			_dropThroughResumePending = true;
+			_kinematic2DState().dropThroughResumeTopY = selfMax.y + kOneWayTopApproachEpsilon;
+			_kinematic2DState().dropThroughResumePending = true;
 		}
 	}
 
@@ -538,11 +462,11 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 		return true;
 	}
 
-	if (_dropThroughTimer > 0.0f) {
+	if (_kinematic2DState().dropThroughTimer > 0.0f) {
 		return false;
 	}
 
-	if (_dropThroughResumePending) {
+	if (_kinematic2DState().dropThroughResumePending) {
 		return false;
 	}
 
@@ -653,70 +577,11 @@ bool Character::_isGroundContact(const CollisionContact& contact) const
 			return false;
 		}
 	}
-
-	if (contact.normal.has_value() && contact.normal->y > kGroundNormalThreshold) {
-		return true;
-	}
-
-	// Resolver-provided separation is a useful fallback when SAT normals on slopes are noisy.
-	if (contact.separation.has_value() && contact.separation->y < -kGroundNormalThreshold) {
-		return true;
-	}
-
-    // Sampling fallback may be necessary on shallow polygon slopes even when the contact
-    // is not flagged as overlapping.  The original implementation would skip sampling
-    // if the contact was not overlapping and the normal was missing or pointed away
-    // from the character.  However, some convex polygon tiles (especially those with
-    // vertices ordered clockwise) can produce contacts with no normal or with a
-    // downward‑facing normal even when they are valid walkable surfaces.  In those
-    // situations the character would repeatedly lose and regain ground contact when
-    // moving up or down the slope, causing visible “thrashing” in the physics
-    // simulation.  To make ground detection more robust for polygonal surfaces, we
-    // always attempt a support sample when we have a potential contact.  The
-    // subsequent support sampling and supportDelta check will ensure that only
-    // surfaces near the character’s feet are treated as ground.  Walls and ceilings
-    // still return false if the sampled support is too far away or does not exist.
-
-	const Collidable* selfCollidable = contact.selfCollidable;
-	const Collidable* tileCollidable = contact.otherCollidable ? contact.otherCollidable : tile->getCollidable();
-	if (!selfCollidable) {
-		return false;
-	}
-
-	vector2 selfMin(0.0f, 0.0f);
-	vector2 selfMax(0.0f, 0.0f);
-	if (!tileCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
-		return false;
-	}
-
-    // Sample the supporting surface at several points across the width of the character.
-    // Sampling only at the horizontal midpoint can miss narrow polygon slopes when the
-    // midpoint happens to lie outside the polygon’s horizontal span.  To improve
-    // robustness we take multiple samples along the X‑axis and treat the contact as
-    // ground if any sample finds a valid support within the allowed vertical
-    // tolerance.
-	const float bodyBottom = selfMax.y;
-	const float bodyWidth = selfMax.x - selfMin.x;
-	// Denser sampling across the character width and small horizontal sweep
-	// to avoid missing narrow polygon spans or slight misalignments.
-	const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
-	const float sampleOffsets[] = { -5.0f, -3.0f, -1.0f, 0.0f, 1.0f, 3.0f, 5.0f };
-    
-	for (float frac : sampleFractions) {
-		for (float off : sampleOffsets) {
-			const float sampleX = selfMin.x + (bodyWidth * frac) + off;
-			float supportY = 0.0f;
-			if (_sampleSupportY(tileCollidable, sampleX, supportY)) {
-				const float supportDelta = bodyBottom - supportY;
-				if (supportDelta >= -kOneWayTopApproachEpsilon && supportDelta <= kGroundSupportSnapDistance) {
-					return true;
-				}
-			}
-		}
-	}
-
-	// If no sample indicated a valid support within tolerance, this is not ground.
-	return false;
+	return Kinematics2D::isGroundContact(
+		contact,
+		kGroundNormalThreshold,
+		kOneWayTopApproachEpsilon,
+		kGroundSupportSnapDistance);
 }
 
 bool Character::_isWallBlockingContact(const CollisionContact& contact, int horizontalIntent, float footY, float maxStepUpDistance) const
@@ -738,17 +603,7 @@ bool Character::_isWallBlockingContact(const CollisionContact& contact, int hori
 		return false;
 	}
 
-	const vector2 normal = contact.normal.value();
-	const float absNormalX = std::fabs(normal.x);
-	const float absNormalY = std::fabs(normal.y);
-	if (absNormalX <= kWallNormalThreshold || absNormalX <= absNormalY) {
-		return false;
-	}
-
-	const bool pushingIntoWall =
-		(horizontalIntent > 0 && normal.x > 0.0f) ||
-		(horizontalIntent < 0 && normal.x < 0.0f);
-	if (!pushingIntoWall) {
+	if (!Kinematics2D::isWallBlockingContact(contact, horizontalIntent, kWallNormalThreshold)) {
 		return false;
 	}
 
@@ -800,7 +655,7 @@ bool Character::_isGroundedLocomotionState(const char* stateName) const
 
 bool Character::_canTriggerGroundCollisionFromFalling() const
 {
-	return _fallingLandingDebounceTimer <= 0.0f;
+	return _kinematic2DState().fallingLandingDebounceTimer <= 0.0f;
 }
 
 int Character::_getHorizontalIntent() const
@@ -956,7 +811,7 @@ void Character::_refreshGroundTile()
 	bool bestTileHasSupportSample = false;
 	float bestSupportDeltaAbs = std::numeric_limits<float>::max();
 	float bestDistance = std::numeric_limits<float>::max();
-	std::vector<Tile*> staleTiles;
+	std::vector<GameObject*> staleContacts;
 
 	float sampleX = 0.0f;
 	float bodyBottom = 0.0f;
@@ -971,26 +826,27 @@ void Character::_refreshGroundTile()
 		}
 	}
 
-	for (Tile* tile : _groundContacts) {
+	for (GameObject* contactObject : _kinematic2DState().groundContacts) {
+		Tile* tile = dynamic_cast<Tile*>(contactObject);
 		if (!tile) {
-			staleTiles.push_back(tile);
+			staleContacts.push_back(contactObject);
 			continue;
 		}
 		const int tileIndex = tile->getTileIndex();
 
 		if (tile->isNonCollidingLayer()) {
-			staleTiles.push_back(tile);
+			staleContacts.push_back(contactObject);
 			continue;
 		}
 
 		if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
-			staleTiles.push_back(tile);
+			staleContacts.push_back(contactObject);
 			continue;
 		}
 
 		Collidable* collidable = tile->getCollidable();
 		if (!collidable || !collidable->isActive()) {
-			staleTiles.push_back(tile);
+			staleContacts.push_back(contactObject);
 			continue;
 		}
 
@@ -1062,8 +918,8 @@ void Character::_refreshGroundTile()
 		}
 	}
 
-	for (Tile* staleTile : staleTiles) {
-		_groundContacts.erase(staleTile);
+	for (GameObject* staleContact : staleContacts) {
+		_kinematic2DState().groundContacts.erase(staleContact);
 	}
 
 	_tile = bestTile;
@@ -1071,76 +927,7 @@ void Character::_refreshGroundTile()
 
 bool Character::_sampleSupportY(const Collidable* collidable, float sampleX, float& outY) const
 {
-	if (!collidable || !collidable->isActive()) {
-		return false;
-	}
-
-	constexpr float kHorizontalEpsilon = 0.001f;
-	switch (collidable->getType()) {
-	case COL_OBJ_SQUARE: {
-		const Square* square = (const Square*)collidable;
-		if (!square) {
-			return false;
-		}
-
-		const vector2 min = square->getMin();
-		const vector2 max = square->getMax();
-		if (sampleX < (min.x - kHorizontalEpsilon) || sampleX > (max.x + kHorizontalEpsilon)) {
-			return false;
-		}
-
-		outY = min.y;
-		return true;
-	}
-	case COL_OBJ_POLYGON: {
-		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
-		if (!polygon) {
-			return false;
-		}
-
-		// Even if the polygon isn't marked as valid, attempt sampling to tolerate
-		// imperfectly authored decomposition data.
-		if (!polygon->isValid()) {
-			float supportY = 0.0f;
-			if (polygon->findTopSurfaceYAtX(sampleX, supportY)) {
-				outY = supportY;
-				return true;
-			}
-			return false;
-		}
-
-		return polygon->findTopSurfaceYAtX(sampleX, outY);
-	}
-	case COL_OBJ_GROUP: {
-		const CollidableGroup* group = (const CollidableGroup*)collidable;
-		if (!group) {
-			return false;
-		}
-
-		bool found = false;
-		float bestY = std::numeric_limits<float>::max();
-		for (const Collidable* member : *group) {
-			float memberY = 0.0f;
-			if (!_sampleSupportY(member, sampleX, memberY)) {
-				continue;
-			}
-
-			if (!found || memberY < bestY) {
-				bestY = memberY;
-				found = true;
-			}
-		}
-
-		if (!found) {
-			return false;
-		}
-
-		outY = bestY;
-		return true;
-	}
-	default:
-		return false;
-	}
+	return Kinematics2D::sampleSupportY(collidable, sampleX, outY);
 }
 
 bool Character::_findSupportOnTile(const Tile* tile, float footY, float maxSnapDistance, float& outSupportY) const
@@ -1940,7 +1727,7 @@ void Character::_initTransitions() {
 void Character::onStateDidEnter(State* previous, State* current)
 {
 	GameObject::onStateDidEnter(previous, current);
-	_pendingTransitionFootCorrection = 0.0f;
+	_kinematic2DState().pendingTransitionFootCorrection = 0.0f;
 
 	GameObjectState* previousState = (GameObjectState*)previous;
 	GameObjectState* currentState = (GameObjectState*)current;
@@ -1950,10 +1737,10 @@ void Character::onStateDidEnter(State* previous, State* current)
 
 	const char* currentStateName = currentState->getName();
 	if (!strcmp(currentStateName, "Falling")) {
-		_fallingLandingDebounceTimer = kFallingLandingDebounceSeconds;
+		_kinematic2DState().fallingLandingDebounceTimer = kFallingLandingDebounceSeconds;
 	}
 	else {
-		_fallingLandingDebounceTimer = 0.0f;
+		_kinematic2DState().fallingLandingDebounceTimer = 0.0f;
 	}
 	vector2 currentVelocity = this->getVelocity();
 	bool velocityAdjusted = false;
@@ -2027,7 +1814,7 @@ void Character::onStateDidEnter(State* previous, State* current)
 	}
 
 	this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
-	_pendingTransitionFootCorrection = std::fabs(deltaY);
+	_kinematic2DState().pendingTransitionFootCorrection = std::fabs(deltaY);
 }
 
 const char* Character::mapCollisionToCommand(const CollisionContact& contact) const
@@ -2115,24 +1902,24 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 	}
 
 	if (contact.phase == CollisionPhase::Exit) {
-		_groundContacts.erase(tile);
+		_kinematic2DState().groundContacts.erase(tile);
 		_refreshGroundTile();
 		return;
 	}
 
 	const bool isGroundContact = _isGroundContact(contact);
 	if (isGroundContact) {
-		_groundContacts.insert(tile);
-		_timeWithoutGroundContact = 0.0f;
+		_kinematic2DState().groundContacts.insert(tile);
+		_kinematic2DState().timeWithoutGroundContact = 0.0f;
 		_refreshGroundTile();
 	}
 	else {
-		_groundContacts.erase(tile);
+		_kinematic2DState().groundContacts.erase(tile);
 		_refreshGroundTile();
 	}
 
 	if (isGroundContact && contact.phase != CollisionPhase::Exit) {
-		++_telemetryPendingGroundContacts;
+		++_kinematic2DState().telemetryPendingGroundContacts;
 	}
 
 	if (contact.overlapping &&
@@ -2158,10 +1945,10 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 			}
 
 			if (_isWallBlockingContact(contact, horizontalIntent, footY, maxStepUpDistance)) {
-				++_telemetryPendingWallContacts;
+				++_kinematic2DState().telemetryPendingWallContacts;
 
 				bool isGroundedForStepAssist = false;
-				if (_timeWithoutGroundContact < kGroundLossGraceSeconds) {
+				if (_kinematic2DState().timeWithoutGroundContact < kGroundLossGraceSeconds) {
 					if (GameObjectState* currentState = this->getState()) {
 						const char* stateName = currentState->getName();
 						isGroundedForStepAssist =
@@ -2193,7 +1980,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 
 				const float correctionX = -std::copysign(separationX, normal.x);
 				this->setPosition(this->getPosition().x + correctionX, this->getPosition().y);
-				_telemetryPendingWallCorrectionX += correctionX;
+				_kinematic2DState().telemetryPendingWallCorrectionX += correctionX;
 			}
 		}
 	}
@@ -2247,27 +2034,27 @@ void Character::update(float time)
 	AutoTestRuntime& autoRuntime = getAutoTestRuntime();
 	initializeAutoTestRuntime(autoRuntime);
 	autoRuntime.elapsedSeconds += std::max(0.0, (double)time);
-	_telemetryLastWallCorrectionX = _telemetryPendingWallCorrectionX;
-	_telemetryPendingWallCorrectionX = 0.0f;
-	_telemetryLastGroundContacts = _telemetryPendingGroundContacts;
-	_telemetryPendingGroundContacts = 0;
-	_telemetryLastWallContacts = _telemetryPendingWallContacts;
-	_telemetryPendingWallContacts = 0;
-	if (_fallingLandingDebounceTimer > 0.0f) {
-		_fallingLandingDebounceTimer = std::max(0.0f, _fallingLandingDebounceTimer - time);
+	_kinematic2DState().telemetryLastWallCorrectionX = _kinematic2DState().telemetryPendingWallCorrectionX;
+	_kinematic2DState().telemetryPendingWallCorrectionX = 0.0f;
+	_kinematic2DState().telemetryLastGroundContacts = _kinematic2DState().telemetryPendingGroundContacts;
+	_kinematic2DState().telemetryPendingGroundContacts = 0;
+	_kinematic2DState().telemetryLastWallContacts = _kinematic2DState().telemetryPendingWallContacts;
+	_kinematic2DState().telemetryPendingWallContacts = 0;
+	if (_kinematic2DState().fallingLandingDebounceTimer > 0.0f) {
+		_kinematic2DState().fallingLandingDebounceTimer = std::max(0.0f, _kinematic2DState().fallingLandingDebounceTimer - time);
 	}
 
-	if (_dropThroughTimer > 0.0f) {
-		_dropThroughTimer = std::max(0.0f, _dropThroughTimer - time);
+	if (_kinematic2DState().dropThroughTimer > 0.0f) {
+		_kinematic2DState().dropThroughTimer = std::max(0.0f, _kinematic2DState().dropThroughTimer - time);
 	}
 
-	if (_dropThroughResumePending) {
+	if (_kinematic2DState().dropThroughResumePending) {
 		Collidable* selfCollidable = this->getCollidable();
 		vector2 selfMin(0.0f, 0.0f);
 		vector2 selfMax(0.0f, 0.0f);
-		if (!selfCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax) || selfMin.y >= _dropThroughResumeTopY) {
-			_dropThroughResumePending = false;
-			_dropThroughResumeTopY = 0.0f;
+		if (!selfCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax) || selfMin.y >= _kinematic2DState().dropThroughResumeTopY) {
+			_kinematic2DState().dropThroughResumePending = false;
+			_kinematic2DState().dropThroughResumeTopY = 0.0f;
 		}
 	}
 
@@ -2277,7 +2064,8 @@ void Character::update(float time)
 		bool groundedOnOneWay = _isOneWayTile(_tile);
 
 		if (!groundedOnOneWay) {
-			for (Tile* contactTile : _groundContacts) {
+			for (GameObject* contactObject : _kinematic2DState().groundContacts) {
+				Tile* contactTile = dynamic_cast<Tile*>(contactObject);
 				if (_isOneWayTile(contactTile) && _canCollideWithOneWayTile(contactTile)) {
 					groundedOnOneWay = true;
 					break;
@@ -2331,8 +2119,8 @@ void Character::update(float time)
                 baseSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
             }
             float maxSnapPerFrame = baseSnapPerFrame;
-            if (_pendingTransitionFootCorrection > 0.0f) {
-                maxSnapPerFrame = std::max(baseSnapPerFrame, _pendingTransitionFootCorrection + 1.0f);
+            if (_kinematic2DState().pendingTransitionFootCorrection > 0.0f) {
+                maxSnapPerFrame = std::max(baseSnapPerFrame, _kinematic2DState().pendingTransitionFootCorrection + 1.0f);
             }
             const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
             maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
@@ -2365,7 +2153,7 @@ void Character::update(float time)
                     }
                     this->setPosition(this->getPosition().x, this->getPosition().y + deltaY);
                 }
-                _timeWithoutGroundContact = 0.0f;
+                _kinematic2DState().timeWithoutGroundContact = 0.0f;
             }
         }
     }
@@ -2375,8 +2163,8 @@ void Character::update(float time)
 		baseSnapPerFrame = std::max(1.0f, _tile->getTileSet()->getTileSize() * 0.5f);
 	}
 	float maxSnapPerFrame = baseSnapPerFrame;
-	if (_pendingTransitionFootCorrection > 0.0f) {
-		maxSnapPerFrame = std::max(baseSnapPerFrame, _pendingTransitionFootCorrection + 1.0f);
+	if (_kinematic2DState().pendingTransitionFootCorrection > 0.0f) {
+		maxSnapPerFrame = std::max(baseSnapPerFrame, _kinematic2DState().pendingTransitionFootCorrection + 1.0f);
 	}
 	const float horizontalTravelPerFrame = std::fabs(this->getVelocity().x) * time;
 	maxSnapPerFrame = std::max(maxSnapPerFrame, horizontalTravelPerFrame + kHorizontalSnapTravelPadding);
@@ -2425,10 +2213,10 @@ void Character::update(float time)
 	}
 
 	if (!hasGroundSupport) {
-		_timeWithoutGroundContact += time;
+		_kinematic2DState().timeWithoutGroundContact += time;
 	}
 	else {
-		_timeWithoutGroundContact = 0.0f;
+		_kinematic2DState().timeWithoutGroundContact = 0.0f;
 	}
 
 	if (state) {
@@ -2437,7 +2225,7 @@ void Character::update(float time)
 			this->sendInput("GROUND_COLLISION");
 			state = this->getState();
 			if (!state) {
-				_pendingTransitionFootCorrection = 0.0f;
+				_kinematic2DState().pendingTransitionFootCorrection = 0.0f;
 				return;
 			}
 			stateName = state->getName();
@@ -2488,7 +2276,7 @@ void Character::update(float time)
 			!strcmp(stateName, "Jump") ||
 			!strcmp(stateName, "Rising");
 			
-		const bool groundedForMovement = hasGroundSupport || (_timeWithoutGroundContact < kGroundLossGraceSeconds);
+		const bool groundedForMovement = hasGroundSupport || (_kinematic2DState().timeWithoutGroundContact < kGroundLossGraceSeconds);
 
 		const int horizontalInput = canInputMove ? _getHorizontalInput() : 0;
 		const bool hasDirectionalIntent = horizontalInput != 0;
@@ -2662,16 +2450,15 @@ void Character::update(float time)
 
 			// Grounded state is tracked by collision Enter/Stay/Exit callbacks.
 			// Debounce loss slightly to avoid one-frame Enter/Exit jitter.
-			if (!hasGroundSupport && _timeWithoutGroundContact >= kGroundLossGraceSeconds) {
+			if (!hasGroundSupport && _kinematic2DState().timeWithoutGroundContact >= kGroundLossGraceSeconds) {
 				if (_isGroundedLocomotionState(stateName)) {
 					this->sendInput("IN_AIR");
 				}
 			}
 		} // if (Player)
 	}
-	_pendingTransitionFootCorrection = 0.0f;
-
-	if (autoRuntime.enabled && autoRuntime.telemetryEnabled && autoRuntime.telemetryOut.is_open()) {
+	_kinematic2DState().pendingTransitionFootCorrection = 0.0f;
+	if (Telemetry2D::isEnabled(autoRuntime)) {
 		const vector2 pos = this->getPosition();
 		const vector2 vel = this->getVelocity();
 		const uint64_t replayTick = Engine2D::getSimulationTick();
@@ -2714,10 +2501,10 @@ void Character::update(float time)
 			(AutoSupportSource)supportSampleSource :
 			AutoSupportSource::None;
 		const char* contactClass = "unknown";
-		if (_telemetryLastGroundContacts > _telemetryLastWallContacts) {
+		if (_kinematic2DState().telemetryLastGroundContacts > _kinematic2DState().telemetryLastWallContacts) {
 			contactClass = "ground";
 		}
-		else if (_telemetryLastWallContacts > _telemetryLastGroundContacts) {
+		else if (_kinematic2DState().telemetryLastWallContacts > _kinematic2DState().telemetryLastGroundContacts) {
 			contactClass = "wall";
 		}
 
@@ -2750,49 +2537,34 @@ void Character::update(float time)
 			(autoRuntime.polygonPathSpeedSum / (double)autoRuntime.polygonSampleCount) :
 			0.0;
 
-		autoRuntime.telemetryOut << std::fixed << std::setprecision(6)
-			<< sampleTime << ","
-			<< sampleDt << ","
-			<< replayTick << ","
-			<< (this->getState() ? this->getState()->getName() : "(null)") << ","
-			<< pos.x << ","
-			<< pos.y << ","
-			<< vel.x << ","
-			<< vel.y << ","
-			<< intent << ","
-			<< dxSigned << ","
-			<< dxAbs << ","
-			<< autoRuntime.netDxAccum << ","
-			<< dxSpeed << ","
-			<< pathSpeed << ","
-			<< _telemetryLastWallCorrectionX << ","
-			<< toAutoSupportSourceString(supportSource) << ","
-			<< contactClass << ","
-			<< (_tile ? _tile->getTileIndex() : -1) << ","
-			<< toAutoGroundShapeString(groundShape) << ","
-			<< (hasGroundSupport ? 1 : 0) << ","
-			<< _groundContacts.size() << ","
-			<< autoRuntime.groundDropouts << ","
-			<< horizontalJitter << ","
-			<< squareDxAvg << ","
-			<< polygonDxAvg << ","
-			<< squarePathAvg << ","
-			<< polygonPathAvg << "\n";
+		Telemetry2D::Sample sample;
+		sample.time = sampleTime;
+		sample.dt = sampleDt;
+		sample.replayTick = replayTick;
+		sample.stateName = this->getState() ? this->getState()->getName() : "(null)";
+		sample.position = pos;
+		sample.velocity = vel;
+		sample.intent = intent;
+		sample.dxSigned = dxSigned;
+		sample.dxAbs = dxAbs;
+		sample.netDxAccum = autoRuntime.netDxAccum;
+		sample.dxSpeed = dxSpeed;
+		sample.pathSpeed = pathSpeed;
+		sample.wallCorrectionX = _kinematic2DState().telemetryLastWallCorrectionX;
+		sample.supportSource = toAutoSupportSourceString(supportSource);
+		sample.contactClass = contactClass;
+		sample.groundTile = _tile ? _tile->getTileIndex() : -1;
+		sample.groundShape = toAutoGroundShapeString(groundShape);
+		sample.grounded = hasGroundSupport ? 1 : 0;
+		sample.contacts = _kinematic2DState().groundContacts.size();
+		sample.dropouts = autoRuntime.groundDropouts;
+		sample.jitter = horizontalJitter;
+		sample.squareDxAvg = squareDxAvg;
+		sample.polygonDxAvg = polygonDxAvg;
+		sample.squarePathAvg = squarePathAvg;
+		sample.polygonPathAvg = polygonPathAvg;
+		Telemetry2D::appendSample(autoRuntime, sample);
 
-		autoRuntime.summaryTimerSeconds += sampleDt;
-		if (autoRuntime.summaryTimerSeconds >= kAutoSummaryIntervalSeconds) {
-			autoRuntime.summaryTimerSeconds = 0.0;
-			printf("[AUTO_SUMMARY] t=%.2f square_dx=%.2f polygon_dx=%.2f square_path=%.2f polygon_path=%.2f jitter_max=%.2f dropouts=%d\n",
-				(float)sampleTime,
-				(float)squareDxAvg,
-				(float)polygonDxAvg,
-				(float)squarePathAvg,
-				(float)polygonPathAvg,
-				(float)autoRuntime.maxHorizontalJitter,
-				autoRuntime.groundDropouts);
-		}
-
-		autoRuntime.telemetryOut.flush();
 		autoRuntime.previousTelemetryPosition = pos;
 		autoRuntime.previousTelemetryTime = sampleTime;
 		autoRuntime.hasPreviousTelemetry = true;
@@ -2821,11 +2593,11 @@ void Character::update(float time)
 				vel.y,
 				this->getState() ? this->getState()->getName() : "(null)",
 				(_tile != NULL) ? "yes" : "no",
-				_groundContacts.size(),
+				_kinematic2DState().groundContacts.size(),
 				groundTileIndex,
 				groundLayerName.c_str(),
-				_timeWithoutGroundContact,
-				_dropThroughTimer);
+				_kinematic2DState().timeWithoutGroundContact,
+				_kinematic2DState().dropThroughTimer);
 			DEBUG_MSG(buffer);
 		}
 	}
