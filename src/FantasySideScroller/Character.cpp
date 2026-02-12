@@ -145,7 +145,8 @@ bool isTruthyEnvValue(const char* value)
 
 std::string getEnvOrDefault(const char* key, const char* fallbackValue)
 {
-	const char* value = std::getenv(key);
+	std::string owned;
+	const char* value = System::getenv_platform(key, owned);
 	if (value && value[0] != '\0') {
 		return std::string(value);
 	}
@@ -255,9 +256,11 @@ void initializeAutoTestRuntime(AutoTestRuntime& runtime)
 	}
 	runtime.initialized = true;
 
+	std::string owned;
+
 	runtime.telemetryEnabled =
-		isTruthyEnvValue(std::getenv("AUTO_SLOPE_TELEMETRY")) ||
-		isTruthyEnvValue(std::getenv("AUTO_SLOPE_TEST"));
+		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TELEMETRY", owned)) ||
+		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TEST", owned));
 
 	runtime.telemetryPath = getEnvOrDefault("AUTO_SLOPE_LOG_PATH", kAutoDefaultTelemetryPath);
 

@@ -373,17 +373,19 @@ void initializeFromEnvironment(void)
 	}
 	gInitialized = true;
 
-	gRecordEnabled = isTruthy(std::getenv("AUTO_INPUT_RECORD"));
-	gReplayEnabled =
-		isTruthy(std::getenv("AUTO_INPUT_REPLAY")) ||
-		(std::getenv("AUTO_INPUT_REPLAY_PATH") && std::getenv("AUTO_INPUT_REPLAY_PATH")[0] != '\0');
+	std::string owned;
 
-	const char* recordPathValue = std::getenv("AUTO_INPUT_RECORD_PATH");
+	gRecordEnabled = isTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned));
+	gReplayEnabled =
+		isTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
+		(System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned) && System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned)[0] != '\0');
+
+	const char* recordPathValue = System::getenv_platform("AUTO_INPUT_RECORD_PATH", owned);
 	gRecordPath = (recordPathValue && recordPathValue[0] != '\0') ?
 		recordPathValue :
 		"tmp/auto_input_events.csv";
 
-	const char* replayPathValue = std::getenv("AUTO_INPUT_REPLAY_PATH");
+	const char* replayPathValue = System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned);
 	gReplayPath = (replayPathValue && replayPathValue[0] != '\0') ?
 		replayPathValue :
 		gRecordPath;

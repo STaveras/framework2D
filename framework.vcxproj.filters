@@ -49,6 +49,9 @@
     <Filter Include="Applications\FantasySideScroller">
       <UniqueIdentifier>{d1bca923-b7db-49d6-b49b-d45e57d04f18}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Physics\Collision">
+      <UniqueIdentifier>{13c73dbc-d7df-44fc-8aab-567a1d1768d0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\TreeNode.h">
@@ -243,15 +246,6 @@
     <ClInclude Include="src\ForceOperator.h">
       <Filter>Operators / Simulation</Filter>
     </ClInclude>
-    <ClInclude Include="src\Collidable.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CollidableGroup.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CollisionEvent.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
     <ClInclude Include="src\ProgramState.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -417,6 +411,30 @@
     <ClInclude Include="src\RendererGL.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\CollisionSystem.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FantasySideScroller\LevelManager.h">
+      <Filter>Applications\FantasySideScroller</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InputTapeRecorder.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PolygonDecomposition.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Polygon.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Collidable.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollidableGroup.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CollisionEvent.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine2D.cpp">
@@ -536,9 +554,6 @@
     <ClCompile Include="src\CullObjectOperator.cpp">
       <Filter>Operators / Simulation</Filter>
     </ClCompile>
-    <ClCompile Include="src\CollidableGroup.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
     <ClCompile Include="src\ProgramStack.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -594,6 +609,24 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\CollisionSystem.cpp">
+      <Filter>Physics\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\LevelManager.cpp">
+      <Filter>Applications\FantasySideScroller</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputTapeRecorder.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PolygonDecomposition.cpp">
+      <Filter>Physics\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Polygon.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CollidableGroup.cpp">
+      <Filter>Physics\Collision</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\project.d">
