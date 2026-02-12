@@ -28,15 +28,17 @@ public:
       this->setCollisionPredicate([](const GameObject& other) {
          return other.getType() != GAME_OBJ_TILE;
       });
+      this->setStatic(true);
       this->addState("");
       this->start();
-      this->setStatic(true);
    }
 
    // tileIndex which tile to use, starting from 0, left-to-right, top-to-bottom
    explicit Tile(int tileIndex, TileSet* tileSet) :
       GameObject(GAME_OBJ_TILE),
       _tileSet(tileSet) {
+
+      this->setStatic(true);
 
       this->setCollisionPredicate([](const GameObject& other) {
          return other.getType() != GAME_OBJ_TILE;
@@ -46,7 +48,6 @@ public:
          this->addState(_tileSet->getTileInfo(tileIndex)._typeName.c_str()); // Look up the tileType in the tile set info
          this->start();
          this->setTileIndex(tileIndex);
-         this->setStatic(true);
       }
    }
 

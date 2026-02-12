@@ -31,12 +31,10 @@ void ObjectManager::update(float fTime)
 			continue;
 		}
 
-		const bool isStaticTile = object->getType() == GameObject::GAME_OBJ_TILE && object->isStatic();
-		if (!isStaticTile) {
+		if (!object->isStatic()) {
 			object->update(fTime);
 		}
-
-		if (object->getType() == GameObject::GAME_OBJ_TILE)
+		else
 			continue;
 
 		for (ObjectOperator* objOperator : m_lsObjOperators) {
