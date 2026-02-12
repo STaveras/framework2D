@@ -67,11 +67,13 @@ void initialize(Runtime& runtime, const char* defaultPath)
 		return;
 	}
 
+	std::string ownedString;
+
 	runtime.initialized = true;
 	runtime.enabled =
-		isTruthyEnvValue(std::getenv("AUTO_MOVEMENT_TELEMETRY")) ||
-		isTruthyEnvValue(std::getenv("AUTO_SLOPE_TELEMETRY")) ||
-		isTruthyEnvValue(std::getenv("AUTO_SLOPE_TEST"));
+		isTruthyEnvValue(System::getenv_platform("AUTO_MOVEMENT_TELEMETRY", ownedString)) ||
+		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TELEMETRY", ownedString)) ||
+		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TEST", ownedString));
 	runtime.telemetryEnabled = runtime.enabled;
 
 	std::string path = getEnvOrDefault("AUTO_MOVEMENT_LOG_PATH", "");
