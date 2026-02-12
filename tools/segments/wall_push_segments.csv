@@ -1,0 +1,2 @@
+name,start_tick,end_tick,min_polygon_net_dx,max_polygon_backward_ratio,min_polygon_samples,max_polygon_wall_correction_abs
+wall_window,0,999999,0.0,1.0,0,

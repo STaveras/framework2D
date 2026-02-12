@@ -453,6 +453,11 @@ void Character::_startDropThrough()
 		}
 	}
 
+	this->requestDropThrough(
+		kDropThroughDurationSeconds,
+		_kinematic2DState().dropThroughResumeTopY,
+		_kinematic2DState().dropThroughResumePending);
+
 	this->setPosition(this->getPosition().x, this->getPosition().y + kDropThroughStartNudge);
 }
 
@@ -2034,29 +2039,7 @@ void Character::update(float time)
 	AutoTestRuntime& autoRuntime = getAutoTestRuntime();
 	initializeAutoTestRuntime(autoRuntime);
 	autoRuntime.elapsedSeconds += std::max(0.0, (double)time);
-	_kinematic2DState().telemetryLastWallCorrectionX = _kinematic2DState().telemetryPendingWallCorrectionX;
-	_kinematic2DState().telemetryPendingWallCorrectionX = 0.0f;
-	_kinematic2DState().telemetryLastGroundContacts = _kinematic2DState().telemetryPendingGroundContacts;
-	_kinematic2DState().telemetryPendingGroundContacts = 0;
-	_kinematic2DState().telemetryLastWallContacts = _kinematic2DState().telemetryPendingWallContacts;
-	_kinematic2DState().telemetryPendingWallContacts = 0;
-	if (_kinematic2DState().fallingLandingDebounceTimer > 0.0f) {
-		_kinematic2DState().fallingLandingDebounceTimer = std::max(0.0f, _kinematic2DState().fallingLandingDebounceTimer - time);
-	}
-
-	if (_kinematic2DState().dropThroughTimer > 0.0f) {
-		_kinematic2DState().dropThroughTimer = std::max(0.0f, _kinematic2DState().dropThroughTimer - time);
-	}
-
-	if (_kinematic2DState().dropThroughResumePending) {
-		Collidable* selfCollidable = this->getCollidable();
-		vector2 selfMin(0.0f, 0.0f);
-		vector2 selfMax(0.0f, 0.0f);
-		if (!selfCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax) || selfMin.y >= _kinematic2DState().dropThroughResumeTopY) {
-			_kinematic2DState().dropThroughResumePending = false;
-			_kinematic2DState().dropThroughResumeTopY = 0.0f;
-		}
-	}
+	this->beginKinematicFrame(time);
 
 	_refreshGroundTile();
 
