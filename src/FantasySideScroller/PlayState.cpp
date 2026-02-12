@@ -147,6 +147,7 @@ void PlayState::onEnter(State* prev)
 	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
 	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
 	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
+	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_V));
 	_player->getController()->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
 	_player->setGameObject(_playableCharacter);
 
