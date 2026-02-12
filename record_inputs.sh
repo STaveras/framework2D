@@ -11,10 +11,15 @@ shift $(( $# > 0 ? 1 : 0 )) || true
 shift $(( $# > 0 ? 1 : 0 )) || true
 shift $(( $# > 0 ? 1 : 0 )) || true
 
+movement_telemetry="${AUTO_MOVEMENT_TELEMETRY:-${AUTO_SLOPE_TELEMETRY:-1}}"
+movement_log_path="${AUTO_MOVEMENT_LOG_PATH:-${AUTO_SLOPE_LOG_PATH:-$telemetry_path}}"
+
 AUTO_DETERMINISTIC=1 \
 AUTO_FIXED_DT_MS="$fixed_dt_ms" \
 AUTO_INPUT_RECORD=1 \
 AUTO_INPUT_RECORD_PATH="$record_path" \
-AUTO_SLOPE_TELEMETRY=1 \
-AUTO_SLOPE_LOG_PATH="$telemetry_path" \
+AUTO_MOVEMENT_TELEMETRY="$movement_telemetry" \
+AUTO_MOVEMENT_LOG_PATH="$movement_log_path" \
+AUTO_SLOPE_TELEMETRY="$movement_telemetry" \
+AUTO_SLOPE_LOG_PATH="$movement_log_path" \
 ./bin/framework2D_d --opengl "$@"

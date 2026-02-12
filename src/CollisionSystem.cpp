@@ -5,6 +5,7 @@
 #include "Debug.h"
 #include "GameObject.h"
 #include "Polygon.h"
+#include "Kinematics2D.h"
 #include "Renderable.h"
 #include "Square.h"
 #include "Tile.h"
@@ -379,119 +380,6 @@ void updateContactPhase(std::map<GameObject*, CollisionPhase>& phaseMap, GameObj
 	}
 }
 
-bool trySampleSupportY(const Collidable* collidable, float sampleX, float& outY)
-{
-	if (!collidable || !collidable->isActive()) {
-		return false;
-	}
-
-	constexpr float horizontalEpsilon = 0.001f;
-	switch (collidable->getType()) {
-	case COL_OBJ_SQUARE: {
-		const Square* square = (const Square*)collidable;
-		if (!square) {
-			return false;
-		}
-
-		const vector2 min = square->getMin();
-		const vector2 max = square->getMax();
-		if (sampleX < (min.x - horizontalEpsilon) || sampleX > (max.x + horizontalEpsilon)) {
-			return false;
-		}
-
-		outY = min.y;
-		return true;
-	}
-	case COL_OBJ_POLYGON: {
-		const PolygonCollider* polygon = (const PolygonCollider*)collidable;
-		if (!polygon || !polygon->isValid()) {
-			return false;
-		}
-		return polygon->findTopSurfaceYAtX(sampleX, outY);
-	}
-	case COL_OBJ_GROUP: {
-		const CollidableGroup* group = (const CollidableGroup*)collidable;
-		if (!group) {
-			return false;
-		}
-
-		bool found = false;
-		float bestY = std::numeric_limits<float>::max();
-		for (const Collidable* member : *group) {
-			float memberY = 0.0f;
-			if (!trySampleSupportY(member, sampleX, memberY)) {
-				continue;
-			}
-
-			if (!found || memberY < bestY) {
-				bestY = memberY;
-				found = true;
-			}
-		}
-
-		if (!found) {
-			return false;
-		}
-
-		outY = bestY;
-		return true;
-	}
-	default:
-		return false;
-	}
-}
-
-bool hasWalkableSupportNearFoot(
-	const Collidable* supportCollidable,
-	float footMinX,
-	float footMaxX,
-	float footY,
-	float& outSupportY)
-{
-	if (!supportCollidable || footMaxX <= footMinX) {
-		return false;
-	}
-
-	const float width = footMaxX - footMinX;
-	const float sampleFractions[] = { 0.0f, 0.08f, 0.22f, 0.50f, 0.78f, 0.92f, 1.0f };
-	const float sampleOffsets[] = { -1.5f, 0.0f, 1.5f };
-	bool foundSupport = false;
-	int supportSampleCount = 0;
-	float bestDeltaMagnitude = std::numeric_limits<float>::max();
-	float bestSupportY = 0.0f;
-
-	for (float fraction : sampleFractions) {
-		const float baseSampleX = footMinX + (width * fraction);
-		for (float offset : sampleOffsets) {
-			const float sampleX = std::clamp(baseSampleX + offset, footMinX, footMaxX);
-			float supportY = 0.0f;
-			if (!trySampleSupportY(supportCollidable, sampleX, supportY)) {
-				continue;
-			}
-
-			const float supportDelta = footY - supportY;
-			if (supportDelta < -kSupportProbeFootAboveTolerance || supportDelta > kSupportProbeFootBelowTolerance) {
-				continue;
-			}
-
-			++supportSampleCount;
-			const float deltaMagnitude = std::fabs(supportDelta);
-			if (!foundSupport || deltaMagnitude < bestDeltaMagnitude) {
-				foundSupport = true;
-				bestDeltaMagnitude = deltaMagnitude;
-				bestSupportY = supportY;
-			}
-		}
-	}
-
-	if (!foundSupport || supportSampleCount < kMinimumSupportSamplesForWalkable) {
-		return false;
-	}
-
-	outSupportY = bestSupportY;
-	return true;
-}
-
 bool shouldForceVerticalSeparationForWalkablePolygon(
 	GameObject* dynamicObject,
 	GameObject* staticObject,
@@ -503,34 +391,18 @@ bool shouldForceVerticalSeparationForWalkablePolygon(
 		return false;
 	}
 
-	if (staticObject->getType() != GameObject::GAME_OBJ_TILE) {
+	if (!staticObject->isStatic()) {
 		return false;
 	}
 
 	(void)axis;
-
-	vector2 dynamicMin(0.0f, 0.0f);
-	vector2 dynamicMax(0.0f, 0.0f);
-	if (!tryGetBounds(dynamicCollidable, dynamicMin, dynamicMax)) {
-		return false;
-	}
-
-	float supportY = 0.0f;
-	if (!hasWalkableSupportNearFoot(staticCollidable, dynamicMin.x, dynamicMax.x, dynamicMax.y, supportY)) {
-		return false;
-	}
-
-	const float supportDelta = dynamicMax.y - supportY;
-
-	std::vector<std::vector<vector2>> polygonLoops;
-	collectPolygonLoops(staticCollidable, polygonLoops);
-	if (!polygonLoops.empty()) {
-		return true;
-	}
-
-	// Allow small square ledges to resolve vertically so movement doesn't get
-	// hung on tiny bumps, while still preventing full-height pit auto-climbs.
-	return supportDelta >= 0.0f && supportDelta <= kMaxSquareStepUpForVerticalSeparation;
+	return Kinematics2D::shouldPreferVerticalSeparation(
+		dynamicCollidable,
+		staticCollidable,
+		kMaxSquareStepUpForVerticalSeparation,
+		kSupportProbeFootAboveTolerance,
+		kSupportProbeFootBelowTolerance,
+		kMinimumSupportSamplesForWalkable);
 }
 
 bool shouldResolveAsOneWay(
@@ -544,48 +416,22 @@ bool shouldResolveAsOneWay(
 		return false;
 	}
 
-	const Tile* oneWayTile = nullptr;
 	const Collidable* oneWayCollidable = nullptr;
 	GameObject* dynamicObject = nullptr;
 	const Collidable* dynamicCollidable = nullptr;
 
-	if (first->getType() == GameObject::GAME_OBJ_TILE) {
-		const Tile* tile = (const Tile*)first;
-		if (tile && tile->isOneWay()) {
-			oneWayTile = tile;
-			oneWayCollidable = firstCollidable;
-			dynamicObject = second;
-			dynamicCollidable = secondCollidable;
-		}
+	if (first->isStatic() && firstCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !second->isStatic()) {
+		oneWayCollidable = firstCollidable;
+		dynamicObject = second;
+		dynamicCollidable = secondCollidable;
+	}
+	else if (second->isStatic() && secondCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !first->isStatic()) {
+		oneWayCollidable = secondCollidable;
+		dynamicObject = first;
+		dynamicCollidable = firstCollidable;
 	}
 
-	if (!oneWayTile && second->getType() == GameObject::GAME_OBJ_TILE) {
-		const Tile* tile = (const Tile*)second;
-		if (tile && tile->isOneWay()) {
-			oneWayTile = tile;
-			oneWayCollidable = secondCollidable;
-			dynamicObject = first;
-			dynamicCollidable = firstCollidable;
-		}
-	}
-
-	if (!oneWayTile || !oneWayCollidable || !dynamicObject || !dynamicCollidable) {
-		return true;
-	}
-
-	if (dynamicObject->isStatic()) {
-		return false;
-	}
-
-	vector2 dynamicMin(0.0f, 0.0f);
-	vector2 dynamicMax(0.0f, 0.0f);
-	if (!tryGetBounds(dynamicCollidable, dynamicMin, dynamicMax)) {
-		return true;
-	}
-
-	const float sampleX = dynamicMin.x + ((dynamicMax.x - dynamicMin.x) * 0.5f);
-	float supportY = 0.0f;
-	if (!trySampleSupportY(oneWayCollidable, sampleX, supportY)) {
+	if (!oneWayCollidable || !dynamicObject || !dynamicCollidable) {
 		return true;
 	}
 
@@ -596,22 +442,12 @@ bool shouldResolveAsOneWay(
 		previousPosition = previousItr->second;
 	}
 
-	const float deltaY = currentPosition.y - previousPosition.y;
-	if (deltaY < -kAxisEpsilon) {
-		return false;
-	}
-
-	const float currentBottom = dynamicMax.y;
-	const float previousBottom = currentBottom - deltaY;
-
-	const bool crossedPlatformTop =
-		(previousBottom <= (supportY + kOneWayEpsilon)) &&
-		(currentBottom >= (supportY - kOneWayEpsilon));
-	const bool restingOnTop =
-		(std::fabs(currentBottom - supportY) <= (kOneWayEpsilon * 2.0f)) &&
-		(previousBottom <= (supportY + kOneWayEpsilon * 2.0f));
-
-	return crossedPlatformTop || restingOnTop;
+	return Kinematics2D::shouldResolveAsOneWay(
+		oneWayCollidable,
+		dynamicCollidable,
+		currentPosition,
+		previousPosition,
+		kOneWayEpsilon);
 }
 
 void clipVelocityAlongAxis(GameObject* object, const vector2& intoNormal)

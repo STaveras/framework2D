@@ -9,39 +9,23 @@
 #include "Constants.h"
 #include "Resources.h"
 
-#include <unordered_set>
-#include <unordered_map>
-
 class Character : public GameObject
 {
 	Tile* _tile = NULL; // The tile the character is on
-	std::unordered_set<Tile*> _groundContacts;
-	std::unordered_map<Tile*, int> _groundContactFrameCount;  // Hysteresis: frames since contact started
-	float _timeWithoutGroundContact = 0.0f;
-	float _pendingTransitionFootCorrection = 0.0f;
-	float _dropThroughTimer = 0.0f;
-	bool _dropThroughJumpWasDown = false;
-	bool _dropThroughResumePending = false;
-	float _dropThroughResumeTopY = 0.0f;
-	float _fallingLandingDebounceTimer = 0.0f;
 	float _stamina = 100.0f;
 	float _maxStamina = 100.0f;
 	bool _runBoostActive = false;
 	float _longJumpMomentumSpeed = 0.0f;
 	int _longJumpMomentumDirection = 0;
 	bool _longJumpMomentumActive = false;
-	float _telemetryPendingWallCorrectionX = 0.0f;
-	float _telemetryLastWallCorrectionX = 0.0f;
-	int _telemetryPendingGroundContacts = 0;
-	int _telemetryPendingWallContacts = 0;
-	int _telemetryLastGroundContacts = 0;
-	int _telemetryLastWallContacts = 0;
 
 protected:
 	// Initialize animation states and hitboxes
 	void _initStates();
 	// Load or set up state transitions
 	void _initTransitions();
+	Physical::KinematicState2D& _kinematic2DState();
+	const Physical::KinematicState2D& _kinematic2DState() const;
 	bool _isOneWayTile(const Tile* tile) const;
 	bool _isDropThroughRequested();
 	void _startDropThrough();

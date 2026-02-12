@@ -323,6 +323,7 @@
     <ClInclude Include="src\Logger.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Maths.h" />
+    <ClInclude Include="src\Telemetry2D.h" />
     <ClInclude Include="src\maths\Vector2.h" />
     <ClInclude Include="src\maths\Vector3.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
@@ -331,6 +332,7 @@
     <ClInclude Include="src\ObjectManager.h" />
     <ClInclude Include="src\ObjectOperator.h" />
     <ClInclude Include="src\Physical.h" />
+    <ClInclude Include="src\Kinematics2D.h" />
     <ClInclude Include="src\Plane.h" />
     <ClInclude Include="src\PlatformInput.h" />
     <ClInclude Include="src\PlatformKeyboard.h" />
@@ -418,8 +420,11 @@
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\IRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Telemetry2D.cpp" />
     <ClCompile Include="src\ObjectManager.cpp" />
     <ClCompile Include="src\Plane.cpp" />
+    <ClCompile Include="src\Physical.cpp" />
+    <ClCompile Include="src\Kinematics2D.cpp" />
     <ClCompile Include="src\PlatformInput.cpp" />
     <ClCompile Include="src\PlatformKeyboard.cpp" />
     <ClCompile Include="src\Player.cpp" />

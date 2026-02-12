@@ -5,6 +5,7 @@
 #include "TileSet.h"
 #include "TileLayerConfig.h"
 #include "Square.h"
+#include "CollidableGroup.h"
 
 #include <algorithm>
 #include <string>
@@ -59,6 +60,7 @@ public:
 
    void setLayerCollisionMode(TileCollisionMode mode) {
       _layerCollisionMode = mode;
+      applyLayerSurfaceTraitsToCurrentState();
    }
 
    TileCollisionMode getLayerCollisionMode(void) const {
@@ -113,6 +115,65 @@ public:
       return _tileSet->getTileInfo(_tileIndex)._typeName;
    }
 
+private:
+   SurfaceTraits2D buildSurfaceTraitsForLayer(void) const
+   {
+      SurfaceTraits2D traits;
+      traits.upNormal = vector2(0.0f, -1.0f);
+      traits.oneWayEpsilon = 0.5f;
+      traits.maxStepHeight = 8.0f;
+
+      switch (_layerCollisionMode) {
+      case TileCollisionMode::Solid:
+         traits.flags = SurfaceFlags::Solid | SurfaceFlags::Walkable | SurfaceFlags::StepCandidate;
+         break;
+      case TileCollisionMode::OneWay:
+         traits.flags = SurfaceFlags::Solid | SurfaceFlags::Walkable | SurfaceFlags::OneWay;
+         break;
+      case TileCollisionMode::None:
+      default:
+         traits.flags = SurfaceFlags::None;
+         break;
+      }
+
+      return traits;
+   }
+
+   static void applySurfaceTraitsRecursive(Collidable* collidable, const SurfaceTraits2D& traits)
+   {
+      if (!collidable) {
+         return;
+      }
+
+      collidable->setSurfaceTraits(traits);
+      if (collidable->getType() != COL_OBJ_GROUP) {
+         return;
+      }
+
+      CollidableGroup* group = (CollidableGroup*)collidable;
+      for (Collidable* member : *group) {
+         applySurfaceTraitsRecursive(member, traits);
+      }
+   }
+
+   void applyLayerSurfaceTraitsToCurrentState(void)
+   {
+      GameObjectState* state = this->getState();
+      if (!state) {
+         return;
+      }
+
+      Collidable* collidable = state->getCollidable();
+      if (!collidable) {
+         return;
+      }
+
+      const SurfaceTraits2D traits = buildSurfaceTraitsForLayer();
+      applySurfaceTraitsRecursive(collidable, traits);
+   }
+
+public:
+
    void setTileIndex(int tileIndex) 
    {
       _tileIndex = tileIndex;
@@ -159,6 +220,7 @@ public:
 
                if (tileInfo._collisionInfo != NULL) {
                   state->setCollidable(_tileSet->getTileInfo(tileIndex)._collisionInfo);
+                  applyLayerSurfaceTraitsToCurrentState();
                }
                else {
                   state->setCollidable(NULL);

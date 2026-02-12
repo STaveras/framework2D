@@ -5,9 +5,57 @@
 #include "Positionable.h"
 #include "Cyclable.h"
 
+#include <unordered_map>
+#include <unordered_set>
+
+class GameObject;
+struct CollisionContact;
+
 // For actually making physics a thing in this "engine" sometime in the future...
 class Physical : public Positionable, public Cyclable
 {
+public:
+	struct KinematicConfig2D
+	{
+		bool enabled = false;
+		vector2 upAxis = vector2(0.0f, -1.0f);
+		float groundNormalThreshold = 0.2f;
+		float wallNormalThreshold = 0.55f;
+		float oneWayEpsilon = 0.5f;
+		float supportProbeFootAboveTolerance = 2.0f;
+		float supportProbeFootBelowTolerance = 20.0f;
+		int minimumSupportSamples = 1;
+		float maxStepHeight = 8.0f;
+		float dropThroughDefaultDuration = 0.2f;
+	};
+
+	struct KinematicState2D
+	{
+		bool grounded = false;
+		float timeWithoutGroundContact = 0.0f;
+		float pendingTransitionFootCorrection = 0.0f;
+		float dropThroughTimer = 0.0f;
+		bool dropThroughResumePending = false;
+		float dropThroughResumeTopY = 0.0f;
+		bool dropThroughJumpWasDown = false;
+		float fallingLandingDebounceTimer = 0.0f;
+
+		float telemetryPendingWallCorrectionX = 0.0f;
+		float telemetryLastWallCorrectionX = 0.0f;
+		int telemetryPendingGroundContacts = 0;
+		int telemetryPendingWallContacts = 0;
+		int telemetryLastGroundContacts = 0;
+		int telemetryLastWallContacts = 0;
+
+		bool dropThroughRequested = false;
+		float requestedDropThroughDuration = 0.0f;
+		bool dropThroughResumeTopProvided = false;
+
+		GameObject* groundObject = nullptr;
+		std::unordered_set<GameObject*> groundContacts;
+		std::unordered_map<GameObject*, int> groundContactFrameCount;
+	};
+
 protected:
 
 	bool _static;
@@ -17,6 +65,8 @@ protected:
 	float _restitution;
 
 	vector2 _velocity;
+	KinematicConfig2D _kinematicConfig;
+	KinematicState2D _kinematicState;
 
 public:
 	Physical(void) :
@@ -41,6 +91,19 @@ public:
 
 	vector2 getVelocity(void) const { return _velocity; }
 	void setVelocity(vector2 velocity) { _velocity = velocity; }
+
+	void setKinematicConfig2D(const KinematicConfig2D& config) { _kinematicConfig = config; }
+	const KinematicConfig2D& getKinematicConfig2D(void) const { return _kinematicConfig; }
+	KinematicState2D& getKinematicState2D(void) { return _kinematicState; }
+	const KinematicState2D& getKinematicState2D(void) const { return _kinematicState; }
+	bool hasKinematic2D(void) const { return _kinematicConfig.enabled; }
+	void enableKinematic2D(bool enabled = true) { _kinematicConfig.enabled = enabled; }
+
+	void resetKinematicState2D(void);
+	void requestDropThrough(float durationSeconds = 0.0f, float resumeTopY = 0.0f, bool hasResumeTopY = false);
+	void beginKinematicFrame(float dt);
+	void processKinematicContact(const CollisionContact& contact, int horizontalIntent = 0);
+	void finalizeKinematicFrame(float dt);
 
 	virtual void addImpulse(vector2 direction, double force) {
 

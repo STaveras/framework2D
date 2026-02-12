@@ -159,6 +159,9 @@
     <ClInclude Include="src\Maths.h">
       <Filter>Math / Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="src\Telemetry2D.h">
+      <Filter>Debugging</Filter>
+    </ClInclude>
     <ClInclude Include="src\Logger.h">
       <Filter>Debugging</Filter>
     </ClInclude>
@@ -185,6 +188,9 @@
     </ClInclude>
     <ClInclude Include="src\Physical.h">
       <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Kinematics2D.h">
+      <Filter>Physics\Collision</Filter>
     </ClInclude>
     <ClInclude Include="src\Plane.h">
       <Filter>Physics</Filter>
@@ -521,8 +527,17 @@
     <ClCompile Include="src\ObjectManager.cpp">
       <Filter>Objects / Entities</Filter>
     </ClCompile>
+    <ClCompile Include="src\Telemetry2D.cpp">
+      <Filter>Debugging</Filter>
+    </ClCompile>
     <ClCompile Include="src\Plane.cpp">
       <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Physical.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kinematics2D.cpp">
+      <Filter>Physics\Collision</Filter>
     </ClCompile>
     <ClCompile Include="src\PlatformInput.cpp">
       <Filter>Input</Filter>
