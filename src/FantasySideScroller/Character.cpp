@@ -27,6 +27,8 @@
 namespace {
 constexpr float kGroundLossGraceSeconds = 0.06f;
 constexpr float kDropThroughDurationSeconds = 0.20f;
+constexpr float kDropThroughStartNudge = 1.0f;
+constexpr float kDropThroughStartDownwardSpeed = 30.0f;
 constexpr float kSupportSampleInset = 2.0f;
 constexpr float kDefaultMaxSnapPerFrame = 8.0f;
 constexpr float kGroundNormalThreshold = 0.2f;
@@ -401,6 +403,9 @@ void Character::resetForRespawn(void)
 	_timeWithoutGroundContact = 0.0f;
 	_pendingTransitionFootCorrection = 0.0f;
 	_dropThroughTimer = 0.0f;
+	_dropThroughJumpWasDown = false;
+	_dropThroughResumePending = false;
+	_dropThroughResumeTopY = 0.0f;
 	_fallingLandingDebounceTimer = 0.0f;
 	_runBoostActive = false;
 	_longJumpMomentumActive = false;
@@ -421,15 +426,17 @@ bool Character::_isOneWayTile(const Tile* tile) const
 		tile->isOneWay();
 }
 
-bool Character::_isDropThroughRequested() const
+bool Character::_isDropThroughRequested()
 {
 	Game* game = Engine2D::getGame();
 	if (!game) {
+		_dropThroughJumpWasDown = false;
 		return false;
 	}
 
 	Player* player = game->getPlayerWith((GameObject*)this);
 	if (!player || !player->getController()) {
+		_dropThroughJumpWasDown = false;
 		return false;
 	}
 
@@ -437,19 +444,47 @@ bool Character::_isDropThroughRequested() const
 	Action* jumpAction = controller->getAction("JUMP");
 	Action* downAction = controller->getAction("DOWN");
 	if (!jumpAction || !downAction) {
+		_dropThroughJumpWasDown = false;
 		return false;
 	}
 
-	return controller->buttonPressed(jumpAction) && controller->buttonDown(downAction);
+	const bool jumpDown = jumpAction->isActive();
+	const bool jumpPressed = jumpDown && !_dropThroughJumpWasDown;
+	_dropThroughJumpWasDown = jumpDown;
+	return jumpPressed && downAction->isActive();
 }
 
 void Character::_startDropThrough()
 {
 	_dropThroughTimer = kDropThroughDurationSeconds;
+	_dropThroughResumePending = false;
+	float dropThroughResumeTopY = 0.0f;
+	bool hasDropThroughResumeTopY = false;
+
+	auto collectTileBottomY = [&](Tile* tile) {
+		if (!tile || !_isOneWayTile(tile)) {
+			return;
+		}
+
+		Collidable* tileCollidable = tile->getCollidable();
+		vector2 tileMin(0.0f, 0.0f);
+		vector2 tileMax(0.0f, 0.0f);
+		if (!tileCollidable || !tryGetCollidableBounds(tileCollidable, tileMin, tileMax)) {
+			return;
+		}
+
+		if (!hasDropThroughResumeTopY || tileMax.y > dropThroughResumeTopY) {
+			dropThroughResumeTopY = tileMax.y;
+			hasDropThroughResumeTopY = true;
+		}
+	};
+
+	collectTileBottomY(_tile);
 
 	for (auto itr = _groundContacts.begin(); itr != _groundContacts.end();) {
 		Tile* tile = *itr;
 		if (_isOneWayTile(tile)) {
+			collectTileBottomY(tile);
 			itr = _groundContacts.erase(itr);
 			continue;
 		}
@@ -464,7 +499,34 @@ void Character::_startDropThrough()
 		if (_isGroundedLocomotionState(stateName) || !strcmp(stateName, "Attack01") || !strcmp(stateName, "Attack02")) {
 			this->sendInput("IN_AIR");
 		}
+		else if (!strcmp(stateName, "Rising") || !strcmp(stateName, "Jump")) {
+			this->sendInput("JUMP_RELEASED");
+		}
 	}
+
+	vector2 velocity = this->getVelocity();
+	if (velocity.y < kDropThroughStartDownwardSpeed) {
+		velocity.y = kDropThroughStartDownwardSpeed;
+		this->setVelocity(velocity);
+	}
+
+	if (hasDropThroughResumeTopY) {
+		// Keep one-way tiles disabled until our top is fully below the previous
+		// one-way tile body. This avoids side pushback when dropping through.
+		_dropThroughResumeTopY = dropThroughResumeTopY + kOneWayTopApproachEpsilon;
+		_dropThroughResumePending = true;
+	}
+	else {
+		Collidable* selfCollidable = this->getCollidable();
+		vector2 selfMin(0.0f, 0.0f);
+		vector2 selfMax(0.0f, 0.0f);
+		if (selfCollidable && tryGetCollidableBounds(selfCollidable, selfMin, selfMax)) {
+			_dropThroughResumeTopY = selfMax.y + kOneWayTopApproachEpsilon;
+			_dropThroughResumePending = true;
+		}
+	}
+
+	this->setPosition(this->getPosition().x, this->getPosition().y + kDropThroughStartNudge);
 }
 
 bool Character::_canCollideWithOneWayTile(const Tile* tile) const
@@ -474,6 +536,10 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 	}
 
 	if (_dropThroughTimer > 0.0f) {
+		return false;
+	}
+
+	if (_dropThroughResumePending) {
 		return false;
 	}
 
@@ -2188,6 +2254,39 @@ void Character::update(float time)
 		_fallingLandingDebounceTimer = std::max(0.0f, _fallingLandingDebounceTimer - time);
 	}
 
+	if (_dropThroughTimer > 0.0f) {
+		_dropThroughTimer = std::max(0.0f, _dropThroughTimer - time);
+	}
+
+	if (_dropThroughResumePending) {
+		Collidable* selfCollidable = this->getCollidable();
+		vector2 selfMin(0.0f, 0.0f);
+		vector2 selfMax(0.0f, 0.0f);
+		if (!selfCollidable || !tryGetCollidableBounds(selfCollidable, selfMin, selfMax) || selfMin.y >= _dropThroughResumeTopY) {
+			_dropThroughResumePending = false;
+			_dropThroughResumeTopY = 0.0f;
+		}
+	}
+
+	_refreshGroundTile();
+
+	if (_isDropThroughRequested()) {
+		bool groundedOnOneWay = _isOneWayTile(_tile);
+
+		if (!groundedOnOneWay) {
+			for (Tile* contactTile : _groundContacts) {
+				if (_isOneWayTile(contactTile) && _canCollideWithOneWayTile(contactTile)) {
+					groundedOnOneWay = true;
+					break;
+				}
+			}
+		}
+
+		if (groundedOnOneWay) {
+			_startDropThrough();
+		}
+	}
+
 	if (GameObjectState* preUpdateState = this->getState()) {
 		const char* preUpdateStateName = preUpdateState->getName();
 		const bool preUpdateStateHasCollisionShape = preUpdateState->getCollidable() != NULL;
@@ -2267,29 +2366,6 @@ void Character::update(float time)
             }
         }
     }
-
-	if (_dropThroughTimer > 0.0f) {
-		_dropThroughTimer = std::max(0.0f, _dropThroughTimer - time);
-	}
-
-	_refreshGroundTile();
-
-	if (_isDropThroughRequested()) {
-		bool groundedOnOneWay = _isOneWayTile(_tile);
-
-		if (!groundedOnOneWay) {
-			for (Tile* contactTile : _groundContacts) {
-				if (_isOneWayTile(contactTile) && _canCollideWithOneWayTile(contactTile)) {
-					groundedOnOneWay = true;
-					break;
-				}
-			}
-		}
-
-		if (groundedOnOneWay) {
-			_startDropThrough();
-		}
-	}
 
 	float baseSnapPerFrame = kDefaultMaxSnapPerFrame;
 	if (_tile && _tile->getTileSet()) {

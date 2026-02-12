@@ -20,6 +20,9 @@ class Character : public GameObject
 	float _timeWithoutGroundContact = 0.0f;
 	float _pendingTransitionFootCorrection = 0.0f;
 	float _dropThroughTimer = 0.0f;
+	bool _dropThroughJumpWasDown = false;
+	bool _dropThroughResumePending = false;
+	float _dropThroughResumeTopY = 0.0f;
 	float _fallingLandingDebounceTimer = 0.0f;
 	float _stamina = 100.0f;
 	float _maxStamina = 100.0f;
@@ -40,7 +43,7 @@ protected:
 	// Load or set up state transitions
 	void _initTransitions();
 	bool _isOneWayTile(const Tile* tile) const;
-	bool _isDropThroughRequested() const;
+	bool _isDropThroughRequested();
 	void _startDropThrough();
 	bool _canCollideWithOneWayTile(const Tile* tile) const;
 	bool _isGroundContact(const CollisionContact& contact) const;
