@@ -1,0 +1,14 @@
+{ "columns":18,
+ "image":"Props-Rocks.png",
+ "imageheight":336,
+ "imagewidth":288,
+ "margin":0,
+ "name":"rockProps",
+ "spacing":0,
+ "tilecount":378,
+ "tiledversion":"1.11.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.10"
+}

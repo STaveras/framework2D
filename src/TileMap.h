@@ -389,6 +389,14 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 			return fallback;
 		};
 
+		auto readLayerOffset = [&](auto layerElement, const char* preferredFieldName, const char* fallbackFieldName) -> float {
+			const auto preferred = layerElement[preferredFieldName];
+			if (!preferred.is_null()) {
+				return readFloat(preferred, 0.0f);
+			}
+			return readFloat(layerElement[fallbackFieldName], 0.0f);
+		};
+
 		auto normalizeModeString = [](const std::string& value) -> std::string {
 			std::string normalized = value;
 			std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char c) {
@@ -578,8 +586,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.name = layerDescriptor.name;
 						layerConfig.startX = readInt(layer["startx"], 0);
 						layerConfig.startY = readInt(layer["starty"], 0);
-						layerConfig.offsetX = readFloat(layer["x"], 0.0f);
-						layerConfig.offsetY = readFloat(layer["y"], 0.0f);
+						// Tiled stores layer offsets in offsetx/offsety. Keep x/y as a fallback for legacy files.
+						layerConfig.offsetX = readLayerOffset(layer, "offsetx", "x");
+						layerConfig.offsetY = readLayerOffset(layer, "offsety", "y");
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
 						// User-selected default for missing property is non-colliding.
@@ -753,8 +762,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 					objectLayer.visible = layerDescriptor.visible;
 					objectLayer.traversalIndex = layerDescriptor.traversalIndex;
 
-					const float layerOffsetX = readFloat(layer["x"], 0.0f);
-					const float layerOffsetY = readFloat(layer["y"], 0.0f);
+					const float layerOffsetX = readLayerOffset(layer, "offsetx", "x");
+					const float layerOffsetY = readLayerOffset(layer, "offsety", "y");
 					if (!layer["objects"].is_null() && layer["objects"].is_array()) {
 						for (auto object : layer["objects"]) {
 							TileObjectDescriptor descriptor;

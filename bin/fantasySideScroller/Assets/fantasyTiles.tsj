@@ -140,31 +140,6 @@
          "type":"tile"
         }, 
         {
-         "id":5,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"auto_full_tile",
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":16,
-                     "x":0,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            }
-        }, 
-        {
          "id":6,
          "objectgroup":
             {
@@ -215,31 +190,6 @@
              "y":0
             },
          "type":"tile"
-        }, 
-        {
-         "id":8,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"auto_full_tile",
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":16,
-                     "x":0,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            }
         }, 
         {
          "id":12,
@@ -491,7 +441,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -1649,28 +1598,6 @@
         }, 
         {
          "id":160,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"",
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":15,
-                     "x":1,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
