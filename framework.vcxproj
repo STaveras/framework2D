@@ -256,8 +256,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\repos\framework2D\src\CollisionSystem.h" />
-    <ClInclude Include="..\..\source\repos\framework2D\src\Polygon.h" />
     <ClInclude Include="src\Action.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\AnimationManager.h" />
@@ -269,6 +267,7 @@
     <ClInclude Include="src\Collidable.h" />
     <ClInclude Include="src\CollidableGroup.h" />
     <ClInclude Include="src\CollisionEvent.h" />
+    <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
     <ClInclude Include="src\Command.h" />
@@ -284,6 +283,7 @@
     <ClInclude Include="src\FantasySideScroller\LevelManager.h" />
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
     <ClInclude Include="src\FantasySideScroller\Resources.h" />
+    <ClInclude Include="src\InputTapeRecorder.h" />
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\DirectInput.h" />
@@ -335,6 +335,8 @@
     <ClInclude Include="src\PlatformInput.h" />
     <ClInclude Include="src\PlatformKeyboard.h" />
     <ClInclude Include="src\Player.h" />
+    <ClInclude Include="src\Polygon.h" />
+    <ClInclude Include="src\PolygonDecomposition.h" />
     <ClInclude Include="src\Popup.h" />
     <ClInclude Include="src\Positionable.h" />
     <ClInclude Include="src\ProgramStack.h" />
@@ -383,8 +385,6 @@
     <ClInclude Include="src\XAudioFile.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\repos\framework2D\src\CollisionSystem.cpp" />
-    <ClCompile Include="..\..\source\repos\framework2D\src\Polygon.cpp" />
     <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
@@ -392,6 +392,7 @@
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Circle.cpp" />
     <ClCompile Include="src\CollidableGroup.cpp" />
+    <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\Command.cpp" />
     <ClCompile Include="src\Controller.cpp" />
     <ClCompile Include="src\CullObjectOperator.cpp" />
@@ -400,6 +401,7 @@
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp" />
     <ClCompile Include="src\FantasySideScroller\LevelManager.cpp" />
     <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
+    <ClCompile Include="src\InputTapeRecorder.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />
     <ClCompile Include="src\DirectInput.cpp" />
@@ -421,6 +423,8 @@
     <ClCompile Include="src\PlatformInput.cpp" />
     <ClCompile Include="src\PlatformKeyboard.cpp" />
     <ClCompile Include="src\Player.cpp" />
+    <ClCompile Include="src\Polygon.cpp" />
+    <ClCompile Include="src\PolygonDecomposition.cpp" />
     <ClCompile Include="src\ProgramStack.cpp" />
     <ClCompile Include="src\Renderer.cpp" />
     <ClCompile Include="src\RendererDX.cpp" />

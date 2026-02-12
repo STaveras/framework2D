@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
+#include <string>
 
 namespace System
 {
@@ -34,12 +36,46 @@ namespace System
             lowered == "on";
     }
 
+    // Platform-agnostic getenv wrapper.
+    //
+    // On MSVC, getenv() triggers a deprecation warning (C4996). Using _dupenv_s avoids
+    // the warning and is the Microsoft-recommended API.
+    //
+    // NOTE: On MSVC this copies the environment value into `ownedStorage` so the returned
+    // pointer remains valid after we free the temporary buffer.
+    static const char* getenv_platform(const char* name, std::string& ownedStorage)
+    {
+        if (!name || name[0] == '\0') {
+            ownedStorage.clear();
+            return nullptr;
+        }
+
+#if defined(_MSC_VER)
+        char* buffer = nullptr;
+        size_t bufferLen = 0;
+        // _dupenv_s allocates memory that must be freed with free().
+        if (_dupenv_s(&buffer, &bufferLen, name) != 0 || !buffer) {
+            ownedStorage.clear();
+            return nullptr;
+        }
+
+        ownedStorage.assign(buffer);
+        free(buffer);
+        return ownedStorage.c_str();
+#else
+        (void)ownedStorage; // unused on non-MSVC
+        return std::getenv(name);
+#endif
+    }
+
     static bool checkEnvironmentFlag(const char* name)
     {
         if (!name || name[0] == '\0') {
             return false;
         }
-        return isTruthyValue(std::getenv(name));
+
+        std::string owned;
+        return isTruthyValue(getenv_platform(name, owned));
     }
 
     static double checkEnvironmentDouble(const char* name, double fallbackValue)
@@ -48,7 +84,8 @@ namespace System
             return fallbackValue;
         }
 
-        const char* envValue = std::getenv(name);
+        std::string owned;
+        const char* envValue = getenv_platform(name, owned);
         if (!envValue || envValue[0] == '\0') {
             return fallbackValue;
         }
