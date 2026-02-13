@@ -8,9 +8,11 @@
 #include "../Renderer.h"
 
 #include "Resources.h"
+#include "Prop.h"
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <limits>
 #include <string>
 #include <utility>
@@ -63,6 +65,42 @@ float clampValue(float value, float minValue, float maxValue)
 		return maxValue;
 	}
 	return value;
+}
+
+bool isValidSrcRect(const RECT& rect)
+{
+	return rect.left >= 0 &&
+		rect.top >= 0 &&
+		rect.right > rect.left &&
+		rect.bottom > rect.top;
+}
+
+std::string resolveTexturePath(const std::string& texturePath)
+{
+	if (texturePath.empty()) {
+		return texturePath;
+	}
+
+	if (FileSystem::FileExists(texturePath)) {
+		return texturePath;
+	}
+
+	const std::string baseCandidate = BasePath(texturePath.c_str());
+	if (FileSystem::FileExists(baseCandidate)) {
+		return baseCandidate;
+	}
+
+	if (std::filesystem::path(texturePath).is_absolute()) {
+		return texturePath;
+	}
+
+	return baseCandidate;
+}
+
+bool isBackgroundImageLayer(const TileImageLayerDescriptor& imageLayer)
+{
+	return toLowerCopy(imageLayer.name) == "background" ||
+		toLowerCopy(imageLayer.className) == "background";
 }
 }
 
@@ -253,6 +291,97 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 		}
 	}
 
+	for (const MapLayerDescriptor& layer : loadResult.layers) {
+		if (layer.type != "imagelayer" || !isValidLayerIndex(layer.typedIndex, loadResult.imageLayers.size())) {
+			continue;
+		}
+
+		const TileImageLayerDescriptor& imageLayer = loadResult.imageLayers[(size_t)layer.typedIndex];
+		const std::string imagePath = resolveTexturePath(imageLayer.imagePath);
+		if (imagePath.empty()) {
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(
+				buffer,
+				sizeof(buffer),
+				"Skipping imagelayer '%s' because no valid image path was found\n",
+				imageLayer.name.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			continue;
+		}
+
+		if (!_background && isBackgroundImageLayer(imageLayer)) {
+			Image* backgroundImage = new Image(imagePath.c_str());
+			if (!backgroundImage || !backgroundImage->getTexture()) {
+				SAFE_DELETE(backgroundImage);
+#if _DEBUG
+				char buffer[512];
+				sprintf_s(
+					buffer,
+					sizeof(buffer),
+					"Skipping background imagelayer '%s' because texture failed to load: %s\n",
+					imageLayer.name.c_str(),
+					imagePath.c_str());
+				DEBUG_MSG(buffer);
+#endif
+				continue;
+			}
+
+			backgroundImage->center();
+			backgroundImage->setVisibility(imageLayer.visible);
+			backgroundImage->setAlpha(clampValue(imageLayer.opacity, 0.0f, 1.0f));
+			_background = backgroundImage;
+
+			if (IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList()) {
+				if (std::find(baseRenderList->begin(), baseRenderList->end(), _background) == baseRenderList->end()) {
+					baseRenderList->push_back(_background);
+				}
+			}
+			continue;
+		}
+
+		Prop::Descriptor descriptor;
+		descriptor.texturePath = imagePath;
+		descriptor.visible = imageLayer.visible;
+
+		Prop* imageLayerProp = new Prop();
+		std::string initError;
+		if (!imageLayerProp->InitializeFromDescriptor(
+			descriptor,
+			mapOffset + vector2(imageLayer.x, imageLayer.y),
+			&initError)) {
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(
+				buffer,
+				sizeof(buffer),
+				"Skipping imagelayer '%s' due to initialization error: %s\n",
+				imageLayer.name.c_str(),
+				initError.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			delete imageLayerProp;
+			continue;
+		}
+
+		if (Renderable* renderable = imageLayerProp->getRenderable()) {
+			renderable->setAlpha(clampValue(imageLayer.opacity, 0.0f, 1.0f));
+		}
+
+		IRenderer::RenderList* layerRenderList = gameState.getBaseRenderList();
+		if (isValidLayerIndex(layer.traversalIndex, _mapLayerRenderLists.size())) {
+			layerRenderList = _mapLayerRenderLists[(size_t)layer.traversalIndex];
+		}
+
+		gameState.routeObjectToRenderList(imageLayerProp, layerRenderList);
+
+		const std::string safeLayerName = sanitizeLayerName(imageLayer.name);
+		const std::string objectName = "imagelayer_" + std::to_string(imageLayer.id) + "_" + safeLayerName;
+		objectManager.addObject(objectName.c_str(), imageLayerProp);
+		_imageLayerObjects.push_back(imageLayerProp);
+	}
+
 	refreshLevelBounds(loadResult, mapOffset);
 
 	for (const MapLayerDescriptor& layer : loadResult.layers) {
@@ -291,6 +420,12 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 			trigger.polygonPoints = object.polygonPoints;
 			trigger.polylinePoints = object.polylinePoints;
 			trigger.properties = object.properties;
+			trigger.hasResolvedTileVisual = object.hasResolvedTileVisual;
+			trigger.tileTexturePath = object.tileTexturePath;
+			trigger.tileSrcRect = object.tileSrcRect;
+			trigger.tileProperties = object.tileProperties;
+			trigger.objectPropertyMap = object.objectPropertyMap;
+			trigger.mergedPropertyMap = object.mergedPropertyMap;
 
 			_triggerDescriptors.push_back(std::move(trigger));
 		}
@@ -334,6 +469,172 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 	return loadResult;
 }
 
+void LevelManager::_spawnPropsFromTriggers(ObjectManager& objectManager, GameState& gameState)
+{
+	IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList();
+	IRenderer::RenderList* runtimeRenderList = gameState.getDefaultRenderList();
+	if (isValidLayerIndex(_runtimeLayerIndex, _mapLayerRenderLists.size())) {
+		runtimeRenderList = _mapLayerRenderLists[(size_t)_runtimeLayerIndex];
+	}
+	if (!runtimeRenderList) {
+		runtimeRenderList = baseRenderList;
+	}
+
+	IRenderer::RenderList* backRenderList = baseRenderList;
+	if (isValidLayerIndex(_runtimeLayerIndex - 1, _mapLayerRenderLists.size())) {
+		backRenderList = _mapLayerRenderLists[(size_t)(_runtimeLayerIndex - 1)];
+	}
+	if (!backRenderList) {
+		backRenderList = runtimeRenderList;
+	}
+
+	IRenderer::RenderList* frontRenderList = runtimeRenderList;
+	if (isValidLayerIndex(_runtimeLayerIndex + 1, _mapLayerRenderLists.size())) {
+		frontRenderList = _mapLayerRenderLists[(size_t)(_runtimeLayerIndex + 1)];
+	}
+
+	int generatedNameCounter = 0;
+	for (const LevelTriggerDescriptor& trigger : _triggerDescriptors) {
+		std::unordered_map<std::string, std::string>::const_iterator objectPropJsonItr = trigger.objectPropertyMap.find("prop_json");
+		if (objectPropJsonItr == trigger.objectPropertyMap.end()) {
+			continue;
+		}
+
+		Prop::Descriptor descriptor;
+		if (trigger.hasResolvedTileVisual) {
+			descriptor.texturePath = trigger.tileTexturePath;
+			descriptor.srcRect = trigger.tileSrcRect;
+		}
+		if (isValidSrcRect(descriptor.srcRect)) {
+			descriptor.pivot = vector2(
+				(float)(descriptor.srcRect.right - descriptor.srcRect.left) * 0.5f,
+				(float)(descriptor.srcRect.bottom - descriptor.srcRect.top));
+		}
+
+		bool hasPivotOverride = false;
+
+		std::unordered_map<std::string, std::string>::const_iterator tilePropJsonItr = trigger.tileProperties.find("prop_json");
+		if (tilePropJsonItr != trigger.tileProperties.end() && !tilePropJsonItr->second.empty()) {
+			Prop::DescriptorPatch tilePatch;
+			std::string tileParseError;
+			if (!Prop::ParseDescriptorJSON(tilePropJsonItr->second, tilePatch, &tileParseError)) {
+#if _DEBUG
+				char buffer[512];
+				sprintf_s(buffer, sizeof(buffer),
+					"Skipping prop object %d due to invalid tile prop_json: %s\n",
+					trigger.objectId, tileParseError.c_str());
+				DEBUG_MSG(buffer);
+#endif
+				continue;
+			}
+
+			Prop::MergeDescriptor(descriptor, tilePatch);
+			hasPivotOverride = hasPivotOverride || tilePatch.hasPivot;
+		}
+
+		Prop::DescriptorPatch objectPatch;
+		std::string objectParseError;
+		if (!Prop::ParseDescriptorJSON(objectPropJsonItr->second, objectPatch, &objectParseError)) {
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(buffer, sizeof(buffer),
+				"Skipping prop object %d due to invalid object prop_json: %s\n",
+				trigger.objectId, objectParseError.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			continue;
+		}
+		Prop::MergeDescriptor(descriptor, objectPatch);
+		hasPivotOverride = hasPivotOverride || objectPatch.hasPivot;
+
+		if (descriptor.texturePath.empty() && trigger.hasResolvedTileVisual) {
+			descriptor.texturePath = trigger.tileTexturePath;
+		}
+		if (!isValidSrcRect(descriptor.srcRect) && trigger.hasResolvedTileVisual) {
+			descriptor.srcRect = trigger.tileSrcRect;
+		}
+
+		if (!hasPivotOverride && isValidSrcRect(descriptor.srcRect)) {
+			descriptor.pivot = vector2(
+				(float)(descriptor.srcRect.right - descriptor.srcRect.left) * 0.5f,
+				(float)(descriptor.srcRect.bottom - descriptor.srcRect.top));
+		}
+
+		descriptor.texturePath = resolveTexturePath(descriptor.texturePath);
+		if (descriptor.texturePath.empty()) {
+#if _DEBUG
+			char buffer[256];
+			sprintf_s(buffer, sizeof(buffer),
+				"Skipping prop object %d because texture path is empty after resolution\n",
+				trigger.objectId);
+			DEBUG_MSG(buffer);
+#endif
+			continue;
+		}
+
+		Prop* prop = new Prop();
+		std::string initError;
+		if (!prop->InitializeFromDescriptor(descriptor, trigger.position, &initError)) {
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(buffer, sizeof(buffer),
+				"Skipping prop object %d due to initialization error: %s\n",
+				trigger.objectId, initError.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			delete prop;
+			continue;
+		}
+
+		IRenderer::RenderList* targetRenderList = backRenderList;
+		switch (descriptor.renderLayer) {
+		case Prop::RenderLayerHint::Runtime:
+			targetRenderList = runtimeRenderList;
+			break;
+		case Prop::RenderLayerHint::Front:
+			targetRenderList = frontRenderList;
+			break;
+		case Prop::RenderLayerHint::Back:
+		default:
+			targetRenderList = backRenderList;
+			break;
+		}
+
+		gameState.routeObjectToRenderList(prop, targetRenderList);
+
+		const int objectId = (trigger.objectId >= 0) ? trigger.objectId : generatedNameCounter++;
+		const std::string objectName = "prop_" + std::to_string(objectId);
+		objectManager.addObject(objectName.c_str(), prop);
+		_props.push_back(prop);
+	}
+}
+
+void LevelManager::_clearProps(ObjectManager& objectManager, GameState& gameState)
+{
+	for (Prop* prop : _props) {
+		if (!prop) {
+			continue;
+		}
+		gameState.clearObjectRenderRoute(prop);
+		objectManager.removeObject(prop);
+		delete prop;
+	}
+	_props.clear();
+}
+
+void LevelManager::_clearImageLayers(ObjectManager& objectManager, GameState& gameState)
+{
+	for (GameObject* imageLayerObject : _imageLayerObjects) {
+		if (!imageLayerObject) {
+			continue;
+		}
+		gameState.clearObjectRenderRoute(imageLayerObject);
+		objectManager.removeObject(imageLayerObject);
+		delete imageLayerObject;
+	}
+	_imageLayerObjects.clear();
+}
+
 void LevelManager::initialize(const char* mapFileName,
 	const vector2& mapOffset,
 	const char* backgroundFileName,
@@ -350,17 +651,13 @@ void LevelManager::initialize(const char* mapFileName,
 		_pixel = new Image(BasePath("pixel.bmp").c_str());
 	}
 
-	if (!_background && backgroundFileName && backgroundFileName[0] != '\0') {
-		_background = new Image(BasePath(backgroundFileName).c_str());
-		_background->center();
-#ifdef _DEBUG
-		_background->setVisibility(false);
-#endif
-	}
-
-	if (IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList()) {
-		if (_background && std::find(baseRenderList->begin(), baseRenderList->end(), _background) == baseRenderList->end()) {
-			baseRenderList->push_back(_background);
+	if (_tileMaps.empty()) {
+		_clearImageLayers(objectManager, gameState);
+		if (_background) {
+			if (IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList()) {
+				baseRenderList->remove(_background);
+			}
+			SAFE_DELETE(_background);
 		}
 	}
 
@@ -375,6 +672,25 @@ void LevelManager::initialize(const char* mapFileName,
 		}
 		gameState.setDefaultRenderList(runtimeRenderList);
 	}
+
+	if (!_background && backgroundFileName && backgroundFileName[0] != '\0') {
+		_background = new Image(BasePath(backgroundFileName).c_str());
+		if (_background) {
+			_background->center();
+#ifdef _DEBUG
+			_background->setVisibility(false);
+#endif
+		}
+	}
+
+	if (IRenderer::RenderList* baseRenderList = gameState.getBaseRenderList()) {
+		if (_background && std::find(baseRenderList->begin(), baseRenderList->end(), _background) == baseRenderList->end()) {
+			baseRenderList->push_back(_background);
+		}
+	}
+
+	_clearProps(objectManager, gameState);
+	_spawnPropsFromTriggers(objectManager, gameState);
 
 	if (objectManager.getObjectName(_camera).empty()) {
 		objectManager.addObject("Camera", _camera);
@@ -412,6 +728,8 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 	_cameraPlayerAttach.setEnabled(false);
 	_cameraPlayerAttach.setSource(NULL);
 	_cameraPlayerAttach.follow(NULL, true, true);
+	_clearProps(objectManager, gameState);
+	_clearImageLayers(objectManager, gameState);
 
 	for (TileMap* tileMap : _tileMaps)
 	{

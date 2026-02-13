@@ -152,6 +152,7 @@ void PlayState::onEnter(State* prev)
 	_player->setGameObject(_playableCharacter);
 
 	_levelManager.attachCameraTo(_objectManager.getGameObject("Hero"), _objectManager, true, true);
+	
 	_initHUD();
 }
 
