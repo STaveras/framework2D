@@ -15,6 +15,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -51,6 +52,24 @@ struct TileObjectDescriptor
 	std::vector<vector2> polygonPoints;
 	std::vector<vector2> polylinePoints;
 	std::vector<TileMapPropertyDescriptor> properties;
+	bool hasResolvedTileVisual = false;
+	std::string tileTexturePath;
+	RECT tileSrcRect{ 0, 0, 0, 0 };
+	std::unordered_map<std::string, std::string> tileProperties;
+	std::unordered_map<std::string, std::string> objectPropertyMap;
+	std::unordered_map<std::string, std::string> mergedPropertyMap;
+
+	const std::string* findProperty(const std::string& name) const {
+		std::unordered_map<std::string, std::string>::const_iterator itr = mergedPropertyMap.find(name);
+		if (itr == mergedPropertyMap.end()) {
+			return NULL;
+		}
+		return &(itr->second);
+	}
+
+	bool hasObjectProperty(const std::string& name) const {
+		return objectPropertyMap.find(name) != objectPropertyMap.end();
+	}
 };
 
 struct TileObjectLayerDescriptor
@@ -62,11 +81,29 @@ struct TileObjectLayerDescriptor
 	std::vector<TileObjectDescriptor> objects;
 };
 
+struct TileImageLayerDescriptor
+{
+	int id = -1;
+	std::string name;
+	std::string className;
+	bool visible = true;
+	int traversalIndex = -1;
+	std::string imagePath;
+	float x = 0.0f;
+	float y = 0.0f;
+	float opacity = 1.0f;
+	bool repeatX = false;
+	bool repeatY = false;
+	float parallaxX = 1.0f;
+	float parallaxY = 1.0f;
+};
+
 struct MapLayerDescriptor
 {
 	int id = -1;
 	std::string name;
 	std::string type;
+	std::string className;
 	bool visible = true;
 	int traversalIndex = -1;
 	int typedIndex = -1;
@@ -81,6 +118,7 @@ struct TileMapLoadResult
 	std::vector<MapLayerDescriptor> layers;
 	std::vector<TileMap*> tileMaps;
 	std::vector<TileObjectLayerDescriptor> objectLayers;
+	std::vector<TileImageLayerDescriptor> imageLayers;
 };
 
 class TileMap : public Tile
@@ -571,6 +609,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 				MapLayerDescriptor layerDescriptor;
 				layerDescriptor.id = readInt(layer["id"], -1);
 				layerDescriptor.name = layer["name"].is_string() ? std::string((std::string_view)layer["name"].get_string()) : "";
+				layerDescriptor.className = layer["class"].is_string() ? std::string((std::string_view)layer["class"].get_string()) : "";
 				layerDescriptor.visible = readBool(layer["visible"], true);
 				layerDescriptor.traversalIndex = traversalIndex++;
 
@@ -782,11 +821,32 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 							descriptor.isEllipse = readBool(object["ellipse"], false);
 							descriptor.typeName = resolveClassOrType(object["class"], object["type"]);
 
-							if (descriptor.typeName.empty() && descriptor.gid > 0) {
-								TileSet* resolvedTileSet = nullptr;
-								int resolvedTileIndex = -1;
-								if (resolveTileFromGid(descriptor.gid, resolvedTileSet, resolvedTileIndex) && resolvedTileSet && resolvedTileIndex >= 0) {
-									descriptor.typeName = resolvedTileSet->getTileInfo(resolvedTileIndex)._typeName;
+							TileSet* resolvedTileSet = nullptr;
+							int resolvedTileIndex = -1;
+							if (descriptor.gid > 0 &&
+								resolveTileFromGid(descriptor.gid, resolvedTileSet, resolvedTileIndex) &&
+								resolvedTileSet &&
+								resolvedTileIndex >= 0) {
+								const TileSet::TileInfo resolvedTileInfo = resolvedTileSet->getTileInfo(resolvedTileIndex);
+								if (descriptor.typeName.empty()) {
+									descriptor.typeName = resolvedTileInfo._typeName;
+								}
+
+								descriptor.tileProperties = resolvedTileInfo._properties;
+								if (Texture* tileSheet = resolvedTileSet->getTileSheet()) {
+									const char* filename = tileSheet->getFilename();
+									if (filename && filename[0] != '\0') {
+										descriptor.tileTexturePath = filename;
+										const int tileSize = (int)resolvedTileSet->getTileSize();
+										int columns = (int)resolvedTileSet->getTileCounts().x;
+										if (columns <= 0) {
+											columns = 1;
+										}
+										const int srcX = (resolvedTileIndex % columns) * tileSize;
+										const int srcY = (resolvedTileIndex / columns) * tileSize;
+										descriptor.tileSrcRect = RECT{ srcX, srcY, srcX + tileSize, srcY + tileSize };
+										descriptor.hasResolvedTileVisual = true;
+									}
 								}
 							}
 
@@ -819,7 +879,13 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									propertyDescriptor.type = property["type"].is_string() ? std::string((std::string_view)property["type"].get_string()) : "";
 									propertyDescriptor.value = propertyValueToString(property["value"]);
 									descriptor.properties.push_back(propertyDescriptor);
+									descriptor.objectPropertyMap[propertyDescriptor.name] = propertyDescriptor.value;
 								}
+							}
+
+							descriptor.mergedPropertyMap = descriptor.tileProperties;
+							for (const auto& objectProperty : descriptor.objectPropertyMap) {
+								descriptor.mergedPropertyMap[objectProperty.first] = objectProperty.second;
 							}
 
 							objectLayer.objects.push_back(descriptor);
@@ -828,6 +894,29 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 
 					layerDescriptor.typedIndex = (int)result.objectLayers.size();
 					result.objectLayers.push_back(std::move(objectLayer));
+				}
+				else if (layerType == "imagelayer") {
+					TileImageLayerDescriptor imageLayer;
+					imageLayer.id = layerDescriptor.id;
+					imageLayer.name = layerDescriptor.name;
+					imageLayer.className = layerDescriptor.className;
+					imageLayer.visible = layerDescriptor.visible;
+					imageLayer.traversalIndex = layerDescriptor.traversalIndex;
+					imageLayer.x = readLayerOffset(layer, "offsetx", "x");
+					imageLayer.y = readLayerOffset(layer, "offsety", "y");
+					imageLayer.opacity = readFloat(layer["opacity"], 1.0f);
+					imageLayer.repeatX = readBool(layer["repeatx"], false);
+					imageLayer.repeatY = readBool(layer["repeaty"], false);
+					imageLayer.parallaxX = readFloat(layer["parallaxx"], 1.0f);
+					imageLayer.parallaxY = readFloat(layer["parallaxy"], 1.0f);
+
+					if (layer["image"].is_string()) {
+						const std::string imagePath = std::string((std::string_view)layer["image"].get_string());
+						imageLayer.imagePath = FileSystem::Path::ResolveFromBaseOrParent(imagePath, mapDirectory);
+					}
+
+					layerDescriptor.typedIndex = (int)result.imageLayers.size();
+					result.imageLayers.push_back(std::move(imageLayer));
 				}
 
 				result.layers.push_back(std::move(layerDescriptor));

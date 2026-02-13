@@ -6,6 +6,7 @@
 
 #include <map>
 #include <string>
+#include <unordered_map>
 
 #ifndef _TILESET_H_
 #define _TILESET_H_
@@ -28,6 +29,7 @@ public:
    struct TileInfo {
       std::string _typeName;
       Collidable* _collisionInfo = NULL;
+      std::unordered_map<std::string, std::string> _properties;
    };
 
    //static Factory<TileSet> _globalTileSets;
@@ -53,6 +55,14 @@ public:
 
    TileInfo getTileInfo(int tileIndex) {
       return _tileInfo[tileIndex];
+   }
+
+   const std::unordered_map<std::string, std::string>* getTileProperties(int tileIndex) const {
+      std::map<int, TileInfo>::const_iterator itr = _tileInfo.find(tileIndex);
+      if (itr == _tileInfo.end()) {
+         return NULL;
+      }
+      return &(itr->second._properties);
    }
 
    static TileSet* loadFromFile(const char* fileName);

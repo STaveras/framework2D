@@ -10,6 +10,7 @@
 #include "Square.h"
 
 #include <vector>
+#include <string>
 
 // I usually hate globals, but this one will only be accessible to TileSets
 // Eventually this might grow too large if we're loading many tilesets and not clearing this
@@ -90,6 +91,46 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 				return "";
 			};
 
+			auto propertyValueToString = [](simdjson::dom::element element) -> std::string {
+				if (element.is_null()) {
+					return "";
+				}
+				if (element.is_string()) {
+					return std::string((std::string_view)element.get_string());
+				}
+				if (element.is_bool()) {
+					return (bool)element.get_bool() ? "true" : "false";
+				}
+				if (element.is_int64()) {
+					return std::to_string((int64_t)element.get_int64());
+				}
+				if (element.is_uint64()) {
+					return std::to_string((uint64_t)element.get_uint64());
+				}
+				if (element.is_double()) {
+					char buffer[64];
+					sprintf_s(buffer, sizeof(buffer), "%g", (double)element.get_double());
+					return std::string(buffer);
+				}
+				return "";
+			};
+
+			auto parseTileProperties = [&](simdjson::dom::element tileElement) -> std::unordered_map<std::string, std::string> {
+				std::unordered_map<std::string, std::string> parsedProperties;
+				if (tileElement["properties"].is_null() || !tileElement["properties"].is_array()) {
+					return parsedProperties;
+				}
+
+				for (auto property : tileElement["properties"]) {
+					if (!property["name"].is_string()) {
+						continue;
+					}
+					const std::string name = std::string((std::string_view)property["name"].get_string());
+					parsedProperties[name] = propertyValueToString(property["value"]);
+				}
+				return parsedProperties;
+			};
+
 			int explicitColliderCount = 0;
 			int missingColliderCount = 0;
 			int decomposedConcaveCount = 0;
@@ -111,6 +152,7 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 					TileSet::TileInfo tileInfo;
 					tileInfo._typeName = resolveClassOrType(tile);
+					tileInfo._properties = parseTileProperties(tile);
 
 					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
 						simdjson::dom::element objectgroup = tile["objectgroup"];
@@ -223,7 +265,7 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 						}
 					}
 
-					if (!tileInfo._typeName.empty() || tileInfo._collisionInfo != NULL) {
+					if (!tileInfo._typeName.empty() || tileInfo._collisionInfo != NULL || !tileInfo._properties.empty()) {
 						tileSet->_tileInfo[(int)id] = tileInfo;
 					}
 				}

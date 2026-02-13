@@ -1,4 +1,5 @@
-{ "compressionlevel":-1,
+{ "backgroundcolor":"#93e3e4",
+ "compressionlevel":-1,
  "height":19,
  "infinite":true,
  "layers":[
@@ -11,6 +12,20 @@
          "name":"Background",
          "offsetx":256,
          "offsety":0,
+         "opacity":1,
+         "type":"imagelayer",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "id":23,
+         "image":"Trees\/Green-Tree.png",
+         "imageheight":1200,
+         "imagewidth":1344,
+         "name":"GreenTree",
+         "offsetx":336,
+         "offsety":32,
          "opacity":1,
          "type":"imagelayer",
          "visible":true,
@@ -896,7 +911,8 @@
          "visible":true,
          "x":0,
          "y":0
-        }, 
+        },
+    
         {
          "chunks":[
                 {
@@ -991,17 +1007,23 @@
          "id":12,
          "name":"bushes",
          "opacity":1,
-         "startx":0,
+         "startx":16,
          "starty":0,
          "type":"tilelayer",
          "visible":true,
-         "width":48,
+         "width":32,
          "x":0,
          "y":0
         }],
- "nextlayerid":21,
+ "nextlayerid":24,
  "nextobjectid":23,
  "orientation":"orthogonal",
+ "properties":[
+        {
+         "name":"background",
+         "type":"string",
+         "value":"image"
+        }],
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
  "tileheight":16,

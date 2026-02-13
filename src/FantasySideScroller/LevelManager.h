@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class Camera;
@@ -15,6 +16,7 @@ class GameState;
 class GameObject;
 class ObjectManager;
 class TileSet;
+class Prop;
 
 struct LevelTriggerDescriptor
 {
@@ -35,7 +37,31 @@ struct LevelTriggerDescriptor
 	std::vector<vector2> polygonPoints;
 	std::vector<vector2> polylinePoints;
 	std::vector<TileMapPropertyDescriptor> properties;
+	bool hasResolvedTileVisual = false;
+	std::string tileTexturePath;
+	RECT tileSrcRect{ 0, 0, 0, 0 };
+	std::unordered_map<std::string, std::string> tileProperties;
+	std::unordered_map<std::string, std::string> objectPropertyMap;
+	std::unordered_map<std::string, std::string> mergedPropertyMap;
+
+	const std::string* findMergedProperty(const std::string& name) const {
+		std::unordered_map<std::string, std::string>::const_iterator itr = mergedPropertyMap.find(name);
+		if (itr == mergedPropertyMap.end()) {
+			return NULL;
+		}
+		return &(itr->second);
+	}
+
+	const std::string* findObjectProperty(const std::string& name) const {
+		std::unordered_map<std::string, std::string>::const_iterator itr = objectPropertyMap.find(name);
+		if (itr == objectPropertyMap.end()) {
+			return NULL;
+		}
+		return &(itr->second);
+	}
 };
+
+// Will at some point become the scene manager or whatever, but for now just handles loading a tile map and providing access to the camera and spawn point.
 
 class LevelManager
 {
@@ -53,10 +79,15 @@ class LevelManager
 	vector2 _levelBoundsMax;
 	int _runtimeLayerIndex = -1;
 	std::vector<LevelTriggerDescriptor> _triggerDescriptors;
+	std::vector<Prop*> _props;
+	std::vector<GameObject*> _imageLayerObjects;
 	AttachObjectsOperator _cameraPlayerAttach;
 	bool _cameraAttachOperatorRegistered = false;
 
 	TileMapLoadResult loadMapDataIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, GameState& gameState, const vector2& mapOffset);
+	void _spawnPropsFromTriggers(ObjectManager& objectManager, GameState& gameState);
+	void _clearProps(ObjectManager& objectManager, GameState& gameState);
+	void _clearImageLayers(ObjectManager& objectManager, GameState& gameState);
 	void clearCachedMapMetadata(void);
 	void refreshLevelBounds(const TileMapLoadResult& loadResult, const vector2& mapOffset);
 	void clampCameraToLevelBounds(void);
