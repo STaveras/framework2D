@@ -8,6 +8,7 @@
 #include "RendererDX.h"
 #include "Animation.h"
 #include "Camera.h"
+#include "Font.h"
 #include "Frame.h"
 #include "Renderable.h"
 #include "Sprite.h"
@@ -22,6 +23,7 @@
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
 
+#include <algorithm>
 #include <cmath>
 
 namespace {
@@ -56,6 +58,25 @@ D3DXVECTOR2 worldToScreen(const Camera* camera, const vector2& worldPosition)
 		(legacyTranslated.x * sinTheta) + (legacyTranslated.y * cosTheta));
 	return D3DXVECTOR2(legacyRotated.x * zoom, legacyRotated.y * zoom);
 }
+
+LPDIRECT3DTEXTURE9 getFontPixelTexture(LPDIRECT3DDEVICE9 device)
+{
+	static LPDIRECT3DTEXTURE9 s_texture = NULL;
+	if (!s_texture && device)
+	{
+		if (SUCCEEDED(device->CreateTexture(1, 1, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &s_texture, NULL)))
+		{
+			D3DLOCKED_RECT lockedRect;
+			if (SUCCEEDED(s_texture->LockRect(0, &lockedRect, NULL, 0)))
+			{
+				*reinterpret_cast<DWORD*>(lockedRect.pBits) = 0xFFFFFFFF;
+				s_texture->UnlockRect(0);
+			}
+		}
+	}
+	return s_texture;
+}
+
 }
 
 RendererDX::RendererDX(void) : 
@@ -137,11 +158,20 @@ D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 }
 
 // Why do we have offset? Center is already an offset...
-void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue)
+void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace)
 {
-	vector2 worldPosition = image->getPosition() + vector2(offset.x, offset.y);
-	D3DXVECTOR2 screenPosition = worldToScreen(m_pCamera, worldPosition);
-	const float cameraZoom = (m_pCamera && m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+	vector2 resolvedPosition = image->getPosition() + vector2(offset.x, offset.y);
+	D3DXVECTOR2 screenPosition;
+	float cameraZoom = 1.0f;
+	if (screenSpace) {
+		screenPosition = D3DXVECTOR2(resolvedPosition.x, resolvedPosition.y);
+	}
+	else {
+		screenPosition = worldToScreen(m_pCamera, resolvedPosition);
+		if (m_pCamera && m_pCamera->getZoom() > 0.0f) {
+			cameraZoom = m_pCamera->getZoom();
+		}
+	}
 	const D3DXVECTOR2 spriteScale = image->getScale();
 
 	D3DXVECTOR3 position;
@@ -175,10 +205,90 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 		tint._color);
 }
 
-// void RendererDX::_DrawFont(Font* pFont)
-//{
+void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace)
+{
+	if (!font || !m_pD3DSprite || !m_pD3DDevice) {
+		return;
+	}
 
-//}
+	LPDIRECT3DTEXTURE9 pixelTexture = getFontPixelTexture(m_pD3DDevice);
+	if (!pixelTexture) {
+		return;
+	}
+
+	vector2 resolvedPosition = font->getPosition() + vector2(offset.x, offset.y);
+	D3DXVECTOR2 screenPosition;
+	float cameraZoom = 1.0f;
+	if (screenSpace) {
+		screenPosition = D3DXVECTOR2(resolvedPosition.x, resolvedPosition.y);
+	}
+	else {
+		screenPosition = worldToScreen(m_pCamera, resolvedPosition);
+		if (m_pCamera && m_pCamera->getZoom() > 0.0f) {
+			cameraZoom = m_pCamera->getZoom();
+		}
+	}
+	const float pixelWidth = font->getScale().x * cameraZoom;
+	const float pixelHeight = font->getScale().y * cameraZoom;
+	const vector2 center = font->getCenter();
+	const std::string& text = font->getText();
+
+	if (pixelWidth <= 0.0f || pixelHeight <= 0.0f || text.empty()) {
+		return;
+	}
+
+	screenPosition.x -= center.x * pixelWidth;
+	screenPosition.y -= center.y * pixelHeight;
+
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+
+	D3DXMATRIX originalTransform;
+	m_pD3DSprite->GetTransform(&originalTransform);
+
+	float cursorX = screenPosition.x;
+	float cursorY = screenPosition.y;
+	const float lineHeight = std::max(font->getHeight(), 1) * pixelHeight;
+
+	for (char c : text)
+	{
+		if (c == '\n')
+		{
+			cursorX = screenPosition.x;
+			cursorY += lineHeight + pixelHeight;
+			continue;
+		}
+
+		const std::vector<int>& bitmap = font->getBitmap(c);
+		const int glyphWidth = std::max(font->getWidth(c), 1);
+
+		for (int row = 0; row < static_cast<int>(bitmap.size()); ++row)
+		{
+			const int rowBits = bitmap[row];
+            for (int column = 0; column < glyphWidth; ++column)
+            {
+                const int bitIndex = column;
+                if (((rowBits >> bitIndex) & 1) == 0) {
+                    continue;
+                }
+
+				D3DXVECTOR2 scale(pixelWidth, pixelHeight);
+				D3DXVECTOR2 translation(cursorX + (column * pixelWidth), cursorY + (row * pixelHeight));
+				D3DXVECTOR3 spritePosition(0.0f, 0.0f, zValue);
+				D3DXMATRIX transform;
+				D3DXMatrixTransformation2D(&transform, NULL, 0.0f, &scale, NULL, 0.0f, &translation);
+				m_pD3DSprite->SetTransform(&transform);
+				m_pD3DSprite->Draw(pixelTexture, NULL, NULL, &spritePosition, tint._color);
+			}
+		}
+
+		cursorX += (glyphWidth + 1) * pixelWidth;
+	}
+
+	m_pD3DSprite->SetTransform(&originalTransform);
+}
 
 ITexture* RendererDX::createTexture(const char* szFilename, Color colorKey)
 {
@@ -317,39 +427,54 @@ void RendererDX::render(void)
 
 			if (!_RenderLists.empty())
 			{
-				for (unsigned int i = 0; i < _RenderLists.size(); i++)
+				const auto drawRenderLists = [this](bool screenSpace)
 				{
-					for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++)
+					for (unsigned int i = 0; i < _RenderLists.size(); i++)
 					{
-						// We should be making *absolutely* sure that nothing that makes it here is NULL to begin with
-						if ((*o))
+						RenderList* renderList = _RenderLists.at(i);
+						if (!renderList || renderList->screenSpace != screenSpace) {
+							continue;
+						}
+
+						for (RenderList::iterator o = renderList->begin(); o != renderList->end(); o++)
 						{
-							if ((*o)->isVisible())
+							if (!(*o) || !(*o)->isVisible()) {
+								continue;
+							}
+
+							switch ((*o)->getRenderableType())
 							{
-								switch ((*o)->getRenderableType())
-								{
-								case RENDERABLE_TYPE_SPRITE:
-								{
-									Image* image = (Image*)(*o);
-									_drawImage(image, image->getTintColor(),
-										image->getOffset());
+							case RENDERABLE_TYPE_SPRITE:
+							{
+								Image* image = (Image*)(*o);
+								_drawImage(image, image->getTintColor(), image->getOffset(), 0.0f, screenSpace);
+							}
+							break;
+							case RENDERABLE_TYPE_ANIMATION:
+							{
+								Animation* animation = (Animation*)(*o);
+								if (animation->getFrameCount()) {
+									_drawImage(animation->getCurrentFrame()->getSprite(),
+										animation->getCurrentFrame()->getSprite()->getTintColor(),
+										animation->getOffset(), 0.0f, screenSpace);
 								}
+							}
+							break;
+							case RENDERABLE_TYPE_FONT:
+							{
+								Font* font = (Font*)(*o);
+								_drawFont(font, font->getTintColor(), font->getOffset(), 0.0f, screenSpace);
+							}
+							break;
+							default:
 								break;
-								case RENDERABLE_TYPE_ANIMATION:
-								{
-									Animation* animation = (Animation*)(*o);
-									if (animation->getFrameCount()) {
-										_drawImage(animation->getCurrentFrame()->getSprite(),
-											animation->getCurrentFrame()->getSprite()->getTintColor(),
-											animation->getOffset());
-									}
-								}
-								break;
-								}
 							}
 						}
 					}
-				}
+				};
+
+				drawRenderLists(false);
+				drawRenderLists(true);
 			}
 
 			m_pD3DSprite->End();

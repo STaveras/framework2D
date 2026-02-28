@@ -17,10 +17,14 @@ class Camera;
 typedef class IRenderer
 {
 public:
-	typedef struct RenderList : public std::list<class Renderable *>
-	{
-		// TODO: Add other state information
-	} RenderList;
+typedef struct RenderList : public std::list<class Renderable *>
+{
+    bool screenSpace;
+
+    RenderList()
+        : screenSpace(false)
+    {}
+} RenderList;
 
 	// Renderer API types
 	// This is used to identify the type of renderer being used
@@ -110,7 +114,13 @@ public:
 	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList); }
 	void popRenderList(void) { _RenderLists.erase(_RenderLists.end()); }
 
-	RenderList *createRenderList(void) { return _RenderLists.create(); }
+    RenderList *createRenderList(bool screenSpace = false)
+    {
+        RenderList *renderList = _RenderLists.create();
+        if (renderList)
+            renderList->screenSpace = screenSpace;
+        return renderList;
+    }
 	void destroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
 
 	virtual void initialize(void) = 0;
