@@ -325,7 +325,8 @@ void RendererGL::_drawFont(Font* font, Color tint, vector2 offset)
 		}
 
 		const std::vector<int>& bitmap = font->getBitmap(c);
-		const int glyphWidth = std::max(font->getWidth(c), 1);
+		const int glyphWidth = std::max(font->getWidth(c), 0);
+		const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
 		for (int rowIndex = 0; rowIndex < static_cast<int>(bitmap.size()); ++rowIndex) {
 			const int rowBits = bitmap[rowIndex];
             for (int column = 0; column < glyphWidth; ++column) {
@@ -346,7 +347,7 @@ void RendererGL::_drawFont(Font* font, Color tint, vector2 offset)
 			}
 		}
 
-		penX += static_cast<float>(glyphWidth + 1);
+		penX += static_cast<float>(glyphAdvance + 1);
 	}
 	glEnd();
 
