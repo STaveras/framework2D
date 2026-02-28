@@ -262,7 +262,8 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 		}
 
 		const std::vector<int>& bitmap = font->getBitmap(c);
-		const int glyphWidth = std::max(font->getWidth(c), 1);
+		const int glyphWidth = std::max(font->getWidth(c), 0);
+		const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
 
 		for (int row = 0; row < static_cast<int>(bitmap.size()); ++row)
 		{
@@ -284,7 +285,7 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 			}
 		}
 
-		cursorX += (glyphWidth + 1) * pixelWidth;
+		cursorX += (glyphAdvance + 1) * pixelWidth;
 	}
 
 	m_pD3DSprite->SetTransform(&originalTransform);
