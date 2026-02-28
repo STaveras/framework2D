@@ -713,7 +713,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 		}
 		else {
 			dynamicObjects.push_back(object);
-			const float displacement = (currentPosition - previousItr->second).length();
+			const float displacement = (currentPosition - previousItr->second).length(); // TODO: This is always going to return 2 or 3...
 			maxDisplacement = std::max(maxDisplacement, displacement);
 		}
 	}

@@ -7,6 +7,7 @@
 #include "LevelManager.h"
 
 class Character;
+class Font;
 
 class PlayState : public GameState
 {
@@ -21,6 +22,7 @@ class PlayState : public GameState
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
+	Font* _helloWorldText = NULL;
 
 public:
 	PlayState(void);

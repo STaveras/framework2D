@@ -6,12 +6,14 @@
 
 class Sprite;
 class Animation;
+class Font;
 
 class RendererGL : public IRenderer
 {
 	GLFWwindow* _window = nullptr;
 
 	void _drawImage(Sprite* sprite, Color tint, vector2 offset);
+	void _drawFont(Font* font, Color tint, vector2 offset);
 
 public:
 	RendererGL();
