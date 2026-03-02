@@ -652,10 +652,10 @@ bool Character::_isGroundedLocomotionState(const char* stateName) const
 		return false;
 	}
 
-	return !strcmp(stateName, "Idle") ||
-		!strcmp(stateName, "RunningLeft") ||
-		!strcmp(stateName, "RunningRight") ||
-		!strcmp(stateName, "Landing");
+	return !strcmp(stateName, "Idle") || 
+			 !strcmp(stateName, "RunningLeft") || 
+			 !strcmp(stateName, "RunningRight") ||
+			 !strcmp(stateName, "Landing");
 }
 
 bool Character::_canTriggerGroundCollisionFromFalling() const
@@ -708,19 +708,15 @@ int Character::_getHorizontalInput() const
 
 bool Character::_isRunRequested() const
 {
-	Game* game = Engine2D::getGame();
-	if (!game) {
-		return false;
+	if (Game* game = Engine2D::getGame()) {
+		if (Player* player = game->getPlayerWith((GameObject*)this)) {
+			Controller* controller = player->getController();
+			Action* runAction = controller->getAction("RUN");
+			return runAction && runAction->isActive();
+		}
 	}
 
-	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getController()) {
-		return false;
-	}
-
-	Controller* controller = player->getController();
-	Action* runAction = controller->getAction("RUN");
-	return runAction && runAction->isActive();
+	return false;
 }
 
 bool Character::_getStateFootLocalY(const GameObjectState* state, float& outFootY) const
