@@ -1,0 +1,1513 @@
+{
+  "AnimationFile": {
+    "Animation": [
+      {
+        "Name": "Air Spin",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Air Spin/player air spin 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Air Spin/player air spin 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Air Spin/player air spin 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Air Spin/player air spin 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Air Spin/player air spin 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Air Spin/player air spin 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Climb",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing back of player)/player climb-back 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing back of player)/player climb-back 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing back of player)/player climb-back 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing back of player)/player climb-back 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Climb",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing side of player)/Player Side-Climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing side of player)/Player Side-Climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing side of player)/Player Side-Climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Climb (facing side of player)/Player Side-Climb 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Crouch-Idle",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Idle/Player Crouch-Idle 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Crouch-Walk",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Crouch-Walk/player crouch-walk 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Death",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "64,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "128,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "256,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Death/Player Death 64x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Hurt-Damaged",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Hurt-Damaged/Player Hurt 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Hurt-Damaged/Player Hurt 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Hurt-Damaged/Player Hurt 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Hurt-Damaged/Player Hurt 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Idle",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Idle/Player Idle 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Jump",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Jump/player jump 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Jump/player jump 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Jump/player jump 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Katana Air Attack",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "80,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "160,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "400,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "480,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "560,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "640,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Air Attack/player katana air attack (upper body) 80x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Katana Attack-Sheathe",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "80,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "160,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "400,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "480,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "560,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "640,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "720,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Attack-Sheathe/player katana attack-sheathe 80x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Katana Continuous Attack",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "80,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "160,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "400,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "480,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "560,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "640,0,80,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Continuous Attack/player katana continuous attack 80x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Katana Run",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Katana Run/player katana run 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Land",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Land/player land 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Ledge Grab-Climb",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Ledge Grab-Climb/player ledge climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Ledge Grab-Climb/player ledge climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Ledge Grab-Climb/player ledge climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Ledge Grab-Climb/player ledge climb 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Ledge Grab-Climb/player ledge climb 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Pull",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Pull/Player Pull 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Pull/Player Pull 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Pull/Player Pull 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Pull/Player Pull 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Pull/Player Pull 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Pull/Player Pull 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Punch",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "64,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "128,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "256,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "448,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch/Player Punch 64x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Punch Cross",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "64,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "128,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "256,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Cross/Player Punch Cross 64x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Punch Jab",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Punch Jab/Player Jab 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Push",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Push/player push 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "PushPull",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/PushPull (idle state)/player push idle 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Roll",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Roll/Player Roll 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Run",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Run/player run 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Shooting",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (running and aiming)/Player Running Aiming 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Shooting",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Shooting (two-handed)/player shoot 2H 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Slide",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Slide/Player Slide 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Sword Attack",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Attack/player sword atk 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "64,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Attack/player sword atk 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "128,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Attack/player sword atk 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Attack/player sword atk 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "256,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Attack/player sword atk 64x64.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "320,0,64,64",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Attack/player sword atk 64x64.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Sword Idle",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "432,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Idle/Player Sword Idle 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Sword Run",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Run/Player Sword Run 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Sword Stab",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "384,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "480,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "576,0,96,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Sword Stab/Player Sword Stab 96x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Tilemap",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,160,160",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Tilemap (Super Basic)/160x160 background tilemap.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Walk",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "288,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "336,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Walk/PlayerWalk 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Wall Land",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Land/Player Wall Land (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Land/Player Wall Land (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Land/Player Wall Land (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "144,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Land/Player Wall Land (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "192,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Land/Player Wall Land (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "240,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Land/Player Wall Land (left) 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      },
+      {
+        "Name": "Wall Slide",
+        "Mode": "LOOPING",
+        "Forward": true,
+        "Speed": 1.0,
+        "Frame": [
+          {
+            "DisplayRect": "0,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Slide/player wall slide (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "48,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Slide/player wall slide (left) 48x48.png",
+            "Duration": 0.133333
+          },
+          {
+            "DisplayRect": "96,0,48,48",
+            "Filename": "./fantasySideScroller/2D-Pixel-Art-Character-Template/Wall Slide/player wall slide (left) 48x48.png",
+            "Duration": 0.133333
+          }
+        ]
+      }
+    ]
+  }
+}
