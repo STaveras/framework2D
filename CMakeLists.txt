@@ -4,6 +4,10 @@ if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
 
+if(MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "MSVC runtime library" FORCE)
+endif()
+
 if(DEFINED VCPKG_TARGET_TRIPLET AND VCPKG_TARGET_TRIPLET MATCHES ".*-static.*")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "MSVC runtime library" FORCE)
 elseif(DEFINED VCPKG_TARGET_TRIPLET AND NOT VCPKG_TARGET_TRIPLET STREQUAL "")
@@ -228,6 +232,10 @@ else()
   )
 endif()
 
+if(WIN32)
+  target_compile_definitions(${ROOT_DIR_NAME} PRIVATE _CONSOLE)
+endif()
+
 # Place the executable in the project's bin/ directory so relative data paths work
 set_target_properties(${ROOT_DIR_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
@@ -236,6 +244,26 @@ set_target_properties(${ROOT_DIR_NAME} PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_SOURCE_DIR}/bin"
   RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_SOURCE_DIR}/bin"
 )
+
+if(MSVC)
+  set_target_properties(${ROOT_DIR_NAME} PROPERTIES
+    OUTPUT_NAME_DEBUG "${ROOT_DIR_NAME}_d"
+  )
+
+  target_compile_options(${ROOT_DIR_NAME} PRIVATE
+    /W3
+    /sdl
+    /permissive-
+    /MP
+    /openmp
+  )
+
+  target_link_options(${ROOT_DIR_NAME} PRIVATE
+    $<$<CONFIG:Debug>:/DEBUG:FASTLINK>
+    $<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>
+    $<$<NOT:$<CONFIG:Release>>:/SUBSYSTEM:CONSOLE>
+  )
+endif()
 
 target_include_directories(${ROOT_DIR_NAME} PRIVATE
   "${CMAKE_SOURCE_DIR}/ext/inc"
