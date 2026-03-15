@@ -46,11 +46,16 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "strategy": "external",
+        "value": "x64"
+      },
+      "toolset": "v143",
       "environment": {
         "VCPKG_ROOT": "C:/Utilities/vcpkg"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
       }
@@ -64,11 +69,16 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "strategy": "external",
+        "value": "x64"
+      },
+      "toolset": "v143",
       "environment": {
         "VCPKG_ROOT": "C:/Utilities/vcpkg"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
       }

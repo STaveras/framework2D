@@ -32,7 +32,7 @@
     <ProjectGuid>{31b78b48-e690-4980-84fe-8c87a0d241bf}</ProjectGuid>
     <RootNamespace>framework</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>framework</ProjectName>
+    <ProjectName>framework2D</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (DX)|Win32'" Label="Configuration">
