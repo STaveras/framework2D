@@ -4,7 +4,7 @@
 // TODO: Create a collidable encompassing the map
 
 #include "Tile.h"
-#include "StrUtil.h"
+#include "StrUtils.h"
 #include "FileSystem.h"
 
 #include <algorithm>
@@ -271,7 +271,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 
 				if (!line.empty()) {
 					std::vector<int> indices;
-					std::vector<std::string> tokens = split(line, ',');
+					std::vector<std::string> tokens = StrUtils::Split(line, ',', false);
 
 					if (!tokens.empty()) {
 						for (std::string index : tokens) {

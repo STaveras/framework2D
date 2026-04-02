@@ -12,6 +12,8 @@
 class GameObject;
 
 // I realized this is only for not updating an object if it is not on screen, its renderable can still be on screen
+// DEPRECATED: Legacy operator path. Kept for compatibility while runtime culling
+// is migrated to renderer/collision systems.
 
 class CullObjectOperator : public ObjectOperator
 {

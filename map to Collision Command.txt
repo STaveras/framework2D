@@ -1,0 +1,62 @@
+const char* Character::mapCollisionToCommand(const CollisionContact& contact) const
+{
+    if (!contact.other || contact.phase == CollisionPhase::Exit || contact.other->getType() != GAME_OBJ_TILE) {
+        return NULL;
+    }
+
+    Tile* tile = (Tile*)contact.other;
+    if (!tile) {
+        return NULL;
+    }
+
+    if (tile->getTileType() == "key") {
+        if (Collidable* collidable = tile->getCollidable()) {
+            if (tile->getLayerCollisionMode() != TileCollisionMode::None && contact.phase == CollisionPhase::Enter) {
+                tile->setLayerCollisionMode(TileCollisionMode::None);
+                return "DEATH";
+            }
+        }
+    }
+
+    if (tile->getTileType() != "tile") {
+        return NULL;
+    }
+
+    if (contact.normal) {
+        if (contact.normal->y < -0.5f) {
+            return "JUMP_RELEASED";
+        }
+        if (contact.normal->y > kGroundNormalThreshold) {
+            if (contact.phase == CollisionPhase::Enter) {
+                return "GROUND_COLLISION";
+            }
+            if (contact.phase == CollisionPhase::Stay) {
+                if (GameObjectState* state = this->getState()) {
+                    if (!strcmp(state->getName(), "Falling")) {
+                        return "GROUND_COLLISION";
+                    }
+                }
+            }
+        }
+    } else {
+        vector2 directionToObject = tile->getPosition() - this->getPosition();
+        directionToObject.normalize();
+        if (directionToObject.y < -0.5f) {
+            return "JUMP_RELEASED";
+        }
+        if (directionToObject.y > kGroundNormalThreshold) {
+            if (contact.phase == CollisionPhase::Enter) {
+                return "GROUND_COLLISION";
+            }
+            if (contact.phase == CollisionPhase::Stay) {
+                if (GameObjectState* state = this->getState()) {
+                    if (!strcmp(state->getName(), "Falling")) {
+                        return "GROUND_COLLISION";
+                    }
+                }
+            }
+        }
+    }
+
+    return NULL;
+}

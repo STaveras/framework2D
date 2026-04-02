@@ -1,0 +1,1 @@
+mkdir -p tmp && (./bin/framework2D_d --debug --dbg-collision --opengl > tmp/baseline_run.log 2>&1 &) ; pid=$!; sleep 3; kill -TERM $pid >/dev/null 2>&1 || true; wait $pid >/dev/null 2>&1 || true; tail -n 40 tmp/baseline_run.log

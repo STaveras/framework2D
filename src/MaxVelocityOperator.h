@@ -3,6 +3,7 @@
 #include "ObjectOperator.h"
 #include "GameObject.h"
 
+// DEPRECATED: Legacy operator kept for compatibility.
 class MaxVelocityOperator : public ObjectOperator
 {
    float _maxSpeed;

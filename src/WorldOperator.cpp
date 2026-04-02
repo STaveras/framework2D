@@ -7,5 +7,7 @@
 
 bool WorldOperator::operator()(GameObject* object)
 {
+	// DEPRECATED: no-op legacy operator.
+	(void)object;
 	return false;
 }

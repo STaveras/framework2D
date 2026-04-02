@@ -2,7 +2,7 @@
 #include "Trigger.h"
 #include "Engine2D.h"
 #include "SDSParser.h"
-#include "StrUtil.h"
+#include "StrUtils.h"
 
 Trigger::Trigger(void):
 	Type(NONE),
@@ -74,11 +74,11 @@ void Trigger::LoadFromFile(const char* szFilename)
 
 			if(pData)
 			{
-				if(streqls(pData->GetValue(), "Effect"))
+				if(StrUtils::IEquals(pData->GetValue(), "Effect"))
 					Type = EFFECT;
-				else if(streqls(pData->GetValue(), "Event") || pData->GetValueAsInt() == 1)
+				else if(StrUtils::IEquals(pData->GetValue(), "Event") || pData->GetValueAsInt() == 1)
 					Type = EVENT;
-				else if(streqls(pData->GetValue(), "Sound") || pData->GetValueAsInt() == 2)
+				else if(StrUtils::IEquals(pData->GetValue(), "Sound") || pData->GetValueAsInt() == 2)
 					Type = SOUND;
 				else
 					Type = NONE;
@@ -88,9 +88,9 @@ void Trigger::LoadFromFile(const char* szFilename)
 
 			if(pData)
 			{
-				if(streqls(pData->GetValue(), "Always"))
+				if(StrUtils::IEquals(pData->GetValue(), "Always"))
 					Mode = ALWAYS;
-				else if(streqls(pData->GetValue(), "Once") || pData->GetValueAsInt() == 1)
+				else if(StrUtils::IEquals(pData->GetValue(), "Once") || pData->GetValueAsInt() == 1)
 					Mode = ONCE;
 			}
 

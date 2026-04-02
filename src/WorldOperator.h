@@ -11,6 +11,7 @@
 class GameObject;
 class Stage;
 
+// DEPRECATED: Legacy world operator kept for compatibility only.
 class WorldOperator : public ObjectOperator
 {
 	float m_fGravity;

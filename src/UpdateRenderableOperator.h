@@ -4,6 +4,7 @@
 #include "GameObject.h"
 
 // TODO: Should also update the collidable info
+// DEPRECATED: Legacy operator kept for compatibility.
 
 class UpdateRenderableOperator: public ObjectOperator
 {

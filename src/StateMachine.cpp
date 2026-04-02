@@ -5,7 +5,6 @@
 
 #include "StateMachine.h"
 #include "State.h"
-#include "StrUtil.h"
 
 #include <iostream>
 #include <fstream>

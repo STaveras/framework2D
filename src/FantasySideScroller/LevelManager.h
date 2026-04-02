@@ -5,6 +5,7 @@
 #include "../IRenderer.h"
 #include "../Maths.h"
 #include "../TileMap.h"
+#include "../Trigger.h"
 
 #include <cstdint>
 #include <string>
@@ -15,27 +16,6 @@ class GameState;
 class GameObject;
 class ObjectManager;
 class TileSet;
-
-struct LevelTriggerDescriptor
-{
-	int layerId = -1;
-	std::string layerName;
-	int objectId = -1;
-	std::string name;
-	std::string typeName;
-	int64_t gid = 0;
-	vector2 position;
-	vector2 size;
-	float rotation = 0.0f;
-	bool visible = true;
-	bool isPoint = false;
-	bool isEllipse = false;
-	bool hasPolygon = false;
-	bool hasPolyline = false;
-	std::vector<vector2> polygonPoints;
-	std::vector<vector2> polylinePoints;
-	std::vector<TileMapPropertyDescriptor> properties;
-};
 
 class LevelManager
 {

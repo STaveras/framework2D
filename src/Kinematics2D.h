@@ -7,7 +7,10 @@ class Collidable;
 
 namespace Kinematics2D
 {
+bool isSquareOnly(const Collidable* collidable);
+bool hasPolygonSurface(const Collidable* collidable);
 bool tryGetBounds(const Collidable* collidable, vector2& outMin, vector2& outMax);
+bool tryGetActiveBounds(const Collidable* collidable, vector2& outMin, vector2& outMax);
 bool sampleSupportY(const Collidable* collidable, float sampleX, float& outY);
 
 bool hasWalkableSupportNearFoot(

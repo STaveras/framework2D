@@ -8,6 +8,7 @@
 
 #define EVT_FORCE_EVENT "EVT_FORCE_EVENT"
 
+// DEPRECATED: Legacy operator/event path kept for compatibility.
 class ForceEvent : public Event
 {
 	struct ForceOperator* _operator;

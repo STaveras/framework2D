@@ -3,3 +3,4 @@ flat_jump,tmp/tapes/flat_jump_input_events.csv,tools/segments/flat_jump_segments
 polygon_slope,tmp/tapes/polygon_slope_input_events.csv,tools/segments/polygon_slope_segments.csv
 wall_push,tmp/tapes/wall_push_input_events.csv,tools/segments/wall_push_segments.csv
 oneway_drop,tmp/tapes/oneway_drop_input_events.csv,tools/segments/oneway_drop_segments.csv
+traversal_goal,tmp/tapes/traversal_goal_input_events.csv,tools/segments/flat_jump_segments.csv

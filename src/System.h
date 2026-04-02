@@ -5,6 +5,7 @@
 
 #include "Types.h"
 #include "Renderer.h"
+#include "StrUtils.h"
 
 #include <algorithm>
 #include <cctype>
@@ -21,19 +22,7 @@ namespace System
 
     static bool isTruthyValue(const char* value)
     {
-        if (!value || value[0] == '\0') {
-            return false;
-        }
-
-        std::string lowered(value);
-        std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
-            return (char)std::tolower(c);
-        });
-
-        return lowered == "1" ||
-            lowered == "true" ||
-            lowered == "yes" ||
-            lowered == "on";
+        return StrUtils::IsTruthy(value);
     }
 
     // Platform-agnostic getenv wrapper.

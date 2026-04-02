@@ -1,6 +1,6 @@
 
 #include "SDSParser.h"
-#include "StrUtil.h"
+#include "StrUtils.h"
 
 #include <fstream>
 #include <list>
@@ -217,16 +217,10 @@ void SDSParser::close(void)
 
 bool SDSParser::setScope(const char *szScope)
 {
-	std::list<std::string> lsScopes;
-	strdiv(lsScopes, szScope, ".:");
-
-	std::list<std::string>::iterator itr = lsScopes.begin();
-
 	SDSNode *pResult = m_pRoot;
-
-	for (; itr != lsScopes.end(); itr++)
-	{
-		pResult = _NodeExists(itr->c_str(), SDSNodeData::SDS_SCOPE, pResult);
+	const std::vector<std::string> scopes = StrUtils::SplitAny(szScope ? szScope : "", ".:", true, true);
+	for (const std::string& scope : scopes) {
+		pResult = _NodeExists(scope.c_str(), SDSNodeData::SDS_SCOPE, pResult);
 	}
 
 	if (pResult)

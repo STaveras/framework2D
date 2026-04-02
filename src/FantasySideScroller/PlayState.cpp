@@ -15,6 +15,8 @@ constexpr float kHUDBackgroundHeight = 10.0f;
 constexpr float kHUDFillInset = 2.0f;
 constexpr float kHUDFillMaxWidth = 100.0f;
 constexpr float kHUDFillHeight = 6.0f;
+constexpr float kHUDTimerOffsetY = 14.0f;
+constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
 }
 
 PlayState::PlayState()
@@ -22,7 +24,9 @@ PlayState::PlayState()
     , _playableCharacter(nullptr) {}
 
 PlayState::~PlayState() {
-    // ensure cleanup if exit wasn't called
+	if (_player || _playableCharacter || _hudRenderList) {
+		onExit(nullptr);
+	}
 }
 
 void PlayState::_initHUD()
@@ -53,13 +57,31 @@ void PlayState::_initHUD()
 		_staminaBarFill->setVisibility(true);
 		_hudRenderList->push_back(_staminaBarFill);
 	}
+
+	if (!_timerBarBackground) {
+		_timerBarBackground = new Image(BasePath("pixel.bmp").c_str());
+		_timerBarBackground->setTint(0xAA101018);
+		_timerBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
+		_timerBarBackground->setOffset(vector2(0.0f, 0.0f));
+		_timerBarBackground->setVisibility(true);
+		_hudRenderList->push_back(_timerBarBackground);
+	}
+
+	if (!_timerBarFill) {
+		_timerBarFill = new Image(BasePath("pixel.bmp").c_str());
+		_timerBarFill->setTint(0xFFD0A020);
+		_timerBarFill->setScale(kHUDFillMaxWidth, kHUDFillHeight);
+		_timerBarFill->setOffset(vector2(0.0f, 0.0f));
+		_timerBarFill->setVisibility(true);
+		_hudRenderList->push_back(_timerBarFill);
+	}
 }
 
 void PlayState::_updateHUD(float dt)
 {
 	(void)dt;
 
-	if (!_staminaBarBackground || !_staminaBarFill) {
+	if (!_staminaBarBackground || !_staminaBarFill || !_timerBarBackground || !_timerBarFill) {
 		return;
 	}
 
@@ -91,6 +113,28 @@ void PlayState::_updateHUD(float dt)
 	_staminaBarFill->setPosition(fillOrigin);
 	_staminaBarFill->setScale(fillWidth, kHUDFillHeight);
 	_staminaBarFill->setVisibility(fillWidth > 0.0f);
+
+	const TraversalRunState& runState = _traversalMechanics.getRunState();
+	const vector2 timerOrigin = hudOrigin + vector2(0.0f, kHUDTimerOffsetY);
+	_timerBarBackground->setPosition(timerOrigin);
+	_timerBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
+
+	float timeRatio = 0.0f;
+	if (runState.timeLimitSeconds > 0.0f) {
+		timeRatio = runState.remainingSeconds / runState.timeLimitSeconds;
+	}
+	if (timeRatio < 0.0f) {
+		timeRatio = 0.0f;
+	}
+	else if (timeRatio > 1.0f) {
+		timeRatio = 1.0f;
+	}
+
+	const float timerFillWidth = kHUDFillMaxWidth * timeRatio;
+	const vector2 timerFillOrigin = timerOrigin + vector2(kHUDFillInset, kHUDFillInset);
+	_timerBarFill->setPosition(timerFillOrigin);
+	_timerBarFill->setScale(timerFillWidth, kHUDFillHeight);
+	_timerBarFill->setVisibility(timerFillWidth > 0.0f && !runState.completed);
 }
 
 void PlayState::_shutdownHUD()
@@ -102,6 +146,12 @@ void PlayState::_shutdownHUD()
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
 		}
+		if (_timerBarBackground) {
+			_hudRenderList->remove(_timerBarBackground);
+		}
+		if (_timerBarFill) {
+			_hudRenderList->remove(_timerBarFill);
+		}
 
 		if (IRenderer* renderer = Engine2D::getRenderer()) {
 			renderer->destroyRenderList(_hudRenderList);
@@ -111,6 +161,8 @@ void PlayState::_shutdownHUD()
 
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
+	SAFE_DELETE(_timerBarBackground);
+	SAFE_DELETE(_timerBarFill);
 }
 
 void PlayState::onEnter(State* prev)
@@ -120,15 +172,17 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	//_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
-	_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	//_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
+	vector2 spawnPoint = START_POSITION;
 	if (_levelManager.hasSpawnPoint()) {
-		_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+		spawnPoint = _levelManager.getSpawnPoint();
+		_playableCharacter->setPosition(spawnPoint);
 	}
 	else {
-		_playableCharacter->setPosition(START_POSITION);
+		_playableCharacter->setPosition(spawnPoint);
 	}
 
 	_objectManager.addObject("Hero", _playableCharacter);
@@ -148,6 +202,17 @@ void PlayState::onEnter(State* prev)
 	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
 	_player->getController()->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
 	_player->setGameObject(_playableCharacter);
+
+	_traversalMechanics.initialize(_levelManager.getTriggerDescriptors(),
+									spawnPoint,
+									kTraversalDefaultTimeLimitSeconds);
+	_traversalMechanics.setTrackedCharacter(_playableCharacter);
+	_traversalMechanics.setFrameDeltaSeconds(0.0f);
+	_traversalMechanics.setEnabled(true);
+	if (!_traversalOperatorRegistered) {
+		_objectManager.pushOperator(&_traversalMechanics);
+		_traversalOperatorRegistered = true;
+	}
 
 	_levelManager.attachCameraTo(_objectManager.getGameObject("Hero"), _objectManager, true, true);
 	_initHUD();
@@ -248,7 +313,18 @@ bool PlayState::onExecute(float time)
 		}
 	}
 
+	_traversalMechanics.setFrameDeltaSeconds(time);
 	const bool keepRunning = GameState::onExecute(time);
+
+	vector2 traversalRespawn(0.0f, 0.0f);
+	if (_traversalMechanics.consumeRespawnRequest(traversalRespawn) && _playableCharacter) {
+		_collisionSystem.reset();
+		_playableCharacter->clearEvents();
+		_playableCharacter->resetForRespawn();
+		_playableCharacter->setState(_playableCharacter->getState("Falling"));
+		_playableCharacter->setPosition(traversalRespawn);
+	}
+
 	_levelManager.update();
 	_updateHUD(time);
 	return keepRunning;
@@ -257,16 +333,26 @@ bool PlayState::onExecute(float time)
 void PlayState::onExit(State* next)
 {
 	_shutdownHUD();
+	_traversalMechanics.setEnabled(false);
+	_traversalMechanics.setTrackedCharacter(NULL);
+	_traversalMechanics.setFrameDeltaSeconds(0.0f);
 
-	_player->finish();
+	if (_player) {
+		_player->finish();
+	}
 
-	_objectManager.removeObject(_playableCharacter);
+	if (_playableCharacter) {
+		_objectManager.removeObject(_playableCharacter);
+	}
 
 	SAFE_DELETE(_playableCharacter);
 	
 	_levelManager.shutdown(_objectManager, *this);
 
-	Engine2D::getGame()->getPlayers()->destroy(_player);
+	if (_player) {
+		Engine2D::getGame()->getPlayers()->destroy(_player);
+		_player = NULL;
+	}
 
 	GameState::onExit(next);
 }
