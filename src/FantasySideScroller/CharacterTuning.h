@@ -1,0 +1,63 @@
+#pragma once
+
+inline constexpr float kGroundLossGraceSeconds = 0.06f;
+inline constexpr float kDropThroughDurationSeconds = 0.20f;
+inline constexpr float kDropThroughStartNudge = 1.0f;
+inline constexpr float kDropThroughStartDownwardSpeed = 30.0f;
+inline constexpr float kSupportSampleInset = 2.0f;
+inline constexpr float kDefaultMaxSnapPerFrame = 8.0f;
+inline constexpr float kGroundNormalThreshold = 0.2f;
+inline constexpr float kOneWayTopApproachEpsilon = 1.0f;
+inline constexpr float kGroundSupportSnapDistance = 50.0f;
+inline constexpr float kLocomotionFootLocalY = 24.0f;
+inline constexpr float kFootlineTolerance = 0.5f;
+inline constexpr float kFootlineEpsilon = 0.001f;
+inline constexpr float kWallNormalThreshold = 0.55f;
+inline constexpr float kGroundRejectWallNormalX = 0.90f;
+inline constexpr float kGroundRejectWallNormalY = 0.25f;
+inline constexpr float kHorizontalSeparationEpsilon = 0.01f;
+inline constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
+inline constexpr float kStepUpAssistEpsilon = 0.05f;
+inline constexpr float kUpwardSnapMultiplier = 2.0f;
+inline constexpr float kMaxAutoStepUpDistance = 8.0f;
+inline constexpr float kFallingLandingDebounceSeconds = 0.04f;
+inline constexpr float kUpwardSupportBias = 0.25f;
+inline constexpr float kSlopePriorityEpsilon = 0.25f;
+inline constexpr float kSlopeFootClearance = 0.1f;
+inline constexpr float kSupportSwitchHysteresisUp = 1.0f;
+inline constexpr float kSupportSwitchHysteresisDown = 0.25f;
+inline constexpr float kUphillProbeDistance = 1.5f;
+inline constexpr float kUphillProbeMaxRise = 6.0f;
+inline constexpr float kWalkMaxHorizontalSpeed = 95.0f;
+inline constexpr float kRunMaxHorizontalSpeed = 130.0f;
+inline constexpr float kAirMaxHorizontalSpeed = 112.0f;
+inline constexpr float kWalkGroundAcceleration = 650.0f;
+inline constexpr float kRunGroundAcceleration = 860.0f;
+inline constexpr float kGroundTurnAcceleration = 1300.0f;
+inline constexpr float kGroundDeceleration = 1450.0f;
+inline constexpr float kAirAcceleration = 360.0f;
+inline constexpr float kAirTurnAcceleration = 520.0f;
+inline constexpr float kAirDeceleration = 280.0f;
+inline constexpr float kStaminaMax = 100.0f;
+inline constexpr float kStaminaDrainPerSecond = 25.0f;
+inline constexpr float kStaminaRegenPerSecond = 40.0f;
+inline constexpr float kRunAnimationSpeed = 1.1f;
+inline constexpr float kRunBoostAnimationSpeed = 1.35f;
+inline constexpr float kHorizontalVelocityEpsilon = 0.01f;
+inline constexpr float kHorizontalSnapTravelPadding = 2.0f;
+inline constexpr float kFastFallAcceleration = 900.0f;
+inline constexpr float kFastFallMaxSpeed = 300.0f;
+inline constexpr float kGravityAcceleration = 760.0f;
+inline constexpr float kNormalFallMaxSpeed = 260.0f;
+inline constexpr float kLongJumpLaunchSpeedThreshold = 110.0f;
+inline constexpr float kLongJumpMomentumDecayPerSecond = 45.0f;
+inline constexpr const char* kAutoDefaultTelemetryPath = "tmp/auto_slope_telemetry.csv";
+
+enum class AutoSupportSource {
+	None = -1,
+	Left = 0,
+	Center = 1,
+	Right = 2,
+	UphillProbe = 3,
+	Sticky = 4
+};

@@ -6,47 +6,19 @@
 #include "../GameState.h"
 #include "../ObjectManager.h"
 #include "../Renderer.h"
+#include "../StrUtils.h"
 
 #include "Resources.h"
 
 #include <algorithm>
-#include <cctype>
 #include <limits>
 #include <string>
 #include <utility>
 
 namespace {
-std::string sanitizeLayerName(const std::string& value)
-{
-	if (value.empty()) {
-		return "unnamed";
-	}
-
-	std::string sanitized;
-	sanitized.reserve(value.size());
-	for (char c : value) {
-		if (std::isalnum((unsigned char)c)) {
-			sanitized.push_back(c);
-		}
-		else {
-			sanitized.push_back('_');
-		}
-	}
-	return sanitized;
-}
-
-std::string toLowerCopy(const std::string& value)
-{
-	std::string lowered = value;
-	std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
-		return (char)std::tolower(c);
-	});
-	return lowered;
-}
-
 bool isSpawnType(const std::string& typeName)
 {
-	return toLowerCopy(typeName) == "spawn";
+	return StrUtils::IEquals(typeName, "spawn");
 }
 
 bool isValidLayerIndex(int index, size_t size)
@@ -236,7 +208,7 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 		}
 
 		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
-		const std::string safeLayerName = sanitizeLayerName(layerConfig.name);
+		const std::string safeLayerName = StrUtils::SanitizeIdentifier(layerConfig.name);
 		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
 
 		unsigned int tileIndex = 0;
@@ -290,7 +262,14 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 			trigger.hasPolyline = object.hasPolyline;
 			trigger.polygonPoints = object.polygonPoints;
 			trigger.polylinePoints = object.polylinePoints;
-			trigger.properties = object.properties;
+			trigger.properties.reserve(object.properties.size());
+			for (const TileMapPropertyDescriptor& property : object.properties) {
+				TriggerPropertyDescriptor triggerProperty;
+				triggerProperty.name = property.name;
+				triggerProperty.type = property.type;
+				triggerProperty.value = property.value;
+				trigger.properties.push_back(std::move(triggerProperty));
+			}
 
 			_triggerDescriptors.push_back(std::move(trigger));
 		}

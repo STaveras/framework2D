@@ -40,13 +40,15 @@ COMMON_SRCS := \
   src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
   src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
   src/InputTapeRecorder.cpp \
-  src/Physical.cpp src/Kinematics2D.cpp src/Telemetry2D.cpp \
+  src/Physical.cpp src/Kinematics2D.cpp src/Telemetry2D.cpp src/StrUtils.cpp \
   src/TextureVK.cpp src/TextureGL.cpp src/InputEvent.cpp src/IInput.cpp src/Trigger.cpp \
   src/UpdateBackgroundOperator.cpp src/SDSParser.cpp src/PlatformInput.cpp src/PlatformKeyboard.cpp src/System.cpp \
   src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
   src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
-  src/FantasySideScroller/Character.cpp
+  src/FantasySideScroller/Character.cpp \
+  src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
+  src/FantasySideScroller/TraversalMechanics.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 

@@ -5,6 +5,7 @@
 #include "../Sprite.h"
 
 #include "LevelManager.h"
+#include "TraversalMechanics.h"
 
 class Character;
 
@@ -16,11 +17,15 @@ class PlayState : public GameState
 
 	Player* _player = NULL;
 	LevelManager _levelManager;
+	TraversalMechanics _traversalMechanics;
+	bool _traversalOperatorRegistered = false;
 
 	Character* _playableCharacter = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
+	Image* _timerBarBackground = NULL;
+	Image* _timerBarFill = NULL;
 
 public:
 	PlayState(void);

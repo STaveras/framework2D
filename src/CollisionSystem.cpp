@@ -47,84 +47,9 @@ int phasePriority(CollisionPhase phase)
 	}
 }
 
-bool tryGetSquareBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
-{
-	if (!collidable || collidable->getType() != COL_OBJ_SQUARE) {
-		return false;
-	}
-
-	const Square* square = (const Square*)collidable;
-	outMin = square->getMin();
-	outMax = square->getMax();
-	return true;
-}
-
-bool tryGetPolygonBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
-{
-	if (!collidable || collidable->getType() != COL_OBJ_POLYGON) {
-		return false;
-	}
-
-	const PolygonCollider* polygon = (const PolygonCollider*)collidable;
-	// Allow both convex and non-convex (but valid) polygons - we can still sample their surfaces
-	if (!polygon || !polygon->isValid()) {
-		return false;
-	}
-
-	outMin = polygon->getMin();
-	outMax = polygon->getMax();
-	return true;
-}
-
 bool tryGetBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
 {
-	if (!collidable) {
-		return false;
-	}
-
-	if (tryGetSquareBounds(collidable, outMin, outMax) || tryGetPolygonBounds(collidable, outMin, outMax)) {
-		return true;
-	}
-
-	if (collidable->getType() != COL_OBJ_GROUP) {
-		return false;
-	}
-
-	const CollidableGroup* group = (const CollidableGroup*)collidable;
-	if (!group || group->empty()) {
-		return false;
-	}
-
-	bool hasAnyBounds = false;
-	vector2 minBounds(0.0f, 0.0f);
-	vector2 maxBounds(0.0f, 0.0f);
-	for (const Collidable* member : *group) {
-		vector2 memberMin(0.0f, 0.0f);
-		vector2 memberMax(0.0f, 0.0f);
-		if (!member || !tryGetBounds(member, memberMin, memberMax)) {
-			continue;
-		}
-
-		if (!hasAnyBounds) {
-			minBounds = memberMin;
-			maxBounds = memberMax;
-			hasAnyBounds = true;
-			continue;
-		}
-
-		minBounds.x = std::min(minBounds.x, memberMin.x);
-		minBounds.y = std::min(minBounds.y, memberMin.y);
-		maxBounds.x = std::max(maxBounds.x, memberMax.x);
-		maxBounds.y = std::max(maxBounds.y, memberMax.y);
-	}
-
-	if (!hasAnyBounds) {
-		return false;
-	}
-
-	outMin = minBounds;
-	outMax = maxBounds;
-	return true;
+	return Kinematics2D::tryGetBounds(collidable, outMin, outMax);
 }
 
 bool tryComputeTouchingNormal(const Collidable* firstCollidable, const Collidable* secondCollidable, vector2& outNormal)

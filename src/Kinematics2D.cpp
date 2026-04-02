@@ -43,9 +43,9 @@ bool tryGetPolygonBounds(const Collidable* collidable, vector2& outMin, vector2&
 	return true;
 }
 
-bool hasPolygonPrimitive(const Collidable* collidable)
+bool hasPolygonSurfaceInternal(const Collidable* collidable)
 {
-	if (!collidable) {
+	if (!collidable || !collidable->isActive()) {
 		return false;
 	}
 
@@ -64,7 +64,7 @@ bool hasPolygonPrimitive(const Collidable* collidable)
 	}
 
 	for (const Collidable* member : *group) {
-		if (hasPolygonPrimitive(member)) {
+		if (hasPolygonSurfaceInternal(member)) {
 			return true;
 		}
 	}
@@ -72,10 +72,48 @@ bool hasPolygonPrimitive(const Collidable* collidable)
 	return false;
 }
 
+bool isSquareOnlyInternal(const Collidable* collidable)
+{
+	if (!collidable || !collidable->isActive()) {
+		return false;
+	}
+
+	switch (collidable->getType()) {
+	case COL_OBJ_SQUARE:
+		return true;
+	case COL_OBJ_GROUP: {
+		const CollidableGroup* group = (const CollidableGroup*)collidable;
+		if (!group || group->empty()) {
+			return false;
+		}
+
+		for (const Collidable* member : *group) {
+			if (!isSquareOnlyInternal(member)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+	default:
+		return false;
+	}
+}
+
 } // namespace
 
 namespace Kinematics2D
 {
+
+bool isSquareOnly(const Collidable* collidable)
+{
+	return isSquareOnlyInternal(collidable);
+}
+
+bool hasPolygonSurface(const Collidable* collidable)
+{
+	return hasPolygonSurfaceInternal(collidable);
+}
 
 bool tryGetBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
 {
@@ -126,6 +164,15 @@ bool tryGetBounds(const Collidable* collidable, vector2& outMin, vector2& outMax
 	outMin = minBounds;
 	outMax = maxBounds;
 	return true;
+}
+
+bool tryGetActiveBounds(const Collidable* collidable, vector2& outMin, vector2& outMax)
+{
+	if (!collidable || !collidable->isActive()) {
+		return false;
+	}
+
+	return tryGetBounds(collidable, outMin, outMax);
 }
 
 bool sampleSupportY(const Collidable* collidable, float sampleX, float& outY)
@@ -431,7 +478,7 @@ bool shouldPreferVerticalSeparation(
 	}
 
 	const float supportDelta = dynamicMax.y - supportY;
-	if (hasPolygonPrimitive(staticCollidable)) {
+	if (hasPolygonSurfaceInternal(staticCollidable)) {
 		return true;
 	}
 

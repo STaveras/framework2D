@@ -1,0 +1,117 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+        "MockUp",
+        "Character",
+        "Font/monogram",
+        ".",
+        "Assets",
+        "Font",
+        "Font/monogram/bitmap"
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "Assets/buildingsTiles.tsj": {
+            "scaleInDock": 1.7245,
+            "scaleInEditor": 3.4779
+        },
+        "Assets/fantasyTiles.tsj": {
+            "scaleInDock": 1.6265,
+            "scaleInEditor": 1.69
+        },
+        "Assets/rockProps.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1.69
+        },
+        "Assets/treeAssetsTiles.tsj": {
+            "scaleInDock": 1.2333
+        },
+        "MockUp/Tiles.tsj": {
+            "scaleInDock": 1.2395,
+            "scaleInEditor": 1.69
+        },
+        "MockUp/Tiles2.tsj": {
+            "scaleInDock": 1.0165,
+            "scaleInEditor": 1
+        },
+        "mock_level.tmj": {
+            "scale": 1.82578125,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 160.2053915275995,
+                "y": 80.23962344886608
+            }
+        },
+        "mock_level.tmj#Tiles": {
+            "scaleInDock": 1
+        },
+        "mockup_tiles2.tmj": {
+            "scale": 0.9456,
+            "selectedLayer": 6,
+            "viewCenter": {
+                "x": 335.76565143824024,
+                "y": 200.40186125211503
+            }
+        },
+        "testMap.tmj": {
+            "scale": 1.0345,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 254.71242145964234,
+                "y": 129.0478492025133
+            }
+        },
+        "testMap_separate_layers.tmj": {
+            "scale": 0.9292,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": -0.5380972879896717,
+                "y": -0.5380972879896717
+            }
+        },
+        "village_1to1_exact.tmj": {
+            "scale": 0.65,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 1343.8461538461538,
+                "y": 383.8461538461538
+            }
+        },
+        "village_rebuilt_1to1.tmj": {
+            "scale": 2.4783,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1336.1982003792923,
+                "y": 375.86248638179404
+            }
+        }
+    },
+    "last.imagePath": "/Users/stan/Workspace/framework2D/bin/fantasySideScroller/Assets",
+    "openFiles": [
+    ],
+    "project": "",
+    "property.type": "string",
+    "recentFiles": [
+        "Assets/fantasyTiles.tsj",
+        "MockUp/Tiles.tsj",
+        "mockup_tiles2.tmj",
+        "testMap_separate_layers.tmj",
+        "testMap.tmj",
+        "Assets/rockProps.tsj",
+        "village_1to1_exact.tmj",
+        "village_rebuilt_1to1.tmj",
+        "Assets/buildingsTiles.tsj",
+        "MockUp/Tiles2.tsj",
+        "mock_level.tmj"
+    ],
+    "resizeMap.removeObjects": true,
+    "tileset.lastUsedFormat": "json",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

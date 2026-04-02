@@ -1,6 +1,7 @@
 #include "InputTapeRecorder.h"
 
 #include "Controller.h"
+#include "StrUtils.h"
 
 #include <algorithm>
 #include <cctype>
@@ -9,7 +10,6 @@
 #include <fstream>
 #include <cstdio>
 #include <limits>
-#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -61,50 +61,9 @@ uint64_t gLoadedReplayEvents = 0;
 uint64_t gConsumedReplayEvents = 0;
 bool gWarnedLegacyReplay = false;
 
-bool isTruthy(const char* value)
-{
-	if (!value || value[0] == '\0') {
-		return false;
-	}
-
-	std::string lowered(value);
-	std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
-		return (char)std::tolower(c);
-	});
-
-	return lowered == "1" ||
-		lowered == "true" ||
-		lowered == "yes" ||
-		lowered == "on";
-}
-
-std::string trim(const std::string& input)
-{
-	size_t first = 0;
-	while (first < input.size() && std::isspace((unsigned char)input[first])) {
-		++first;
-	}
-
-	size_t last = input.size();
-	while (last > first && std::isspace((unsigned char)input[last - 1])) {
-		--last;
-	}
-
-	return input.substr(first, last - first);
-}
-
-std::string toLowerCopy(const std::string& value)
-{
-	std::string lowered(value);
-	std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
-		return (char)std::tolower(c);
-	});
-	return lowered;
-}
-
 bool parseBoolToken(const std::string& token, bool fallback)
 {
-	const std::string lowered = toLowerCopy(trim(token));
+	const std::string lowered = StrUtils::ToLower(StrUtils::Trim(token));
 	if (lowered.empty()) {
 		return fallback;
 	}
@@ -129,18 +88,6 @@ bool parseBoolToken(const std::string& token, bool fallback)
 
 	return fallback;
 }
-
-std::vector<std::string> splitCsvRow(const std::string& line)
-{
-	std::vector<std::string> tokens;
-	std::stringstream stream(line);
-	std::string token;
-	while (std::getline(stream, token, ',')) {
-		tokens.push_back(trim(token));
-	}
-	return tokens;
-}
-
 bool ensureParentDirectory(const std::string& path)
 {
 	if (path.empty()) {
@@ -210,7 +157,7 @@ ReplayFormat inferFormatFromTokens(const std::vector<std::string>& tokens)
 		return ReplayFormat::Unknown;
 	}
 
-	const std::string firstLower = toLowerCopy(tokens[0]);
+	const std::string firstLower = StrUtils::ToLower(tokens[0]);
 	if (firstLower == "tick") {
 		return ReplayFormat::TickV2;
 	}
@@ -258,19 +205,19 @@ void loadReplayFile(const std::string& path)
 	std::string line;
 	size_t sequence = 0;
 	while (std::getline(replayIn, line)) {
-		const std::string trimmedLine = trim(line);
+		const std::string trimmedLine = StrUtils::Trim(line);
 		if (trimmedLine.empty() || trimmedLine[0] == '#') {
 			continue;
 		}
 
-		std::vector<std::string> tokens = splitCsvRow(trimmedLine);
+		std::vector<std::string> tokens = StrUtils::Split(trimmedLine, ',', true);
 		if (tokens.empty()) {
 			continue;
 		}
 
 		if (format == ReplayFormat::Unknown) {
 			format = inferFormatFromTokens(tokens);
-			const std::string firstLower = toLowerCopy(tokens[0]);
+			const std::string firstLower = StrUtils::ToLower(tokens[0]);
 			if (firstLower == "tick" || firstLower == "time") {
 				continue;
 			}
@@ -375,9 +322,9 @@ void initializeFromEnvironment(void)
 
 	std::string owned;
 
-	gRecordEnabled = isTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned));
+	gRecordEnabled = StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned));
 	gReplayEnabled =
-		isTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
+		StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
 		(System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned) && System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned)[0] != '\0');
 
 	const char* recordPathValue = System::getenv_platform("AUTO_INPUT_RECORD_PATH", owned);

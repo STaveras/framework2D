@@ -5,7 +5,7 @@
 
 #include "AnimationManager.h"
 #include "SDSParser.h"
-#include "StrUtil.h"
+#include "StrUtils.h"
 
 Animation* AnimationManager::GetAnimation(const char* szName)
 {

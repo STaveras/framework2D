@@ -55,6 +55,7 @@ public:
 	float getMaxStamina() const { return _maxStamina; }
 	float getStaminaNormalized() const { return (_maxStamina > 0.0f) ? (_stamina / _maxStamina) : 0.0f; }
 	bool isRunBoostActive() const { return _runBoostActive; }
+	void addStamina(float amount);
 	float getHorizontalSpeed() const {
 		const float vx = this->getVelocity().x;
 		return (vx >= 0.0f) ? vx : -vx;

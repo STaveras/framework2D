@@ -5,6 +5,7 @@
 #include "Timer.h"
 
 // All good things come to an end... (Or does they/it?)
+// DEPRECATED: Legacy operator kept for compatibility.
 class ForceDegradationOperator : public ObjectOperator
 {
    float _force;

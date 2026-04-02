@@ -4,9 +4,9 @@
 #include "AnimationManager.h"
 
 #include "FileSystem.h"
+#include "StrUtils.h"
 #include "System.h"
 
-#include <cctype>
 #include <string>
 
 using namespace tinyxml2;
@@ -20,20 +20,6 @@ namespace Animations {
       if (!rectDescription || rectDescription[0] == '\0') {
          return output;
       }
-
-      auto trim = [](std::string_view value) -> std::string {
-         size_t start = 0;
-         size_t end = value.size();
-
-         while (start < end && std::isspace(static_cast<unsigned char>(value[start]))) {
-            ++start;
-         }
-         while (end > start && std::isspace(static_cast<unsigned char>(value[end - 1]))) {
-            --end;
-         }
-
-         return std::string(value.substr(start, end - start));
-      };
 
       std::string input(rectDescription);
       for (char& c : input) {
@@ -55,13 +41,13 @@ namespace Animations {
             end = input.size();
          }
 
-         std::string token = trim(std::string_view(input).substr(start, end - start));
+         std::string token = StrUtils::Trim(std::string_view(input).substr(start, end - start));
          if (!token.empty()) {
             size_t eq = token.find('=');
             if (eq != std::string::npos) {
                usedKeyValues = true;
-               std::string key = trim(std::string_view(token).substr(0, eq));
-               std::string value = trim(std::string_view(token).substr(eq + 1));
+               std::string key = StrUtils::Trim(std::string_view(token).substr(0, eq));
+               std::string value = StrUtils::Trim(std::string_view(token).substr(eq + 1));
                int parsedValue = std::atoi(value.c_str());
 
                if (key == "X") {

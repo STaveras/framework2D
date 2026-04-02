@@ -1,127 +1,80 @@
 // File: StrUtil.h
 // Author: Stan Taveras
-// Created: 6/29/2010
-// Modified: 6/29/2010
+// Legacy compatibility shim. Prefer StrUtils.h in new code.
 
 #pragma once
 
+#include "StrUtils.h"
+
+#include <cctype>
+#include <cstring>
 #include <list>
 #include <string>
+#include <vector>
 
-#define STR_EQUALS(x, y) !strcmp(x, y)
+#define STR_EQUALS(x, y) (std::strcmp((x), (y)) == 0)
 
-// Trims leading whitespace
-static char* strtrlws(char* szString)
+inline char* strtrlws(char* szString)
 {
-	char* pItr = szString;
-
-	while(*pItr == ' ' || *pItr == '\t' || *pItr == '\n')
-		pItr++;
-
-	return pItr;
-}
-
-// Trims trailing whitespace
-static char* strtrtws(char* szString)
-{
-	char* pItr = szString + strlen(szString);
-
-	while(*pItr == ' ' || *pItr == '\t' || *pItr == '\n')
-	{
-		*pItr = '\0';
-		pItr--;
+	if (!szString) {
+		return nullptr;
 	}
 
+	while (*szString != '\0' && std::isspace((unsigned char)*szString)) {
+		++szString;
+	}
 	return szString;
 }
 
-// Trims leading and trailing whitespace
-static char* strtrws(char* szString)
+inline char* strtrtws(char* szString)
+{
+	if (!szString) {
+		return nullptr;
+	}
+
+	size_t len = std::strlen(szString);
+	while (len > 0 && std::isspace((unsigned char)szString[len - 1])) {
+		szString[len - 1] = '\0';
+		--len;
+	}
+	return szString;
+}
+
+inline char* strtrws(char* szString)
 {
 	return strtrtws(strtrlws(szString));
 }
 
-// Determines whether two strings are the same
-static bool streqls(const char* szLeft, const char* szRight, bool bCaseSensitive = false)
+inline bool streqls(const char* szLeft, const char* szRight, bool bCaseSensitive = false)
 {
-	if(bCaseSensitive)
-	{
-		return !strcmp(szLeft, szRight);
+	if (!szLeft || !szRight) {
+		return false;
 	}
-	else
-	{
-		size_t uiLength = strlen(szLeft);
-
-		if(uiLength != strlen(szRight))
-			return false;
-
-		const char* pItr1 = szLeft + uiLength;
-		const char* pItr2 = szRight + uiLength;
-
-		for(; uiLength > 0; uiLength--, pItr1--, pItr2--)
-		{
-			if(tolower(*pItr1) != tolower(*pItr2))
-				return false;
-		}
-	}
-
-	return true;
+	return bCaseSensitive ? (std::strcmp(szLeft, szRight) == 0) : StrUtils::IEquals(szLeft, szRight);
 }
 
-// Replaces occurances of characters specified by szDelims with szReplacement
-static void strsubst(char* szString, char szReplacement, const char* szDelims)
+inline void strsubst(char* szString, char szReplacement, const char* szDelims)
 {
-	char* pItr = szString;
+	if (!szString || !szDelims) {
+		return;
+	}
 
-	while(*pItr != '\0')
-	{
-		for(int i = 0; i < (int)strlen(szDelims); i++)
-		{
-			if(*pItr == szDelims[i])
-				*pItr = szReplacement;
+	for (char* pItr = szString; *pItr != '\0'; ++pItr) {
+		if (std::strchr(szDelims, *pItr)) {
+			*pItr = szReplacement;
 		}
-
-		pItr++;
 	}
 }
 
-// Outputs a list of strings from the szTarget string, separated by characters specified in szDelims
-static void strdiv(std::list<std::string>& output, const char* szTarget, const char* szDelims)
+inline void strdiv(std::list<std::string>& output, const char* szTarget, const char* szDelims)
 {
-	std::string szTemp;
-	const char* pItr = szTarget;
-
-	while(*pItr != '\0')
-	{
-		for(int i = 0; i < (int)strlen(szDelims); i++)
-		{
-			if(*pItr == szDelims[i] && szTemp != "")
-			{
-				output.push_back(szTemp);
-				szTemp.clear();
-				pItr++;
-				break;
-			}
-		}
-
-		szTemp += *pItr;
-		pItr++;
+	output.clear();
+	for (const std::string& token : StrUtils::SplitAny(szTarget ? szTarget : "", szDelims ? szDelims : "", true, true)) {
+		output.push_back(token);
 	}
-
-	if(szTemp != "")
-		output.push_back(szTemp);
 }
 
-static std::vector<std::string> split(const std::string& s, char delimiter)
+inline std::vector<std::string> split(const std::string& s, char delimiter)
 {
-	std::vector<std::string> tokens;
-	size_t offset = 0, pos = 0;
-
-	while(pos != std::string::npos) {
-		pos = s.find(delimiter, offset);
-		tokens.push_back(s.substr(offset, pos - offset));
-		offset = pos + 1;
-	}
-
-	return tokens;
+	return StrUtils::Split(s, delimiter, false);
 }

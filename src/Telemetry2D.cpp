@@ -1,9 +1,9 @@
 #include "Telemetry2D.h"
 
+#include "StrUtils.h"
 #include "System.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -12,23 +12,6 @@
 namespace
 {
 constexpr float kAutoSummaryIntervalSeconds = 1.0f;
-
-bool isTruthyEnvValue(const char* value)
-{
-	if (!value || value[0] == '\0') {
-		return false;
-	}
-
-	std::string lowered(value);
-	std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
-		return (char)std::tolower(c);
-	});
-
-	return lowered == "1" ||
-		lowered == "true" ||
-		lowered == "yes" ||
-		lowered == "on";
-}
 
 std::string getEnvOrDefault(const char* name, const char* fallback)
 {
@@ -71,9 +54,9 @@ void initialize(Runtime& runtime, const char* defaultPath)
 
 	runtime.initialized = true;
 	runtime.enabled =
-		isTruthyEnvValue(System::getenv_platform("AUTO_MOVEMENT_TELEMETRY", ownedString)) ||
-		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TELEMETRY", ownedString)) ||
-		isTruthyEnvValue(System::getenv_platform("AUTO_SLOPE_TEST", ownedString));
+		StrUtils::IsTruthy(System::getenv_platform("AUTO_MOVEMENT_TELEMETRY", ownedString)) ||
+		StrUtils::IsTruthy(System::getenv_platform("AUTO_SLOPE_TELEMETRY", ownedString)) ||
+		StrUtils::IsTruthy(System::getenv_platform("AUTO_SLOPE_TEST", ownedString));
 	runtime.telemetryEnabled = runtime.enabled;
 
 	std::string path = getEnvOrDefault("AUTO_MOVEMENT_LOG_PATH", "");
