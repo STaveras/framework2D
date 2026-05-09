@@ -390,6 +390,9 @@
     <ClInclude Include="src\FantasySideScroller\Constants.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
+    <ClInclude Include="src\FantasySideScroller\Cursor.h">
+      <Filter>Applications\FantasySideScroller</Filter>
+    </ClInclude>
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
@@ -606,6 +609,9 @@
       <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="src\FantasySideScroller\Character.cpp">
+      <Filter>Applications\FantasySideScroller</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\Cursor.cpp">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClCompile>
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp">

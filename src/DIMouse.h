@@ -8,11 +8,18 @@ class DIMouse : public IMouse, IDIDevice
 {
    friend class DirectInput;
 
+   HWND _hWnd;
+   bool _wasCursorInsideClient;
    DIMOUSESTATE2 _mouseStateOld;
    DIMOUSESTATE2 _mouseState;
 
+   bool _cursorIsInsideClient(void) const;
+   bool _syncPositionToClientCursor(void);
+
 public:
    DIMouse(void) {
+      _hWnd = NULL;
+      _wasCursorInsideClient = false;
       ZeroMemory(&_mouseState, sizeof(_mouseState));
    }
 

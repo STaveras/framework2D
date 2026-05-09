@@ -29,3 +29,4 @@ out/
 out-test/
 framework/
 *.app/**
+framework2D/x64/

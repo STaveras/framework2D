@@ -1,4 +1,8 @@
-// PlayState.cpp
+// File: PlayState.cpp
+// Author: Stanley Taveras
+// Created: 2/18/2010
+// Modified: 11/13/2024
+
 #include "PlayState.h"
 
 #include "../Camera.h"
@@ -6,6 +10,9 @@
 
 #include "Constants.h"
 #include "Character.h"
+#include "Cursor.h"
+
+#include <cmath>
 
 namespace {
 constexpr float kHUDPaddingX = 12.0f;
@@ -15,14 +22,47 @@ constexpr float kHUDBackgroundHeight = 10.0f;
 constexpr float kHUDFillInset = 2.0f;
 constexpr float kHUDFillMaxWidth = 100.0f;
 constexpr float kHUDFillHeight = 6.0f;
+
+vector2 ScreenToWorldCursorPosition(const Camera* camera, const vector2& screenPosition)
+{
+	if (!camera) {
+		return screenPosition;
+	}
+
+	const vector2 cameraPosition = camera->getRenderPosition();
+	const vector2 cameraCenter = camera->getCenter();
+	const float zoom = (camera->getZoom() > 0.0f) ? camera->getZoom() : 1.0f;
+	const float rotation = camera->getRotation();
+	const float cosTheta = std::cos(rotation);
+	const float sinTheta = std::sin(rotation);
+
+	vector2 cameraSpace = screenPosition;
+	if (camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		cameraSpace = screenPosition - cameraCenter;
+	}
+
+	cameraSpace.x /= zoom;
+	cameraSpace.y /= zoom;
+
+	vector2 unrotated(
+		(cameraSpace.x * cosTheta) + (cameraSpace.y * sinTheta),
+		(-cameraSpace.x * sinTheta) + (cameraSpace.y * cosTheta));
+
+	if (camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		return cameraPosition + unrotated;
+	}
+
+	return (cameraPosition - cameraCenter) + unrotated;
+}
 }
 
 PlayState::PlayState()
     : _player(nullptr)
-    , _playableCharacter(nullptr) {}
+    , _playableCharacter(nullptr)
+    , _cursor(nullptr) {}
 
 PlayState::~PlayState() {
-    // ensure cleanup if exit wasn't called
+    // Cleanup handled by _shutdownHUD()
 }
 
 void PlayState::_initHUD()
@@ -52,6 +92,18 @@ void PlayState::_initHUD()
 		_staminaBarFill->setOffset(vector2(0.0f, 0.0f));
 		_staminaBarFill->setVisibility(true);
 		_hudRenderList->push_back(_staminaBarFill);
+	}
+
+	if (!_cursor) {
+		_cursor = new Cursor();
+		if (_cursor->load(BasePath("cursors.png").c_str())) {
+			_hudRenderList->push_back(_cursor->getImage());
+		}
+		
+		IRenderer* renderer = Engine2D::getRenderer();
+		if (renderer) {
+			renderer->pushRenderList(_hudRenderList);
+		}
 	}
 }
 
@@ -102,6 +154,9 @@ void PlayState::_shutdownHUD()
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
 		}
+		if (_cursor && _cursor->getImage()) {
+			_hudRenderList->remove(_cursor->getImage());
+		}
 
 		if (IRenderer* renderer = Engine2D::getRenderer()) {
 			renderer->destroyRenderList(_hudRenderList);
@@ -111,6 +166,8 @@ void PlayState::_shutdownHUD()
 
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
+	SAFE_DELETE(_cursor);
+	_cursor = NULL;
 }
 
 void PlayState::onEnter(State* prev)
@@ -251,6 +308,16 @@ bool PlayState::onExecute(float time)
 	const bool keepRunning = GameState::onExecute(time);
 	_levelManager.update();
 	_updateHUD(time);
+
+	// Update cursor position and state to match mouse
+	if (_cursor) {
+		Mouse* mouse = Engine2D::getInput()->getMouse();
+		if (mouse) {
+			_cursor->setPosition(ScreenToWorldCursorPosition(_levelManager.getCamera(), mouse->getPosition()));
+			_cursor->updateFromMouse(mouse);
+		}
+	}
+
 	return keepRunning;
 }
 

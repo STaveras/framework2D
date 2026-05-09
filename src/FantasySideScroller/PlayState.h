@@ -2,8 +2,8 @@
 #pragma once
 
 #include "../GameState.h"
-#include "../Sprite.h"
 
+#include "Cursor.h"
 #include "LevelManager.h"
 
 class Character;
@@ -21,6 +21,7 @@ class PlayState : public GameState
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
+	Cursor* _cursor = NULL;
 
 public:
 	PlayState(void);
