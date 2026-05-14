@@ -28,4 +28,5 @@ build-*/**
 out/
 out-test/
 framework/
+framework2D/
 *.app/**
