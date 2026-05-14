@@ -6,6 +6,7 @@
 #pragma once
 
 #include <list>
+#include <cstring>
 #include <string>
 
 #define STR_EQUALS(x, y) !strcmp(x, y)
