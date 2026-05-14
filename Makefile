@@ -39,7 +39,7 @@ COMMON_SRCS := \
   src/ObjectManager.cpp src/CollisionSystem.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
   src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
   src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
-  src/InputTapeRecorder.cpp \
+  src/InputTapeRecorder.cpp src/Font.cpp \
   src/Physical.cpp src/Kinematics2D.cpp src/Telemetry2D.cpp \
   src/TextureVK.cpp src/TextureGL.cpp src/InputEvent.cpp src/IInput.cpp src/Trigger.cpp \
   src/UpdateBackgroundOperator.cpp src/SDSParser.cpp src/PlatformInput.cpp src/PlatformKeyboard.cpp src/System.cpp \
