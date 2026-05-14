@@ -27,7 +27,7 @@ namespace FileSystem
 {
 	static int SetWorkingDirectory(const std::string& path)
 	{
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 		return chdir(path.c_str());
 #else
 		return _chdir(path.c_str());
@@ -372,7 +372,7 @@ namespace FileSystem
 		// Opens a file ofstream for a given filepath
 		static Stream Open(const std::string& filename, bool append = false, bool overwrite = false)
 		{
-			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : (overwrite ? std::ios::trunc : 0)); // ios::binary	eventually
+			std::ios_base::openmode modeFlags = std::ios::in | std::ios::out | ((append) ? std::ios::app : (overwrite ? std::ios::trunc : std::ios::out)); // ios::binary	eventually
 			return Stream(filename, modeFlags);
 		}
 
