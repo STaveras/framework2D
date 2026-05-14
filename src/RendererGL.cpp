@@ -20,6 +20,32 @@
 namespace {
 constexpr float kRadiansToDegrees = 180.0f / 3.14159265358979323846f;
 
+int snapToPixel(float value)
+{
+	return static_cast<int>(std::lround(value));
+}
+
+int sampleNearestIndex(int sourceSize, int outputSize, int outputIndex)
+{
+	if (sourceSize <= 0 || outputSize <= 0) {
+		return 0;
+	}
+
+	const float sourceCoord =
+		(((static_cast<float>(outputIndex) + 0.5f) * static_cast<float>(sourceSize)) /
+		static_cast<float>(outputSize)) - 0.5f;
+
+	int index = static_cast<int>(std::lround(sourceCoord));
+	if (index < 0) {
+		index = 0;
+	}
+	else if (index >= sourceSize) {
+		index = sourceSize - 1;
+	}
+
+	return index;
+}
+
 const CollisionSystem* getActiveCollisionSystem()
 {
 	Game* game = Engine2D::getGame();
@@ -302,41 +328,55 @@ void RendererGL::_drawFont(Font* font, Color tint, vector2 offset)
 	const vector2 position = font->getPosition() + offset;
 	const vector2 center = font->getCenter();
 	const vector2 scale = font->getScale();
+	const float absScaleX = std::fabs(scale.x);
+	const float absScaleY = std::fabs(scale.y);
 	const float rotationRadians = font->getRotation();
+	if (absScaleX <= 0.0f || absScaleY <= 0.0f) {
+		return;
+	}
 
 	glDisable(GL_TEXTURE_2D);
 	glColor4f(tint.r / 255.0f, tint.g / 255.0f, tint.b / 255.0f, tint.a / 255.0f);
 
 	glPushMatrix();
-	glTranslatef(position.x, position.y, 0.0f);
+	// Keep the text anchored to whole pixels, then resample the bitmap per pixel.
+	glTranslatef(static_cast<float>(snapToPixel(position.x)), static_cast<float>(snapToPixel(position.y)), 0.0f);
 	glRotatef(rotationRadians * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
-	glScalef(scale.x, scale.y, 1.0f);
 
-	float penX = -center.x;
-	float penY = -center.y;
-	const float lineAdvance = static_cast<float>(fontHeight + 1);
+	const int originX = snapToPixel(-center.x * absScaleX);
+	const int originY = snapToPixel(-center.y * absScaleY);
+	const int lineAdvance = std::max(1, snapToPixel(static_cast<float>(fontHeight + 1) * absScaleY));
+	const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
+	const int letterAdvance = std::max(1, snapToPixel(static_cast<float>(glyphAdvance + 1) * absScaleX));
 
 	glBegin(GL_QUADS);
+	int penX = originX;
+	int penY = originY;
 	for (char c : text) {
 		if (c == '\n') {
-			penX = -center.x;
+			penX = originX;
 			penY += lineAdvance;
 			continue;
 		}
 
 		const std::vector<int>& bitmap = font->getBitmap(c);
 		const int glyphWidth = std::max(font->getWidth(c), 0);
-		const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
-		for (int rowIndex = 0; rowIndex < static_cast<int>(bitmap.size()); ++rowIndex) {
-			const int rowBits = bitmap[rowIndex];
-            for (int column = 0; column < glyphWidth; ++column) {
-                const int bitIndex = column;
-                if (((rowBits >> bitIndex) & 1) == 0) {
-                    continue;
-                }
+		const int glyphHeight = static_cast<int>(bitmap.size());
+		const int outputWidth = (glyphWidth > 0) ? std::max(1, snapToPixel(static_cast<float>(glyphWidth) * absScaleX)) : 0;
+		const int outputHeight = (glyphHeight > 0) ? std::max(1, snapToPixel(static_cast<float>(glyphHeight) * absScaleY)) : 0;
 
-				const float left = penX + static_cast<float>(column);
-				const float top = penY + static_cast<float>(rowIndex);
+		for (int outputRow = 0; outputRow < outputHeight; ++outputRow) {
+			const int sourceRow = sampleNearestIndex(glyphHeight, outputHeight, outputRow);
+			const int rowBits = bitmap[sourceRow];
+
+			for (int outputColumn = 0; outputColumn < outputWidth; ++outputColumn) {
+				const int sourceColumn = sampleNearestIndex(glyphWidth, outputWidth, outputColumn);
+				if (((rowBits >> sourceColumn) & 1) == 0) {
+					continue;
+				}
+
+				const float left = static_cast<float>(penX + outputColumn);
+				const float top = static_cast<float>(penY + outputRow);
 				const float right = left + 1.0f;
 				const float bottom = top + 1.0f;
 
@@ -347,7 +387,7 @@ void RendererGL::_drawFont(Font* font, Color tint, vector2 offset)
 			}
 		}
 
-		penX += static_cast<float>(glyphAdvance + 1);
+		penX += letterAdvance;
 	}
 	glEnd();
 

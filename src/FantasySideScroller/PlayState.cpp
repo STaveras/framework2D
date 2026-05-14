@@ -62,10 +62,11 @@ void PlayState::_initHUD()
 		_helloWorldText = new Font();
 		const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
 		if (_helloWorldText->loadFromJSON(fontPath)) {
-			_helloWorldText->setText("HelloWorld\nHello World");
+			_helloWorldText->setText("exp: 0; lvl. 1");
 			_helloWorldText->setTint(0xFFFFFFFF);
 			_helloWorldText->setScale(kHUDTextScale, kHUDTextScale);
 			_helloWorldText->setOffset(vector2(0.0f, 0.0f));
+			_helloWorldText->setScale(0.8, 0.8);
 			_helloWorldText->setVisibility(true);
 			_hudRenderList->push_back(_helloWorldText);
 		}

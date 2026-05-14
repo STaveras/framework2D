@@ -59,6 +59,32 @@ D3DXVECTOR2 worldToScreen(const Camera* camera, const vector2& worldPosition)
 	return D3DXVECTOR2(legacyRotated.x * zoom, legacyRotated.y * zoom);
 }
 
+int snapToPixel(float value)
+{
+	return static_cast<int>(std::lround(value));
+}
+
+int sampleNearestIndex(int sourceSize, int outputSize, int outputIndex)
+{
+	if (sourceSize <= 0 || outputSize <= 0) {
+		return 0;
+	}
+
+	const float sourceCoord =
+		(((static_cast<float>(outputIndex) + 0.5f) * static_cast<float>(sourceSize)) /
+		static_cast<float>(outputSize)) - 0.5f;
+
+	int index = static_cast<int>(std::lround(sourceCoord));
+	if (index < 0) {
+		index = 0;
+	}
+	else if (index >= sourceSize) {
+		index = sourceSize - 1;
+	}
+
+	return index;
+}
+
 LPDIRECT3DTEXTURE9 getFontPixelTexture(LPDIRECT3DDEVICE9 device)
 {
 	static LPDIRECT3DTEXTURE9 s_texture = NULL;
@@ -228,8 +254,8 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 			cameraZoom = m_pCamera->getZoom();
 		}
 	}
-	const float pixelWidth = font->getScale().x * cameraZoom;
-	const float pixelHeight = font->getScale().y * cameraZoom;
+	const float pixelWidth = std::fabs(font->getScale().x * cameraZoom);
+	const float pixelHeight = std::fabs(font->getScale().y * cameraZoom);
 	const vector2 center = font->getCenter();
 	const std::string& text = font->getText();
 
@@ -237,8 +263,8 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 		return;
 	}
 
-	screenPosition.x -= center.x * pixelWidth;
-	screenPosition.y -= center.y * pixelHeight;
+	const int baseX = snapToPixel(screenPosition.x - (center.x * pixelWidth));
+	const int baseY = snapToPixel(screenPosition.y - (center.y * pixelHeight));
 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
@@ -248,35 +274,41 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 	D3DXMATRIX originalTransform;
 	m_pD3DSprite->GetTransform(&originalTransform);
 
-	float cursorX = screenPosition.x;
-	float cursorY = screenPosition.y;
-	const float lineHeight = std::max(font->getHeight(), 1) * pixelHeight;
+	const int lineHeight = std::max(1, snapToPixel(static_cast<float>(std::max(font->getHeight(), 1) + 1) * pixelHeight));
+	const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
+	const int letterAdvance = std::max(1, snapToPixel(static_cast<float>(glyphAdvance + 1) * pixelWidth));
+	int cursorX = baseX;
+	int cursorY = baseY;
 
 	for (char c : text)
 	{
 		if (c == '\n')
 		{
-			cursorX = screenPosition.x;
-			cursorY += lineHeight + pixelHeight;
+			cursorX = baseX;
+			cursorY += lineHeight;
 			continue;
 		}
 
 		const std::vector<int>& bitmap = font->getBitmap(c);
 		const int glyphWidth = std::max(font->getWidth(c), 0);
-		const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
+		const int glyphHeight = static_cast<int>(bitmap.size());
+		const int outputWidth = (glyphWidth > 0) ? std::max(1, snapToPixel(static_cast<float>(glyphWidth) * pixelWidth)) : 0;
+		const int outputHeight = (glyphHeight > 0) ? std::max(1, snapToPixel(static_cast<float>(glyphHeight) * pixelHeight)) : 0;
 
-		for (int row = 0; row < static_cast<int>(bitmap.size()); ++row)
+		for (int outputRow = 0; outputRow < outputHeight; ++outputRow)
 		{
-			const int rowBits = bitmap[row];
-            for (int column = 0; column < glyphWidth; ++column)
-            {
-                const int bitIndex = column;
-                if (((rowBits >> bitIndex) & 1) == 0) {
-                    continue;
-                }
+			const int sourceRow = sampleNearestIndex(glyphHeight, outputHeight, outputRow);
+			const int rowBits = bitmap[sourceRow];
 
-				D3DXVECTOR2 scale(pixelWidth, pixelHeight);
-				D3DXVECTOR2 translation(cursorX + (column * pixelWidth), cursorY + (row * pixelHeight));
+			for (int outputColumn = 0; outputColumn < outputWidth; ++outputColumn)
+			{
+				const int sourceColumn = sampleNearestIndex(glyphWidth, outputWidth, outputColumn);
+				if (((rowBits >> sourceColumn) & 1) == 0) {
+					continue;
+				}
+
+				D3DXVECTOR2 scale(1.0f, 1.0f);
+				D3DXVECTOR2 translation(static_cast<float>(cursorX + outputColumn), static_cast<float>(cursorY + outputRow));
 				D3DXVECTOR3 spritePosition(0.0f, 0.0f, zValue);
 				D3DXMATRIX transform;
 				D3DXMatrixTransformation2D(&transform, NULL, 0.0f, &scale, NULL, 0.0f, &translation);
@@ -285,7 +317,7 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 			}
 		}
 
-		cursorX += (glyphAdvance + 1) * pixelWidth;
+		cursorX += letterAdvance;
 	}
 
 	m_pD3DSprite->SetTransform(&originalTransform);
