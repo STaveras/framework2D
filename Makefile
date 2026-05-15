@@ -8,7 +8,7 @@ ifeq ($(SUPPRESS_UNUSED),1)
 endif
 DIAG := -fdiagnostics-color=always
 INCLUDES := -I./ext -isystem ./ext/inc -isystem ./ext/inc/metal-cpp
-LIBS := -lglfw -lvulkan -ltinyxml2 -lsimdjson
+LIBS := -lGL -lglfw -lvulkan -ltinyxml2 -lsimdjson
 
 # Debug (make DEBUG=1)
 ifeq ($(DEBUG),1)
