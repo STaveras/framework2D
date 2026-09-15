@@ -38,6 +38,7 @@ inline constexpr float kGroundDeceleration = 1450.0f;
 inline constexpr float kAirAcceleration = 360.0f;
 inline constexpr float kAirTurnAcceleration = 520.0f;
 inline constexpr float kAirDeceleration = 280.0f;
+inline constexpr float kHealthMax = 100.0f;
 inline constexpr float kStaminaMax = 100.0f;
 inline constexpr float kStaminaDrainPerSecond = 25.0f;
 inline constexpr float kStaminaRegenPerSecond = 40.0f;

@@ -43,6 +43,8 @@ Character::Character(void) :
 	kinematicConfig.dropThroughDefaultDuration = kDropThroughDurationSeconds;
 	this->setKinematicConfig2D(kinematicConfig);
 	this->resetKinematicState2D();
+	_maxHealth = kHealthMax;
+	_health = _maxHealth;
 	_maxStamina = kStaminaMax;
 	_stamina = _maxStamina;
 	_runBoostActive = false;
@@ -72,6 +74,7 @@ void Character::resetForRespawn(void)
 	_longJumpMomentumActive = false;
 	_longJumpMomentumDirection = 0;
 	_longJumpMomentumSpeed = 0.0f;
+	_health = _maxHealth;
 	this->setVelocity(vector2(0.0f, 0.0f));
 }
 
@@ -275,4 +278,9 @@ bool Character::shouldCollideWith(const GameObject& other) const
 void Character::addStamina(float amount)
 {
 	_stamina = std::max(0.0f, std::min(_maxStamina, _stamina + amount));
+}
+
+void Character::addHealth(float amount)
+{
+	_health = std::max(0.0f, std::min(_maxHealth, _health + amount));
 }
