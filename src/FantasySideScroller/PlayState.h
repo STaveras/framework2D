@@ -8,6 +8,7 @@
 #include "TraversalMechanics.h"
 
 class Character;
+class Boar;
 
 class PlayState : public GameState
 {
@@ -21,11 +22,12 @@ class PlayState : public GameState
 	bool _traversalOperatorRegistered = false;
 
 	Character* _playableCharacter = NULL;
+	Boar* _boar = nullptr;
 	IRenderer::RenderList* _hudRenderList = NULL;
+	Image* _healthBarBackground = NULL;
+	Image* _healthBarFill = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
-	Image* _timerBarBackground = NULL;
-	Image* _timerBarFill = NULL;
 
 public:
 	PlayState(void);

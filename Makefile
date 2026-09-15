@@ -46,7 +46,7 @@ COMMON_SRCS := \
   src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
   src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
-  src/FantasySideScroller/Character.cpp \
+  src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
   src/FantasySideScroller/TraversalMechanics.cpp
 
@@ -89,3 +89,8 @@ $(OBJDIR)/%.o: %.mm
 
 clean:
 	rm -rf build/obj build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d
+
+.PHONY: test-boar
+test-boar: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/boar_smoke_test.o
+	$(CXX) $^ -o $(OBJDIR)/boar_smoke_test $(LDFLAGS)
+	./$(OBJDIR)/boar_smoke_test
