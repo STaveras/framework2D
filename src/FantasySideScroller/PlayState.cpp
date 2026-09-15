@@ -6,6 +6,7 @@
 
 #include "Constants.h"
 #include "Character.h"
+#include "Boar.h"
 
 namespace {
 constexpr float kHUDPaddingX = 12.0f;
@@ -15,7 +16,8 @@ constexpr float kHUDBackgroundHeight = 10.0f;
 constexpr float kHUDFillInset = 2.0f;
 constexpr float kHUDFillMaxWidth = 100.0f;
 constexpr float kHUDFillHeight = 6.0f;
-constexpr float kHUDTimerOffsetY = 14.0f;
+constexpr float kHUDStaminaOffsetY = kHUDBackgroundHeight;
+constexpr float kHUDStaminaHeight = 1.0f;
 constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
 }
 
@@ -40,10 +42,28 @@ void PlayState::_initHUD()
 		_hudRenderList = renderer->createRenderList();
 	}
 
+	if (!_healthBarBackground) {
+		_healthBarBackground = new Image(BasePath("pixel.bmp").c_str());
+		_healthBarBackground->setTint(0xAA101018);
+		_healthBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
+		_healthBarBackground->setOffset(vector2(0.0f, 0.0f));
+		_healthBarBackground->setVisibility(true);
+		_hudRenderList->push_back(_healthBarBackground);
+	}
+
+	if (!_healthBarFill) {
+		_healthBarFill = new Image(BasePath("pixel.bmp").c_str());
+		_healthBarFill->setTint(0xFF32D060);
+		_healthBarFill->setScale(kHUDFillMaxWidth, kHUDFillHeight);
+		_healthBarFill->setOffset(vector2(0.0f, 0.0f));
+		_healthBarFill->setVisibility(true);
+		_hudRenderList->push_back(_healthBarFill);
+	}
+
 	if (!_staminaBarBackground) {
 		_staminaBarBackground = new Image(BasePath("pixel.bmp").c_str());
 		_staminaBarBackground->setTint(0xAA101018);
-		_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
+		_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDStaminaHeight);
 		_staminaBarBackground->setOffset(vector2(0.0f, 0.0f));
 		_staminaBarBackground->setVisibility(true);
 		_hudRenderList->push_back(_staminaBarBackground);
@@ -51,29 +71,11 @@ void PlayState::_initHUD()
 
 	if (!_staminaBarFill) {
 		_staminaBarFill = new Image(BasePath("pixel.bmp").c_str());
-		_staminaBarFill->setTint(0xFF32D060);
-		_staminaBarFill->setScale(kHUDFillMaxWidth, kHUDFillHeight);
+		_staminaBarFill->setTint(0xFF38A8E8);
+		_staminaBarFill->setScale(kHUDFillMaxWidth, kHUDStaminaHeight);
 		_staminaBarFill->setOffset(vector2(0.0f, 0.0f));
 		_staminaBarFill->setVisibility(true);
 		_hudRenderList->push_back(_staminaBarFill);
-	}
-
-	if (!_timerBarBackground) {
-		_timerBarBackground = new Image(BasePath("pixel.bmp").c_str());
-		_timerBarBackground->setTint(0xAA101018);
-		_timerBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
-		_timerBarBackground->setOffset(vector2(0.0f, 0.0f));
-		_timerBarBackground->setVisibility(true);
-		_hudRenderList->push_back(_timerBarBackground);
-	}
-
-	if (!_timerBarFill) {
-		_timerBarFill = new Image(BasePath("pixel.bmp").c_str());
-		_timerBarFill->setTint(0xFFD0A020);
-		_timerBarFill->setScale(kHUDFillMaxWidth, kHUDFillHeight);
-		_timerBarFill->setOffset(vector2(0.0f, 0.0f));
-		_timerBarFill->setVisibility(true);
-		_hudRenderList->push_back(_timerBarFill);
 	}
 }
 
@@ -81,7 +83,7 @@ void PlayState::_updateHUD(float dt)
 {
 	(void)dt;
 
-	if (!_staminaBarBackground || !_staminaBarFill || !_timerBarBackground || !_timerBarFill) {
+	if (!_healthBarBackground || !_healthBarFill || !_staminaBarBackground || !_staminaBarFill) {
 		return;
 	}
 
@@ -96,8 +98,27 @@ void PlayState::_updateHUD(float dt)
 	const vector2 cameraTopLeft = cameraPosition - cameraCenter;
 	const vector2 hudOrigin = cameraTopLeft + vector2(kHUDPaddingX, kHUDPaddingY);
 
-	_staminaBarBackground->setPosition(hudOrigin);
-	_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
+	_healthBarBackground->setPosition(hudOrigin);
+	_healthBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
+
+	const float normalizedHealth = _playableCharacter ? _playableCharacter->getHealthNormalized() : 0.0f;
+	float clampedHealth = normalizedHealth;
+	if (clampedHealth < 0.0f) {
+		clampedHealth = 0.0f;
+	}
+	else if (clampedHealth > 1.0f) {
+		clampedHealth = 1.0f;
+	}
+
+	const float healthFillWidth = kHUDFillMaxWidth * clampedHealth;
+	const vector2 healthFillOrigin = hudOrigin + vector2(kHUDFillInset, kHUDFillInset);
+	_healthBarFill->setPosition(healthFillOrigin);
+	_healthBarFill->setScale(healthFillWidth, kHUDFillHeight);
+	_healthBarFill->setVisibility(healthFillWidth > 0.0f);
+
+	const vector2 staminaOrigin = hudOrigin + vector2(0.0f, kHUDStaminaOffsetY);
+	_staminaBarBackground->setPosition(staminaOrigin);
+	_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDStaminaHeight);
 
 	const float normalizedStamina = _playableCharacter ? _playableCharacter->getStaminaNormalized() : 0.0f;
 	float clampedStamina = normalizedStamina;
@@ -108,49 +129,27 @@ void PlayState::_updateHUD(float dt)
 		clampedStamina = 1.0f;
 	}
 
-	const float fillWidth = kHUDFillMaxWidth * clampedStamina;
-	const vector2 fillOrigin = hudOrigin + vector2(kHUDFillInset, kHUDFillInset);
-	_staminaBarFill->setPosition(fillOrigin);
-	_staminaBarFill->setScale(fillWidth, kHUDFillHeight);
-	_staminaBarFill->setVisibility(fillWidth > 0.0f);
-
-	const TraversalRunState& runState = _traversalMechanics.getRunState();
-	const vector2 timerOrigin = hudOrigin + vector2(0.0f, kHUDTimerOffsetY);
-	_timerBarBackground->setPosition(timerOrigin);
-	_timerBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
-
-	float timeRatio = 0.0f;
-	if (runState.timeLimitSeconds > 0.0f) {
-		timeRatio = runState.remainingSeconds / runState.timeLimitSeconds;
-	}
-	if (timeRatio < 0.0f) {
-		timeRatio = 0.0f;
-	}
-	else if (timeRatio > 1.0f) {
-		timeRatio = 1.0f;
-	}
-
-	const float timerFillWidth = kHUDFillMaxWidth * timeRatio;
-	const vector2 timerFillOrigin = timerOrigin + vector2(kHUDFillInset, kHUDFillInset);
-	_timerBarFill->setPosition(timerFillOrigin);
-	_timerBarFill->setScale(timerFillWidth, kHUDFillHeight);
-	_timerBarFill->setVisibility(timerFillWidth > 0.0f && !runState.completed);
+	const float staminaFillWidth = kHUDFillMaxWidth * clampedStamina;
+	const vector2 staminaFillOrigin = staminaOrigin + vector2(kHUDFillInset, 0.0f);
+	_staminaBarFill->setPosition(staminaFillOrigin);
+	_staminaBarFill->setScale(staminaFillWidth, kHUDStaminaHeight);
+	_staminaBarFill->setVisibility(staminaFillWidth > 0.0f);
 }
 
 void PlayState::_shutdownHUD()
 {
 	if (_hudRenderList) {
+		if (_healthBarBackground) {
+			_hudRenderList->remove(_healthBarBackground);
+		}
+		if (_healthBarFill) {
+			_hudRenderList->remove(_healthBarFill);
+		}
 		if (_staminaBarBackground) {
 			_hudRenderList->remove(_staminaBarBackground);
 		}
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
-		}
-		if (_timerBarBackground) {
-			_hudRenderList->remove(_timerBarBackground);
-		}
-		if (_timerBarFill) {
-			_hudRenderList->remove(_timerBarFill);
 		}
 
 		if (IRenderer* renderer = Engine2D::getRenderer()) {
@@ -159,10 +158,10 @@ void PlayState::_shutdownHUD()
 		_hudRenderList = NULL;
 	}
 
+	SAFE_DELETE(_healthBarBackground);
+	SAFE_DELETE(_healthBarFill);
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
-	SAFE_DELETE(_timerBarBackground);
-	SAFE_DELETE(_timerBarFill);
 }
 
 void PlayState::onEnter(State* prev)
@@ -198,6 +197,8 @@ void PlayState::onEnter(State* prev)
 #endif
 
 	_objectManager.addObject("Hero", _playableCharacter);
+	_boar = new Boar(_objectManager, *_playableCharacter, spawnPoint + vector2(140.0f, 10.0f));
+	_objectManager.addObject("Boar", _boar);
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
@@ -253,11 +254,11 @@ bool PlayState::onExecute(float time)
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
-	// TODO: Handle enemy spawning, game rules, etc.
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
 		_collisionSystem.reset();
+		if (_boar) _boar->reset();
 		_playableCharacter->clearEvents();
 		_playableCharacter->resetForRespawn();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
@@ -337,6 +338,7 @@ bool PlayState::onExecute(float time)
 	// 	_playableCharacter->setPosition(traversalRespawn);
 	// }
 
+	if (_boar) _boar->updateCombat(time);
 	_levelManager.update();
 	_updateHUD(time);
 	return keepRunning;
@@ -357,6 +359,8 @@ void PlayState::onExit(State* next)
 		_objectManager.removeObject(_playableCharacter);
 	}
 
+	if (_boar) _objectManager.removeObject(_boar);
+	SAFE_DELETE(_boar);
 	SAFE_DELETE(_playableCharacter);
 	
 	_levelManager.shutdown(_objectManager, *this);

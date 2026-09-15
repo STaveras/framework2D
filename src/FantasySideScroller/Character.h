@@ -12,6 +12,8 @@
 class Character : public GameObject
 {
 	Tile* _tile = NULL; // The tile the character is on
+	float _health = 100.0f;
+	float _maxHealth = 100.0f;
 	float _stamina = 100.0f;
 	float _maxStamina = 100.0f;
 	bool _runBoostActive = false;
@@ -50,6 +52,11 @@ public:
 	Character(void);
 	virtual ~Character(void);
 	void resetForRespawn(void);
+
+	float getHealth() const { return _health; }
+	float getMaxHealth() const { return _maxHealth; }
+	float getHealthNormalized() const { return (_maxHealth > 0.0f) ? (_health / _maxHealth) : 0.0f; }
+	void addHealth(float amount);
 
 	float getStamina() const { return _stamina; }
 	float getMaxStamina() const { return _maxStamina; }
