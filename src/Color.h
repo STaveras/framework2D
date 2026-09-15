@@ -2,21 +2,21 @@
 #pragma once
 
 #include "Types.h"
+#include <cstdint>
 
 namespace framework {
 	
 	typedef union color
 	{
-		unsigned long _color;
+		uint32_t _color;
 
-//#if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm__)
-		struct { byte a; byte r; byte g; byte b; };
-//#else
-		//struct { byte b; byte g; byte r; byte a; };
-//#endif
+		// Color storage is canonicalized as 0xAARRGGBB across APIs.
+		// On little-endian CPUs, this byte layout keeps r/g/b/a channel
+		// access consistent with the packed integer value.
+		struct { byte b; byte g; byte r; byte a; };
 
 		color(void):_color(0xFFFFFFFF){}
-		color(unsigned long value){ _color = value; }
+		color(unsigned long value){ _color = static_cast<uint32_t>(value); }
 		color(float alpha, float red, float green, float blue) { 
 			a = (int)(alpha * 255);
 			r = (int)(red * 255);
@@ -42,7 +42,7 @@ namespace framework {
 	//		return MTLClearColorMake(r/255.0, g/255.0, b/255.0, a/255.0);
 	//	}
 	//#endif
-		const color& operator=(unsigned long value) { _color = value; return *this; }
+		const color& operator=(unsigned long value) { _color = static_cast<uint32_t>(value); return *this; }
 		const color& operator=(const color& value) { _color = value._color; return *this; }
 
 	}Color;
