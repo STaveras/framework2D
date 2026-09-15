@@ -384,6 +384,9 @@
     <ClInclude Include="src\FileSystem.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\FantasySideScroller\Boar.h">
+      <Filter>Applications\FantasySideScroller</Filter>
+    </ClInclude>
     <ClInclude Include="src\FantasySideScroller\Character.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
@@ -604,6 +607,9 @@
     </ClCompile>
     <ClCompile Include="src\SDSParser.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\Boar.cpp">
+      <Filter>Applications\FantasySideScroller</Filter>
     </ClCompile>
     <ClCompile Include="src\FantasySideScroller\Character.cpp">
       <Filter>Applications\FantasySideScroller</Filter>
