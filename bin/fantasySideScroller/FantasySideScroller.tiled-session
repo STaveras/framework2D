@@ -3,25 +3,29 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "",
+    "activeFile": "Assets/fantasyTiles.tsj",
     "expandedProjectPaths": [
-        "MockUp",
-        "Character",
         "Font/monogram",
-        ".",
+        "Font/monogram/bitmap",
+        "Character",
         "Assets",
-        "Font",
-        "Font/monogram/bitmap"
+        "MockUp",
+        ".",
+        "Font"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "Assets/buildings.tsj": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
         "Assets/buildingsTiles.tsj": {
             "scaleInDock": 1.7245,
             "scaleInEditor": 3.4779
         },
         "Assets/fantasyTiles.tsj": {
             "scaleInDock": 1.6265,
-            "scaleInEditor": 1.69
+            "scaleInEditor": 1
         },
         "Assets/rockProps.tsj": {
             "scaleInDock": 1,
@@ -37,6 +41,14 @@
         "MockUp/Tiles2.tsj": {
             "scaleInDock": 1.0165,
             "scaleInEditor": 1
+        },
+        "fantasy_forest_level.tmj": {
+            "scale": 0.3,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 455,
+                "y": 615
+            }
         },
         "mock_level.tmj": {
             "scale": 1.82578125,
@@ -58,11 +70,11 @@
             }
         },
         "testMap.tmj": {
-            "scale": 1.0345,
-            "selectedLayer": 0,
+            "scale": 1.23,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 254.71242145964234,
-                "y": 129.0478492025133
+                "x": 223.9837398373984,
+                "y": 111.78861788617883
             }
         },
         "testMap_separate_layers.tmj": {
@@ -92,21 +104,24 @@
     },
     "last.imagePath": "/Users/stan/Workspace/framework2D/bin/fantasySideScroller/Assets",
     "openFiles": [
+        "Assets/fantasyTiles.tsj",
+        "testMap.tmj"
     ],
     "project": "",
     "property.type": "string",
     "recentFiles": [
+        "testMap.tmj",
         "Assets/fantasyTiles.tsj",
+        "fantasy_forest_level.tmj",
+        "Assets/buildings.tsj",
         "MockUp/Tiles.tsj",
         "mockup_tiles2.tmj",
         "testMap_separate_layers.tmj",
-        "testMap.tmj",
         "Assets/rockProps.tsj",
         "village_1to1_exact.tmj",
         "village_rebuilt_1to1.tmj",
         "Assets/buildingsTiles.tsj",
-        "MockUp/Tiles2.tsj",
-        "mock_level.tmj"
+        "MockUp/Tiles2.tsj"
     ],
     "resizeMap.removeObjects": true,
     "tileset.lastUsedFormat": "json",
