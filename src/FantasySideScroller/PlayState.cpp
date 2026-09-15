@@ -172,8 +172,8 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
-	//_levelManager.initialize("testMap_separate_layers.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	//_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize("fantasy_forest_level.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
 	vector2 spawnPoint = START_POSITION;
@@ -184,6 +184,18 @@ void PlayState::onEnter(State* prev)
 	else {
 		_playableCharacter->setPosition(spawnPoint);
 	}
+
+#if _DEBUG
+	{
+		char buffer[192];
+		sprintf_s(buffer, sizeof(buffer),
+			"PlayState spawn: hasSpawn=%s pos={%.2f,%.2f}\n",
+			_levelManager.hasSpawnPoint() ? "true" : "false",
+			spawnPoint.x,
+			spawnPoint.y);
+		DEBUG_MSG(buffer);
+	}
+#endif
 
 	_objectManager.addObject("Hero", _playableCharacter);
 
@@ -316,14 +328,14 @@ bool PlayState::onExecute(float time)
 	_traversalMechanics.setFrameDeltaSeconds(time);
 	const bool keepRunning = GameState::onExecute(time);
 
-	vector2 traversalRespawn(0.0f, 0.0f);
-	if (_traversalMechanics.consumeRespawnRequest(traversalRespawn) && _playableCharacter) {
-		_collisionSystem.reset();
-		_playableCharacter->clearEvents();
-		_playableCharacter->resetForRespawn();
-		_playableCharacter->setState(_playableCharacter->getState("Falling"));
-		_playableCharacter->setPosition(traversalRespawn);
-	}
+	// vector2 traversalRespawn(0.0f, 0.0f);
+	// if (_traversalMechanics.consumeRespawnRequest(traversalRespawn) && _playableCharacter) {
+	// 	_collisionSystem.reset();
+	// 	_playableCharacter->clearEvents();
+	// 	_playableCharacter->resetForRespawn();
+	// 	_playableCharacter->setState(_playableCharacter->getState("Falling"));
+	// 	_playableCharacter->setPosition(traversalRespawn);
+	// }
 
 	_levelManager.update();
 	_updateHUD(time);
