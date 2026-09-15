@@ -1,0 +1,15 @@
+{
+  "columns": 84,
+  "image": "../Trees/Green-Tree.png",
+  "imagewidth": 1344,
+  "imageheight": 1200,
+  "margin": 0,
+  "spacing": 0,
+  "name": "mosswoodGreenTrees",
+  "tilecount": 6300,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "type": "tileset",
+  "version": "1.10",
+  "tiledversion": "1.11.2"
+}

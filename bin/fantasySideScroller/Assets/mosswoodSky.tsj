@@ -1,0 +1,15 @@
+{
+  "columns": 30,
+  "image": "../Background/Background.png",
+  "imagewidth": 480,
+  "imageheight": 272,
+  "margin": 0,
+  "spacing": 0,
+  "name": "mosswoodSky",
+  "tilecount": 510,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "type": "tileset",
+  "version": "1.10",
+  "tiledversion": "1.11.2"
+}

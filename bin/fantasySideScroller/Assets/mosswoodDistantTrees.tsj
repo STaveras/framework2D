@@ -1,0 +1,15 @@
+{
+  "columns": 56,
+  "image": "../Trees/Background.png",
+  "imagewidth": 896,
+  "imageheight": 256,
+  "margin": 0,
+  "spacing": 0,
+  "name": "mosswoodDistantTrees",
+  "tilecount": 896,
+  "tilewidth": 16,
+  "tileheight": 16,
+  "type": "tileset",
+  "version": "1.10",
+  "tiledversion": "1.11.2"
+}
