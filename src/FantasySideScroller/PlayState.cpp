@@ -173,7 +173,7 @@ void PlayState::onEnter(State* prev)
 
 	// Preferred: map-declared tilesets from the .tmj file.
 	//_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
-	_levelManager.initialize("fantasy_forest_level.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize("mosswood_hollow.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
 	vector2 spawnPoint = START_POSITION;
