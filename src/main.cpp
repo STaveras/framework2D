@@ -138,6 +138,12 @@ int main(int argc, const char *argv[])
       pInput = (DirectInput*)Input::createDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
+#elif defined(__linux__)
+   else {
+      window.initialize(Window::ClientAPI::OpenGL);
+      pInput = (IInput*)Input::createInputInterface(&window);
+      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+   }
 #elif __APPLE__
    else if(bool useMetal = false) {
       window.initialize(Window::ClientAPI::OpenGL);
