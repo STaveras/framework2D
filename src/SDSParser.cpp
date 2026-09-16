@@ -6,6 +6,8 @@
 #include <list>
 #include <queue>
 #include <string>
+#include <cstring>
+#include <limits>
 
 SDSParser::SDSParser(void) : m_pRoot(NULL),
 							 m_pScope(NULL)
