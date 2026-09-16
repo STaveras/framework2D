@@ -213,11 +213,11 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 	Collidable* selfCollidable = ((Character*)this)->getCollidable();
 	Collidable* tileCollidable = ((Tile*)tile)->getCollidable();
 	if (!selfCollidable || !tileCollidable || !selfCollidable->isActive() || !tileCollidable->isActive()) {
-		return true;
+		return false;
 	}
 
 	if (selfCollidable->getType() != COL_OBJ_SQUARE) {
-		return true;
+		return false;
 	}
 
 	Square* bodySquare = (Square*)selfCollidable;
@@ -227,7 +227,7 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 
 	float supportY = 0.0f;
 	if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
-		return true;
+		return false;
 	}
 
 	const float bodyTop = bodyMin.y;

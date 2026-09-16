@@ -16,6 +16,8 @@ namespace {
 constexpr float kFoot = 14.0f;
 constexpr float kPatrolRadius = 72.0f;
 constexpr float kDetectionRange = 135.0f;
+constexpr float kWallNormalThreshold = 0.55f;
+constexpr float kWallTurnCooldownSeconds = 0.75f;
 }
 
 Boar::Boar(ObjectManager& world, Character& target, vector2 nearSpawn)
@@ -80,12 +82,44 @@ void Boar::reset()
     _direction = -1;
     _pause = 0.6f;
     _damageCooldown = 0.0f;
+    _wallTurnCooldown = 0.0f;
     _defeated = false;
     setVelocity(vector2(0, 0));
     setState("Idle");
     animate("Idle");
     getRenderable()->setVisibility(true);
     setPosition(_spawn);
+}
+
+void Boar::handleCollisionContact(const CollisionContact& contact)
+{
+    if (_defeated || contact.phase == CollisionPhase::Exit || !contact.other ||
+        contact.other->getType() != GAME_OBJ_TILE || !contact.normal.has_value()) {
+        return;
+    }
+
+    const vector2 normal = contact.normal.value();
+    const float absNormalX = std::fabs(normal.x);
+    const float absNormalY = std::fabs(normal.y);
+    // A floor or slope has a predominantly vertical normal. A wall has a
+    // predominantly horizontal normal, and the normal points toward the
+    // tile from the boar, so its sign matches the direction being pushed.
+    if (absNormalX <= kWallNormalThreshold || absNormalX <= absNormalY ||
+        normal.x * static_cast<float>(_direction) <= 0.0f) {
+        return;
+    }
+
+    _direction = -_direction;
+    _pause = std::max(_pause, 0.15f);
+    _wallTurnCooldown = kWallTurnCooldownSeconds;
+    setVelocity(vector2(0.0f, getVelocity().y));
+
+    // Collision contacts are dispatched after the movement update. Apply the
+    // new facing immediately so the sprite, debug shape, and any post-
+    // collision combat query agree during this same frame.
+    if (GameObjectState* state = getState()) {
+        animate(state->getName());
+    }
 }
 
 bool Boar::shouldCollideWith(const GameObject& other) const
@@ -103,6 +137,7 @@ void Boar::update(float time)
         return;
     }
     const vector2 position = getPosition();
+    _wallTurnCooldown = std::max(0.0f, _wallTurnCooldown - time);
     float ground = 0.0f;
     const bool grounded = supportAt(position.x, position.y + kFoot, 3.0f, 4.0f, ground);
     const vector2 delta = _target.getPosition() - position;
@@ -111,7 +146,7 @@ void Boar::update(float time)
     _pause = std::max(0.0f, _pause - time);
     float speed = 0.0f;
     if (_pause <= 0.0f && grounded) {
-        if (chase) _direction = delta.x < 0.0f ? -1 : 1;
+        if (chase && _wallTurnCooldown <= 0.0f) _direction = delta.x < 0.0f ? -1 : 1;
         speed = chase ? 100.0f : 28.0f;
         float ahead = 0.0f;
         const float probeX = position.x + _direction * (20.0f + speed * time);

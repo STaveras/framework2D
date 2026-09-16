@@ -135,19 +135,29 @@ void GameObject::finish(void)
 
 Collidable* GameObject::getCollidable(void) 
 {
+	vector2 mirrorScale(1.0f, 1.0f);
+	if (GameObjectState* currentState = this->getState()) {
+		if (Renderable* renderable = currentState->getRenderable()) {
+			vector2 scale = renderable->getScale();
+			mirrorScale.x = (scale.x < 0.0f) ? -1.0f : 1.0f;
+			mirrorScale.y = (scale.y < 0.0f) ? -1.0f : 1.0f;
+		}
+	}
+
+	// updateComponents() normally clears this cache once per update, but a
+	// renderable may be mirrored later in the same update. Do not return a
+	// collider cloned for the previous facing in that case.
+	if (!_collisionObjects.empty() &&
+		(_collisionMirrorScale.x != mirrorScale.x || _collisionMirrorScale.y != mirrorScale.y)) {
+		_collisionObjects.clear();
+	}
+
 	Collidable* collidable = (_collisionObjects.empty()) ? [&]() -> Collidable* {
 
 		// Use the collision information from the current state
 		if (GameObjectState* currentState = this->getState()) {
 
 			if (Collidable* stateCollidable = currentState->getCollidable()) {
-				vector2 mirrorScale(1.0f, 1.0f);
-				if (Renderable* renderable = currentState->getRenderable()) {
-					vector2 scale = renderable->getScale();
-					mirrorScale.x = (scale.x < 0.0f) ? -1.0f : 1.0f;
-					mirrorScale.y = (scale.y < 0.0f) ? -1.0f : 1.0f;
-				}
-
 				std::function<Collidable*(const Collidable*, const vector2&, const vector2&)> cloneCollidable =
 					[&](const Collidable* source, const vector2& parentWorldPosition, const vector2& mirrorSign) -> Collidable* {
 						if (!source) {
@@ -232,6 +242,7 @@ Collidable* GameObject::getCollidable(void)
 				// Collidable information is consumed each frame. This translates state-local
 				// collision coordinates to world-space using the object's collision anchor.
 				vector2 anchor = this->getCollisionAnchor();
+				_collisionMirrorScale = mirrorScale;
 				return cloneCollidable(stateCollidable, anchor, mirrorScale);
 			}
 			else {
@@ -286,27 +297,8 @@ void GameObject::GameObjectState::onEnter(State* prevState)
 
 				if (_preserveScaling) {
 
-					vector2 oldCenter = _renderable->getCenter();
-					vector2 newCenter(oldCenter.x * prevRenderable->getScale().x,
-											oldCenter.y * prevRenderable->getScale().y);
-
-					// We should just be checking and matching signs
+					// Preserve facing without moving local pivots or authored colliders.
 					if (_renderable->getScale() != prevRenderable->getScale()) {
-
-						if (Collidable* collidable = _collidable) {
-							switch (collidable->getType()) {
-							case COL_OBJ_SQUARE:
-								if (oldCenter != newCenter) {
-									collidable->setPosition(collidable->getPosition() - oldCenter);
-									collidable->setPosition(collidable->getPosition() + newCenter);
-								}
-								break;
-							default:
-								break;
-							}
-						}
-
-						_renderable->setCenter(newCenter);
 						_renderable->setScale(prevRenderable->getScale());
 						_renderable->setPosition(prevRenderable->getPosition());
 					}
