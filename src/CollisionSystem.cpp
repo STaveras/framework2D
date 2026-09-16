@@ -697,6 +697,11 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 					return;
 				}
 
+				const bool firstIsOneWaySurface =
+					first->isStatic() && firstCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !second->isStatic();
+				const bool secondIsOneWaySurface =
+					second->isStatic() && secondCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !first->isStatic();
+
 				if (!shouldResolveAsOneWay(first, second, firstCollidable, secondCollidable, previousStepPositions)) {
 					return;
 				}
@@ -739,7 +744,13 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 					}
 
 					vector2 resolveAxis = axis;
-					if (secondStatic && !firstStatic &&
+					if (firstIsOneWaySurface) {
+						resolveAxis = vector2(0.0f, -1.0f);
+					}
+					else if (secondIsOneWaySurface) {
+						resolveAxis = vector2(0.0f, 1.0f);
+					}
+					else if (secondStatic && !firstStatic &&
 						shouldForceVerticalSeparationForWalkablePolygon(
 							first,
 							second,

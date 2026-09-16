@@ -76,7 +76,7 @@ bool Character::_isWallBlockingContact(const CollisionContact& contact, int hori
 		return false;
 	}
 
-	if (_isOneWayTile(tile) && !_canCollideWithOneWayTile(tile)) {
+	if (_isOneWayTile(tile)) {
 		return false;
 	}
 
