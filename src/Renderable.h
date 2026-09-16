@@ -91,8 +91,8 @@ public:
 	virtual Color getTintColor(void) const { return _appearance._tintColor; }
 	virtual void setTint(Color _tintColor) { _appearance._tintColor = _tintColor; }
 
-	// There's a problem here with offsets... They should be relative to the position, not absolute
-	// Meaning when the scale is flipped, the offset should be flipped as well, but instead of being from top-left, it should be from the bottom-right (e.g. the origin has flipped)
+	// The center is a local pivot. Signed scale reflects around it; the pivot
+	// itself must remain unchanged so mirroring cannot translate the sprite.
 	virtual void mirror(bool mirrorHorizontally, bool mirrorVertically)
 	{
 		if (mirrorHorizontally)
@@ -100,14 +100,12 @@ public:
 			this->_appearance._flipHorizontalAxis = !this->_appearance._flipHorizontalAxis;
 
 			_scale.x = -_scale.x;
-			_center.x = -_center.x;
 		}
 		if (mirrorVertically)
 		{
 			this->_appearance._flipVerticalAxis = !this->_appearance._flipVerticalAxis;
 
 			_scale.y = -_scale.y;
-			_center.y = -_center.y;
 		}
 	}
 
