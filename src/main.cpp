@@ -12,6 +12,9 @@
 #include "Window.h"
 
 #include <iostream>
+#include <chrono>
+#include <algorithm>
+#include <vector>
 
 // TODO: Put this in a DLL and have loader functions to search for "game" library files
 #include "FantasySideScroller/FantasySideScroller.h"
@@ -167,11 +170,19 @@ int main(int argc, const char *argv[])
    engine->setGame(&game);
    engine->initialize();
 
+   // Opt-in, bounded benchmark: exclude startup and warm up for one second.
+   const double benchmarkSeconds = System::checkEnvironmentDouble("AUTO_BENCHMARK_SECONDS", 0.0);
+   using BenchmarkClock = std::chrono::steady_clock;
+   const auto benchmarkStart = BenchmarkClock::now();
+   std::vector<double> frameTimes;
+   if (benchmarkSeconds > 0.0) frameTimes.reserve(10000);
+
    try {
       do 
       {
          // Eventually just have the engine handle this like:
          // engine->Run(); 
+         const auto frameStart = BenchmarkClock::now();
          window.update();
          engine->update();
 
@@ -213,6 +224,14 @@ int main(int argc, const char *argv[])
              window.setWindowTitle(newTitle.c_str());
          }
 
+         if (benchmarkSeconds > 0.0) {
+            const auto now = BenchmarkClock::now();
+            const double elapsed = std::chrono::duration<double>(now - benchmarkStart).count();
+            if (elapsed >= 1.0) {
+               frameTimes.push_back(std::chrono::duration<double, std::milli>(now - frameStart).count());
+            }
+            if (elapsed >= benchmarkSeconds + 1.0) break;
+         }
       } while (!window.hasQuit() && !engine->hasQuit());
    }
    catch (std::exception& e) {
@@ -225,6 +244,18 @@ int main(int argc, const char *argv[])
 #endif
    }
 
+   if (!frameTimes.empty()) {
+      double total = 0.0;
+      size_t overBudget = 0;
+      for (double ms : frameTimes) { total += ms; if (ms > 1000.0 / 60.0) ++overBudget; }
+      std::sort(frameTimes.begin(), frameTimes.end());
+      std::cout << "BENCHMARK frames=" << frameTimes.size()
+                << " fps=" << 1000.0 * frameTimes.size() / total
+                << " mean_ms=" << total / frameTimes.size()
+                << " p95_ms=" << frameTimes[(frameTimes.size() - 1) * 95 / 100]
+                << " p99_ms=" << frameTimes[(frameTimes.size() - 1) * 99 / 100]
+                << " over_16.67ms=" << overBudget << std::endl;
+   }
    engine->shutdown();
    
    Input::destroyInputInterface(pInput);
