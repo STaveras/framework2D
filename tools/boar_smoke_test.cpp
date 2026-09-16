@@ -3,6 +3,7 @@
 #include "../src/FantasySideScroller/Character.h"
 #include "../src/Animation.h"
 #include "../src/Debug.h"
+#include "../src/Kinematics2D.h"
 #include "../src/ObjectManager.h"
 #include "../src/Square.h"
 #include "../src/Tile.h"
@@ -39,6 +40,21 @@ public:
     void render() override {}
 };
 int main() {
+    Square oneWayShape(vector2(0, 100), 100, 32);
+    SurfaceTraits2D oneWayTraits;
+    oneWayTraits.flags = SurfaceFlags::Solid | SurfaceFlags::Walkable | SurfaceFlags::OneWay;
+    oneWayShape.setSurfaceTraits(oneWayTraits);
+    Square playerShape(vector2(40, 50.7f), 20, 50);
+    // A character whose feet are already just below the platform must pass
+    // through while falling; the old resting tolerance could snap the
+    // character onto the platform from underneath.
+    assert(!Kinematics2D::shouldResolveAsOneWay(
+        &oneWayShape, &playerShape, vector2(0, 0.1f), vector2(0, 0), 0.5f));
+    // A real downward crossing from above must still land on the platform.
+    playerShape.setMin(vector2(40, 50.3f));
+    assert(Kinematics2D::shouldResolveAsOneWay(
+        &oneWayShape, &playerShape, vector2(0, 0.5f), vector2(0, 0), 0.5f));
+
     System::GlobalDataPath("bin/fantasySideScroller");
     TestRenderer renderer;
     Engine2D::setRenderer(&renderer);
