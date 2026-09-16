@@ -419,13 +419,13 @@ bool shouldResolveAsOneWay(
 	vector2 dynamicMin(0.0f, 0.0f);
 	vector2 dynamicMax(0.0f, 0.0f);
 	if (!tryGetBounds(dynamicCollidable, dynamicMin, dynamicMax)) {
-		return true;
+		return false;
 	}
 
 	const float sampleX = dynamicMin.x + ((dynamicMax.x - dynamicMin.x) * 0.5f);
 	float supportY = 0.0f;
 	if (!sampleSupportY(oneWayCollidable, sampleX, supportY)) {
-		return true;
+		return false;
 	}
 
 	const float deltaY = currentPosition.y - previousPosition.y;
@@ -436,12 +436,15 @@ bool shouldResolveAsOneWay(
 	const float currentBottom = dynamicMax.y;
 	const float previousBottom = currentBottom - deltaY;
 
+	// Allow one-way resolution only when the previous footline was at or above
+	// the support plane. The configurable epsilon is useful for the current
+	// crossing, but must not admit a character that was already underneath.
 	const bool crossedPlatformTop =
-		(previousBottom <= (supportY + oneWayEpsilon)) &&
+		(previousBottom <= (supportY + kAxisEpsilon)) &&
 		(currentBottom >= (supportY - oneWayEpsilon));
 	const bool restingOnTop =
 		(std::fabs(currentBottom - supportY) <= (oneWayEpsilon * 2.0f)) &&
-		(previousBottom <= (supportY + oneWayEpsilon * 2.0f));
+		(previousBottom <= (supportY + kAxisEpsilon));
 
 	return crossedPlatformTop || restingOnTop;
 }

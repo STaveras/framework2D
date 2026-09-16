@@ -53,6 +53,9 @@ protected:
    Factory<Sprite>     _spriteManager;
    Factory<Animation>  _animationManager;
    Factory<Collidable> _collisionObjects;
+   // Cached colliders are rebuilt when a renderable changes mirror sign. This
+   // catches direct setScale calls that happen after updateComponents().
+   vector2 _collisionMirrorScale = vector2(1.0f, 1.0f);
 
 public:
    class GameObjectState : public State

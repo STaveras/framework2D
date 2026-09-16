@@ -697,6 +697,11 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 					return;
 				}
 
+				const bool firstIsOneWaySurface =
+					first->isStatic() && firstCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !second->isStatic();
+				const bool secondIsOneWaySurface =
+					second->isStatic() && secondCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !first->isStatic();
+
 				if (!shouldResolveAsOneWay(first, second, firstCollidable, secondCollidable, previousStepPositions)) {
 					return;
 				}
@@ -739,7 +744,13 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 					}
 
 					vector2 resolveAxis = axis;
-					if (secondStatic && !firstStatic &&
+					if (firstIsOneWaySurface) {
+						resolveAxis = vector2(0.0f, -1.0f);
+					}
+					else if (secondIsOneWaySurface) {
+						resolveAxis = vector2(0.0f, 1.0f);
+					}
+					else if (secondStatic && !firstStatic &&
 						shouldForceVerticalSeparationForWalkablePolygon(
 							first,
 							second,
@@ -987,6 +998,34 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 		pendingDispatches.push_back(pending);
 	}
 
+	// Contacts can change facing or state; capture debug geometry afterward.
+
+	for (const PendingDispatch& pending : pendingDispatches) {
+		if (!pending.first || !pending.second) {
+			continue;
+		}
+
+		if (activeObjectSet.find(pending.first) == activeObjectSet.end() ||
+			activeObjectSet.find(pending.second) == activeObjectSet.end()) {
+			continue;
+		}
+
+		Collidable* firstCollidable = pending.first->getCollidable();
+		Collidable* secondCollidable = pending.second->getCollidable();
+
+		dispatchPair(
+			pending.first,
+			pending.second,
+			firstCollidable,
+			secondCollidable,
+			pending.phase,
+			pending.overlapping,
+			pending.normal,
+			pending.penetrationDepth,
+			pending.timeOfImpact,
+			pending.separation);
+	}
+
 	_debugShapes.clear();
 	_debugContacts.clear();
 	std::map<GameObject*, size_t> shapeIndexByObject;
@@ -1065,32 +1104,6 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 			shape.hasContact = true;
 			shape.phase = objectPhase.second;
 		}
-	}
-
-	for (const PendingDispatch& pending : pendingDispatches) {
-		if (!pending.first || !pending.second) {
-			continue;
-		}
-
-		if (activeObjectSet.find(pending.first) == activeObjectSet.end() ||
-			activeObjectSet.find(pending.second) == activeObjectSet.end()) {
-			continue;
-		}
-
-		Collidable* firstCollidable = pending.first->getCollidable();
-		Collidable* secondCollidable = pending.second->getCollidable();
-
-		dispatchPair(
-			pending.first,
-			pending.second,
-			firstCollidable,
-			secondCollidable,
-			pending.phase,
-			pending.overlapping,
-			pending.normal,
-			pending.penetrationDepth,
-			pending.timeOfImpact,
-			pending.separation);
 	}
 
 	_activePairs.swap(currentPairs);
