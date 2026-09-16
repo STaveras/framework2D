@@ -109,6 +109,31 @@ int main() {
         assert(std::fabs(boar.getPosition().x - 100) < 73);
         assert(std::fabs(boar.getPosition().y - 86) < 0.01f);
     }
+    // A nearby player behind either facing must not trigger a charge.
+    boar.reset();
+    hero.setPosition(150, 86);
+    for (int i = 0; i < 45; ++i) boar.update(1.0f / 60);
+    assert(!std::strcmp(boar.getState()->getName(), "Walk"));
+    assert(boar.getVelocity().x == -28.0f);
+    // Reach the left patrol boundary to turn naturally toward the right.
+    hero.setPosition(-500, 76);
+    boar.setPosition(27, 86);
+    boar.update(1.0f / 60);
+    boar.setPosition(100, 86);
+    hero.setPosition(50, 86);
+    for (int i = 0; i < 45; ++i) boar.update(1.0f / 60);
+    assert(!std::strcmp(boar.getState()->getName(), "Walk"));
+    assert(boar.getVelocity().x == 28.0f);
+    hero.setPosition(150, 86);
+    boar.update(1.0f / 60);
+    assert(!std::strcmp(boar.getState()->getName(), "Run"));
+    assert(boar.getVelocity().x == 100.0f);
+    // Crossing behind an already charging boar also ends its aggro.
+    hero.setPosition(50, 86);
+    boar.update(1.0f / 60);
+    assert(!std::strcmp(boar.getState()->getName(), "Walk"));
+    assert(boar.getVelocity().x == 28.0f);
+
     boar.reset();
     hero.setPosition(40, 76);
     for (int i = 0; i < 45; ++i) boar.update(1.0f / 60);
@@ -164,6 +189,9 @@ int main() {
     wall.getState()->setCollidable(&wallShape);
     world.addObject("wall", &wall);
     world.addObject("boar", &boar);
+    // Turn at the patrol boundary first; the player must be in front to aggro.
+    boar.setPosition(27, 86);
+    boar.update(0.61f);
     hero.setPosition(180, 86); // Make the boar charge right into the wall.
     boar.setPosition(85, 86);
     Debug::Mode.enable();

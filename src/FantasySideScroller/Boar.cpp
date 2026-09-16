@@ -141,7 +141,8 @@ void Boar::update(float time)
     float ground = 0.0f;
     const bool grounded = supportAt(position.x, position.y + kFoot, 3.0f, 4.0f, ground);
     const vector2 delta = _target.getPosition() - position;
-    const bool chase = _target.getHealth() > 0.0f && std::fabs(delta.x) < kDetectionRange &&
+    const bool targetInFront = delta.x * static_cast<float>(_direction) > 0.0f;
+    const bool chase = targetInFront && _target.getHealth() > 0.0f && std::fabs(delta.x) < kDetectionRange &&
         std::fabs(delta.y) < 40.0f;
     _pause = std::max(0.0f, _pause - time);
     float speed = 0.0f;
