@@ -253,33 +253,37 @@ void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset)
 	const vector2 scale = sprite->getScale();
 	const float rotationRadians = sprite->getRotation();
 
-	glBindTexture(GL_TEXTURE_2D, texture->getTextureId());
+	// Transform once on the CPU so adjacent sprites share one draw call.
+	const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
+	const float xs[4] = {-center.x, srcWidth - center.x, srcWidth - center.x, -center.x};
+	const float ys[4] = {-center.y, -center.y, srcHeight - center.y, srcHeight - center.y};
+	const float us[4] = {u0, u1, u1, u0}, vs[4] = {v0, v0, v1, v1};
+	SpriteVertex quad[4];
+	vector2 lo(INFINITY, INFINITY), hi(-INFINITY, -INFINITY);
+	for (int i = 0; i < 4; ++i) {
+		const float x = xs[i] * scale.x, y = ys[i] * scale.y;
+		quad[i] = {position.x + c*x - sn*y, position.y + sn*x + c*y,
+			us[i], vs[i], tint.r, tint.g, tint.b, tint.a};
+		lo.x = std::min(lo.x, quad[i].x); lo.y = std::min(lo.y, quad[i].y);
+		hi.x = std::max(hi.x, quad[i].x); hi.y = std::max(hi.y, quad[i].y);
+	}
+	if (hi.x < _viewMin.x || lo.x > _viewMax.x || hi.y < _viewMin.y || lo.y > _viewMax.y) return;
+	if (_batchTexture != texture->getTextureId() || _vertices.size() >= 16384) {
+		_flushBatch();
+		_batchTexture = texture->getTextureId();
+	}
+	_vertices.insert(_vertices.end(), quad, quad + 4);
+}
 
-	glColor4f(tint.r / 255.0f, tint.g / 255.0f, tint.b / 255.0f, tint.a / 255.0f);
-
-	glPushMatrix();
-	// Match DirectX sprite semantics: position refers to the sprite's center.
-	glTranslatef(position.x, position.y, 0.0f);
-	glRotatef(rotationRadians * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
-	glScalef(scale.x, scale.y, 1.0f);
-
-	glBegin(GL_QUADS);
-	glTexCoord2f(u0, v0);
-	glVertex2f(-center.x, -center.y);
-
-	glTexCoord2f(u1, v0);
-	glVertex2f(srcWidth - center.x, -center.y);
-
-	glTexCoord2f(u1, v1);
-	glVertex2f(srcWidth - center.x, srcHeight - center.y);
-
-	glTexCoord2f(u0, v1);
-	glVertex2f(-center.x, srcHeight - center.y);
-	glEnd();
-
-	glPopMatrix();
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+void RendererGL::_flushBatch()
+{
+	if (_vertices.empty()) return;
+	glBindTexture(GL_TEXTURE_2D, _batchTexture);
+	glVertexPointer(2, GL_FLOAT, sizeof(SpriteVertex), &_vertices[0].x);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(SpriteVertex), &_vertices[0].u);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(SpriteVertex), &_vertices[0].r);
+	glDrawArrays(GL_QUADS, 0, static_cast<GLsizei>(_vertices.size()));
+	_vertices.clear();
 }
 
 ITexture* RendererGL::createTexture(const char* szFilename, Color colorKey)
@@ -389,6 +393,30 @@ void RendererGL::render(void)
 		}
 	}
 
+	// Inverse-transform viewport corners to a conservative world-space AABB.
+	_viewMin = vector2(INFINITY, INFINITY);
+	_viewMax = vector2(-INFINITY, -INFINITY);
+	const float zoom = m_pCamera && m_pCamera->getZoom() > 0 ? m_pCamera->getZoom() : 1.0f;
+	const float angle = m_pCamera ? -m_pCamera->getRotation() : 0.0f;
+	const float c = std::cos(angle), sn = std::sin(angle);
+	for (int i = 0; i < 4; ++i) {
+		vector2 point((i & 1) ? m_nWidth : 0, (i & 2) ? m_nHeight : 0);
+		if (m_pCamera && m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter)
+			point = point - m_pCamera->getCenter();
+		point /= zoom;
+		point = vector2(c*point.x - sn*point.y, sn*point.x + c*point.y);
+		if (m_pCamera) {
+			point = point + m_pCamera->getRenderPosition();
+			if (m_pCamera->getZoomAnchorMode() != Camera::ZoomAnchorMode::TargetCenter)
+				point = point - m_pCamera->getCenter();
+		}
+		_viewMin.x = std::min(_viewMin.x, point.x); _viewMin.y = std::min(_viewMin.y, point.y);
+		_viewMax.x = std::max(_viewMax.x, point.x); _viewMax.y = std::max(_viewMax.y, point.y);
+	}
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
 	if (!_RenderLists.empty()) {
 		for (unsigned int i = 0; i < _RenderLists.size(); i++) {
 			for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++) {
@@ -419,6 +447,12 @@ void RendererGL::render(void)
 			}
 		}
 	}
+
+	_flushBatch();
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if (DEBUGGING/* && Debug::dbgCollision*/) {
 		if (const CollisionSystem* collisionSystem = getActiveCollisionSystem()) {

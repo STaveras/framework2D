@@ -13,6 +13,12 @@ endif()
 get_filename_component(ROOT_DIR_NAME "${CMAKE_SOURCE_DIR}" NAME)
 project(${ROOT_DIR_NAME} LANGUAGES CXX)
 
+# Single-config generators otherwise silently build without optimization.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

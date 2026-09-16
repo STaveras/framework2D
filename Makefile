@@ -12,9 +12,9 @@ LIBS := -lglfw -lvulkan -ltinyxml2 -lsimdjson
 
 # Debug (make DEBUG=1)
 ifeq ($(DEBUG),1)
-  DEBUG_FLAGS := -D_DEBUG -g
+  DEBUG_FLAGS := -D_DEBUG -g -O0
 else
-  DEBUG_FLAGS :=
+  DEBUG_FLAGS := -O2 -DNDEBUG
 endif
 
 UNAME_S := $(shell uname -s)
@@ -58,7 +58,7 @@ ifeq ($(DEBUG),1)
   OBJDIR := build/obj_d
 else
   TARGET := bin/$(TARGET_BASE)
-  OBJDIR := build/obj
+  OBJDIR := build/obj_release
 endif
 OBJS := $(SRCS:%.cpp=$(OBJDIR)/%.o)
 OBJS := $(OBJS:%.mm=$(OBJDIR)/%.o)
@@ -88,9 +88,11 @@ $(OBJDIR)/%.o: %.mm
 -include $(OBJS:.o=.d)
 
 clean:
-	rm -rf build/obj build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d
+	rm -rf build/obj build/obj_release build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d
 
 .PHONY: test-boar
+# Keep test assertions active even when linking optimized engine objects.
+$(OBJDIR)/tools/boar_smoke_test.o: CXXFLAGS += -UNDEBUG
 test-boar: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/boar_smoke_test.o
 	$(CXX) $^ -o $(OBJDIR)/boar_smoke_test $(LDFLAGS)
 	./$(OBJDIR)/boar_smoke_test

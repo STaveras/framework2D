@@ -3,6 +3,7 @@
 
 #include "IRenderer.h"
 #include "Window.h"
+#include <vector>
 
 class Sprite;
 class Animation;
@@ -11,6 +12,11 @@ class RendererGL : public IRenderer
 {
 	GLFWwindow* _window = nullptr;
 
+	struct SpriteVertex { float x, y, u, v; unsigned char r, g, b, a; };
+	std::vector<SpriteVertex> _vertices;
+	unsigned int _batchTexture = 0;
+	vector2 _viewMin, _viewMax;
+	void _flushBatch();
 	void _drawImage(Sprite* sprite, Color tint, vector2 offset);
 
 public:
