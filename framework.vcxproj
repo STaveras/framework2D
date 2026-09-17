@@ -284,6 +284,7 @@
     <ClInclude Include="src\FantasySideScroller\LevelManager.h" />
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
     <ClInclude Include="src\FantasySideScroller\Resources.h" />
+    <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
     <ClInclude Include="src\InputTapeRecorder.h" />
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
@@ -324,6 +325,7 @@
     <ClInclude Include="src\Logger.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Maths.h" />
+    <ClInclude Include="src\StrUtils.h" />
     <ClInclude Include="src\Telemetry2D.h" />
     <ClInclude Include="src\maths\Vector2.h" />
     <ClInclude Include="src\maths\Vector3.h" />
@@ -402,9 +404,13 @@
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\FantasySideScroller\Character.cpp" />
     <ClCompile Include="src\FantasySideScroller\Boar.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterMovement.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterStateSetup.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterUpdate.cpp" />
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp" />
     <ClCompile Include="src\FantasySideScroller\LevelManager.cpp" />
     <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
+    <ClCompile Include="src\FantasySideScroller\TraversalMechanics.cpp" />
     <ClCompile Include="src\InputTapeRecorder.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />
@@ -422,6 +428,7 @@
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\IRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\StrUtils.cpp" />
     <ClCompile Include="src\Telemetry2D.cpp" />
     <ClCompile Include="src\ObjectManager.cpp" />
     <ClCompile Include="src\Plane.cpp" />
