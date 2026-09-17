@@ -2,6 +2,8 @@
 #include "PlayState.h"
 
 #include "../Camera.h"
+#include "../Debug.h"
+#include "../Font.h"
 #include "../Sprite.h"
 
 #include "Constants.h"
@@ -16,6 +18,8 @@ constexpr float kHUDBackgroundHeight = 10.0f;
 constexpr float kHUDFillInset = 2.0f;
 constexpr float kHUDFillMaxWidth = 100.0f;
 constexpr float kHUDFillHeight = 6.0f;
+constexpr float kHUDTextOffsetY = 10.0f;
+constexpr float kHUDTextScale = 1.0f;
 constexpr float kHUDStaminaOffsetY = kHUDBackgroundHeight;
 constexpr float kHUDStaminaHeight = 1.0f;
 constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
@@ -39,7 +43,7 @@ void PlayState::_initHUD()
 	}
 
 	if (!_hudRenderList) {
-		_hudRenderList = renderer->createRenderList();
+    _hudRenderList = renderer->createRenderList(true);
 	}
 
 	if (!_healthBarBackground) {
@@ -77,6 +81,23 @@ void PlayState::_initHUD()
 		_staminaBarFill->setVisibility(true);
 		_hudRenderList->push_back(_staminaBarFill);
 	}
+
+	if (!_helloWorldText) {
+		_helloWorldText = new Font();
+		const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
+		if (_helloWorldText->loadFromJSON(fontPath)) {
+			_helloWorldText->setText("HelloWorld\nHello World");
+			_helloWorldText->setTint(0xFFFFFFFF);
+			_helloWorldText->setScale(kHUDTextScale, kHUDTextScale);
+			_helloWorldText->setOffset(vector2(0.0f, 0.0f));
+			_helloWorldText->setVisibility(true);
+			_hudRenderList->push_back(_helloWorldText);
+		}
+		else {
+			DEBUG_MSG(("Failed to load bitmap font from: " + fontPath + "\n").c_str());
+			SAFE_DELETE(_helloWorldText);
+		}
+	}
 }
 
 void PlayState::_updateHUD(float dt)
@@ -87,16 +108,7 @@ void PlayState::_updateHUD(float dt)
 		return;
 	}
 
-	Camera* camera = _levelManager.getCamera();
-	vector2 cameraPosition(0.0f, 0.0f);
-	vector2 cameraCenter(0.0f, 0.0f);
-	if (camera) {
-		cameraPosition = camera->getRenderPosition();
-		cameraCenter = camera->getCenter();
-	}
-
-	const vector2 cameraTopLeft = cameraPosition - cameraCenter;
-	const vector2 hudOrigin = cameraTopLeft + vector2(kHUDPaddingX, kHUDPaddingY);
+	const vector2 hudOrigin(kHUDPaddingX, kHUDPaddingY);
 
 	_healthBarBackground->setPosition(hudOrigin);
 	_healthBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
@@ -133,7 +145,11 @@ void PlayState::_updateHUD(float dt)
 	const vector2 staminaFillOrigin = staminaOrigin + vector2(kHUDFillInset, 0.0f);
 	_staminaBarFill->setPosition(staminaFillOrigin);
 	_staminaBarFill->setScale(staminaFillWidth, kHUDStaminaHeight);
-	_staminaBarFill->setVisibility(staminaFillWidth > 0.0f);
+    _staminaBarFill->setVisibility(staminaFillWidth > 0.0f);
+    
+    if (_helloWorldText) {
+        _helloWorldText->setPosition(hudOrigin + vector2(0.0f, kHUDTextOffsetY));
+    }
 }
 
 void PlayState::_shutdownHUD()
@@ -151,6 +167,9 @@ void PlayState::_shutdownHUD()
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
 		}
+		if (_helloWorldText) {
+			_hudRenderList->remove(_helloWorldText);
+		}
 
 		if (IRenderer* renderer = Engine2D::getRenderer()) {
 			renderer->destroyRenderList(_hudRenderList);
@@ -162,6 +181,7 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_healthBarFill);
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
+	SAFE_DELETE(_helloWorldText);
 }
 
 void PlayState::onEnter(State* prev)

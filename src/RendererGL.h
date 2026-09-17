@@ -7,6 +7,7 @@
 
 class Sprite;
 class Animation;
+class Font;
 
 class RendererGL : public IRenderer
 {
@@ -17,7 +18,8 @@ class RendererGL : public IRenderer
 	unsigned int _batchTexture = 0;
 	vector2 _viewMin, _viewMax;
 	void _flushBatch();
-	void _drawImage(Sprite* sprite, Color tint, vector2 offset);
+	void _drawImage(Sprite* sprite, Color tint, vector2 offset, bool screenSpace = false);
+	void _drawFont(Font* font, Color tint, vector2 offset);
 
 public:
 	RendererGL();
