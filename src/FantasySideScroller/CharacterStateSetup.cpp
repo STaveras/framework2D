@@ -29,6 +29,11 @@ void Character::_initStates() {
 			for (Animation* animation : loadedAnimations) {
 				if (animation) {
 					_animationManager.store(animation);
+					for (Frame* frame : animation->getFrames()) {
+						if (frame && frame->getSprite()) {
+							_spriteManager.store(frame->getSprite());
+						}
+					}
 				}
 			}
 		}
