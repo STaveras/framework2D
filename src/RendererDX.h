@@ -4,6 +4,7 @@
 #define _RENDERERD3D_H
 #include "IRenderer.h"
 class Appearance;
+class Font;
 class Sprite;
 class Text;
 class RendererDX : public IRenderer
@@ -13,7 +14,8 @@ class RendererDX : public IRenderer
    LPDIRECT3DDEVICE9	m_pD3DDevice;
    LPD3DXSPRITE		m_pD3DSprite;
 
-   void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f);
+    void _drawFont(Font* font, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false);
+    void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false);
    void _drawText(Text* text, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
 
 private:

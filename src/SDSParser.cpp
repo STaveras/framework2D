@@ -5,6 +5,8 @@
 #include <fstream>
 #include <list>
 #include <queue>
+#include <cstring>
+#include <limits>
 #include <string>
 #include <cstring>
 #include <limits>

@@ -9,6 +9,7 @@
 
 class Character;
 class Boar;
+class Font;
 
 class PlayState : public GameState
 {
@@ -28,6 +29,7 @@ class PlayState : public GameState
 	Image* _healthBarFill = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
+	Font* _helloWorldText = NULL;
 
 public:
 	PlayState(void);

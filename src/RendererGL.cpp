@@ -7,6 +7,7 @@
 #include "CollisionSystem.h"
 #include "Debug.h"
 #include "Engine2D.h"
+#include "Font.h"
 #include "Frame.h"
 #include "Game.h"
 #include "GameState.h"
@@ -204,7 +205,7 @@ void RendererGL::setVerticalSync(bool vsyncEnabled)
 	}
 }
 
-void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset)
+void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset, bool screenSpace)
 {
 	if (!sprite) {
 		return;
@@ -267,7 +268,7 @@ void RendererGL::_drawImage(Sprite* sprite, Color tint, vector2 offset)
 		lo.x = std::min(lo.x, quad[i].x); lo.y = std::min(lo.y, quad[i].y);
 		hi.x = std::max(hi.x, quad[i].x); hi.y = std::max(hi.y, quad[i].y);
 	}
-	if (hi.x < _viewMin.x || lo.x > _viewMax.x || hi.y < _viewMin.y || lo.y > _viewMax.y) return;
+	if (!screenSpace && (hi.x < _viewMin.x || lo.x > _viewMax.x || hi.y < _viewMin.y || lo.y > _viewMax.y)) return;
 	if (_batchTexture != texture->getTextureId() || _vertices.size() >= 16384) {
 		_flushBatch();
 		_batchTexture = texture->getTextureId();
@@ -284,6 +285,80 @@ void RendererGL::_flushBatch()
 	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(SpriteVertex), &_vertices[0].r);
 	glDrawArrays(GL_QUADS, 0, static_cast<GLsizei>(_vertices.size()));
 	_vertices.clear();
+}
+
+void RendererGL::_drawFont(Font* font, Color tint, vector2 offset)
+{
+	if (!font) {
+		return;
+	}
+
+	const std::string& text = font->getText();
+	if (text.empty()) {
+		return;
+	}
+
+	const int fontHeight = font->getHeight();
+	if (fontHeight <= 0) {
+		return;
+	}
+
+	const vector2 position = font->getPosition() + offset;
+	const vector2 center = font->getCenter();
+	const vector2 scale = font->getScale();
+	const float rotationRadians = font->getRotation();
+
+	// Flush queued sprites first so immediate-mode glyphs preserve render-list order.
+	_flushBatch();
+	glDisable(GL_TEXTURE_2D);
+	glColor4f(tint.r / 255.0f, tint.g / 255.0f, tint.b / 255.0f, tint.a / 255.0f);
+
+	glPushMatrix();
+	glTranslatef(position.x, position.y, 0.0f);
+	glRotatef(rotationRadians * kRadiansToDegrees, 0.0f, 0.0f, 1.0f);
+	glScalef(scale.x, scale.y, 1.0f);
+
+	float penX = -center.x;
+	float penY = -center.y;
+	const float lineAdvance = static_cast<float>(fontHeight + 1);
+
+	glBegin(GL_QUADS);
+	for (char c : text) {
+		if (c == '\n') {
+			penX = -center.x;
+			penY += lineAdvance;
+			continue;
+		}
+
+		const std::vector<int>& bitmap = font->getBitmap(c);
+		const int glyphWidth = std::max(font->getWidth(c), 0);
+		const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
+		for (int rowIndex = 0; rowIndex < static_cast<int>(bitmap.size()); ++rowIndex) {
+			const int rowBits = bitmap[rowIndex];
+            for (int column = 0; column < glyphWidth; ++column) {
+                const int bitIndex = column;
+                if (((rowBits >> bitIndex) & 1) == 0) {
+                    continue;
+                }
+
+				const float left = penX + static_cast<float>(column);
+				const float top = penY + static_cast<float>(rowIndex);
+				const float right = left + 1.0f;
+				const float bottom = top + 1.0f;
+
+				glVertex2f(left, top);
+				glVertex2f(right, top);
+				glVertex2f(right, bottom);
+				glVertex2f(left, bottom);
+			}
+		}
+
+		penX += static_cast<float>(glyphAdvance + 1);
+	}
+	glEnd();
+
+	glPopMatrix();
+	glEnable(GL_TEXTURE_2D);
 }
 
 ITexture* RendererGL::createTexture(const char* szFilename, Color colorKey)
@@ -371,6 +446,56 @@ void RendererGL::render(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	const auto drawRenderLists = [this](bool screenSpace)
+	{
+		if (_RenderLists.empty()) {
+			return;
+		}
+
+		for (unsigned int i = 0; i < _RenderLists.size(); i++) {
+			RenderList* renderList = _RenderLists.at(i);
+			if (!renderList || renderList->screenSpace != screenSpace) {
+				continue;
+			}
+
+			for (RenderList::iterator o = renderList->begin(); o != renderList->end(); o++) {
+				if (!(*o) || !(*o)->isVisible()) {
+					continue;
+				}
+
+				switch ((*o)->getRenderableType()) {
+				case RENDERABLE_TYPE_NULL:
+				case RENDERABLE_TYPE_WIDGET:
+					break;
+				case RENDERABLE_TYPE_FONT:
+				{
+					Font* font = (Font*)(*o);
+					_drawFont(font, font->getTintColor(), font->getOffset());
+				}
+				break;
+				case RENDERABLE_TYPE_SPRITE:
+				{
+					Image* image = (Image*)(*o);
+					_drawImage(image, image->getTintColor(), image->getOffset(), screenSpace);
+				}
+				break;
+				case RENDERABLE_TYPE_ANIMATION:
+				{
+					Animation* animation = (Animation*)(*o);
+					if (animation->getFrameCount()) {
+						_drawImage(animation->getCurrentFrame()->getSprite(),
+								   animation->getCurrentFrame()->getSprite()->getTintColor(),
+								   animation->getOffset(), screenSpace);
+					}
+				}
+				break;
+				default:
+					break;
+				}
+			}
+		}
+	};
+
 	if (m_pCamera) {
 		const vector2 cameraPosition = m_pCamera->getRenderPosition();
 		const vector2 cameraCenter = m_pCamera->getCenter();
@@ -417,36 +542,7 @@ void RendererGL::render(void)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
-	if (!_RenderLists.empty()) {
-		for (unsigned int i = 0; i < _RenderLists.size(); i++) {
-			for (RenderList::iterator o = _RenderLists.at(i)->begin(); o != _RenderLists.at(i)->end(); o++) {
-				if ((*o) && (*o)->isVisible()) {
-					switch ((*o)->getRenderableType()) {
-					case RENDERABLE_TYPE_NULL:
-					case RENDERABLE_TYPE_WIDGET:
-					case RENDERABLE_TYPE_FONT:
-						break;
-					case RENDERABLE_TYPE_SPRITE:
-					{
-						Image* image = (Image*)(*o);
-						_drawImage(image, image->getTintColor(), image->getOffset());
-					}
-					break;
-					case RENDERABLE_TYPE_ANIMATION:
-					{
-						Animation* animation = (Animation*)(*o);
-						if (animation->getFrameCount()) {
-							_drawImage(animation->getCurrentFrame()->getSprite(),
-									   animation->getCurrentFrame()->getSprite()->getTintColor(),
-									   animation->getOffset());
-						}
-					}
-					break;
-					}
-				}
-			}
-		}
-	}
+	drawRenderLists(false);
 
 	_flushBatch();
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -459,6 +555,20 @@ void RendererGL::render(void)
 			drawCollisionDebugOverlay(*collisionSystem);
 		}
 	}
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glEnable(GL_TEXTURE_2D);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	drawRenderLists(true);
+	_flushBatch();
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glfwSwapBuffers(_window);
 }

@@ -29,7 +29,7 @@ namespace FileSystem
 	{
 #if defined(__APPLE__) || defined(__linux__)
 		return chdir(path.c_str());
-#elif defined(_WIN32)
+#else
 		return _chdir(path.c_str());
 #endif
 	}
