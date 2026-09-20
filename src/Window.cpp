@@ -129,14 +129,23 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport)
 
 	glfwSetWindowUserPointer(_window, this);
 
-	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
+	glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int, int) {
 
 		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 		if (_window->getUnderlyingWindow() == window) {
+			// GLFW reports framebuffer pixels to this callback.  The framework's
+			// width/height are the logical client dimensions used by rendering and
+			// cursor input, so keep them in the same coordinate space as
+			// glfwGetCursorPos() instead of storing HiDPI framebuffer pixels here.
+			int width = 0;
+			int height = 0;
+			glfwGetWindowSize(window, &width, &height);
 
-			_window->setWidth(width);
-			_window->setHeight(height);
+			if (width > 0 && height > 0) {
+				_window->setWidth(width);
+				_window->setHeight(height);
+			}
 
 			Engine2D::getEventSystem()->sendEvent(EVT_WINDOW_RESIZED, window);
 		}
@@ -263,6 +272,48 @@ void Window::setHeight(int nHeight)
 	if (m_nHeight != nHeight) {
 		m_nHeight = nHeight;
 	}
+}
+
+int Window::getClientWidth(void) const
+{
+	if (_window) {
+		int width = 0;
+		int height = 0;
+		glfwGetWindowSize(_window, &width, &height);
+		if (width > 0) {
+			return width;
+		}
+	}
+#ifdef _WIN32
+	if (m_hWnd) {
+		RECT clientRect{};
+		if (GetClientRect(m_hWnd, &clientRect)) {
+			return clientRect.right - clientRect.left;
+		}
+	}
+#endif
+	return m_nWidth;
+}
+
+int Window::getClientHeight(void) const
+{
+	if (_window) {
+		int width = 0;
+		int height = 0;
+		glfwGetWindowSize(_window, &width, &height);
+		if (height > 0) {
+			return height;
+		}
+	}
+#ifdef _WIN32
+	if (m_hWnd) {
+		RECT clientRect{};
+		if (GetClientRect(m_hWnd, &clientRect)) {
+			return clientRect.bottom - clientRect.top;
+		}
+	}
+#endif
+	return m_nHeight;
 }
 
 void Window::resize(void)

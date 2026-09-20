@@ -3,13 +3,21 @@
 
 #include "PlatformKeyboard.h"
 
+#if !defined(_WIN32)
+#include "PlatformMouse.h"
+#endif
+
 PlatformInput::PlatformInput(Window *window):_window(window)
 {
    _keyboard = new PlatformKeyboard(_window);
+#if !defined(_WIN32)
+   _mouse = new PlatformMouse(_window);
+#endif
 }
 
 PlatformInput::~PlatformInput(void) {
    SAFE_DELETE(_keyboard);
+   SAFE_DELETE(_mouse);
 }
 
 void PlatformInput::initialize(void)
@@ -29,23 +37,14 @@ void PlatformInput::update(void)
    if (_keyboard)
       _keyboard->update();
 
-//    if (_mouse)
-//       ((DIMouse*)_mouse)->update();
+#if !defined(_WIN32)
+   if (_mouse)
+      ((PlatformMouse*)_mouse)->update();
+#endif
 }
 
 void PlatformInput::shutdown(void)
 {
-//    if (m_lpDirectInput)
-//    {
-//       if (_mouse) {
-//          ((DIMouse*)_mouse)->release();
-//       }
-
-//       if (_keyboard) {
-//          ((DIKeyboard*)_keyboard)->release();
-//       }
-
-//       m_lpDirectInput->release();
-//       m_lpDirectInput = NULL;
-//    }
+   // PlatformKeyboard and PlatformMouse poll GLFW for state and hold no
+   // resources to release; nothing to tear down.
 }

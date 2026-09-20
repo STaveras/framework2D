@@ -74,6 +74,8 @@ public:
 	bool hasQuit(void) const { return m_bHasQuit; }
 	int getWidth(void) const { return m_nWidth; }
 	int getHeight(void) const { return m_nHeight; }
+	int getClientWidth(void) const;
+	int getClientHeight(void) const;
 
 	const char* getWindowTitle(void) const { return m_szWindowTitle.c_str(); }
 	const char* getWindowClassName(void) const { return m_szWindowClassName; }
