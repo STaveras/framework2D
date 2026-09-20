@@ -97,6 +97,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <FrameworkEnableVLD Condition="'$(FrameworkEnableVLD)'==''">false</FrameworkEnableVLD>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(FrameworkEnableVLD)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>FRAMEWORK_ENABLE_VLD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (DX)|x64'">
     <IncludePath>$(DXSDK_DIR)Include;$(VK_SDK_PATH)\Include;$(VLD_INCLUDE);$(IncludePath)</IncludePath>
     <LibraryPath>$(VLD_LIB)\Win64;$(DXSDK_DIR)Lib\x64;$(VK_SDK_PATH)\Lib;$(LibraryPath)</LibraryPath>
@@ -334,6 +342,8 @@
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\MOUSE_BUTTONS.h" />
     <ClInclude Include="src\ObjectManager.h" />
+    <ClInclude Include="src\SpatialIndex2D.h" />
+    <ClInclude Include="src\RuntimeProfile.h" />
     <ClInclude Include="src\ObjectOperator.h" />
     <ClInclude Include="src\Physical.h" />
     <ClInclude Include="src\Kinematics2D.h" />

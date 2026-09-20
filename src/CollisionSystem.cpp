@@ -6,10 +6,13 @@
 #include "GameObject.h"
 #include "Polygon.h"
 #include "Kinematics2D.h"
+#include "ObjectManager.h"
+#include "SpatialIndex2D.h"
 #include "Renderable.h"
 #include "Square.h"
 #include "Tile.h"
 #include "TileSet.h"
+#include "RuntimeProfile.h"
 
 #include <algorithm>
 #include <cmath>
@@ -544,6 +547,16 @@ void CollisionSystem::reset(void)
 
 void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, float dt)
 {
+	updateInternal(objects, dt, nullptr);
+}
+
+void CollisionSystem::update(ObjectManager& objectManager, float dt)
+{
+	updateInternal(objectManager.getObjects(), dt, &objectManager);
+}
+
+void CollisionSystem::updateInternal(const std::map<std::string, GameObject*>& objects, float dt, ObjectManager* spatialManager)
+{
 	struct PairRuntimeInfo
 	{
 		std::optional<float> timeOfImpact;
@@ -567,22 +580,36 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 	const bool collectDebugData = DEBUGGING && Debug::dbgCollision;
 
 	std::vector<GameObject*> activeObjects;
-	activeObjects.reserve(objects.size());
-
 	std::unordered_set<GameObject*> activeObjectSet;
-	activeObjectSet.reserve(objects.size());
-
-	for (const auto& entry : objects) {
-		GameObject* object = entry.second;
-		if (!object) {
-			continue;
+	if (!spatialManager || collectDebugData) {
+		activeObjects.reserve(objects.size());
+		if (!spatialManager) {
+			activeObjectSet.reserve(objects.size());
 		}
-		activeObjects.push_back(object);
-		activeObjectSet.insert(object);
+		for (const auto& entry : objects) {
+			GameObject* object = entry.second;
+			if (!object) {
+				continue;
+			}
+			activeObjects.push_back(object);
+			if (!spatialManager) {
+				activeObjectSet.insert(object);
+			}
+		}
 	}
 
+	auto isCurrentObject = [&](GameObject* object) -> bool {
+		if (!object) {
+			return false;
+		}
+		if (spatialManager) {
+			return spatialManager->contains(object);
+		}
+		return activeObjectSet.find(object) != activeObjectSet.end();
+	};
+
 	for (auto itr = _previousPositions.begin(); itr != _previousPositions.end();) {
-		if (activeObjectSet.find(itr->first) == activeObjectSet.end()) {
+		if (!isCurrentObject(itr->first) || !itr->first || itr->first->isStatic()) {
 			itr = _previousPositions.erase(itr);
 		}
 		else {
@@ -594,12 +621,20 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 	std::map<GameObject*, vector2> frameTargetPositions;
 	std::vector<GameObject*> dynamicObjects;
 	std::vector<GameObject*> staticObjects;
-	dynamicObjects.reserve(activeObjects.size());
-	staticObjects.reserve(activeObjects.size());
+	const std::vector<GameObject*>* sourceObjects = &activeObjects;
+	if (spatialManager) {
+		sourceObjects = &spatialManager->getDynamicObjects();
+	}
+	dynamicObjects.reserve(sourceObjects->size());
+	if (!spatialManager) {
+		// The map overload is intentionally retained as a reference path. It
+		// enumerates static objects exactly as the original implementation did.
+		staticObjects.reserve(activeObjects.size());
+	}
 
 	float maxDisplacement = 0.0f;
 	int inferredStartCount = 0;
-	for (GameObject* object : activeObjects) {
+	for (GameObject* object : *sourceObjects) {
 		if (!object) {
 			continue;
 		}
@@ -617,26 +652,27 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 		}
 
 		const vector2 currentPosition = object->getPosition();
-		auto previousItr = _previousPositions.find(object);
-		if (previousItr == _previousPositions.end()) {
-			vector2 inferredStart = currentPosition;
-			// First frame for an object: approximate pre-integration position to avoid
-			// dropping the initial sweep and tunneling on startup spikes.
-			if (!object->isStatic() && dt > 0.0f) {
-				inferredStart = currentPosition - (object->getVelocity() * dt);
-				++inferredStartCount;
-			}
-			_previousPositions[object] = inferredStart;
-			previousItr = _previousPositions.find(object);
-		}
-
-		frameStartPositions[object] = previousItr->second;
-		frameTargetPositions[object] = currentPosition;
-
 		if (object->isStatic()) {
-			staticObjects.push_back(object);
+			if (!spatialManager) {
+				staticObjects.push_back(object);
+			}
 		}
 		else {
+			auto previousItr = _previousPositions.find(object);
+			if (previousItr == _previousPositions.end()) {
+				vector2 inferredStart = currentPosition;
+				// First frame for an object: approximate pre-integration position to avoid
+				// dropping the initial sweep and tunneling on startup spikes.
+				if (dt > 0.0f) {
+					inferredStart = currentPosition - (object->getVelocity() * dt);
+					++inferredStartCount;
+				}
+				_previousPositions[object] = inferredStart;
+				previousItr = _previousPositions.find(object);
+			}
+
+			frameStartPositions[object] = previousItr->second;
+			frameTargetPositions[object] = currentPosition;
 			dynamicObjects.push_back(object);
 			const float displacement = (float)((currentPosition - previousItr->second).length());
 			maxDisplacement = std::max(maxDisplacement, displacement);
@@ -658,6 +694,34 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 
 	std::map<CollisionPairKey, PairRuntimeInfo> runtimePairInfo;
 	float maxCorrectionMagnitude = 0.0f;
+
+	std::vector<GameObject*> broadphaseCandidates;
+	auto queryBroadphase = [&](GameObject* object) -> bool {
+		broadphaseCandidates.clear();
+		if (!spatialManager || !object) {
+			return false;
+		}
+
+		Collidable* collidable = object->getCollidable();
+		vector2 min(0.0f, 0.0f);
+		vector2 max(0.0f, 0.0f);
+		if (!collidable || !collidable->isActive() ||
+			!SpatialIndex2D::tryGetConservativeBounds(collidable, min, max)) {
+			return false;
+		}
+
+		// Include touching contacts in the broadphase. Narrowphase still decides
+		// whether the candidate is an overlap or an epsilon touch.
+		min.x -= kTouchContactEpsilon;
+		min.y -= kTouchContactEpsilon;
+		max.x += kTouchContactEpsilon;
+		max.y += kTouchContactEpsilon;
+		// Dynamic pairs are handled in their stable later-object order by the
+		// collision loop. Query only indexed static geometry here so each actor
+		// does not rescan every dynamic object.
+		spatialManager->queryBounds(min, max, broadphaseCandidates, true);
+		return true;
+	};
 
 	for (int substep = 1; substep <= substeps; ++substep) {
 		const float alpha = (float)substep / (float)substeps;
@@ -682,19 +746,20 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 		for (int iteration = 0; iteration < kResolveIterations; ++iteration) {
 			bool resolvedAnyPair = false;
 
-			auto resolvePair = [&](GameObject* first, GameObject* second) {
+			auto resolvePair = [&](GameObject* first, GameObject* second) -> bool {
+				RuntimeProfile::count(RuntimeProfile::Counter::CollisionCandidates);
 				if (!first || !second || first == second) {
-					return;
+					return false;
 				}
 
 				Collidable* firstCollidable = first->getCollidable();
 				Collidable* secondCollidable = second->getCollidable();
 				if (!firstCollidable || !secondCollidable || !firstCollidable->isActive() || !secondCollidable->isActive()) {
-					return;
+					return false;
 				}
 
 				if (!first->shouldCollideWith(*second) || !second->shouldCollideWith(*first)) {
-					return;
+					return false;
 				}
 
 				const bool firstIsOneWaySurface =
@@ -703,14 +768,14 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 					second->isStatic() && secondCollidable->hasSurfaceFlag(SurfaceFlags::OneWay) && !first->isStatic();
 
 				if (!shouldResolveAsOneWay(first, second, firstCollidable, secondCollidable, previousStepPositions)) {
-					return;
+					return false;
 				}
 
 				const bool overlapping =
 					firstCollidable->collidesWith(secondCollidable) ||
 					secondCollidable->collidesWith(firstCollidable);
 				if (!overlapping) {
-					return;
+					return false;
 				}
 
 				CollisionPairKey key = makePairKey(first, second);
@@ -723,24 +788,24 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 				std::optional<float> penetrationDepth;
 				computeGeometryHints(firstCollidable, secondCollidable, normal, penetrationDepth);
 				if (!normal.has_value() || !penetrationDepth.has_value() || penetrationDepth.value() <= 0.0f) {
-					return;
+					return false;
 				}
 
 				vector2 axis = normal.value();
 				if (axis.length() <= kAxisEpsilon) {
-					return;
+					return false;
 				}
 				axis.normalize();
 
 				const float depth = penetrationDepth.value() + kSeparationSlop;
 				if (depth <= 0.0f) {
-					return;
+					return false;
 				}
 
 					const bool firstStatic = first->isStatic();
 					const bool secondStatic = second->isStatic();
 					if (firstStatic && secondStatic) {
-						return;
+						return false;
 					}
 
 					vector2 resolveAxis = axis;
@@ -815,16 +880,75 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 				pairInfo.penetrationDepth = penetrationDepth;
 				pairInfo.separation = vector2(-axisForKeyOrder.x, -axisForKeyOrder.y) * penetrationDepth.value();
 				resolvedAnyPair = true;
+				return true;
 			};
 
 			for (size_t i = 0; i < dynamicObjects.size(); ++i) {
 				GameObject* first = dynamicObjects[i];
+				// Dynamic pairs retain the original later-object order. This keeps
+				// correction behavior stable and is cheap compared with narrowphase.
 				for (size_t j = i + 1; j < dynamicObjects.size(); ++j) {
 					resolvePair(first, dynamicObjects[j]);
 				}
-				for (GameObject* staticObject : staticObjects) {
-					resolvePair(first, staticObject);
+
+				if (!spatialManager) {
+					// The map overload is the complete reference implementation.
+					for (GameObject* staticObject : staticObjects) {
+						resolvePair(first, staticObject);
+					}
+					continue;
 				}
+
+				// A dynamic actor with no conservative bounds cannot be safely
+				// culled. Enumerate static objects only for this rare fallback.
+				if (!queryBroadphase(first)) {
+				for (const auto& entry : objects) {
+					GameObject* staticObject = entry.second;
+					if (staticObject && staticObject->isStatic() &&
+							isCurrentObject(staticObject)) {
+							resolvePair(first, staticObject);
+						}
+					}
+					continue;
+				}
+
+				// Static candidates are queried from the persistent grid using the
+				// actor's current bounds. After a correction, query again immediately,
+				// but resume strictly after the last processed manager rank. Objects
+				// skipped before that rank are revisited by the next solver iteration,
+				// matching the legacy loop's ordering.
+			size_t lastStaticRank = 0;
+			bool hasLastStaticRank = false;
+			for (;;) {
+				if (!queryBroadphase(first)) {
+					break;
+				}
+
+				bool resolvedStatic = false;
+				for (GameObject* candidate : broadphaseCandidates) {
+					if (!candidate || !candidate->isStatic() ||
+						!isCurrentObject(candidate)) {
+						continue;
+					}
+
+					const size_t rank = spatialManager->getSpatialOrder(candidate);
+					if (rank == std::numeric_limits<size_t>::max() ||
+						(hasLastStaticRank && rank <= lastStaticRank)) {
+						continue;
+					}
+
+					lastStaticRank = rank;
+					hasLastStaticRank = true;
+					if (resolvePair(first, candidate)) {
+						resolvedStatic = true;
+						break;
+					}
+				}
+
+				if (!resolvedStatic) {
+					break;
+				}
+			}
 			}
 
 			if (!resolvedAnyPair) {
@@ -848,8 +972,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 			return;
 		}
 
-		if (activeObjectSet.find(first) == activeObjectSet.end() ||
-			activeObjectSet.find(second) == activeObjectSet.end()) {
+		if (!isCurrentObject(first) || !isCurrentObject(second)) {
 			return;
 		}
 
@@ -929,6 +1052,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 	}
 
 	auto enqueuePairIfOverlapping = [&](GameObject* first, GameObject* second) {
+		RuntimeProfile::count(RuntimeProfile::Counter::CollisionCandidates);
 		if (!first || !second || first == second) {
 			return;
 		}
@@ -972,11 +1096,34 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 
 	for (size_t i = 0; i < dynamicObjects.size(); ++i) {
 		GameObject* first = dynamicObjects[i];
+		// Dynamic contacts always retain the original later-object ordering.
 		for (size_t j = i + 1; j < dynamicObjects.size(); ++j) {
 			enqueuePairIfOverlapping(first, dynamicObjects[j]);
 		}
-		for (GameObject* staticObject : staticObjects) {
-			enqueuePairIfOverlapping(first, staticObject);
+		if (!spatialManager) {
+			for (GameObject* staticObject : staticObjects) {
+				enqueuePairIfOverlapping(first, staticObject);
+			}
+			continue;
+		}
+
+		if (queryBroadphase(first)) {
+			// Append static contacts in the spatial query's lexicographic order.
+			for (GameObject* candidate : broadphaseCandidates) {
+				if (candidate && candidate->isStatic() && spatialManager->contains(candidate)) {
+					enqueuePairIfOverlapping(first, candidate);
+				}
+			}
+		}
+		else {
+			// Unsupported actor bounds require the complete static fallback.
+			for (const auto& entry : objects) {
+				GameObject* staticObject = entry.second;
+				if (staticObject && staticObject->isStatic() &&
+					spatialManager->contains(staticObject)) {
+					enqueuePairIfOverlapping(first, staticObject);
+				}
+			}
 		}
 	}
 
@@ -985,8 +1132,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 			continue;
 		}
 
-		if (activeObjectSet.find(previousPair.first) == activeObjectSet.end() ||
-			activeObjectSet.find(previousPair.second) == activeObjectSet.end()) {
+		if (!isCurrentObject(previousPair.first) || !isCurrentObject(previousPair.second)) {
 			continue;
 		}
 
@@ -1005,8 +1151,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 			continue;
 		}
 
-		if (activeObjectSet.find(pending.first) == activeObjectSet.end() ||
-			activeObjectSet.find(pending.second) == activeObjectSet.end()) {
+		if (!isCurrentObject(pending.first) || !isCurrentObject(pending.second)) {
 			continue;
 		}
 
@@ -1042,7 +1187,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 			shape.collisionAnchor = object->getCollisionAnchor();
 
 			auto sweepStartItr = frameStartPositions.find(object);
-			if (sweepStartItr != frameStartPositions.end()) {
+			if (!object->isStatic() && sweepStartItr != frameStartPositions.end()) {
 				shape.hasSweep = true;
 				shape.sweepStart = sweepStartItr->second;
 				shape.sweepEnd = object->getPosition();
@@ -1108,7 +1253,7 @@ void CollisionSystem::update(const std::map<std::string, GameObject*>& objects, 
 
 	_activePairs.swap(currentPairs);
 
-	for (GameObject* object : activeObjects) {
+	for (GameObject* object : dynamicObjects) {
 		if (!object) {
 			continue;
 		}

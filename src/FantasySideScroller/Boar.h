@@ -3,6 +3,8 @@
 #include "../GameObject.h"
 #include "../Square.h"
 
+#include <vector>
+
 class Character;
 class ObjectManager;
 
@@ -23,6 +25,8 @@ class Boar : public GameObject
     // steering the boar back into the same contact on the next frame.
     float _wallTurnCooldown = 0.0f;
     bool _defeated = false;
+    // Reused by supportAt so the per-tick spatial query does not allocate.
+    mutable std::vector<GameObject*> _supportCandidates;
 
     bool supportAt(float x, float footY, float above, float below, float& support) const;
     void animate(const char* name);
