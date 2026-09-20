@@ -30,3 +30,4 @@ out-test/
 framework/
 framework2D/
 *.app/**
+cmake-macos-build
