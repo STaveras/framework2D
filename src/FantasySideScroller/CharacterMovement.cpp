@@ -8,6 +8,7 @@
 #include "../Kinematics2D.h"
 #include "../Polygon.h"
 #include "../Square.h"
+#include "../RuntimeProfile.h"
 
 #include <algorithm>
 #include <cmath>
@@ -516,6 +517,7 @@ bool Character::_findSupportOnTile(const Tile* tile, float footY, float maxSnapD
 
 Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, float& outSupportY, int* outSupportSampleSource)
 {
+	RuntimeProfile::Scope profileScope(RuntimeProfile::Region::CharacterSupport);
 	outSupportY = footY;
 	if (outSupportSampleSource) {
 		*outSupportSampleSource = (int)AutoSupportSource::None;
@@ -572,7 +574,6 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 		return NULL;
 	}
 
-	const auto& objects = activeGameState->getObjectManager()->getObjects();
 	const int horizontalIntent = _getHorizontalIntent();
 	const float maxUpwardSnapDistance = std::min(
 		kMaxAutoStepUpDistance,
@@ -587,8 +588,25 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 	float uphillProbeY = footY;
 	float uphillProbeRise = std::numeric_limits<float>::max();
 
-	for (const auto& entry : objects) {
-		GameObject* object = entry.second;
+	// Query the complete span of the three foot samples and the uphill probe.
+	// The small x padding matches PolygonCollider's edge sampling epsilon and
+	// keeps edge-touching supports in the candidate set.
+	constexpr float kSampleQueryEpsilon = 0.001f;
+	// The uphill probe deliberately searches 1.25x the normal upward window.
+	// Include that expanded range in the broad phase or a valid slope can be
+	// rejected before the existing narrow phase sees it.
+	const float queryUpwardDistance = maxUpwardSnapDistance * 1.25f;
+	const vector2 queryMin(
+		std::min(bodyMin.x, uphillProbeX) - kSampleQueryEpsilon,
+		footY - queryUpwardDistance);
+	const vector2 queryMax(
+		std::max(bodyMax.x, uphillProbeX) + kSampleQueryEpsilon,
+		footY + maxDownwardSnapDistance);
+	_supportCandidates.clear();
+	activeGameState->getObjectManager()->queryBounds(queryMin, queryMax, _supportCandidates);
+	RuntimeProfile::count(RuntimeProfile::Counter::CharacterCandidates, _supportCandidates.size());
+
+	for (GameObject* object : _supportCandidates) {
 		if (!object || object == this || object->getType() != GAME_OBJ_TILE) {
 			continue;
 		}

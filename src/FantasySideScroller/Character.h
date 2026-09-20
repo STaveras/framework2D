@@ -9,6 +9,8 @@
 #include "Constants.h"
 #include "Resources.h"
 
+#include <vector>
+
 class Character : public GameObject
 {
 	Tile* _tile = NULL; // The tile the character is on
@@ -20,6 +22,8 @@ class Character : public GameObject
 	float _longJumpMomentumSpeed = 0.0f;
 	int _longJumpMomentumDirection = 0;
 	bool _longJumpMomentumActive = false;
+	// Reused by _findGroundSupportTile so support scans do not allocate each tick.
+	std::vector<GameObject*> _supportCandidates;
 
 protected:
 	// Initialize animation states and hitboxes

@@ -13,6 +13,18 @@ constexpr float kHorizontalSeparationEpsilon = 0.01f;
 constexpr float kMaxHorizontalSeparationPerContact = 4.0f;
 }
 
+void Physical::setStatic(bool isStatic)
+{
+	if (_static == isStatic) {
+		return;
+	}
+
+	_static = isStatic;
+	if (dynamic_cast<GameObject*>(this)) {
+		GameObject::invalidateSpatialIndex();
+	}
+}
+
 void Physical::resetKinematicState2D(void)
 {
 	_kinematicState.grounded = false;

@@ -10,6 +10,22 @@
 
 #include <functional>
 #include <utility>
+#include <atomic>
+
+namespace
+{
+std::atomic<uint64_t> g_spatialIndexRevision(1);
+}
+
+uint64_t GameObject::getSpatialIndexRevision(void)
+{
+	return g_spatialIndexRevision.load(std::memory_order_relaxed);
+}
+
+void GameObject::invalidateSpatialIndex(void)
+{
+	g_spatialIndexRevision.fetch_add(1, std::memory_order_relaxed);
+}
 
 void GameObject::onStateWillExit(State* current, State* next)
 {
@@ -48,6 +64,18 @@ bool GameObject::shouldCollideWith(const GameObject& other) const
 void GameObject::setCollisionPredicate(CollisionPredicate predicate)
 {
 	_collisionPredicate = std::move(predicate);
+}
+
+void GameObject::setCollisionAnchorUsesRenderableOffset(bool enabled)
+{
+	if (_useRenderableOffsetForCollisionAnchor == enabled) {
+		return;
+	}
+	_useRenderableOffsetForCollisionAnchor = enabled;
+	_collisionObjects.clear();
+	if (isStatic()) {
+		GameObject::invalidateSpatialIndex();
+	}
 }
 
 vector2 GameObject::getCollisionAnchor(void) const
@@ -116,6 +144,35 @@ void GameObject::updateComponents()
 
 	if (!_collisionObjects.empty()) {
 		_collisionObjects.clear();
+	}
+
+	if (this->isStatic()) {
+		GameObject::invalidateSpatialIndex();
+	}
+}
+
+void GameObject::GameObjectState::setRenderable(Renderable* renderable)
+{
+	_renderable = renderable;
+	if (_owner) {
+		_owner->_collisionObjects.clear();
+		if (_owner->isStatic()) {
+			GameObject::invalidateSpatialIndex();
+		}
+	}
+}
+
+void GameObject::GameObjectState::setCollidable(Collidable* collidable)
+{
+	_collidable = collidable;
+	if (_owner) {
+		// The world-space clone is a cache of this state collider. Clear it as
+		// soon as the source pointer changes so direct state edits are visible
+		// without requiring a position change first.
+		_owner->_collisionObjects.clear();
+		if (_owner->isStatic()) {
+			GameObject::invalidateSpatialIndex();
+		}
 	}
 }
 
@@ -261,6 +318,7 @@ GameObject::GameObjectState* GameObject::addState(const char* name)
 	if (!state) {
 		state = this->createDerived<GameObjectState>();
 		state->setName(name);
+		state->_owner = this;
 	}
 	return state;
 }

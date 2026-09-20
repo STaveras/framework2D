@@ -183,6 +183,12 @@
     <ClInclude Include="src\ObjectManager.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
+    <ClInclude Include="src\SpatialIndex2D.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RuntimeProfile.h">
+      <Filter>Debugging</Filter>
+    </ClInclude>
     <ClInclude Include="src\ObjectOperator.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
