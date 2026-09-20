@@ -8,13 +8,23 @@ class DIMouse : public IMouse, IDIDevice
 {
    friend class DirectInput;
 
+   HWND _hWnd;
+   bool _cursorHidden;
    DIMOUSESTATE2 _mouseStateOld;
    DIMOUSESTATE2 _mouseState;
 
+   bool _cursorIsInsideClient(void) const;
+   bool _syncPositionToClientCursor(void);
+   void _setCursorVisibility(bool visible);
+
 public:
    DIMouse(void) {
+      _hWnd = NULL;
+      _cursorHidden = false;
       ZeroMemory(&_mouseState, sizeof(_mouseState));
    }
+
+   ~DIMouse(void);
 
    bool buttonPressed(MOUSE_BUTTONS eBtn) {
       return ((bool)_mouseState.rgbButtons[eBtn] && !(bool)_mouseStateOld.rgbButtons[eBtn]);
