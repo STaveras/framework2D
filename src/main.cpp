@@ -10,6 +10,7 @@
 #include "System.h"
 #include "Renderer.h"
 #include "Window.h"
+#include "RuntimeProfile.h"
 
 #include <iostream>
 #include <chrono>
@@ -56,7 +57,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 #if defined(_WIN32) && defined(_DEBUG)
 
-#if __has_include(<vld.h>)
+#if defined(FRAMEWORK_ENABLE_VLD)
 #include <vld.h>
 #define FRAMEWORK_HAS_VLD 1
 #else
@@ -73,6 +74,17 @@ int main(int argc, const char *argv[])
    std::cout << "Working directory: " << FileSystem::GetWorkingDirectory() << std::endl;
 
    System::GlobalDataPath(System::checkArgumentsForDataPath(argc, argv));
+
+#if defined(_WIN32) && defined(_DEBUG) && FRAMEWORK_HAS_VLD
+   // Allocation stack tracing is expensive; opt in independently of overlays.
+   Debug::dbgMemory = System::checkEnvironmentFlag("AUTO_MEMORY_DEBUG");
+   if (Debug::dbgMemory) {
+      VLDGlobalEnable();
+   }
+   else {
+      VLDGlobalDisable();
+   }
+#endif
 
    const bool enableDebug = System::checkArgumentsForDebugMode(argc, argv);
    enableDebug ? Debug::Mode.enable() : Debug::Mode.disable(); // set runtime debug mode
@@ -98,14 +110,6 @@ int main(int argc, const char *argv[])
    if (Debug::Mode.isEnabled()) {
       // Check for game data
       FileSystem::ListDirectoryContents(System::GlobalDataPath());
-#if defined(_WIN32) && FRAMEWORK_HAS_VLD
-      if (Debug::dbgMemory) {
-         VLDEnable();
-      }
-      else {
-         VLDDisable();
-      }
-#endif
    }
    // sleep is in milliseconds for Windows, seconds for others!
    // sleep(1000);
@@ -178,8 +182,10 @@ int main(int argc, const char *argv[])
 
    // Opt-in, bounded benchmark: exclude startup and warm up for one second.
    const double benchmarkSeconds = System::checkEnvironmentDouble("AUTO_BENCHMARK_SECONDS", 0.0);
+   const bool profileEnabled = System::checkEnvironmentFlag("AUTO_PROFILE");
    using BenchmarkClock = std::chrono::steady_clock;
-   const auto benchmarkStart = BenchmarkClock::now();
+   auto benchmarkStart = BenchmarkClock::now();
+   bool benchmarkNeedsStart = true;
    std::vector<double> frameTimes;
    if (benchmarkSeconds > 0.0) frameTimes.reserve(10000);
 
@@ -189,6 +195,8 @@ int main(int argc, const char *argv[])
          // Eventually just have the engine handle this like:
          // engine->Run(); 
          const auto frameStart = BenchmarkClock::now();
+         RuntimeProfile::active = profileEnabled && !benchmarkNeedsStart &&
+             std::chrono::duration<double>(frameStart - benchmarkStart).count() >= 1.0;
          window.update();
          engine->update();
 
@@ -230,13 +238,19 @@ int main(int argc, const char *argv[])
              window.setWindowTitle(newTitle.c_str());
          }
 
-         if (benchmarkSeconds > 0.0) {
+         if (benchmarkSeconds > 0.0 || profileEnabled) {
             const auto now = BenchmarkClock::now();
+            // The initial update can load the level through queued events.
+            // Start warm-up after that frame, not before deferred loading.
+            if (benchmarkNeedsStart) {
+               benchmarkStart = now;
+               benchmarkNeedsStart = false;
+            }
             const double elapsed = std::chrono::duration<double>(now - benchmarkStart).count();
-            if (elapsed >= 1.0) {
+            if (benchmarkSeconds > 0.0 && std::chrono::duration<double>(frameStart - benchmarkStart).count() >= 1.0) {
                frameTimes.push_back(std::chrono::duration<double, std::milli>(now - frameStart).count());
             }
-            if (elapsed >= benchmarkSeconds + 1.0) break;
+            if (benchmarkSeconds > 0.0 && elapsed >= benchmarkSeconds + 1.0) break;
          }
       } while (!window.hasQuit() && !engine->hasQuit());
    }
@@ -262,6 +276,8 @@ int main(int argc, const char *argv[])
                 << " p99_ms=" << frameTimes[(frameTimes.size() - 1) * 99 / 100]
                 << " over_16.67ms=" << overBudget << std::endl;
    }
+   RuntimeProfile::active = false;
+   if (profileEnabled) RuntimeProfile::report(std::cout);
    engine->shutdown();
    
    Input::destroyInputInterface(pInput);

@@ -7,13 +7,100 @@
 #include "../src/ObjectManager.h"
 #include "../src/Square.h"
 #include "../src/Tile.h"
+#include "../src/Kinematics2D.h"
 #include "../src/FantasySideScroller/LevelManager.h"
 #include "../src/GameState.h"
 #include "stb/stb_image.h"
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <limits>
+
+namespace {
+
+bool sampleSupportFullScan(
+    const ObjectManager& world,
+    float x,
+    float footY,
+    float above,
+    float below,
+    float& support)
+{
+    support = std::numeric_limits<float>::max();
+    bool found = false;
+    for (const auto& entry : world.getObjects()) {
+        auto* tile = dynamic_cast<Tile*>(entry.second);
+        if (!tile || tile->isNonCollidingLayer()) continue;
+        float y = 0.0f;
+        if (Kinematics2D::sampleSupportY(tile->getCollidable(), x, y) &&
+            y >= footY - above && y <= footY + below && y < support) {
+            support = y;
+            found = true;
+        }
+    }
+    return found;
+}
+
+void compareMapSupportQueryToFullScan(
+    const ObjectManager& world,
+    const vector2& spawn)
+{
+    constexpr float kQueryEpsilon = 0.001f;
+    constexpr float kAbove = 160.0f;
+    constexpr float kBelow = 320.0f;
+    const float footY = spawn.y + 14.0f;
+    // Include negative coordinates, cell boundaries, and points well outside
+    // the map so static grid misses cannot be mistaken for missing terrain.
+    const float sampleX[] = {
+        spawn.x,
+        spawn.x - kQueryEpsilon,
+        spawn.x + kQueryEpsilon,
+        spawn.x - 32.0f,
+        spawn.x + 32.0f,
+        -500.0f,
+        -2048.0f,
+        4096.0f};
+
+    size_t localCandidateCount = std::numeric_limits<size_t>::max();
+    for (float x : sampleX) {
+        std::vector<GameObject*> candidates;
+        world.queryBounds(
+            vector2(x - kQueryEpsilon, footY - kAbove),
+            vector2(x + kQueryEpsilon, footY + kBelow),
+            candidates);
+
+        float queriedSupport = std::numeric_limits<float>::max();
+        bool queried = false;
+        for (GameObject* object : candidates) {
+            auto* tile = dynamic_cast<Tile*>(object);
+            if (!tile || tile->isNonCollidingLayer()) continue;
+            float y = 0.0f;
+            if (Kinematics2D::sampleSupportY(tile->getCollidable(), x, y) &&
+                y >= footY - kAbove && y <= footY + kBelow && y < queriedSupport) {
+                queriedSupport = y;
+                queried = true;
+            }
+        }
+
+        float scannedSupport = std::numeric_limits<float>::max();
+        const bool scanned = sampleSupportFullScan(
+            world, x, footY, kAbove, kBelow, scannedSupport);
+        assert(queried == scanned);
+        if (queried && scanned) assert(std::fabs(queriedSupport - scannedSupport) < 0.01f);
+        localCandidateCount = std::min(localCandidateCount, candidates.size());
+    }
+
+    // The real map is large enough for a narrow local query to prune at least
+    // one object. Keep this conditional so a deliberately tiny fixture map
+    // still exercises the support equivalence checks above.
+    if (world.numObjects() > 8) {
+        assert(localCandidateCount < world.numObjects());
+    }
+}
+
+} // namespace
 
 class TestTexture : public ITexture {
     unsigned int width = 0, height = 0;
@@ -200,7 +287,7 @@ int main() {
     bool sawTurnedLeft = false;
     for (int i = 0; i < 60; ++i) {
         boar.update(1.0f / 60);
-        collision.update(world.getObjects(), 1.0f / 60);
+        collision.update(world, 1.0f / 60);
         for (const auto& shape : collision.getDebugShapes()) {
             if (shape.object == &boar) {
                 auto* body = static_cast<Square*>(boar.getCollidable());
@@ -222,7 +309,7 @@ int main() {
     const float previousX = boar.getPosition().x;
     for (int i = 0; i < 18; ++i) {
         boar.update(1.0f / 60);
-        collision.update(world.getObjects(), 1.0f / 60);
+        collision.update(world, 1.0f / 60);
     }
     assert(boar.getPosition().x < previousX || boar.getVelocity().x < 0.0f);
     world.removeObject(&boar);
@@ -233,6 +320,7 @@ int main() {
         LevelManager level;
         level.initialize("mosswood_hollow.tmj", vector2(-60, 0), "Background/Background.png", mapWorld, state);
         assert(level.hasSpawnPoint());
+        compareMapSupportQueryToFullScan(mapWorld, level.getSpawnPoint());
         hero.setPosition(level.getSpawnPoint());
         Boar mapBoar(mapWorld, hero, level.getSpawnPoint() + vector2(140, 10));
         const vector2 spawn = mapBoar.getPosition();
@@ -240,7 +328,7 @@ int main() {
         mapWorld.addObject("Boar", &mapBoar);
         for (int i = 0; i < 300; ++i) {
             mapBoar.update(1.0f / 60);
-            collision.update(mapWorld.getObjects(), 1.0f / 60);
+            collision.update(mapWorld, 1.0f / 60);
             assert(mapBoar.getPosition().y < spawn.y + 30);
         }
         std::cout << "Map spawn: " << spawn.x << ", " << spawn.y << "\n";

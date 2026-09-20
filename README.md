@@ -77,6 +77,34 @@ collision checks. Build the game with `make`.
 
 ## Performance
 
+Boar support probes, character ground probes, and collision resolution now use
+the framework's shared spatial queries. Static collider bounds are indexed once
+and refreshed after edits; ordinary ticks update only dynamic objects. Queries
+preserve candidate ordering and leave exact collision and support rules intact.
+
+Latest local Windows x64 Debug/DirectX measurements (September 20, 2026), with
+VLD disabled in **both** builds, profiling enabled, VSync/overlays off, and a
+five-second idle sample after warm-up:
+
+| Metric | Before spatial queries | After spatial queries |
+| --- | ---: | ---: |
+| Game update per tick | 15.29 ms | 1.21 ms |
+| Collision processing per tick | 8.05 ms | 0.59 ms |
+| Average FPS | 54.2 | 258.5 |
+| p95 frame time | 24.82 ms | 4.80 ms |
+| Collision candidate checks per tick | 2,483 | 13.7 |
+
+The scene contains 5,752 objects. Boar and character support queries formerly
+visited all of them; the measured indexed queries returned about 3 and 6
+candidates respectively. The final measured run rebuilt the static index zero
+times. These are local variable-step idle measurements, not a cycle-identical
+replay or a frame-rate guarantee for every scene.
+
+Set `AUTO_PROFILE=1` to print inclusive region times and candidate counts on exit.
+See [spatial-query architecture, mutation rules, and tests](doc/spatial_queries.md)
+for the API contract and commands. All three headless regression suites pass,
+including reference-solver comparisons and real-map boar/support checks.
+
 `make` builds with `-O2`; `make DEBUG=1` keeps an unoptimized debug build.
 Release and debug objects are stored separately. Use the release executable
 for frame-rate measurements.
@@ -89,6 +117,43 @@ measure presentation pacing; leave it off to measure rendering throughput.
 Existing input replays can be used through `AUTO_INPUT_REPLAY_PATH` for a
 repeatable moving-camera workload. Keep window size, replay, and debug-overlay
 settings identical when comparing runs.
+
+On Windows, normal Debug builds exclude Visual Leak Detector, even when it is
+installed. Previously, finding `vld.h` automatically loaded it, and allocation
+tracing stayed enabled unless `--debug` was passed. Its stack tracing can dominate
+frame time. Debug symbols, assertions, and unoptimized application code remain
+enabled in the normal Debug configuration.
+
+For leak investigation, build with `msbuild framework.vcxproj
+/p:Configuration="Debug (DX)" /p:Platform=x64 /p:FrameworkEnableVLD=true`, or
+configure CMake with `-DFRAMEWORK_ENABLE_VLD=ON`. Set `VLD_INCLUDE` to the VLD
+include directory and `VLD_LIB` to its lib directory. Then set
+`AUTO_MEMORY_DEBUG=1` when launching to enable tracing across all threads.
+Rebuild with the option off when returning to normal debugging.
+
+To benchmark an existing Windows Debug executable from the repository root:
+
+```powershell
+$env:AUTO_BENCHMARK_SECONDS = '10'
+try {
+    & .\bin\framework2D_d.exe --dataPath .\bin\fantasySideScroller
+} finally {
+    Remove-Item Env:AUTO_BENCHMARK_SECONDS
+}
+```
+
+The benchmark excludes the first update (which can load the level), then warms
+up for one second. Local Windows x64 Debug/DirectX measurements on September 19,
+2026, with a five-second idle sample and VSync/overlays off:
+
+| Configuration | Average FPS | Mean frame time | p95 frame time |
+| --- | ---: | ---: | ---: |
+| VLD included, allocation tracing enabled | 5.0 | 200.85 ms | 211.66 ms |
+| Normal Debug, VLD excluded | 35.7 | 28.01 ms | 34.57 ms |
+
+This removes a major diagnostic overhead, but does not make unoptimized Debug
+a locked 60 FPS build. Temporary timing instrumentation also identified game
+updates as the remaining dominant cost; rendering was roughly 3–4 ms per frame.
 
 The OpenGL renderer culls sprites outside the camera bounds and batches
 consecutive sprites sharing a texture, preserving transparency/layer order.
