@@ -2,7 +2,7 @@
 #pragma once
 
 #include "../GameState.h"
-#include "../Sprite.h"
+#include "../Cursor.h"
 
 #include "LevelManager.h"
 #include "TraversalMechanics.h"
@@ -30,6 +30,7 @@ class PlayState : public GameState
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
 	Font* _helloWorldText = NULL;
+	Cursor* _cursor = NULL;
 
 public:
 	PlayState(void);

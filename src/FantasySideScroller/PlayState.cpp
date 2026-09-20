@@ -1,10 +1,15 @@
-// PlayState.cpp
+// File: PlayState.cpp
+// Author: Stanley Taveras
+// Created: 2/18/2010
+// Modified: 11/13/2024
+
 #include "PlayState.h"
 
 #include "../Camera.h"
 #include "../Debug.h"
 #include "../Font.h"
 #include "../Sprite.h"
+#include "../Cursor.h"
 
 #include "Constants.h"
 #include "Character.h"
@@ -23,11 +28,36 @@ constexpr float kHUDTextScale = 1.0f;
 constexpr float kHUDStaminaOffsetY = kHUDBackgroundHeight;
 constexpr float kHUDStaminaHeight = 1.0f;
 constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
+
+vector2 ClientToRenderCursorPosition(const vector2& clientPosition)
+{
+	IRenderer* renderer = Engine2D::getRenderer();
+	Window* window = Renderer::mainWindow;
+	if (!renderer || !window) {
+		return clientPosition;
+	}
+
+	const float clientWidth = static_cast<float>(window->getClientWidth());
+	const float clientHeight = static_cast<float>(window->getClientHeight());
+	if (clientWidth <= 0.0f || clientHeight <= 0.0f ||
+		renderer->getWidth() <= 0 || renderer->getHeight() <= 0) {
+		return clientPosition;
+	}
+
+	// Mouse coordinates are relative to the actual client area, while the
+	// screen-space render list uses the renderer's logical resolution.  Keep
+	// the cursor in that same logical space so the renderer's final scaling
+	// puts its hotspot back under the OS cursor.
+	return vector2(
+		clientPosition.x * static_cast<float>(renderer->getWidth()) / clientWidth,
+		clientPosition.y * static_cast<float>(renderer->getHeight()) / clientHeight);
+}
 }
 
 PlayState::PlayState()
     : _player(nullptr)
-    , _playableCharacter(nullptr) {}
+    , _playableCharacter(nullptr)
+    , _cursor(nullptr) {}
 
 PlayState::~PlayState() {
 	if (_player || _playableCharacter || _hudRenderList) {
@@ -96,6 +126,13 @@ void PlayState::_initHUD()
 		else {
 			DEBUG_MSG(("Failed to load bitmap font from: " + fontPath + "\n").c_str());
 			SAFE_DELETE(_helloWorldText);
+		}
+	}
+
+	if (!_cursor) {
+		_cursor = new Cursor();
+		if (_cursor->load(BasePath("cursors.png").c_str())) {
+			_hudRenderList->push_back(_cursor->getImage());
 		}
 	}
 }
@@ -170,6 +207,9 @@ void PlayState::_shutdownHUD()
 		if (_helloWorldText) {
 			_hudRenderList->remove(_helloWorldText);
 		}
+		if (_cursor && _cursor->getImage()) {
+			_hudRenderList->remove(_cursor->getImage());
+		}
 
 		if (IRenderer* renderer = Engine2D::getRenderer()) {
 			renderer->destroyRenderList(_hudRenderList);
@@ -182,6 +222,7 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
 	SAFE_DELETE(_helloWorldText);
+	SAFE_DELETE(_cursor);
 }
 
 void PlayState::onEnter(State* prev)
@@ -274,7 +315,6 @@ bool PlayState::onExecute(float time)
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
-
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
 		_collisionSystem.reset();
@@ -361,6 +401,19 @@ bool PlayState::onExecute(float time)
 	if (_boar) _boar->updateCombat(time);
 	_levelManager.update();
 	_updateHUD(time);
+
+	// Update cursor position and state to match mouse.
+	// The cursor sprite is pushed into _hudRenderList (a screen-space render
+	// list). Convert the mouse's client coordinates into the renderer's logical
+	// screen coordinates; do not convert through the camera/world transform.
+	if (_cursor) {
+		Mouse* mouse = Engine2D::getInput()->getMouse();
+		if (mouse) {
+			_cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
+			_cursor->updateFromMouse(mouse);
+		}
+	}
+
 	return keepRunning;
 }
 
