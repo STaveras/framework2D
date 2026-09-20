@@ -5,6 +5,7 @@
 #include "IInput.h"
 #include "InputTapeRecorder.h"
 #include "IRenderer.h"
+#include "RuntimeProfile.h"
 
 #include <algorithm>
 
@@ -71,7 +72,10 @@ void Engine2D::update(void)
 				timer->setManualDeltaTime(fixedDelta);
 				++_simulationTick;
 				_simulationElapsedSeconds += fixedDelta;
-				_game->update(timer);
+				{
+					RuntimeProfile::Scope profile(RuntimeProfile::Region::GameTick);
+					_game->update(timer);
+				}
 				timer->clearManualDeltaTime();
 				_frameAccumulatorSeconds -= fixedDelta;
 				++simulationSteps;
@@ -82,12 +86,17 @@ void Engine2D::update(void)
 			timer->clearManualDeltaTime();
 			++_simulationTick;
 			_simulationElapsedSeconds += frameDeltaSeconds;
-			_game->update(timer);
+			{
+				RuntimeProfile::Scope profile(RuntimeProfile::Region::GameTick);
+				_game->update(timer);
+			}
 		}
 	}
 
-	if (_renderer)
+	if (_renderer) {
+		RuntimeProfile::Scope profile(RuntimeProfile::Region::Render);
 		_renderer->render();
+	}
 }
 
 void Engine2D::shutdown(void)

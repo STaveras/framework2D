@@ -16,6 +16,7 @@
 #include "Game.h"
 
 #include <functional>
+#include <cstdint>
 
 // TODO: GameObjects should maybe have an overload for operator() ?
 //       they could take in other objects, and perform collision checks between it and the other object?
@@ -64,6 +65,7 @@ public:
       bool _preserveScaling;
       Renderable* _renderable;
       Collidable* _collidable;
+      GameObject* _owner = nullptr;
       vector2 _direction;
       double _force;
       double _executeTime;
@@ -84,10 +86,10 @@ public:
       void setPreserveScaling(bool preserveMirror) { _preserveScaling = preserveMirror; }
 
       Renderable* getRenderable(void) { return _renderable; }
-      void setRenderable(Renderable* renderable) { _renderable = renderable; }
+      void setRenderable(Renderable* renderable);
 
       Collidable* getCollidable(void);
-      void setCollidable(Collidable* collidable) { _collidable = collidable; }
+      void setCollidable(Collidable* collidable);
 
       vector2 getDirection(void) const { return _direction; }
       void setDirection(vector2 direction) { _direction = direction; }
@@ -127,6 +129,15 @@ public:
 
    GAME_OBJ_TYPE getType(void) const { return _objType; }
 
+   // Shared revision used by ObjectManager instances to notice static
+   // geometry edits without retaining owner pointers in GameObject.
+   static uint64_t getSpatialIndexRevision(void);
+   static void invalidateSpatialIndex(void);
+
+   // Rebuild the world-space collider cache after editing a state collider
+   // directly. Normal position/state/Tile lifecycle methods do this for you.
+   void refreshCollisionGeometry(void) { this->updateComponents(); }
+
    GameObjectState* addState(const char* name);
    GameObjectState* getState(const char* name) { return (GameObjectState*)StateMachine::getState(name); }
    GameObjectState* getState(void) const { return (GameObjectState*)StateMachine::getState(); } // Just cus I'm tired of adding (ObjectState*) and whatnot
@@ -137,7 +148,7 @@ public:
 
    virtual bool shouldCollideWith(const GameObject& other) const;
    void setCollisionPredicate(CollisionPredicate predicate);
-   void setCollisionAnchorUsesRenderableOffset(bool enabled) { _useRenderableOffsetForCollisionAnchor = enabled; }
+   void setCollisionAnchorUsesRenderableOffset(bool enabled);
    bool collisionAnchorUsesRenderableOffset(void) const { return _useRenderableOffsetForCollisionAnchor; }
 
    virtual void onCollisionContact(const CollisionContact& contact);

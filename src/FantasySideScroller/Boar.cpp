@@ -6,6 +6,7 @@
 #include "../Kinematics2D.h"
 #include "../ObjectManager.h"
 #include "../Tile.h"
+#include "../RuntimeProfile.h"
 
 #include <algorithm>
 #include <cmath>
@@ -52,10 +53,20 @@ Boar::Boar(ObjectManager& world, Character& target, vector2 nearSpawn)
 
 bool Boar::supportAt(float x, float footY, float above, float below, float& support) const
 {
+    RuntimeProfile::Scope profileScope(RuntimeProfile::Region::BoarSupport);
     bool found = false;
     support = std::numeric_limits<float>::max();
-    for (const auto& entry : _world.getObjects()) {
-        auto* tile = dynamic_cast<Tile*>(entry.second);
+    // sampleSupportY accepts points on polygon edges within a small epsilon;
+    // include that tolerance in the query bounds so the spatial index cannot
+    // drop an edge-touching candidate.
+    constexpr float kSampleQueryEpsilon = 0.001f;
+    const vector2 queryMin(x - kSampleQueryEpsilon, footY - above);
+    const vector2 queryMax(x + kSampleQueryEpsilon, footY + below);
+    _supportCandidates.clear();
+    _world.queryBounds(queryMin, queryMax, _supportCandidates);
+    RuntimeProfile::count(RuntimeProfile::Counter::BoarCandidates, _supportCandidates.size());
+    for (GameObject* object : _supportCandidates) {
+        auto* tile = dynamic_cast<Tile*>(object);
         if (!tile || tile->isNonCollidingLayer()) continue;
         float y = 0.0f;
         if (Kinematics2D::sampleSupportY(tile->getCollidable(), x, y) &&
@@ -130,6 +141,7 @@ bool Boar::shouldCollideWith(const GameObject& other) const
 
 void Boar::update(float time)
 {
+    RuntimeProfile::Scope profileScope(RuntimeProfile::Region::BoarUpdate);
     if (_defeated) {
         GameObject::update(time);
         if (!static_cast<Animation*>(getRenderable())->isPlaying())

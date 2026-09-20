@@ -2,6 +2,7 @@
 
 #include "GameState.h"
 #include "Engine2D.h"
+#include "RuntimeProfile.h"
 
 #include "GameObject.h"
 
@@ -112,9 +113,18 @@ void GameState::onEnter(State* prevState)
 
 bool GameState::onExecute(float time)
 {
-	_inputManager.update(time);
-	_objectManager.update(time);
-	_collisionSystem.update(_objectManager.getObjects(), time);
+	{
+		RuntimeProfile::Scope profile(RuntimeProfile::Region::Input);
+		_inputManager.update(time);
+	}
+	{
+		RuntimeProfile::Scope profile(RuntimeProfile::Region::ObjectUpdate);
+		_objectManager.update(time);
+	}
+	{
+		RuntimeProfile::Scope profile(RuntimeProfile::Region::Collision);
+		_collisionSystem.update(_objectManager, time);
+	}
 
 	return true; // We're still updating!!! ...Right?
 }

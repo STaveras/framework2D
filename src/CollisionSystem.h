@@ -13,6 +13,7 @@
 
 class GameObject;
 class Collidable;
+class ObjectManager;
 
 enum class CollisionPhase
 {
@@ -84,6 +85,8 @@ class CollisionSystem
 	std::vector<CollisionDebugContact> _debugContacts;
 	std::map<GameObject*, vector2> _previousPositions;
 
+	void updateInternal(const std::map<std::string, GameObject*>& objects, float dt, ObjectManager* spatialManager);
+
 	static CollisionPairKey makePairKey(GameObject* a, GameObject* b);
 	static void computeGeometryHints(const Collidable* a, const Collidable* b, std::optional<vector2>& normal, std::optional<float>& penetrationDepth);
 	void dispatchPair(
@@ -101,6 +104,7 @@ class CollisionSystem
 public:
 	void reset(void);
 	void update(const std::map<std::string, GameObject*>& objects, float dt);
+	void update(ObjectManager& objectManager, float dt);
 
 	const std::vector<CollisionDebugShape>& getDebugShapes(void) const { return _debugShapes; }
 	const std::vector<CollisionDebugContact>& getDebugContacts(void) const { return _debugContacts; }

@@ -87,7 +87,7 @@ public:
 
 	void setMass(float mass) { _mass = mass; }
 	void setRotation(float rotation) { _rotation = rotation; } // UNDONE: PLEASE DON'T USE THIS ON ANYTHING OTHER THAN A CAMERA (cus collision objects don't rotate yet... :/)
-	void setStatic(bool isStatic) { _static = isStatic; }
+	void setStatic(bool isStatic);
 
 	vector2 getVelocity(void) const { return _velocity; }
 	void setVelocity(vector2 velocity) { _velocity = velocity; }
