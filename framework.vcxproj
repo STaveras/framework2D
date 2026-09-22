@@ -282,13 +282,13 @@
     <ClInclude Include="src\CommandEvent.h" />
     <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\CullObjectOperator.h" />
+    <ClInclude Include="src\Cursor.h" />
     <ClInclude Include="src\Cyclable.h" />
     <ClInclude Include="src\Debug.h" />
     <ClInclude Include="src\DebugLogger.hpp" />
     <ClInclude Include="src\FantasySideScroller\Character.h" />
     <ClInclude Include="src\FantasySideScroller\Boar.h" />
     <ClInclude Include="src\FantasySideScroller\Constants.h" />
-    <ClInclude Include="src\FantasySideScroller\Cursor.h" />
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h" />
     <ClInclude Include="src\FantasySideScroller\LevelManager.h" />
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
@@ -412,9 +412,9 @@
     <ClCompile Include="src\Command.cpp" />
     <ClCompile Include="src\Controller.cpp" />
     <ClCompile Include="src\CullObjectOperator.cpp" />
+    <ClCompile Include="src\Cursor.cpp" />
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\FantasySideScroller\Character.cpp" />
-    <ClCompile Include="src\FantasySideScroller\Cursor.cpp" />
     <ClCompile Include="src\FantasySideScroller\Boar.cpp" />
     <ClCompile Include="src\FantasySideScroller\CharacterMovement.cpp" />
     <ClCompile Include="src\FantasySideScroller\CharacterStateSetup.cpp" />
