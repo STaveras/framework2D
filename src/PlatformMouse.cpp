@@ -1,9 +1,11 @@
 // PlatformMouse.cpp
-// GLFW-backed mouse for non-Windows platforms (macOS / Linux).
+// GLFW-backed mouse for GLFW-backed windows (all platforms).
+//
+// GLFW is the windowing/input layer for the OpenGL, Vulkan, and Metal
+// renderers on every platform, so this implementation is shared. The
+// legacy Win32/DirectX path uses DIMouse instead (see DirectInput.cpp).
 
 #include "PlatformMouse.h"
-
-#if !defined(_WIN32)
 
 #include "Window.h"
 #include "Maths.h"   // vector2
@@ -152,5 +154,3 @@ void PlatformMouse::update(void)
 
    this->setPosition(position);
 }
-
-#endif // !defined(_WIN32)
