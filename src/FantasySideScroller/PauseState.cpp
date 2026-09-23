@@ -54,10 +54,14 @@ void PauseState::onEnter(State* prev)
             _pauseText->setTint(0xFFFFFFFF);
             _pauseText->setScale(1.5f, 1.5f);  // Larger for pause text
 
-            // Center horizontally: calculate total width and offset from center
-            // For now, place at horizontal center (renderer width / 2)
-            // Vertical position: near top with some padding
-            const vector2 pausePos(renderer->getWidth() / 2.0f - 50.0f, 80.0f);
+            // Center horizontally: sum all character widths, then offset from center
+            int textWidth = 0;
+            for (char c : "PAUSE") {
+                textWidth += _pauseText->getWidth(c);
+            }
+            const float centerX = renderer->getWidth() / 2.0f;
+            const float topY = 80.0f;
+            const vector2 pausePos(centerX - textWidth / 2.0f, topY);
             _pauseText->setPosition(pausePos);
             _pauseText->setVisibility(true);
             _menuRenderList->push_back(_pauseText);
@@ -76,8 +80,14 @@ void PauseState::onEnter(State* prev)
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
-            // Center horizontally and position below PAUSE
-            const vector2 hintTextPos(renderer->getWidth() / 2.0f - 60.0f, 140.0f);
+            // Center horizontally: sum all character widths, then offset from center
+            int textWidth = 0;
+            for (char c : "Press ESC to Resume") {
+                textWidth += _hintText->getWidth(c);
+            }
+            const float centerX = renderer->getWidth() / 2.0f;
+            const float hintY = 140.0f;
+            const vector2 hintTextPos(centerX - textWidth / 2.0f, hintY);
             _hintText->setPosition(hintTextPos);
             _hintText->setVisibility(true);
             _menuRenderList->push_back(_hintText);
