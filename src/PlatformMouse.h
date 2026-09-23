@@ -1,5 +1,5 @@
 // PlatformMouse.h
-// Non-Windows (GLFW) implementation of the Mouse interface.
+// GLFW implementation of the Mouse interface for GLFW-backed windows.
 //
 // This is the cross-platform equivalent of the Windows DIMouse. It polls
 // GLFW each frame for the cursor position (window/client pixel coordinates,
@@ -11,8 +11,6 @@
 // Position is clamped to the window's client area, mirroring DIMouse::update().
 
 #pragma once
-
-#if !defined(_WIN32)
 
 #include "IMouse.h"
 
@@ -41,5 +39,3 @@ public:
    // Poll GLFW for cursor position and button state.
    void update(void);
 };
-
-#endif // !defined(_WIN32)
