@@ -10,6 +10,7 @@
 #include "../Font.h"
 #include "../Sprite.h"
 #include "../Cursor.h"
+#include "PauseState.h"
 
 #include "Constants.h"
 #include "Character.h"
@@ -232,7 +233,6 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	//_levelManager.initialize("mockup_tiles2.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 	_levelManager.initialize("mosswood_hollow.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
@@ -341,10 +341,8 @@ bool PlayState::onExecute(float time)
 	}
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
-
-		// TODO: Bring up a menu (i.e. push a 'MenuState')
-
-		Engine2D::quit();
+		// Push PauseState on top to freeze game while keeping world visible
+		Engine2D::getGame()->push(new PauseState());
 	}
 
 	if (DEBUGGING) 
