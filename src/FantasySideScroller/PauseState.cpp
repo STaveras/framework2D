@@ -54,11 +54,9 @@ void PauseState::onEnter(State* prev)
             _pauseText->setTint(0xFFFFFFFF);
             _pauseText->setScale(1.5f, 1.5f);  // Larger for pause text
 
-            // Center horizontally: sum all character widths, then offset from center
-            int textWidth = 0;
-            for (char c : "PAUSE") {
-                textWidth += _pauseText->getWidth(c);
-            }
+            // Center horizontally: use getBitmapWidth() as character advance (per RendererGL line 329)
+            const int charAdvance = _pauseText->getBitmapWidth();
+            const int textWidth = charAdvance * 5;  // 5 characters in "PAUSE"
             const float centerX = renderer->getWidth() / 2.0f;
             const float topY = 80.0f;
             const vector2 pausePos(centerX - textWidth / 2.0f, topY);
@@ -71,7 +69,7 @@ void PauseState::onEnter(State* prev)
         }
     }
 
-    // Create "Press ESC to Resume • Q to Quit" hint text - centered below PAUSE
+    // Create "Press ESC to Resume" hint text - centered below PAUSE
     if (!_hintText) {
         _hintText = new Font();
         const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
@@ -80,11 +78,9 @@ void PauseState::onEnter(State* prev)
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
-            // Center horizontally: sum all character widths, then offset from center
-            int textWidth = 0;
-            for (char c : "Press ESC to Resume") {
-                textWidth += _hintText->getWidth(c);
-            }
+            // Center horizontally: use getBitmapWidth() as character advance (per RendererGL line 329)
+            const int charAdvance = _hintText->getBitmapWidth();
+            const int textWidth = charAdvance * 21;  // 21 characters in "Press ESC to Resume"
             const float centerX = renderer->getWidth() / 2.0f;
             const float hintY = 140.0f;
             const vector2 hintTextPos(centerX - textWidth / 2.0f, hintY);
