@@ -2,17 +2,12 @@
 #include "PlatformInput.h"
 
 #include "PlatformKeyboard.h"
-
-#if !defined(_WIN32)
 #include "PlatformMouse.h"
-#endif
 
 PlatformInput::PlatformInput(Window *window):_window(window)
 {
    _keyboard = new PlatformKeyboard(_window);
-#if !defined(_WIN32)
    _mouse = new PlatformMouse(_window);
-#endif
 }
 
 PlatformInput::~PlatformInput(void) {
@@ -37,10 +32,8 @@ void PlatformInput::update(void)
    if (_keyboard)
       _keyboard->update();
 
-#if !defined(_WIN32)
    if (_mouse)
       ((PlatformMouse*)_mouse)->update();
-#endif
 }
 
 void PlatformInput::shutdown(void)
