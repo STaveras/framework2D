@@ -8,6 +8,7 @@
 #include "../IMouse.h"
 #include "Constants.h"
 #include "Resources.h"
+#include "ScreenSpaceCursor.h"
 
 PauseState::PauseState()
     : _menuRenderList(NULL)
