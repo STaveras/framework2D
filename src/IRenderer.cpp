@@ -58,7 +58,7 @@ ITexture* IRenderer::_textureExists(const char* szFilename)
 
 	for (; itr != m_Textures.end(); itr++)
 	{
-		if(!strcmp((*itr)->getFilename(), szFilename))
+		if(!strcmp((*itr)->getFileName(), szFilename))
 			return (*itr);
 	}
 

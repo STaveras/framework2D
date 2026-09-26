@@ -3,7 +3,9 @@
 // world stays visible. Pushed when Esc is pressed; popping it resumes play.
 
 #include "PauseState.h"
+#include "../Cursor.h"
 #include "../Engine2D.h"
+#include "../IMouse.h"
 #include "Constants.h"
 #include "Resources.h"
 
@@ -11,6 +13,7 @@ PauseState::PauseState()
     : _menuRenderList(NULL)
     , _pauseText(NULL)
     , _hintText(NULL)
+    , _cursor(NULL)
 {
 }
 
@@ -22,6 +25,7 @@ PauseState::~PauseState()
     if (_hintText) {
         SAFE_DELETE(_hintText);
     }
+    SAFE_DELETE(_cursor);
     if (_menuRenderList) {
         IRenderer* renderer = Engine2D::getRenderer();
         if (renderer) {
@@ -54,12 +58,12 @@ void PauseState::onEnter(State* prev)
             _pauseText->setTint(0xFFFFFFFF);
             _pauseText->setScale(1.5f, 1.5f);  // Larger for pause text
 
-            // Center horizontally: use getBitmapWidth() as character advance (per RendererGL line 329)
-            const int charAdvance = _pauseText->getBitmapWidth();
-            const int textWidth = charAdvance * 5;  // 5 characters in "PAUSE"
+            const float textWidth = _pauseText->getTextWidth() * _pauseText->getScale().x;
             const float centerX = renderer->getWidth() / 2.0f;
-            const float topY = 80.0f;
-            const vector2 pausePos(centerX - textWidth / 2.0f, topY);
+
+            const float centerY = 100.0f;
+            const float textHeight = _pauseText->getHeight() * _pauseText->getScale().y;
+            const vector2 pausePos(centerX - textWidth / 2.0f, centerY - textHeight / 2.0f);
             _pauseText->setPosition(pausePos);
             _pauseText->setVisibility(true);
             _menuRenderList->push_back(_pauseText);
@@ -78,18 +82,30 @@ void PauseState::onEnter(State* prev)
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
-            // Center horizontally: use getBitmapWidth() as character advance (per RendererGL line 329)
-            const int charAdvance = _hintText->getBitmapWidth();
-            const int textWidth = charAdvance * 21;  // 21 characters in "Press ESC to Resume"
+            const float textWidth = _hintText->getTextWidth() * _hintText->getScale().x;
             const float centerX = renderer->getWidth() / 2.0f;
-            const float hintY = 140.0f;
-            const vector2 hintTextPos(centerX - textWidth / 2.0f, hintY);
+
+            const float centerY = 160.0f;
+            const float textHeight = _hintText->getHeight() * _hintText->getScale().y;
+            const vector2 hintTextPos(centerX - textWidth / 2.0f, centerY - textHeight / 2.0f);
             _hintText->setPosition(hintTextPos);
             _hintText->setVisibility(true);
             _menuRenderList->push_back(_hintText);
         } else {
             DEBUG_MSG(("Failed to load bitmap font from: " + fontPath + "\n").c_str());
             SAFE_DELETE(_hintText);
+        }
+    }
+
+    // Create the mouse cursor so it stays visible while the game is paused.
+    // It lives in this screen-space render list (created after the game's HUD
+    // list) so it draws on top of the menu text.
+    if (!_cursor) {
+        _cursor = new Cursor();
+        if (_cursor->load(BasePath("cursors.png").c_str())) {
+            _menuRenderList->push_back(_cursor->getImage());
+        } else {
+            SAFE_DELETE(_cursor);
         }
     }
 }
@@ -110,6 +126,15 @@ bool PauseState::onExecute(float time)
         return false;
     }
 
+    // Keep the menu cursor tracking the mouse while paused.
+    if (_cursor) {
+        Mouse* mouse = Engine2D::getInput()->getMouse();
+        if (mouse) {
+            _cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
+            _cursor->updateFromMouse(mouse);
+        }
+    }
+
     return true;  // Keep running (state stays on top)
 }
 
@@ -126,6 +151,10 @@ void PauseState::onExit(State* next)
         SAFE_DELETE(_hintText);
         _hintText = NULL;
     }
+    if (_cursor && _cursor->getImage()) {
+        _menuRenderList->remove(_cursor->getImage());
+    }
+    SAFE_DELETE(_cursor);
 
     if (_menuRenderList) {
         IRenderer* renderer = Engine2D::getRenderer();
