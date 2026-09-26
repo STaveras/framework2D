@@ -22,7 +22,7 @@ The `/bin/fantasySideScroller` folder contains free-to-use assets from anokolisa
 - **Tile Map Support**: Level editing with Tiled Map Editor (.tmj, .tmx)
 - **Animation System**: Sprite-based animations with frame interpolation
 - **Collision System**: AABB-based collision detection and physics operators
-- **Event-Driven Input**: Keyboard, mouse, and gamepad input handling
+- **Event-Driven Input**: Keyboard, mouse, and mapped gamepad input handling
 - **JSON Data-Driven**: Configuration via JSON for currencies, upgrades, and content
 
 ## Build Dependencies
@@ -30,7 +30,7 @@ The `/bin/fantasySideScroller` folder contains free-to-use assets from anokolisa
 - **DirectX 9 SDK** (June 2010) - Windows only
 - **Vulkan SDK**
 - **GLM** (math library)
-- **GLFW3** (windowing/input)
+- **GLFW 3.3+** (windowing/input and standardized gamepad mappings)
 - **TinyXML2** (parsing)
 - **SIMDJSON** (JSON processing)
 - **stb** suite (image loading)
@@ -55,6 +55,18 @@ This project uses CMake. On Windows, Visual Studio projects are available
 via the .sln and .vcxproj files. 
 
 On macOS, you can build just by running 'make'.
+
+## Gamepad input
+
+GLFW-mapped gamepads are available through `Engine2D::getInput()->getGamepad()`.
+Button names use the standard layout (`A`, `B`, `X`, `Y`, bumpers, and D-pad),
+and the API also exposes the left and right sticks and triggers. Stick values
+range from -1 to 1; trigger values range from 0 to 1. `Action` can bind keyboard
+keys, gamepad buttons, and signed axis thresholds, so one action can accept
+multiple input devices. The FantasySideScroller sample uses the left stick or
+D-pad to move, A (DualShock 4 Cross) to jump, X (Square) to attack, and the left
+bumper to run.
+Escape and the DualShock 4 Options button share the `PAUSE` action to pause and resume.
 
 ## Support
 
