@@ -8,6 +8,7 @@
 #include "../Camera.h"
 #include "../Debug.h"
 #include "../Font.h"
+#include "../Gamepad.h"
 #include "../Sprite.h"
 #include "../Cursor.h"
 #include "PauseState.h"
@@ -247,15 +248,30 @@ void PlayState::onEnter(State* prev)
 	// TODO: Save the keymappings to a file and load them here
 	_player->start();
 	_player->setController(_inputManager.createController());
-	_player->getController()->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
-	_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
-	_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
-	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
-	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
-	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
-	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
-	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
-	_player->getController()->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
+	Controller* controller = _player->getController();
+	controller->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
+	controller->addAction(Action("JUMP", Gamepad::Button::A));
+	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
+	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
+	controller->addAction(Action("LEFT", Gamepad::Button::DpadLeft));
+	Action leftStick("LEFT");
+	leftStick.assignAxis(Gamepad::Axis::LeftX, -0.25f);
+	controller->addAction(leftStick);
+	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
+	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
+	controller->addAction(Action("RIGHT", Gamepad::Button::DpadRight));
+	Action rightStick("RIGHT");
+	rightStick.assignAxis(Gamepad::Axis::LeftX, 0.25f);
+	controller->addAction(rightStick);
+	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
+	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
+	controller->addAction(Action("DOWN", Gamepad::Button::DpadDown));
+	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
+	controller->addAction(Action("ATTACK", Gamepad::Button::X));
+	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
+	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
+	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
+	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
 	_player->setGameObject(_playableCharacter);
 
 	_traversalMechanics.initialize(_levelManager.getTriggerDescriptors(),
@@ -295,6 +311,7 @@ bool PlayState::onExecute(float time)
 #endif
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+	Controller* controller = _player ? _player->getController() : NULL;
 
 	// First frame after a pause: the pause overlay was popped and this state is
 	// top again, so make the HUD cursor visible once more.
@@ -330,7 +347,8 @@ bool PlayState::onExecute(float time)
 #endif
 	}
 
-	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
+	Action* pauseAction = controller ? controller->getAction("PAUSE") : NULL;
+	if (controller && controller->buttonPressed(pauseAction)) {
 		// Hide the HUD cursor before pushing the pause overlay: its screen-space
 		// list stays registered (push does not call onExit), and its position is
 		// frozen because onExecute stops running, so leaving it visible would
@@ -345,6 +363,7 @@ bool PlayState::onExecute(float time)
 		if (!_pauseState) {
 			_pauseState = new PauseState();
 		}
+		_pauseState->setController(controller);
 		Engine2D::getGame()->push(_pauseState);
 	}
 

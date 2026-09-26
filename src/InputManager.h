@@ -32,8 +32,9 @@ public:
 	Controller* getController(unsigned int uiIndex) { return _controllers.at(uiIndex); }
 	void destroyController(Controller* controller);
 
-	Keyboard* getKeyboard(void) { return _input->getKeyboard(); }
-	Mouse*	 getMouse(void)	 { return _input->getMouse(); }
+	Keyboard* getKeyboard(void) { return _input ? _input->getKeyboard() : NULL; }
+	Mouse*	 getMouse(void)	 { return _input ? _input->getMouse() : NULL; }
+	Gamepad* getGamepad(void) { return _input ? _input->getGamepad() : NULL; }
 	
 	void update(float fTime);
 	void shutdown(void);

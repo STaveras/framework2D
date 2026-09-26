@@ -37,3 +37,25 @@ void Action::unassign(Keyboard::KEY eKey)
 		}
 	}
 }
+
+void Action::unassign(Gamepad::Button button)
+{
+	std::list<Gamepad::Button>::iterator itr = _gamepadButtonAssignments.begin();
+	for (; itr != _gamepadButtonAssignments.end(); ++itr) {
+		if (button == *itr) {
+			_gamepadButtonAssignments.erase(itr);
+			break;
+		}
+	}
+}
+
+void Action::unassignAxis(Gamepad::Axis axis, float threshold)
+{
+	std::list<AxisAssignment>::iterator itr = _gamepadAxisAssignments.begin();
+	for (; itr != _gamepadAxisAssignments.end(); ++itr) {
+		if (itr->axis == axis && itr->threshold == threshold) {
+			_gamepadAxisAssignments.erase(itr);
+			break;
+		}
+	}
+}
