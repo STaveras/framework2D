@@ -11,21 +11,22 @@
 
 #include "Keyboard.h"
 #include "IMouse.h"
+#include "Gamepad.h"
 
 typedef class IInput
 {
 protected:
 	Keyboard* _keyboard;
 	Mouse* _mouse;
-
-	// TODO: Add physical gamepad support
+	Gamepad* _gamepad;
 
 public:
-	IInput(void) : _keyboard(NULL), _mouse(NULL) {}
+	IInput(void) : _keyboard(NULL), _mouse(NULL), _gamepad(NULL) {}
 	virtual ~IInput(void) = 0;
 
 	virtual Keyboard* getKeyboard(void) { return _keyboard; }
 	virtual Mouse* getMouse(void) { return _mouse; }
+	virtual Gamepad* getGamepad(void) { return _gamepad; }
 
 	virtual void initialize(void) = 0;
 	virtual void update(void) = 0;

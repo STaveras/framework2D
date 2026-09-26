@@ -316,6 +316,7 @@
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\GameState.h" />
+    <ClInclude Include="src\Gamepad.h" />
     <ClInclude Include="src\Graphic.h" />
     <ClInclude Include="src\Hardware.h" />
     <ClInclude Include="src\IAudioSystem.h" />
@@ -350,6 +351,7 @@
     <ClInclude Include="src\Kinematics2D.h" />
     <ClInclude Include="src\Plane.h" />
     <ClInclude Include="src\PlatformInput.h" />
+    <ClInclude Include="src\PlatformGamepad.h" />
     <ClInclude Include="src\PlatformKeyboard.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Polygon.h" />
@@ -442,6 +444,7 @@
     <ClCompile Include="src\IRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\PlatformMouse.cpp" />
+    <ClCompile Include="src\PlatformGamepad.cpp" />
     <ClCompile Include="src\StrUtils.cpp" />
     <ClCompile Include="src\Telemetry2D.cpp" />
     <ClCompile Include="src\ObjectManager.cpp" />
