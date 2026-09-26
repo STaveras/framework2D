@@ -3,15 +3,15 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "Assets/fantasyTiles.tsj",
+    "activeFile": "testMap.tmj",
     "expandedProjectPaths": [
-        "Font/monogram",
         "Font/monogram/bitmap",
-        "Character",
-        "Assets",
-        "MockUp",
         ".",
-        "Font"
+        "Font/monogram",
+        "MockUp",
+        "Font",
+        "Assets",
+        "Character"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -73,8 +73,8 @@
             "scale": 1.23,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 223.9837398373984,
-                "y": 111.78861788617883
+                "x": 448.3739837398374,
+                "y": 84.95934959349592
             }
         },
         "testMap_separate_layers.tmj": {
@@ -110,8 +110,8 @@
     "project": "",
     "property.type": "string",
     "recentFiles": [
-        "testMap.tmj",
         "Assets/fantasyTiles.tsj",
+        "testMap.tmj",
         "fantasy_forest_level.tmj",
         "Assets/buildings.tsj",
         "MockUp/Tiles.tsj",
