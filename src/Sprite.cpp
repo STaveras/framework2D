@@ -116,11 +116,11 @@ void Sprite::unload(void)
 //
 //	if (ofl.good())
 //	{
-//		size_t uiStrLength = strlen(_texture->getFilename()) + 1;
+//		size_t uiStrLength = strlen(_texture->getFileName()) + 1;
 //		Color clrColor = _texture->getKeyColor();
 //
 //		ofl.write((char*)&uiStrLength, sizeof(size_t));
-//		ofl.write(_texture->getFilename(), uiStrLength);
+//		ofl.write(_texture->getFileName(), uiStrLength);
 //		ofl.write((char*)&_sourceRect, sizeof(RECT));
 //		ofl.write((char*)&clrColor, sizeof(Color));
 //		ofl.write((char*)&_center, sizeof(vector2));

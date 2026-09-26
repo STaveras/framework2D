@@ -31,6 +31,7 @@ public:
 	int getHeight() const;
 	void setHeight(int height);
 	int getBitmapWidth() const;
+	int getTextWidth() const;
 
 	void setText(const std::string& text);
 	const std::string& getText() const;
