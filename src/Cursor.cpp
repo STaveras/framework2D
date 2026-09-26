@@ -5,6 +5,9 @@
 
 #include "Cursor.h"
 #include "Debug.h"
+
+#include "ITexture.h"
+
 #include <cstdio>
 
 namespace {
@@ -30,9 +33,19 @@ Cursor::~Cursor()
 
 bool Cursor::load(const std::string& filePath)
 {
+	if (filePath.empty()) {
+		DEBUG_MSG("Cursor::load: filePath is empty");
+		return false;
+	}
+	
 	unload();
 
 	_image = new Image(filePath.c_str(), 0, _makeCursorRect(kCursorIndex));
+	// The Sprite file-path constructor swallows a failed texture load: on a
+	// null createTexture it leaves a null texture rather than signaling.
+	// Detect that here so callers can distinguish a real failure and skip
+	// adding a textureless image to the render list.
+
 	// The renderer pins the sprite's `center` (hotspot) at its position: a
 	// frame pixel (tx,ty) is drawn at position + (tx - center.x, ty - center.y).
 	// The reference cursor is a 6x6 frame whose hotspot is its top-left pixel.
@@ -45,7 +58,9 @@ bool Cursor::load(const std::string& filePath)
 
 void Cursor::unload()
 {
-	SAFE_DELETE(_image);
+	if (!_image || !_image->getTexture()) {
+		SAFE_DELETE(_image);
+	}
 }
 
 void Cursor::setState(CursorState state)
