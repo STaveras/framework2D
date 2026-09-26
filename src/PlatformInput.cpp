@@ -3,20 +3,25 @@
 
 #include "PlatformKeyboard.h"
 #include "PlatformMouse.h"
+#include "PlatformGamepad.h"
 
 PlatformInput::PlatformInput(Window *window):_window(window)
 {
    _keyboard = new PlatformKeyboard(_window);
    _mouse = new PlatformMouse(_window);
+   _gamepad = new PlatformGamepad();
 }
 
 PlatformInput::~PlatformInput(void) {
    SAFE_DELETE(_keyboard);
    SAFE_DELETE(_mouse);
+   SAFE_DELETE(_gamepad);
 }
 
 void PlatformInput::initialize(void)
 {
+   if (_gamepad)
+      _gamepad->update();
 //    if (m_lpDirectInput)
 //    {
 // 	   if (_keyboard && !((DIKeyboard*)_keyboard)->Acquire(m_lpDirectInput, m_hWnd))
@@ -34,6 +39,9 @@ void PlatformInput::update(void)
 
    if (_mouse)
       ((PlatformMouse*)_mouse)->update();
+
+   if (_gamepad)
+      _gamepad->update();
 }
 
 void PlatformInput::shutdown(void)
