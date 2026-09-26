@@ -62,6 +62,24 @@ int Font::getBitmapWidth() const
 	return m_nBitmapWidth;
 }
 
+int Font::getTextWidth() const
+{
+	const int glyphAdvance = std::max(m_nBitmapWidth, 1) + 1;
+	int lineWidth = 0;
+	int maxLineWidth = 0;
+
+	for (char character : m_text) {
+		if (character == '\n') {
+			maxLineWidth = std::max(maxLineWidth, lineWidth);
+			lineWidth = 0;
+			continue;
+		}
+		lineWidth += glyphAdvance;
+	}
+
+	return std::max(maxLineWidth, lineWidth);
+}
+
 void Font::setText(const std::string& text)
 {
 	m_text = text;

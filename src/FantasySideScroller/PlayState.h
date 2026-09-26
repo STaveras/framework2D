@@ -10,6 +10,7 @@
 class Character;
 class Boar;
 class Font;
+class PauseState;
 
 class PlayState : public GameState
 {
@@ -24,12 +25,14 @@ class PlayState : public GameState
 
 	Character* _playableCharacter = NULL;
 	Boar* _boar = nullptr;
+	bool _paused = false;
+	PauseState* _pauseState = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _healthBarBackground = NULL;
 	Image* _healthBarFill = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
-	Font* _helloWorldText = NULL;
+	// Font* _helloWorldText = NULL;
 	Cursor* _cursor = NULL;
 
 public:

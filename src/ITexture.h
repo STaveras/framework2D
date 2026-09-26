@@ -20,7 +20,7 @@ public:
 	ITexture(const char* szFilename): _clearKeyColor(0), _fileName(szFilename) {}
 	virtual ~ITexture(void){ }
 
-	const char* getFilename(void) const { return _fileName.c_str(); }
+	const char* getFileName(void) const { return _fileName.c_str(); }
 	Color getKeyColor(void) const { return _clearKeyColor; }
 	virtual unsigned int getWidth(void) const = 0;
 	virtual unsigned int getHeight(void) const = 0;

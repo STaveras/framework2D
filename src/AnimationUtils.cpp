@@ -229,7 +229,7 @@ namespace Animations {
             Frame* frame = (*animation)[(unsigned int)j];
             file << "          {\n";
             file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
-            file << "            \"Filename\": \"" << FileSystem::Path::MakeRelativeToParent(frame->getSprite()->getTexture()->getFilename(), System::GlobalDataPath()) << "\",\n";
+            file << "            \"Filename\": \"" << FileSystem::Path::MakeRelativeToParent(frame->getSprite()->getTexture()->getFileName(), System::GlobalDataPath()) << "\",\n";
             file << "            \"Duration\": " << frame->getDuration() << "\n";
             file << "          }";
 

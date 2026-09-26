@@ -7,11 +7,14 @@
 #include "../GameState.h"
 #include "../Font.h"
 
+class Cursor;
+
 class PauseState : public GameState
 {
     IRenderer::RenderList* _menuRenderList = NULL;
     Font* _pauseText = NULL;
     Font* _hintText = NULL;
+    Cursor* _cursor = NULL;
 
 public:
     PauseState(void);

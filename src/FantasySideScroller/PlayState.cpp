@@ -11,6 +11,7 @@
 #include "../Sprite.h"
 #include "../Cursor.h"
 #include "PauseState.h"
+#include "ScreenSpaceCursor.h"
 
 #include "Constants.h"
 #include "Character.h"
@@ -29,30 +30,6 @@ constexpr float kHUDTextScale = 1.0f;
 constexpr float kHUDStaminaOffsetY = kHUDBackgroundHeight;
 constexpr float kHUDStaminaHeight = 1.0f;
 constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
-
-vector2 ClientToRenderCursorPosition(const vector2& clientPosition)
-{
-	IRenderer* renderer = Engine2D::getRenderer();
-	Window* window = Renderer::mainWindow;
-	if (!renderer || !window) {
-		return clientPosition;
-	}
-
-	const float clientWidth = static_cast<float>(window->getClientWidth());
-	const float clientHeight = static_cast<float>(window->getClientHeight());
-	if (clientWidth <= 0.0f || clientHeight <= 0.0f ||
-		renderer->getWidth() <= 0 || renderer->getHeight() <= 0) {
-		return clientPosition;
-	}
-
-	// Mouse coordinates are relative to the actual client area, while the
-	// screen-space render list uses the renderer's logical resolution.  Keep
-	// the cursor in that same logical space so the renderer's final scaling
-	// puts its hotspot back under the OS cursor.
-	return vector2(
-		clientPosition.x * static_cast<float>(renderer->getWidth()) / clientWidth,
-		clientPosition.y * static_cast<float>(renderer->getHeight()) / clientHeight);
-}
 }
 
 PlayState::PlayState()
@@ -64,6 +41,9 @@ PlayState::~PlayState() {
 	if (_player || _playableCharacter || _hudRenderList) {
 		onExit(nullptr);
 	}
+	// We own the pause overlay we push on top of ourselves; ProgramStack
+	// never deletes states, so release it here.
+	SAFE_DELETE(_pauseState);
 }
 
 void PlayState::_initHUD()
@@ -74,7 +54,7 @@ void PlayState::_initHUD()
 	}
 
 	if (!_hudRenderList) {
-    _hudRenderList = renderer->createRenderList(true);
+    	_hudRenderList = renderer->createRenderList(true);
 	}
 
 	if (!_healthBarBackground) {
@@ -113,26 +93,27 @@ void PlayState::_initHUD()
 		_hudRenderList->push_back(_staminaBarFill);
 	}
 
-	if (!_helloWorldText) {
-		_helloWorldText = new Font();
-		const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
-		if (_helloWorldText->loadFromJSON(fontPath)) {
-			_helloWorldText->setText("HelloWorld\nHello World");
-			_helloWorldText->setTint(0xFFFFFFFF);
-			_helloWorldText->setScale(kHUDTextScale, kHUDTextScale);
-			_helloWorldText->setOffset(vector2(0.0f, 0.0f));
-			_helloWorldText->setVisibility(true);
-			_hudRenderList->push_back(_helloWorldText);
-		}
-		else {
-			DEBUG_MSG(("Failed to load bitmap font from: " + fontPath + "\n").c_str());
-			SAFE_DELETE(_helloWorldText);
-		}
-	}
+	// if (!_helloWorldText) {
+	// 	_helloWorldText = new Font();
+	// 	const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
+	// 	if (_helloWorldText->loadFromJSON(fontPath)) {
+	// 		_helloWorldText->setText("HelloWorld\nHello World");
+	// 		_helloWorldText->setTint(0xFFFFFFFF);
+	// 		_helloWorldText->setScale(kHUDTextScale, kHUDTextScale);
+	// 		_helloWorldText->setOffset(vector2(0.0f, 0.0f));
+	// 		_helloWorldText->setVisibility(true);
+	// 		_hudRenderList->push_back(_helloWorldText);
+	// 	}
+	// 	else {
+	// 		DEBUG_MSG(("Failed to load bitmap font from: " + fontPath + "\n").c_str());
+	// 		SAFE_DELETE(_helloWorldText);
+	// 	}
+	// }
 
 	if (!_cursor) {
 		_cursor = new Cursor();
 		if (_cursor->load(BasePath("cursors.png").c_str())) {
+			_cursor->getImage()->setVisibility(true);
 			_hudRenderList->push_back(_cursor->getImage());
 		}
 	}
@@ -168,7 +149,7 @@ void PlayState::_updateHUD(float dt)
 
 	const vector2 staminaOrigin = hudOrigin + vector2(0.0f, kHUDStaminaOffsetY);
 	_staminaBarBackground->setPosition(staminaOrigin);
-	_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDStaminaHeight);
+	_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDStaminaHeight + 1.0f);
 
 	const float normalizedStamina = _playableCharacter ? _playableCharacter->getStaminaNormalized() : 0.0f;
 	float clampedStamina = normalizedStamina;
@@ -185,9 +166,9 @@ void PlayState::_updateHUD(float dt)
 	_staminaBarFill->setScale(staminaFillWidth, kHUDStaminaHeight);
     _staminaBarFill->setVisibility(staminaFillWidth > 0.0f);
     
-    if (_helloWorldText) {
-        _helloWorldText->setPosition(hudOrigin + vector2(0.0f, kHUDTextOffsetY));
-    }
+    // if (_helloWorldText) {
+    //     _helloWorldText->setPosition(hudOrigin + vector2(0.0f, kHUDTextOffsetY));
+    // }
 }
 
 void PlayState::_shutdownHUD()
@@ -205,9 +186,9 @@ void PlayState::_shutdownHUD()
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
 		}
-		if (_helloWorldText) {
-			_hudRenderList->remove(_helloWorldText);
-		}
+		// if (_helloWorldText) {
+		// 	_hudRenderList->remove(_helloWorldText);
+		// }
 		if (_cursor && _cursor->getImage()) {
 			_hudRenderList->remove(_cursor->getImage());
 		}
@@ -222,7 +203,7 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_healthBarFill);
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
-	SAFE_DELETE(_helloWorldText);
+	// SAFE_DELETE(_helloWorldText);
 	SAFE_DELETE(_cursor);
 }
 
@@ -315,6 +296,15 @@ bool PlayState::onExecute(float time)
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
+	// First frame after a pause: the pause overlay was popped and this state is
+	// top again, so make the HUD cursor visible once more.
+	if (_paused) {
+		_paused = false;
+		if (_cursor && _cursor->getImage()) {
+			_cursor->getImage()->setVisibility(true);
+		}
+	}
+
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
 		_collisionSystem.reset();
@@ -341,8 +331,21 @@ bool PlayState::onExecute(float time)
 	}
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
-		// Push PauseState on top to freeze game while keeping world visible
-		Engine2D::getGame()->push(new PauseState());
+		// Hide the HUD cursor before pushing the pause overlay: its screen-space
+		// list stays registered (push does not call onExit), and its position is
+		// frozen because onExecute stops running, so leaving it visible would
+		// draw a stale duplicate beside the pause overlay's own cursor.
+		if (_cursor && _cursor->getImage()) {
+			_cursor->getImage()->setVisibility(false);
+		}
+		_paused = true;
+		// Push PauseState on top to freeze game while keeping world visible.
+		// Create it once (onEnter/onExit are re-entrant and clean up after
+		// themselves), so repeated pause/resume cycles reuse the same object.
+		if (!_pauseState) {
+			_pauseState = new PauseState();
+		}
+		Engine2D::getGame()->push(_pauseState);
 	}
 
 	if (DEBUGGING) 
@@ -404,7 +407,7 @@ bool PlayState::onExecute(float time)
 	// The cursor sprite is pushed into _hudRenderList (a screen-space render
 	// list). Convert the mouse's client coordinates into the renderer's logical
 	// screen coordinates; do not convert through the camera/world transform.
-	if (_cursor) {
+	if (!_paused && _cursor) {
 		Mouse* mouse = Engine2D::getInput()->getMouse();
 		if (mouse) {
 			_cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
