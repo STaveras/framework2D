@@ -14,8 +14,10 @@ class RendererDX : public IRenderer
    LPDIRECT3DDEVICE9	m_pD3DDevice;
    LPD3DXSPRITE		m_pD3DSprite;
 
-    void _drawFont(Font* font, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false);
-    void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false);
+    void _drawFont(Font* font, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false,
+       float parallaxX = 1.0f, float parallaxY = 1.0f, float parallaxOriginX = 0.0f, float parallaxOriginY = 0.0f);
+    void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false,
+       float parallaxX = 1.0f, float parallaxY = 1.0f, float parallaxOriginX = 0.0f, float parallaxOriginY = 0.0f);
    void _drawText(Text* text, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
 
 private:

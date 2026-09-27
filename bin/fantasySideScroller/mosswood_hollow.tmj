@@ -92,6 +92,8 @@
          "id":2,
          "name":"02 Misty forest",
          "opacity":1,
+         "parallaxx":0.8,
+         "parallaxy":0.8,
          "properties":[
                 {
                  "name":"collision_mode",
@@ -143,6 +145,8 @@
          "id":3,
          "name":"03 Deep forest",
          "opacity":1,
+         "parallaxx":0.9,
+         "parallaxy":0.9,
          "properties":[
                 {
                  "name":"collision_mode",

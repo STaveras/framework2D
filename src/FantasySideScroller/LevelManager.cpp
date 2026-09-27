@@ -214,6 +214,10 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 		}
 
 		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
+		layerRenderList->parallaxX = layerConfig.parallaxX;
+		layerRenderList->parallaxY = layerConfig.parallaxY;
+		layerRenderList->parallaxOriginX = mapOffset.x + loadResult.parallaxOriginX;
+		layerRenderList->parallaxOriginY = mapOffset.y + loadResult.parallaxOriginY;
 		const std::string safeLayerName = StrUtils::SanitizeIdentifier(layerConfig.name);
 		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
 

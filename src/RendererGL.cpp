@@ -446,7 +446,54 @@ void RendererGL::render(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	const auto drawRenderLists = [this](bool screenSpace)
+	const auto applyCameraTransform = [this](const vector2& cameraPosition)
+	{
+		if (!m_pCamera) {
+			return;
+		}
+
+		const vector2 cameraCenter = m_pCamera->getCenter();
+		const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+		const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
+
+		if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+			glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
+			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+			glScalef(zoom, zoom, 1.0f);
+			glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
+		}
+		else {
+			const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
+			glScalef(zoom, zoom, 1.0f);
+			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+			glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
+		}
+	};
+
+	const auto setViewBounds = [this](const vector2& cameraPosition)
+	{
+		_viewMin = vector2(INFINITY, INFINITY);
+		_viewMax = vector2(-INFINITY, -INFINITY);
+		const float zoom = m_pCamera && m_pCamera->getZoom() > 0 ? m_pCamera->getZoom() : 1.0f;
+		const float angle = m_pCamera ? -m_pCamera->getRotation() : 0.0f;
+		const float c = std::cos(angle), sn = std::sin(angle);
+		for (int i = 0; i < 4; ++i) {
+			vector2 point((i & 1) ? m_nWidth : 0, (i & 2) ? m_nHeight : 0);
+			if (m_pCamera && m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter)
+				point = point - m_pCamera->getCenter();
+			point /= zoom;
+			point = vector2(c * point.x - sn * point.y, sn * point.x + c * point.y);
+			if (m_pCamera) {
+				point = point + cameraPosition;
+				if (m_pCamera->getZoomAnchorMode() != Camera::ZoomAnchorMode::TargetCenter)
+					point = point - m_pCamera->getCenter();
+			}
+			_viewMin.x = std::min(_viewMin.x, point.x); _viewMin.y = std::min(_viewMin.y, point.y);
+			_viewMax.x = std::max(_viewMax.x, point.x); _viewMax.y = std::max(_viewMax.y, point.y);
+		}
+	};
+
+	const auto drawRenderLists = [this, &applyCameraTransform, &setViewBounds](bool screenSpace)
 	{
 		if (_RenderLists.empty()) {
 			return;
@@ -456,6 +503,24 @@ void RendererGL::render(void)
 			RenderList* renderList = _RenderLists.at(i);
 			if (!renderList || renderList->screenSpace != screenSpace) {
 				continue;
+			}
+
+			if (!screenSpace) {
+				_flushBatch();
+				glPushMatrix();
+				glLoadIdentity();
+				if (m_pCamera) {
+					const vector2 parallaxFactor(renderList->parallaxX, renderList->parallaxY);
+					const vector2 parallaxOrigin(renderList->parallaxOriginX, renderList->parallaxOriginY);
+					const vector2 baseCameraPosition = m_pCamera->getRenderPosition();
+					const vector2 cameraPosition = parallaxOrigin + ((baseCameraPosition - parallaxOrigin) * parallaxFactor);
+					applyCameraTransform(cameraPosition);
+					setViewBounds(cameraPosition);
+				}
+				else {
+					_viewMin = vector2(-INFINITY, -INFINITY);
+					_viewMax = vector2(INFINITY, INFINITY);
+				}
 			}
 
 			for (RenderList::iterator o = renderList->begin(); o != renderList->end(); o++) {
@@ -493,51 +558,13 @@ void RendererGL::render(void)
 					break;
 				}
 			}
+
+			if (!screenSpace) {
+				_flushBatch();
+				glPopMatrix();
+			}
 		}
 	};
-
-	if (m_pCamera) {
-		const vector2 cameraPosition = m_pCamera->getRenderPosition();
-		const vector2 cameraCenter = m_pCamera->getCenter();
-		const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
-		const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
-
-		if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
-			// screen = center + rotate(scale(world - cameraPos))
-			glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
-			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
-			glScalef(zoom, zoom, 1.0f);
-			glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
-		}
-		else {
-			// Preserve legacy origin-oriented behavior.
-			const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
-			glScalef(zoom, zoom, 1.0f);
-			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
-			glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
-		}
-	}
-
-	// Inverse-transform viewport corners to a conservative world-space AABB.
-	_viewMin = vector2(INFINITY, INFINITY);
-	_viewMax = vector2(-INFINITY, -INFINITY);
-	const float zoom = m_pCamera && m_pCamera->getZoom() > 0 ? m_pCamera->getZoom() : 1.0f;
-	const float angle = m_pCamera ? -m_pCamera->getRotation() : 0.0f;
-	const float c = std::cos(angle), sn = std::sin(angle);
-	for (int i = 0; i < 4; ++i) {
-		vector2 point((i & 1) ? m_nWidth : 0, (i & 2) ? m_nHeight : 0);
-		if (m_pCamera && m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter)
-			point = point - m_pCamera->getCenter();
-		point /= zoom;
-		point = vector2(c*point.x - sn*point.y, sn*point.x + c*point.y);
-		if (m_pCamera) {
-			point = point + m_pCamera->getRenderPosition();
-			if (m_pCamera->getZoomAnchorMode() != Camera::ZoomAnchorMode::TargetCenter)
-				point = point - m_pCamera->getCenter();
-		}
-		_viewMin.x = std::min(_viewMin.x, point.x); _viewMin.y = std::min(_viewMin.y, point.y);
-		_viewMax.x = std::max(_viewMax.x, point.x); _viewMax.y = std::max(_viewMax.y, point.y);
-	}
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -553,7 +580,13 @@ void RendererGL::render(void)
 
 	if (DEBUGGING/* && Debug::dbgCollision*/) {
 		if (const CollisionSystem* collisionSystem = getActiveCollisionSystem()) {
+			glPushMatrix();
+			glLoadIdentity();
+			if (m_pCamera) {
+				applyCameraTransform(m_pCamera->getRenderPosition());
+			}
 			drawCollisionDebugOverlay(*collisionSystem);
+			glPopMatrix();
 		}
 	}
 

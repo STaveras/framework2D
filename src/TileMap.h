@@ -78,6 +78,8 @@ struct TileMapLoadResult
 	int mapHeight = 0;
 	int tileWidth = 0;
 	int tileHeight = 0;
+	float parallaxOriginX = 0.0f;
+	float parallaxOriginY = 0.0f;
 	std::vector<MapLayerDescriptor> layers;
 	std::vector<TileMap*> tileMaps;
 	std::vector<TileObjectLayerDescriptor> objectLayers;
@@ -472,6 +474,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 		result.mapHeight = readInt(json["height"], 0);
 		result.tileWidth = readInt(json["tilewidth"], 0);
 		result.tileHeight = readInt(json["tileheight"], 0);
+		result.parallaxOriginX = readFloat(json["parallaxoriginx"], 0.0f);
+		result.parallaxOriginY = readFloat(json["parallaxoriginy"], 0.0f);
 
 		const std::string mapDirectory = FileSystem::File::GetFilePath(filePath);
 
@@ -580,6 +584,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.startY = readInt(layer["starty"], 0);
 						layerConfig.offsetX = readFloat(layer["x"], 0.0f);
 						layerConfig.offsetY = readFloat(layer["y"], 0.0f);
+						layerConfig.parallaxX = readFloat(layer["parallaxx"], 1.0f);
+						layerConfig.parallaxY = readFloat(layer["parallaxy"], 1.0f);
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
 						// User-selected default for missing property is non-colliding.

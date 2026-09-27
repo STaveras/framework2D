@@ -90,8 +90,8 @@
             "scale": 1.23,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 448.3739837398374,
-                "y": 84.95934959349592
+                "x": 384.1463414634146,
+                "y": -0.4065040650406786
             }
         },
         "testMap_separate_layers.tmj": {
@@ -126,7 +126,7 @@
         "mosswood_hollow.tmj"
     ],
     "project": "",
-    "property.type": "string",
+    "property.type": "int",
     "recentFiles": [
         "Assets/fantasyTiles.tsj",
         "testMap.tmj",
