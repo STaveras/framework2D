@@ -78,11 +78,16 @@ Contact: stan.taveras@gmail.com
 
 ## Boar enemy
 
-A boar spawns to the right of the entrance in Mosswood Hollow. It patrols,
-turns at ledges, and charges nearby players. Contact costs 15 health with a
-one-second cooldown. Face it and press Left Ctrl to defeat it; press R to
-reset both the player and boar. Idle, walk, run, and hit/vanish animations use
-the original `Mob/Boar` sprite sheets.
+A boar spawns to the right of the entrance in Mosswood Hollow. It idles for two
+seconds, patrols until a ledge or wall, waits two seconds, turns around, then
+waits another two seconds before moving. When a player is in front, it charges
+and stops just short of the character, then holds position while attacking.
+A player detection interrupts a regular patrol idle after a 0.25-second
+reaction; the boar finishes any pending wall turn first.
+Each attack deals 10 health
+once per second, so ten hits from full health are fatal. The first frame of the
+Hit-Vanish sheet is used as its one-shot attack pose; it takes two sword slashes
+to defeat the boar. Press R to reset both the player and boar.
 
 Run `make test-boar` for headless asset, movement, combat, respawn, and map
 collision checks. Build the game with `make`.
