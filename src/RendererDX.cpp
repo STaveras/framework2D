@@ -27,13 +27,15 @@
 #include <cmath>
 
 namespace {
-D3DXVECTOR2 worldToScreen(const Camera* camera, const vector2& worldPosition)
+D3DXVECTOR2 worldToScreen(const Camera* camera, const vector2& worldPosition,
+	const vector2& parallaxFactor, const vector2& parallaxOrigin)
 {
 	if (!camera) {
 		return D3DXVECTOR2(worldPosition.x, worldPosition.y);
 	}
 
-	const vector2 cameraPosition = camera->getRenderPosition();
+	const vector2 baseCameraPosition = camera->getRenderPosition();
+	const vector2 cameraPosition = parallaxOrigin + ((baseCameraPosition - parallaxOrigin) * parallaxFactor);
 	const vector2 center = camera->getCenter();
 	const float zoom = (camera->getZoom() > 0.0f) ? camera->getZoom() : 1.0f;
 	const float rotation = camera->getRotation();
@@ -158,7 +160,8 @@ D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 }
 
 // Why do we have offset? Center is already an offset...
-void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace)
+void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace,
+	float parallaxX, float parallaxY, float parallaxOriginX, float parallaxOriginY)
 {
 	vector2 resolvedPosition = image->getPosition() + vector2(offset.x, offset.y);
 	D3DXVECTOR2 screenPosition;
@@ -167,7 +170,8 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 		screenPosition = D3DXVECTOR2(resolvedPosition.x, resolvedPosition.y);
 	}
 	else {
-		screenPosition = worldToScreen(m_pCamera, resolvedPosition);
+		screenPosition = worldToScreen(m_pCamera, resolvedPosition,
+			vector2(parallaxX, parallaxY), vector2(parallaxOriginX, parallaxOriginY));
 		if (m_pCamera && m_pCamera->getZoom() > 0.0f) {
 			cameraZoom = m_pCamera->getZoom();
 		}
@@ -205,7 +209,8 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 		tint._color);
 }
 
-void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace)
+void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace,
+	float parallaxX, float parallaxY, float parallaxOriginX, float parallaxOriginY)
 {
 	if (!font || !m_pD3DSprite || !m_pD3DDevice) {
 		return;
@@ -223,7 +228,8 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 		screenPosition = D3DXVECTOR2(resolvedPosition.x, resolvedPosition.y);
 	}
 	else {
-		screenPosition = worldToScreen(m_pCamera, resolvedPosition);
+		screenPosition = worldToScreen(m_pCamera, resolvedPosition,
+			vector2(parallaxX, parallaxY), vector2(parallaxOriginX, parallaxOriginY));
 		if (m_pCamera && m_pCamera->getZoom() > 0.0f) {
 			cameraZoom = m_pCamera->getZoom();
 		}
@@ -448,7 +454,9 @@ void RendererDX::render(void)
 							case RENDERABLE_TYPE_SPRITE:
 							{
 								Image* image = (Image*)(*o);
-								_drawImage(image, image->getTintColor(), image->getOffset(), 0.0f, screenSpace);
+								_drawImage(image, image->getTintColor(), image->getOffset(), 0.0f, screenSpace,
+									renderList->parallaxX, renderList->parallaxY,
+									renderList->parallaxOriginX, renderList->parallaxOriginY);
 							}
 							break;
 							case RENDERABLE_TYPE_ANIMATION:
@@ -457,14 +465,18 @@ void RendererDX::render(void)
 								if (animation->getFrameCount()) {
 									_drawImage(animation->getCurrentFrame()->getSprite(),
 										animation->getCurrentFrame()->getSprite()->getTintColor(),
-										animation->getOffset(), 0.0f, screenSpace);
+										animation->getOffset(), 0.0f, screenSpace,
+										renderList->parallaxX, renderList->parallaxY,
+										renderList->parallaxOriginX, renderList->parallaxOriginY);
 								}
 							}
 							break;
 							case RENDERABLE_TYPE_FONT:
 							{
 								Font* font = (Font*)(*o);
-								_drawFont(font, font->getTintColor(), font->getOffset(), 0.0f, screenSpace);
+								_drawFont(font, font->getTintColor(), font->getOffset(), 0.0f, screenSpace,
+									renderList->parallaxX, renderList->parallaxY,
+									renderList->parallaxOriginX, renderList->parallaxOriginY);
 							}
 							break;
 							default:

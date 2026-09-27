@@ -20,9 +20,17 @@ public:
 typedef struct RenderList : public std::list<class Renderable *>
 {
     bool screenSpace;
+    float parallaxX;
+    float parallaxY;
+    float parallaxOriginX;
+    float parallaxOriginY;
 
     RenderList()
-        : screenSpace(false)
+        : screenSpace(false),
+          parallaxX(1.0f),
+          parallaxY(1.0f),
+          parallaxOriginX(0.0f),
+          parallaxOriginY(0.0f)
     {}
 } RenderList;
 

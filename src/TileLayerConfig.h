@@ -18,6 +18,8 @@ struct TileLayerConfig
 	int startY = 0;
 	float offsetX = 0.0f;
 	float offsetY = 0.0f;
+	float parallaxX = 1.0f;
+	float parallaxY = 1.0f;
 	TileCollisionMode collisionMode = TileCollisionMode::Solid;
 	int drawOrder = 0;
 };
