@@ -193,6 +193,11 @@ int main() {
 
     for (int i = 0; i < 1200; ++i) {
         boar.update(1.0f / 60);
+        if (i % 20 == 0 || std::fabs(boar.getPosition().x - 100) >= 73.0f) {
+            std::cout << "P i=" << i << " x=" << boar.getPosition().x
+                      << " vel.x=" << boar.getVelocity().x
+                      << " state=" << boar.getState()->getName() << std::endl;
+        }
         assert(std::fabs(boar.getPosition().x - 100) < 73);
         assert(std::fabs(boar.getPosition().y - 86) < 0.01f);
     }
