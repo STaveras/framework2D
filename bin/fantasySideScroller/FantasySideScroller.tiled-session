@@ -3,15 +3,15 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "testMap.tmj",
+    "activeFile": "mosswood_hollow.tmj",
     "expandedProjectPaths": [
-        "Font/monogram/bitmap",
         ".",
-        "Font/monogram",
+        "Character",
         "MockUp",
         "Font",
+        "Font/monogram/bitmap",
         "Assets",
-        "Character"
+        "Font/monogram"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -26,6 +26,15 @@
         "Assets/fantasyTiles.tsj": {
             "scaleInDock": 1.6265,
             "scaleInEditor": 1
+        },
+        "Assets/mosswoodDistantTrees.tsj": {
+            "scaleInDock": 1
+        },
+        "Assets/mosswoodGreenTrees.tsj": {
+            "scaleInDock": 1
+        },
+        "Assets/mosswoodSky.tsj": {
+            "scaleInDock": 1
         },
         "Assets/rockProps.tsj": {
             "scaleInDock": 1,
@@ -69,6 +78,14 @@
                 "y": 200.40186125211503
             }
         },
+        "mosswood_hollow.tmj": {
+            "scale": 1.1148,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 351.18406889128096,
+                "y": 194.20523860782208
+            }
+        },
         "testMap.tmj": {
             "scale": 1.23,
             "selectedLayer": 3,
@@ -105,13 +122,15 @@
     "last.imagePath": "/Users/stan/Workspace/framework2D/bin/fantasySideScroller/Assets",
     "openFiles": [
         "Assets/fantasyTiles.tsj",
-        "testMap.tmj"
+        "testMap.tmj",
+        "mosswood_hollow.tmj"
     ],
     "project": "",
     "property.type": "string",
     "recentFiles": [
         "Assets/fantasyTiles.tsj",
         "testMap.tmj",
+        "mosswood_hollow.tmj",
         "fantasy_forest_level.tmj",
         "Assets/buildings.tsj",
         "MockUp/Tiles.tsj",
@@ -120,8 +139,7 @@
         "Assets/rockProps.tsj",
         "village_1to1_exact.tmj",
         "village_rebuilt_1to1.tmj",
-        "Assets/buildingsTiles.tsj",
-        "MockUp/Tiles2.tsj"
+        "Assets/buildingsTiles.tsj"
     ],
     "resizeMap.removeObjects": true,
     "tileset.lastUsedFormat": "json",

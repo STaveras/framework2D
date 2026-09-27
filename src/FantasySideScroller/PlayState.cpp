@@ -17,6 +17,7 @@
 #include "Constants.h"
 #include "Character.h"
 #include "Boar.h"
+#include "../StrUtils.h"
 
 namespace {
 constexpr float kHUDPaddingX = 12.0f;
@@ -240,8 +241,20 @@ void PlayState::onEnter(State* prev)
 #endif
 
 	_objectManager.addObject("Hero", _playableCharacter);
-	_boar = new Boar(_objectManager, *_playableCharacter, spawnPoint + vector2(140.0f, 10.0f));
-	_objectManager.addObject("Boar", _boar);
+	const std::vector<LevelEnemyDescriptor>& enemyDescriptors = _levelManager.getEnemyDescriptors();
+	_boars.reserve(enemyDescriptors.size());
+	for (size_t i = 0; i < enemyDescriptors.size(); ++i) {
+		const LevelEnemyDescriptor& descriptor = enemyDescriptors[i];
+		if (!StrUtils::IEquals(descriptor.typeName, "boar")) {
+			continue;
+		}
+
+		Boar* boar = new Boar(_objectManager, *_playableCharacter, descriptor.position);
+		_boars.push_back(boar);
+		const int objectId = (descriptor.objectId >= 0) ? descriptor.objectId : (int)i + 1;
+		const std::string objectName = "Boar_" + std::to_string(objectId);
+		_objectManager.addObject(objectName.c_str(), boar);
+	}
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
@@ -325,7 +338,9 @@ bool PlayState::onExecute(float time)
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
 		_collisionSystem.reset();
-		if (_boar) _boar->reset();
+		for (Boar* boar : _boars) {
+			if (boar) boar->reset();
+		}
 		_playableCharacter->clearEvents();
 		_playableCharacter->resetForRespawn();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
@@ -418,7 +433,9 @@ bool PlayState::onExecute(float time)
 	// 	_playableCharacter->setPosition(traversalRespawn);
 	// }
 
-	if (_boar) _boar->updateCombat(time);
+	for (Boar* boar : _boars) {
+		if (boar) boar->updateCombat(time);
+	}
 	_levelManager.update();
 	_updateHUD(time);
 
@@ -452,8 +469,13 @@ void PlayState::onExit(State* next)
 		_objectManager.removeObject(_playableCharacter);
 	}
 
-	if (_boar) _objectManager.removeObject(_boar);
-	SAFE_DELETE(_boar);
+	for (Boar* boar : _boars) {
+		if (boar) {
+			_objectManager.removeObject(boar);
+			delete boar;
+		}
+	}
+	_boars.clear();
 	SAFE_DELETE(_playableCharacter);
 	
 	_levelManager.shutdown(_objectManager, *this);

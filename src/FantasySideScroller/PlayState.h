@@ -7,6 +7,8 @@
 #include "LevelManager.h"
 #include "TraversalMechanics.h"
 
+#include <vector>
+
 class Character;
 class Boar;
 class Font;
@@ -24,7 +26,7 @@ class PlayState : public GameState
 	bool _traversalOperatorRegistered = false;
 
 	Character* _playableCharacter = NULL;
-	Boar* _boar = nullptr;
+	std::vector<Boar*> _boars;
 	bool _paused = false;
 	PauseState* _pauseState = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;

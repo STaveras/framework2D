@@ -21,6 +21,11 @@ bool isSpawnType(const std::string& typeName)
 	return StrUtils::IEquals(typeName, "spawn");
 }
 
+bool isEnemyType(const std::string& typeName)
+{
+	return StrUtils::IEquals(typeName, "boar");
+}
+
 bool isValidLayerIndex(int index, size_t size)
 {
 	return index >= 0 && (size_t)index < size;
@@ -51,6 +56,7 @@ void LevelManager::clearCachedMapMetadata(void)
 	_levelBoundsMax = vector2(0.0f, 0.0f);
 	_runtimeLayerIndex = -1;
 	_triggerDescriptors.clear();
+	_enemyDescriptors.clear();
 }
 
 void LevelManager::refreshLevelBounds(const TileMapLoadResult& loadResult, const vector2& mapOffset)
@@ -242,6 +248,15 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 			}
 
 			if (isSpawnType(object.typeName)) {
+				continue;
+			}
+
+			if (isEnemyType(object.typeName)) {
+				LevelEnemyDescriptor enemy;
+				enemy.objectId = object.id;
+				enemy.typeName = object.typeName;
+				enemy.position = worldPosition;
+				_enemyDescriptors.push_back(std::move(enemy));
 				continue;
 			}
 
