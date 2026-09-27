@@ -14,6 +14,7 @@
 class Character : public GameObject
 {
 	Tile* _tile = NULL; // The tile the character is on
+	float _dropThroughSupportY = 0.0f;
 	float _health = 100.0f;
 	float _maxHealth = 100.0f;
 	float _stamina = 100.0f;
