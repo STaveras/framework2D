@@ -758,7 +758,7 @@ void CollisionSystem::updateInternal(const std::map<std::string, GameObject*>& o
 					return false;
 				}
 
-				if (!first->shouldCollideWith(*second) || !second->shouldCollideWith(*first)) {
+				if (!first->shouldResolvePhysicsWith(*second) || !second->shouldResolvePhysicsWith(*first)) {
 					return false;
 				}
 

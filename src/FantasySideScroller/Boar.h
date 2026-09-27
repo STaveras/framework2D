@@ -40,4 +40,5 @@ public:
     void update(float time) override;
     void updateCombat(float time);
     bool shouldCollideWith(const GameObject& other) const override;
+    bool shouldResolvePhysicsWith(const GameObject& other) const override;
 };

@@ -135,8 +135,15 @@ void Boar::handleCollisionContact(const CollisionContact& contact)
 
 bool Boar::shouldCollideWith(const GameObject& other) const
 {
-    // Combat uses a separate sword/body overlap so attacks retain terrain collision.
+    // Contact notifications stay terrain-only; combat has its own sword/body overlap.
     return !_defeated && other.getType() == GAME_OBJ_TILE;
+}
+
+bool Boar::shouldResolvePhysicsWith(const GameObject& other) const
+{
+	// A living boar is a solid dynamic body. Keep the existing terrain filters,
+	// but let the shared solver separate it from other dynamic bodies as well.
+	return !_defeated && GameObject::shouldResolvePhysicsWith(other);
 }
 
 void Boar::update(float time)
