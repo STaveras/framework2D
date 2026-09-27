@@ -87,7 +87,7 @@ reaction; the boar finishes any pending wall turn first.
 Each attack deals 10 health
 once per second, so ten hits from full health are fatal. The first frame of the
 Hit-Vanish sheet is used as its one-shot attack pose; it takes two sword slashes
-to defeat the boar. Press R to reset both the player and boar.
+to defeat the boar. Press R to reset the player and all boars.
 
 Run `make test-boar` for headless asset, movement, combat, respawn, and map
 collision checks. Build the game with `make`.

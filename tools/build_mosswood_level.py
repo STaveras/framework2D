@@ -84,9 +84,10 @@ for x in range(34,41):
 objects=dict(id=len(layers)+1,name='09 Player and destination',type='objectgroup',draworder='topdown',
              x=0,y=0,opacity=1,visible=True,objects=[
                  dict(id=1,name='Entrance',type='spawn',point=True,x=72,y=160,width=0,height=0,rotation=0,visible=True),
-                 dict(id=2,name='Canopy overlook',type='destination',point=True,x=904,y=96,width=0,height=0,rotation=0,visible=True)])
+                 dict(id=2,name='Canopy overlook',type='destination',point=True,x=904,y=96,width=0,height=0,rotation=0,visible=True),
+                 dict(id=3,name='Boar',type='boar',point=True,x=212,y=170,width=0,height=0,rotation=0,visible=True)])
 layers.append(objects)
-data=dict(compressionlevel=-1,width=W,height=H,infinite=False,nextlayerid=len(layers)+1,nextobjectid=3,
+data=dict(compressionlevel=-1,width=W,height=H,infinite=False,nextlayerid=len(layers)+1,nextobjectid=4,
           orientation='orthogonal',renderorder='right-down',tilewidth=16,tileheight=16,type='map',version='1.10',
           tiledversion='1.11.2',tilesets=sets,layers=layers,
           properties=[dict(name='title',type='string',value='Mosswood Hollow')])
