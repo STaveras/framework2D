@@ -15,10 +15,19 @@
 
 namespace {
 constexpr float kFoot = 14.0f;
-constexpr float kPatrolRadius = 72.0f;
 constexpr float kDetectionRange = 135.0f;
 constexpr float kWallNormalThreshold = 0.55f;
-constexpr float kWallTurnCooldownSeconds = 0.75f;
+constexpr float kInitialIdleSeconds = 2.0f;
+constexpr float kPatrolPauseSeconds = 2.0f;
+constexpr float kAggroReactionDelaySeconds = 0.25f;
+constexpr float kAttackGap = 4.0f;
+constexpr float kAttackReach = 24.0f;
+constexpr float kAttackCooldownSeconds = 1.0f;
+constexpr float kAttackPoseSeconds = 0.30f;
+constexpr float kAttackDamage = 10.0f;
+constexpr float kChaseSpeed = 100.0f;
+constexpr float kPatrolSpeed = 28.0f;
+constexpr unsigned int kSlashesToDefeat = 2;
 }
 
 Boar::Boar(ObjectManager& world, Character& target, vector2 nearSpawn)
@@ -29,14 +38,18 @@ Boar::Boar(ObjectManager& world, Character& target, vector2 nearSpawn)
         {"Idle", "Mob/Boar/Idle/Idle-Sheet.png", 0.16f},
         {"Walk", "Mob/Boar/Walk/Walk-Base-Sheet.png", 0.12f},
         {"Run", "Mob/Boar/Run/Run-Sheet.png", 0.08f},
-        {"Hit", "Mob/Boar/Hit-Vanish/Hit-Sheet.png", 0.10f}
+        {"Attack", "Mob/Boar/Hit-Vanish/Hit-Sheet.png", kAttackPoseSeconds}
     };
     for (const Clip& clip : clips) {
         auto* animation = _animationManager.create();
         auto* texture = Engine2D::getRenderer()->createTexture(BasePath(clip.path).c_str());
-        Animations::createFramesForAnimation(animation, texture, vector2(48, 32), _spriteManager);
+        const bool attack = std::strcmp(clip.name, "Attack") == 0;
+        // The first Hit-Vanish frame is the boar's attack pose. The later
+        // frames are the vanish effect, so they are deliberately not loaded.
+        Animations::createFramesForAnimation(
+            animation, texture, vector2(48, 32), _spriteManager, 0, attack ? 1 : 0);
         animation->setName(clip.name);
-        animation->setMode(std::strcmp(clip.name, "Hit") == 0 ? Animation::eOnce : Animation::eLoop);
+        animation->setMode(attack ? Animation::eOnce : Animation::eLoop);
         animation->center();
         for (auto* frame : animation->getFrames()) frame->setDuration(clip.duration);
         auto* state = addState(clip.name);
@@ -91,9 +104,15 @@ void Boar::reset()
 {
     clearEvents();
     _direction = -1;
-    _pause = 0.6f;
-    _damageCooldown = 0.0f;
-    _wallTurnCooldown = 0.0f;
+    _pause = kInitialIdleSeconds;
+    _attackCooldown = 0.0f;
+    _attackPoseTime = 0.0f;
+    _lastCountedPlayerAttack = nullptr;
+    _slashesTaken = 0;
+    _turnAfterPause = false;
+    _holdingAttackPosition = false;
+    _wasChasing = false;
+    _canAttack = false;
     _defeated = false;
     setVelocity(vector2(0, 0));
     setState("Idle");
@@ -120,17 +139,20 @@ void Boar::handleCollisionContact(const CollisionContact& contact)
         return;
     }
 
-    _direction = -_direction;
-    _pause = std::max(_pause, 0.15f);
-    _wallTurnCooldown = kWallTurnCooldownSeconds;
+    // Stay contacts repeat each frame while the boar is pressed against a
+    // wall. Only the first contact should start the wait; otherwise the timer
+    // never reaches the delayed turn.
+    if (_turnAfterPause) return;
+
+    // Stop at the wall, wait two seconds, turn, then wait another two
+    // seconds before starting the next patrol leg.
+    _pause = std::max(_pause, kPatrolPauseSeconds);
+    _turnAfterPause = true;
     setVelocity(vector2(0.0f, getVelocity().y));
 
-    // Collision contacts are dispatched after the movement update. Apply the
-    // new facing immediately so the sprite, debug shape, and any post-
-    // collision combat query agree during this same frame.
-    if (GameObjectState* state = getState()) {
-        animate(state->getName());
-    }
+    // Collision contacts are dispatched after movement. Enter the idle pose
+    // immediately so the stop is visible during this same frame.
+    animate("Idle");
 }
 
 bool Boar::shouldCollideWith(const GameObject& other) const
@@ -143,67 +165,137 @@ void Boar::update(float time)
 {
     RuntimeProfile::Scope profileScope(RuntimeProfile::Region::BoarUpdate);
     if (_defeated) {
-        GameObject::update(time);
-        if (!static_cast<Animation*>(getRenderable())->isPlaying())
-            getRenderable()->setVisibility(false);
         return;
     }
     const vector2 position = getPosition();
-    _wallTurnCooldown = std::max(0.0f, _wallTurnCooldown - time);
+    _attackPoseTime = std::max(0.0f, _attackPoseTime - time);
+    _canAttack = false;
+
+    _pause = std::max(0.0f, _pause - time);
+    if (_pause <= 0.0f && _turnAfterPause) {
+        _direction = -_direction;
+        _turnAfterPause = false;
+        _pause = kPatrolPauseSeconds;
+        _wasChasing = false;
+    }
+
     float ground = 0.0f;
     const bool grounded = supportAt(position.x, position.y + kFoot, 3.0f, 4.0f, ground);
     const vector2 delta = _target.getPosition() - position;
     const bool targetInFront = delta.x * static_cast<float>(_direction) > 0.0f;
     const bool chase = targetInFront && _target.getHealth() > 0.0f && std::fabs(delta.x) < kDetectionRange &&
         std::fabs(delta.y) < 40.0f;
-    _pause = std::max(0.0f, _pause - time);
+    if (chase && !_wasChasing && !_turnAfterPause) {
+        _pause = std::min(_pause, kAggroReactionDelaySeconds);
+    }
+    _wasChasing = chase;
+    if (_holdingAttackPosition && !chase) _holdingAttackPosition = false;
+
     float speed = 0.0f;
-    if (_pause <= 0.0f && grounded) {
-        if (chase && _wallTurnCooldown <= 0.0f) _direction = delta.x < 0.0f ? -1 : 1;
-        speed = chase ? 100.0f : 28.0f;
+    int moveDirection = _direction;
+    bool atAttackDistance = false;
+    if (chase) {
+        vector2 heroMin, heroMax, boarMin, boarMax;
+        if (Kinematics2D::tryGetActiveBounds(_target.getCollidable(), heroMin, heroMax) &&
+            Kinematics2D::tryGetActiveBounds(getCollidable(), boarMin, boarMax)) {
+            // Stop with a small gap between the boar's leading body edge and
+            // the player's active character hitbox.
+            const float playerEdge = _direction > 0 ? heroMin.x : heroMax.x;
+            const float boarFrontExtent = _direction > 0
+                ? boarMax.x - position.x
+                : position.x - boarMin.x;
+            const float stopX = playerEdge - _direction * (kAttackGap + boarFrontExtent);
+            const float remaining = (stopX - position.x) * static_cast<float>(_direction);
+            atAttackDistance = std::fabs(remaining) <= 0.5f;
+
+            if (atAttackDistance) _holdingAttackPosition = true;
+            if (_holdingAttackPosition) {
+                const bool verticallyOverlapping = heroMin.y < boarMax.y && heroMax.y > boarMin.y;
+                _canAttack = grounded && verticallyOverlapping && std::fabs(remaining) <= kAttackReach;
+            } else {
+                _canAttack = grounded && atAttackDistance;
+            }
+
+            // Once at the attack spot, stay planted through the whole aggro
+            // exchange instead of following small movements between attacks.
+            if (!_holdingAttackPosition && _pause <= 0.0f && grounded &&
+                _attackPoseTime <= 0.0f && !atAttackDistance) {
+                moveDirection = remaining > 0.0f ? _direction : -_direction;
+                speed = std::min(kChaseSpeed, std::fabs(remaining) / std::max(time, 0.001f));
+            }
+        }
+    }
+
+    if (!chase && _pause <= 0.0f && grounded && _attackPoseTime <= 0.0f) {
+        speed = kPatrolSpeed;
+    }
+    if (speed > 0.0f && grounded) {
         float ahead = 0.0f;
-        const float probeX = position.x + _direction * (20.0f + speed * time);
+        const float probeX = position.x + moveDirection * (20.0f + speed * time);
         const bool ledgeOrWall = !supportAt(probeX, position.y + kFoot, 5.0f, 8.0f, ahead);
-        const bool patrolEnd = !chase && (position.x - _spawn.x) * _direction >= kPatrolRadius;
-        if (ledgeOrWall || patrolEnd) {
-            _direction = -_direction;
-            _pause = 0.7f;
+        if (ledgeOrWall) {
+            _pause = kPatrolPauseSeconds;
+            _turnAfterPause = true;
             speed = 0.0f;
         }
     }
-    animate(speed == 0.0f ? "Idle" : (chase ? "Run" : "Walk"));
-    setVelocity(vector2(speed * _direction, grounded ? 0.0f : std::min(350.0f, getVelocity().y + 900.0f * time)));
+
+    const char* animation = _attackPoseTime > 0.0f
+        ? "Attack"
+        : (speed == 0.0f ? "Idle" : (chase ? "Run" : "Walk"));
+    animate(animation);
+    setVelocity(vector2(speed * moveDirection, grounded ? 0.0f : std::min(350.0f, getVelocity().y + 900.0f * time)));
     if (grounded) setPosition(position.x, ground - kFoot);
     GameObject::update(time);
 }
 
 void Boar::updateCombat(float time)
 {
-    _damageCooldown = std::max(0.0f, _damageCooldown - time);
-    if (_defeated || _target.getHealth() <= 0.0f) return;
+    _attackCooldown = std::max(0.0f, _attackCooldown - time);
+    if (_defeated) return;
     vector2 heroMin, heroMax, boarMin, boarMax;
     if (!Kinematics2D::tryGetActiveBounds(_target.getCollidable(), heroMin, heroMax) ||
         !Kinematics2D::tryGetActiveBounds(getCollidable(), boarMin, boarMax)) return;
     const char* state = _target.getState()->getName();
     const bool attacking = std::strcmp(state, "Attack01") == 0 || std::strcmp(state, "Attack02") == 0;
+    bool swordStrikeActive = false;
     if (attacking) {
         auto* animation = static_cast<Animation*>(_target.getRenderable());
         // First frame is anticipation; only the forward sword reach deals damage.
-        if (animation->getCurrentFrameIndex() == 0) return;
-        if (animation->getScale().x < 0.0f) heroMin.x -= 32.0f;
-        else heroMax.x += 32.0f;
+        swordStrikeActive = animation->getCurrentFrameIndex() > 0;
+        if (swordStrikeActive) {
+            if (animation->getScale().x < 0.0f) heroMin.x -= 32.0f;
+            else heroMax.x += 32.0f;
+        }
+    } else {
+        // Leaving an attack state arms the next slash, including a later
+        // Attack01 animation after the player returns to locomotion.
+        _lastCountedPlayerAttack = nullptr;
     }
     const bool overlaps = heroMin.x < boarMax.x && heroMax.x > boarMin.x &&
         heroMin.y < boarMax.y && heroMax.y > boarMin.y;
-    if (!overlaps) return;
-    if (attacking) {
-        _defeated = true;
-        setVelocity(vector2(0, 0));
-        animate("Hit");
-    } else if (_damageCooldown <= 0.0f) {
-        _target.addHealth(-15.0f);
-        _damageCooldown = 1.0f;
-        _pause = 0.5f;
-        if (_target.getHealth() <= 0.0f) _target.setState("Dead");
+    const bool newSlash = attacking && swordStrikeActive && overlaps &&
+        (!_lastCountedPlayerAttack || std::strcmp(_lastCountedPlayerAttack, state) != 0);
+    if (_target.getHealth() > 0.0f && newSlash) {
+        _lastCountedPlayerAttack = state;
+        ++_slashesTaken;
+        if (_slashesTaken >= kSlashesToDefeat) {
+            // The boar has no separate death clip. The Hit-Vanish sheet is
+            // only the single-frame attack cue, so the second slash removes it.
+            _defeated = true;
+            _canAttack = false;
+            setVelocity(vector2(0, 0));
+            getRenderable()->setVisibility(false);
+            return;
+        }
+    }
+
+    if (_target.getHealth() <= 0.0f || !_canAttack || _attackCooldown > 0.0f) return;
+    _target.addHealth(-kAttackDamage);
+    _attackCooldown = kAttackCooldownSeconds;
+    _attackPoseTime = kAttackPoseSeconds;
+    animate("Attack");
+    if (_target.getHealth() <= 0.0f) {
+        _target.setState("Dead");
     }
 }
