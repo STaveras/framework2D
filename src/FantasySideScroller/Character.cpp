@@ -246,15 +246,12 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 
 bool Character::shouldCollideWith(const GameObject& other) const
 {
-    // During attack states the character is invincible to non‑terrain collisions.
-    // We still need a collidable to remain grounded, but we should ignore
-    // interactions with enemies or hazards while attacking.  To accomplish this
-    // we early out here and only allow collisions with tiles when the current
-    // state is an attack.
+    // During attacks, suppress gameplay contact handling for non-terrain
+    // objects. The physics solver still keeps dynamic bodies separated.
     if (const GameObjectState* state = this->getState()) {
         const char* stateName = state->getName();
         if (stateName && (!std::strcmp(stateName, "Attack01") || !std::strcmp(stateName, "Attack02"))) {
-            // Only collide with tiles while attacking
+            // Only dispatch gameplay contacts with tiles while attacking.
             if (other.getType() != GAME_OBJ_TILE) {
                 return false;
             }
