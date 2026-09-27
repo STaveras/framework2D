@@ -22,18 +22,24 @@ class Boar : public GameObject
     float _pause = 2.0f;
     float _attackCooldown = 0.0f;
     float _attackPoseTime = 0.0f;
+    float _damageFlashRemaining = 0.0f;
+    float _damageFlashPhase = 0.0f;
     const char* _lastCountedPlayerAttack = nullptr;
     unsigned int _slashesTaken = 0;
     bool _turnAfterPause = false;
     bool _holdingAttackPosition = false;
     bool _wasChasing = false;
     bool _canAttack = false;
+    bool _damageFlashOn = false;
     bool _defeated = false;
     // Reused by supportAt so the per-tick spatial query does not allocate.
     mutable std::vector<GameObject*> _supportCandidates;
 
     bool supportAt(float x, float footY, float above, float below, float& support) const;
     void animate(const char* name);
+    void setDamageFlash(bool enabled);
+    void startDamageFlash();
+    void updateDamageFlash(float time);
 
 protected:
     void handleCollisionContact(const CollisionContact& contact) override;
