@@ -61,6 +61,18 @@ bool GameObject::shouldCollideWith(const GameObject& other) const
 	return true;
 }
 
+bool GameObject::shouldResolvePhysicsWith(const GameObject& other) const
+{
+	if (!isStatic() && !other.isStatic()) {
+		// Keep the object-level predicate as an explicit opt-out from both
+		// notifications and physical response, while letting subclasses filter
+		// gameplay contacts without allowing dynamic bodies to overlap.
+		return GameObject::shouldCollideWith(other);
+	}
+
+	return shouldCollideWith(other);
+}
+
 void GameObject::setCollisionPredicate(CollisionPredicate predicate)
 {
 	_collisionPredicate = std::move(predicate);

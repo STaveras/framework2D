@@ -147,6 +147,9 @@ public:
    virtual vector2 getCollisionAnchor(void) const;
 
    virtual bool shouldCollideWith(const GameObject& other) const;
+   // Physical response is independent of gameplay collision notifications:
+   // dynamic bodies separate by default even when a subclass suppresses contact events.
+   virtual bool shouldResolvePhysicsWith(const GameObject& other) const;
    void setCollisionPredicate(CollisionPredicate predicate);
    void setCollisionAnchorUsesRenderableOffset(bool enabled);
    bool collisionAnchorUsesRenderableOffset(void) const { return _useRenderableOffsetForCollisionAnchor; }
