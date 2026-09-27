@@ -259,7 +259,14 @@ void Boar::update(float time)
             const float remaining = (stopX - position.x) * static_cast<float>(_direction);
             atAttackDistance = std::fabs(remaining) <= 0.5f;
 
-            if (atAttackDistance) _holdingAttackPosition = true;
+            if (atAttackDistance) {
+                _holdingAttackPosition = true;
+            } else if (std::fabs(remaining) > kAttackReach) {
+                // Target left the held position beyond attack reach: drop the
+                // hold so the boar repositions and re-engages instead of
+                // staying planted while it walks away.
+                _holdingAttackPosition = false;
+            }
             if (_holdingAttackPosition) {
                 const bool verticallyOverlapping = heroMin.y < boarMax.y && heroMax.y > boarMin.y;
                 _canAttack = grounded && verticallyOverlapping && std::fabs(remaining) <= kAttackReach;
