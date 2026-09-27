@@ -582,8 +582,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.name = layerDescriptor.name;
 						layerConfig.startX = readInt(layer["startx"], 0);
 						layerConfig.startY = readInt(layer["starty"], 0);
-						layerConfig.offsetX = readFloat(layer["x"], 0.0f);
-						layerConfig.offsetY = readFloat(layer["y"], 0.0f);
+						// Tiled stores pixel offsets separately from the layer's tile position.
+						layerConfig.offsetX = readFloat(layer["offsetx"], 0.0f);
+						layerConfig.offsetY = readFloat(layer["offsety"], 0.0f);
 						layerConfig.parallaxX = readFloat(layer["parallaxx"], 1.0f);
 						layerConfig.parallaxY = readFloat(layer["parallaxy"], 1.0f);
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
@@ -759,8 +760,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 					objectLayer.visible = layerDescriptor.visible;
 					objectLayer.traversalIndex = layerDescriptor.traversalIndex;
 
-					const float layerOffsetX = readFloat(layer["x"], 0.0f);
-					const float layerOffsetY = readFloat(layer["y"], 0.0f);
+					const float layerOffsetX = readFloat(layer["x"], 0.0f) + readFloat(layer["offsetx"], 0.0f);
+					const float layerOffsetY = readFloat(layer["y"], 0.0f) + readFloat(layer["offsety"], 0.0f);
 					if (!layer["objects"].is_null() && layer["objects"].is_array()) {
 						for (auto object : layer["objects"]) {
 							TileObjectDescriptor descriptor;
