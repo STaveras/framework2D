@@ -19,11 +19,15 @@ class Boar : public GameObject
     Square _body{vector2(-14.0f, -8.0f), 32.0f, 22.0f};
     vector2 _spawn;
     int _direction = -1;
-    float _pause = 0.6f;
-    float _damageCooldown = 0.0f;
-    // Prevent a chase target on the far side of a wall from immediately
-    // steering the boar back into the same contact on the next frame.
-    float _wallTurnCooldown = 0.0f;
+    float _pause = 2.0f;
+    float _attackCooldown = 0.0f;
+    float _attackPoseTime = 0.0f;
+    const char* _lastCountedPlayerAttack = nullptr;
+    unsigned int _slashesTaken = 0;
+    bool _turnAfterPause = false;
+    bool _holdingAttackPosition = false;
+    bool _wasChasing = false;
+    bool _canAttack = false;
     bool _defeated = false;
     // Reused by supportAt so the per-tick spatial query does not allocate.
     mutable std::vector<GameObject*> _supportCandidates;
