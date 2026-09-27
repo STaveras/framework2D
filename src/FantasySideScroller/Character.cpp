@@ -74,6 +74,7 @@ const Physical::KinematicState2D& Character::_kinematic2DState() const
 void Character::resetForRespawn(void)
 {
 	_tile = NULL;
+	_dropThroughSupportY = 0.0f;
 	_kinematic2DState().groundContacts.clear();
 	this->resetKinematicState2D();
 	_runBoostActive = false;
@@ -126,33 +127,19 @@ void Character::_startDropThrough()
 {
 	_kinematic2DState().dropThroughTimer = kDropThroughDurationSeconds;
 	_kinematic2DState().dropThroughResumePending = false;
-	float dropThroughResumeTopY = 0.0f;
-	bool hasDropThroughResumeTopY = false;
-
-	auto collectTileBottomY = [&](Tile* tile) {
-		if (!tile || !_isOneWayTile(tile)) {
-			return;
-		}
-
-		Collidable* tileCollidable = tile->getCollidable();
-		vector2 tileMin(0.0f, 0.0f);
-		vector2 tileMax(0.0f, 0.0f);
-		if (!tileCollidable || !Kinematics2D::tryGetActiveBounds(tileCollidable, tileMin, tileMax)) {
-			return;
-		}
-
-		if (!hasDropThroughResumeTopY || tileMax.y > dropThroughResumeTopY) {
-			dropThroughResumeTopY = tileMax.y;
-			hasDropThroughResumeTopY = true;
-		}
-	};
-
-	collectTileBottomY(_tile);
+	// Suppress the departure surface for a bounded time. Lower platforms must
+	// remain available even while the body still overlaps the departure tile.
+	vector2 bodyMin(0.0f, 0.0f);
+	vector2 bodyMax(0.0f, 0.0f);
+	_dropThroughSupportY = this->getPosition().y;
+	if (Kinematics2D::tryGetActiveBounds(this->getCollidable(), bodyMin, bodyMax)) {
+		_dropThroughSupportY = bodyMax.y;
+	}
 
 	for (auto itr = _kinematic2DState().groundContacts.begin(); itr != _kinematic2DState().groundContacts.end();) {
 		Tile* tile = dynamic_cast<Tile*>(*itr);
 		if (_isOneWayTile(tile)) {
-			collectTileBottomY(tile);
+			_kinematic2DState().groundContactFrameCount.erase(tile);
 			itr = _kinematic2DState().groundContacts.erase(itr);
 			continue;
 		}
@@ -164,11 +151,12 @@ void Character::_startDropThrough()
 
 	if (GameObjectState* state = this->getState()) {
 		const char* stateName = state->getName();
-		if (_isGroundedLocomotionState(stateName) || !strcmp(stateName, "Attack01") || !strcmp(stateName, "Attack02")) {
-			this->sendInput("IN_AIR");
-		}
-		else if (!strcmp(stateName, "Rising") || !strcmp(stateName, "Jump")) {
-			this->sendInput("JUMP_RELEASED");
+		if (_isGroundedLocomotionState(stateName) ||
+			!strcmp(stateName, "Attack01") || !strcmp(stateName, "Attack02") ||
+			!strcmp(stateName, "Rising") || !strcmp(stateName, "Jump")) {
+			// A confirmed drop must enter the airborne state even when the
+			// current animation has no IN_AIR transition (Landing and attacks).
+			this->setState("Falling");
 		}
 	}
 
@@ -178,27 +166,6 @@ void Character::_startDropThrough()
 		this->setVelocity(velocity);
 	}
 
-	if (hasDropThroughResumeTopY) {
-		// Keep one-way tiles disabled until our top is fully below the previous
-		// one-way tile body. This avoids side pushback when dropping through.
-		_kinematic2DState().dropThroughResumeTopY = dropThroughResumeTopY + kOneWayTopApproachEpsilon;
-		_kinematic2DState().dropThroughResumePending = true;
-	}
-	else {
-		Collidable* selfCollidable = this->getCollidable();
-		vector2 selfMin(0.0f, 0.0f);
-		vector2 selfMax(0.0f, 0.0f);
-		if (selfCollidable && Kinematics2D::tryGetActiveBounds(selfCollidable, selfMin, selfMax)) {
-			_kinematic2DState().dropThroughResumeTopY = selfMax.y + kOneWayTopApproachEpsilon;
-			_kinematic2DState().dropThroughResumePending = true;
-		}
-	}
-
-	this->requestDropThrough(
-		kDropThroughDurationSeconds,
-		_kinematic2DState().dropThroughResumeTopY,
-		_kinematic2DState().dropThroughResumePending);
-
 	this->setPosition(this->getPosition().x, this->getPosition().y + kDropThroughStartNudge);
 }
 
@@ -206,14 +173,6 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 {
 	if (!_isOneWayTile(tile)) {
 		return true;
-	}
-
-	if (_kinematic2DState().dropThroughTimer > 0.0f) {
-		return false;
-	}
-
-	if (_kinematic2DState().dropThroughResumePending) {
-		return false;
 	}
 
 	if (this->getVelocity().y < 0.0f) {
@@ -233,10 +192,13 @@ bool Character::_canCollideWithOneWayTile(const Tile* tile) const
 	Square* bodySquare = (Square*)selfCollidable;
 	const vector2 bodyMin = bodySquare->getMin();
 	const vector2 bodyMax = bodySquare->getMax();
-	const float sampleX = bodyMin.x + ((bodyMax.x - bodyMin.x) * 0.5f);
-
 	float supportY = 0.0f;
-	if (!_sampleSupportY(tileCollidable, sampleX, supportY)) {
+	if (!Kinematics2D::sampleSupportYInOverlap(tileCollidable, bodyMin.x, bodyMax.x, supportY)) {
+		return false;
+	}
+
+	if (_kinematic2DState().dropThroughTimer > 0.0f &&
+		supportY <= _dropThroughSupportY + kOneWayTopApproachEpsilon) {
 		return false;
 	}
 

@@ -466,6 +466,10 @@ bool Character::_findSupportOnTile(const Tile* tile, float footY, float maxSnapD
 		}
 
 		const float deltaY = supportY - footY;
+		// One-way surfaces cannot pull feet back up from underneath.
+		if (_isOneWayTile(tile) && deltaY < -kOneWayTopApproachEpsilon) {
+			continue;
+		}
 		if (deltaY < -maxUpwardSnapDistance || deltaY > maxDownwardSnapDistance) {
 			continue;
 		}
@@ -638,6 +642,10 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 			}
 
 			const float deltaY = supportY - footY;
+			// One-way surfaces cannot pull feet back up from underneath.
+			if (_isOneWayTile(tile) && deltaY < -kOneWayTopApproachEpsilon) {
+				continue;
+			}
 			if (deltaY < -maxUpwardSnapDistance || deltaY > maxDownwardSnapDistance) {
 				continue;
 			}

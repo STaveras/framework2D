@@ -1413,83 +1413,14 @@
         }, 
         {
          "id":130,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":2,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":15,
-                     "x":1,
-                     "y":14
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
          "id":131,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":2,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":16,
-                     "x":0,
-                     "y":14
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
          "id":132,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":2,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":15,
-                     "x":0,
-                     "y":14
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
