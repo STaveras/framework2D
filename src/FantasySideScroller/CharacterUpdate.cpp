@@ -319,6 +319,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 
 void Character::update(float time)
 {
+	_updateDamageFlash(time);
 	AutoTestRuntime& autoRuntime = CharacterPrivate::AutoRuntime();
 	initializeAutoTestRuntime(autoRuntime);
 	autoRuntime.elapsedSeconds += std::max(0.0, (double)time);
