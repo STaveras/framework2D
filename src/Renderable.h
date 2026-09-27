@@ -88,7 +88,21 @@ public:
 	virtual bool isFlashing(void) const { return _appearance._isFlashing; }
 	virtual void setFlash(bool isFlashing, Color _flashColor = 0xFFFFFFFF, float fFlashRate = 1.0) { _appearance._isFlashing = isFlashing; _appearance._flashColor = _flashColor; _appearance._flashOpacity = fFlashRate; }
 	
-	virtual Color getTintColor(void) const { return _appearance._tintColor; }
+	virtual Color getTintColor(void) const {
+		Color tint = _appearance._tintColor;
+		if (!_appearance._isFlashing) return tint;
+
+		float opacity = _appearance._flashOpacity;
+		if (opacity < 0.0f) opacity = 0.0f;
+		if (opacity > 1.0f) opacity = 1.0f;
+		const auto blend = [opacity](unsigned char base, unsigned char flash) {
+			return static_cast<unsigned char>(base + (static_cast<float>(flash) - base) * opacity + 0.5f);
+		};
+		tint.r = blend(tint.r, _appearance._flashColor.r);
+		tint.g = blend(tint.g, _appearance._flashColor.g);
+		tint.b = blend(tint.b, _appearance._flashColor.b);
+		return tint;
+	}
 	virtual void setTint(Color _tintColor) { _appearance._tintColor = _tintColor; }
 
 	// The center is a local pivot. Signed scale reflects around it; the pivot
