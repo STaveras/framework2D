@@ -405,9 +405,6 @@
     <ClInclude Include="src\FantasySideScroller\Constants.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
-    <ClInclude Include="src\FantasySideScroller\Cursor.h">
-      <Filter>Applications\FantasySideScroller</Filter>
-    </ClInclude>
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
@@ -458,6 +455,13 @@
     </ClInclude>
     <ClInclude Include="src\CollisionEvent.h">
       <Filter>Physics\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Cursor.h" />
+    <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
+    <ClInclude Include="src\PlatformMouse.h" />
+    <ClInclude Include="src\StrUtils.h" />
+    <ClInclude Include="src\FantasySideScroller\PauseState.h">
+      <Filter>Assets / Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -632,9 +636,6 @@
     <ClCompile Include="src\FantasySideScroller\Character.cpp">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClCompile>
-    <ClCompile Include="src\FantasySideScroller\Cursor.cpp">
-      <Filter>Applications\FantasySideScroller</Filter>
-    </ClCompile>
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClCompile>
@@ -668,6 +669,16 @@
     </ClCompile>
     <ClCompile Include="src\CollidableGroup.cpp">
       <Filter>Physics\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Cursor.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterMovement.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterStateSetup.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterUpdate.cpp" />
+    <ClCompile Include="src\FantasySideScroller\TraversalMechanics.cpp" />
+    <ClCompile Include="src\PlatformMouse.cpp" />
+    <ClCompile Include="src\StrUtils.cpp" />
+    <ClCompile Include="src\FantasySideScroller\PauseState.cpp">
+      <Filter>Assets / Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
