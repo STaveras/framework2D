@@ -7,6 +7,7 @@
 #include "StrUtils.h"
 #include "FileSystem.h"
 
+#include <cstdlib>
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -587,6 +588,15 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.offsetY = readFloat(layer["offsety"], 0.0f);
 						layerConfig.parallaxX = readFloat(layer["parallaxx"], 1.0f);
 						layerConfig.parallaxY = readFloat(layer["parallaxy"], 1.0f);
+						layerConfig.opacity = readFloat(layer["opacity"], 1.0f);
+						if (layer["tintcolor"].is_string()) {
+							// Tiled writes "#RRGGBB" or "#AARRGGBB".
+							const std::string tint((std::string_view)layer["tintcolor"].get_string());
+							if (tint.size() == 7 || tint.size() == 9) {
+								uint32_t value = (uint32_t)std::strtoul(tint.c_str() + 1, nullptr, 16);
+								layerConfig.tintColor = (tint.size() == 7) ? (0xFF000000u | value) : value;
+							}
+						}
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
 						// User-selected default for missing property is non-colliding.

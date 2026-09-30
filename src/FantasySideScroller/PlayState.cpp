@@ -301,6 +301,10 @@ void PlayState::onEnter(State* prev)
 	controller->addAction(Action("ATTACK", Gamepad::Button::X));
 	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
 	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
+	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_UP));
+	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_W));
+	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
+	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
 	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
 	_player->setGameObject(_playableCharacter);
@@ -359,6 +363,7 @@ bool PlayState::onExecute(float time)
 		for (Boar* boar : _boars) {
 			if (boar) boar->reset();
 		}
+		_levelProps.resetPlatforms();
 		_playableCharacter->clearEvents();
 		_playableCharacter->resetForRespawn();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
@@ -510,7 +515,8 @@ void PlayState::onExit(State* next)
 	_boars.clear();
 	SAFE_DELETE(_playableCharacter);
 	
-	_levelManager.shutdown(_objectManager, *this);
+	_levelProps.clear();
+ 	_levelManager.shutdown(_objectManager, *this);
 
 	if (_player) {
 		Engine2D::getGame()->getPlayers()->destroy(_player);
