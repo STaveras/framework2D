@@ -12,6 +12,8 @@
 namespace
 {
 constexpr float kDefaultTriggerExtent = 8.0f;
+constexpr float kDefaultHazardDamage = 10.0f;
+constexpr float kDefaultHazardInterval = 1.0f;
 }
 
 bool TraversalMechanics::operator()(GameObject* object)
@@ -58,6 +60,9 @@ TraversalTriggerType TraversalMechanics::parseTriggerType(const std::string& typ
 	}
 	if (StrUtils::IEquals(typeName, "stamina_pickup")) {
 		return TraversalTriggerType::StaminaPickup;
+	}
+	if (StrUtils::IEquals(typeName, "hazard")) {
+		return TraversalTriggerType::Hazard;
 	}
 	return TraversalTriggerType::Unknown;
 }
@@ -143,6 +148,11 @@ void TraversalMechanics::initialize(
 		case TraversalTriggerType::Checkpoint:
 			trigger.oneShot = false;
 			break;
+		case TraversalTriggerType::Hazard:
+			trigger.value = readNumericProperty(descriptor, "damage", kDefaultHazardDamage);
+			trigger.interval = std::max(0.0f, readNumericProperty(descriptor, "interval", kDefaultHazardInterval));
+			trigger.oneShot = false;
+			break;
 		default:
 			trigger.oneShot = true;
 			break;
@@ -177,6 +187,7 @@ void TraversalMechanics::resetRun(const vector2& spawnPoint, float timeLimitSeco
 
 	for (TraversalTrigger& trigger : _triggers) {
 		trigger.consumed = false;
+		trigger.cooldownRemaining = 0.0f;
 	}
 }
 
@@ -198,6 +209,10 @@ void TraversalMechanics::update(Character* character, float dt)
 
 	if (_runState.completed) {
 		return;
+	}
+
+	for (TraversalTrigger& trigger : _triggers) {
+		trigger.cooldownRemaining = std::max(0.0f, trigger.cooldownRemaining - clampedDt);
 	}
 
 	for (TraversalTrigger& trigger : _triggers) {
@@ -232,6 +247,13 @@ void TraversalMechanics::update(Character* character, float dt)
 		case TraversalTriggerType::StaminaPickup:
 			character->addStamina(std::max(0.0f, trigger.value));
 			_runState.lastEvent = "stamina_pickup";
+			break;
+		case TraversalTriggerType::Hazard:
+			if (trigger.cooldownRemaining <= 0.0f && character->getHealth() > 0.0f) {
+				character->addHealth(-std::max(0.0f, trigger.value));
+				trigger.cooldownRemaining = trigger.interval;
+				_runState.lastEvent = "hazard";
+			}
 			break;
 		case TraversalTriggerType::Unknown:
 			break;

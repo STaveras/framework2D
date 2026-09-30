@@ -164,7 +164,7 @@ public:
 		}
 	}
 
-	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex) 
+	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex, unsigned int flipFlags = 0) 
 	{
 		if (tileIndex < 0 && !this->getTile(x, y)) {
 			return;
@@ -174,7 +174,7 @@ public:
 			if (tileSet) {
 				tile->setTileSet(tileSet);
 			}
-			tile->setTileIndex(tileIndex);
+			tile->setTileIndex(tileIndex, flipFlags);
 			tile->setLayerCollisionMode(_layerConfig.collisionMode);
 			tile->setLayerName(_layerConfig.name);
 		}
@@ -667,7 +667,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									const int cy = index / chunkW;
 									++index;
 
-										const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+										const int64_t rawGid = readInt64(gidElement, 0);
+										const unsigned int flipFlags = (unsigned int)(rawGid & 0xFFFFFFFFLL) & TileSet::kFlipMask;
+										const int64_t gid = normalizeGid(rawGid);
 										if (gid == 0) {
 											continue;
 										}
@@ -692,7 +694,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 										continue;
 									}
 
-									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex, flipFlags);
 								}
 							}
 						}
@@ -709,7 +711,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 								const int localY = index / mapWidth;
 								++index;
 
-									const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+									const int64_t rawGid = readInt64(gidElement, 0);
+									const unsigned int flipFlags = (unsigned int)(rawGid & 0xFFFFFFFFLL) & TileSet::kFlipMask;
+									const int64_t gid = normalizeGid(rawGid);
 									if (gid == 0) {
 										continue;
 									}
@@ -726,7 +730,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									continue;
 								}
 
-								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex, flipFlags);
 							}
 							}
 

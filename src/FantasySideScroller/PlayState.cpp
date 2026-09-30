@@ -280,6 +280,7 @@ void PlayState::onEnter(State* prev)
 	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
 	controller->addAction(Action("DOWN", Gamepad::Button::DpadDown));
 	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
+	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_Z));
 	controller->addAction(Action("ATTACK", Gamepad::Button::X));
 	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
 	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
