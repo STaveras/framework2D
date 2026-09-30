@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 
 // I usually hate globals, but this one will only be accessible to TileSets
@@ -113,6 +114,33 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 
 					TileSet::TileInfo tileInfo;
 					tileInfo._typeName = resolveClassOrType(tile);
+
+					if (!tile["properties"].is_null() && tile["properties"].is_array()) {
+						for (simdjson::dom::element property : tile["properties"]) {
+							if (!property["name"].is_string()) {
+								continue;
+							}
+							const std::string name((std::string_view)property["name"].get_string());
+							simdjson::dom::element value = property["value"];
+							std::string text;
+							if (value.is_string()) {
+								text = std::string((std::string_view)value.get_string());
+							}
+							else if (value.is_bool()) {
+								text = (bool)value.get_bool() ? "true" : "false";
+							}
+							else if (value.is_int64()) {
+								text = std::to_string((int64_t)value.get_int64());
+							}
+							else if (value.is_uint64()) {
+								text = std::to_string((uint64_t)value.get_uint64());
+							}
+							else if (value.is_double()) {
+								text = std::to_string((double)value.get_double());
+							}
+							tileInfo._properties[name] = text;
+						}
+					}
 
 					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
 						simdjson::dom::element objectgroup = tile["objectgroup"];
@@ -225,7 +253,7 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 						}
 					}
 
-					if (!tileInfo._typeName.empty() || tileInfo._collisionInfo != NULL) {
+					if (!tileInfo._typeName.empty() || tileInfo._collisionInfo != NULL || !tileInfo._properties.empty()) {
 						tileSet->_tileInfo[(int)id] = tileInfo;
 					}
 				}
@@ -362,4 +390,26 @@ Collidable* TileSet::getCollision(int tileIndex, unsigned int flipFlags)
 	Collidable* flipped = cloneFlippedCollision(infoItr->second._collisionInfo, getTileSize(), flipFlags);
 	_flippedCollision[key] = flipped;
 	return flipped;
+}
+
+float TileSet::TileInfo::getFloatProperty(const std::string& name, float fallback) const
+{
+	auto itr = _properties.find(name);
+	if (itr == _properties.end() || itr->second.empty()) {
+		return fallback;
+	}
+	char* end = nullptr;
+	const float value = std::strtof(itr->second.c_str(), &end);
+	return (end == itr->second.c_str()) ? fallback : value;
+}
+
+int TileSet::TileInfo::getIntProperty(const std::string& name, int fallback) const
+{
+	auto itr = _properties.find(name);
+	if (itr == _properties.end() || itr->second.empty()) {
+		return fallback;
+	}
+	char* end = nullptr;
+	const long value = std::strtol(itr->second.c_str(), &end, 10);
+	return (end == itr->second.c_str()) ? fallback : (int)value;
 }

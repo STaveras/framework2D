@@ -85,6 +85,7 @@ void Character::resetForRespawn(void)
 	_damageFlashPhase = 0.0f;
 	_damageFlashOn = false;
 	_setDamageFlash(false);
+	_knockbackRemaining = 0.0f;
 	_health = _maxHealth;
 	this->setVelocity(vector2(0.0f, 0.0f));
 }
@@ -247,6 +248,31 @@ bool Character::shouldCollideWith(const GameObject& other) const
 void Character::addStamina(float amount)
 {
 	_stamina = std::max(0.0f, std::min(_maxStamina, _stamina + amount));
+}
+
+void Character::applyKnockback(vector2 velocity, float lockSeconds)
+{
+	if (_health <= 0.0f) {
+		return;
+	}
+
+	GameObjectState* state = this->getState();
+	const char* stateName = state ? state->getName() : "";
+	const bool aerial =
+		!strcmp(stateName, "Rising") || !strcmp(stateName, "Jump") || !strcmp(stateName, "Falling");
+	// Leave the ground (and any attack pose) so gravity and the push both apply.
+	if (!aerial && strcmp(stateName, "Dead") != 0) {
+		if (GameObjectState* falling = this->getState("Falling")) {
+			this->setState(falling);
+		}
+	}
+
+	_longJumpMomentumActive = false;
+	_longJumpMomentumDirection = 0;
+	_longJumpMomentumSpeed = 0.0f;
+	_runBoostActive = false;
+	_knockbackRemaining = std::max(_knockbackRemaining, lockSeconds);
+	this->setVelocity(velocity);
 }
 
 void Character::addHealth(float amount)

@@ -116,7 +116,8 @@ public:
    }
 
    std::string getTileType(void) const {
-      return _tileSet->getTileInfo(_tileIndex)._typeName;
+      const TileSet::TileInfo* info = _tileSet ? _tileSet->findTileInfo(_tileIndex) : NULL;
+      return info ? info->_typeName : std::string();
    }
 
    unsigned int getFlipFlags(void) const {
@@ -228,6 +229,10 @@ public:
       GameObjectState* state = this->getState();
       if (state && _tileIndex < 0) {
          state->setCollidable(NULL);
+         // A cleared tile (e.g. a collected pickup) must stop drawing too.
+         if (Renderable* renderable = state->getRenderable()) {
+            renderable->setVisibility(false);
+         }
       }
 
       if (_tileSet && _tileIndex >= 0) {
@@ -246,16 +251,15 @@ public:
                   xPosition, yPosition, width, height
                };
 
+               // Reuse the tile's image when its index changes at runtime (e.g. a chest
+               // opening); only the source rect and sheet need updating.
                Image* tileImage = (Image*)state->getRenderable();
-
-               if (tileImage) {
-                  _tileImages.destroy(tileImage);
-               }
-               else {
+               if (!tileImage) {
                   tileImage = _tileImages.create();
-                  tileImage->setSrcRect(tileRect);
-                  tileImage->setTexture(_tileSet->getTileSheet());
                }
+               tileImage->setSrcRect(tileRect);
+               tileImage->setTexture(_tileSet->getTileSheet());
+               tileImage->setVisibility(true);
 
                applyFlipToImage(tileImage);
                state->setRenderable(tileImage);

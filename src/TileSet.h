@@ -29,6 +29,14 @@ public:
    struct TileInfo {
       std::string _typeName;
       Collidable* _collisionInfo = NULL;
+      // Custom properties from the tileset, with values stored as text.
+      std::map<std::string, std::string> _properties;
+
+      bool hasProperty(const std::string& name) const {
+         return _properties.find(name) != _properties.end();
+      }
+      float getFloatProperty(const std::string& name, float fallback) const;
+      int getIntProperty(const std::string& name, int fallback) const;
    };
 
    // Tiled stores a tile's flip/rotation in the top three bits of its gid. A 90 degree
@@ -68,6 +76,12 @@ public:
 
    TileInfo getTileInfo(int tileIndex) {
       return _tileInfo[tileIndex];
+   }
+
+   // Non-copying lookup; NULL when the tile has no class, collider or properties.
+   const TileInfo* findTileInfo(int tileIndex) const {
+      auto itr = _tileInfo.find(tileIndex);
+      return (itr != _tileInfo.end()) ? &itr->second : NULL;
    }
 
    // The tile's collider with the given flip flags applied; NULL when the tile has none.

@@ -94,5 +94,8 @@ struct TraversalTrigger
 	// Hazards re-apply damage every interval while the character overlaps them.
 	float interval = 0.0f;
 	float cooldownRemaining = 0.0f;
+	// Hazards throw the character this way on each hit (pixels/second, +y down).
+	vector2 push = vector2(0.0f, 0.0f);
+	float pushLockSeconds = 0.0f;
 };
 // Author: Stanley Taveras

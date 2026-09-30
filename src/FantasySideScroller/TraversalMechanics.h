@@ -30,6 +30,7 @@ class TraversalMechanics : public ObjectOperator
 	TraversalRunState _runState;
 	bool _respawnPending = false;
 	vector2 _respawnPoint = vector2(0.0f, 0.0f);
+	std::string _respawnReason;
 	Character* _trackedCharacter = NULL;
 	float _frameDeltaSeconds = 0.0f;
 
@@ -37,6 +38,7 @@ class TraversalMechanics : public ObjectOperator
 	static TraversalTriggerType parseTriggerType(const std::string& typeName);
 	static float readNumericProperty(const LevelTriggerDescriptor& descriptor, const char* key, float fallback);
 	static bool readBoolProperty(const LevelTriggerDescriptor& descriptor, const char* key, bool fallback);
+	static std::string readStringProperty(const LevelTriggerDescriptor& descriptor, const char* key);
 
 	void requestRespawn(const vector2& position, const char* reason);
 
@@ -53,7 +55,8 @@ public:
 		float timeLimitSeconds = 75.0f);
 	void resetRun(const vector2& spawnPoint, float timeLimitSeconds = -1.0f);
 	void update(Character* character, float dt);
-	bool consumeRespawnRequest(vector2& outRespawnPoint);
+	// outReason (optional) receives why the respawn was requested, e.g. "killzone" or "timeout".
+	bool consumeRespawnRequest(vector2& outRespawnPoint, std::string* outReason = NULL);
 
 	const TraversalRunState& getRunState(void) const { return _runState; }
 	const std::vector<TraversalTrigger>& getTriggers(void) const { return _triggers; }
