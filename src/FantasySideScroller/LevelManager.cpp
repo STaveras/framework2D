@@ -231,6 +231,14 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 			}
 
 			gameState.routeObjectToRenderList(tile, layerRenderList);
+			if (Renderable* renderable = tile->getState() ? tile->getState()->getRenderable() : NULL) {
+				// Tiled's layer tint and opacity multiply into every tile of the layer.
+				if (layerConfig.tintColor != 0xFFFFFFFFu || layerConfig.opacity < 1.0f) {
+					Color tint(layerConfig.tintColor);
+					tint.a = (byte)(tint.a * std::max(0.0f, std::min(1.0f, layerConfig.opacity)) + 0.5f);
+					renderable->setTint(tint);
+				}
+			}
 
 			std::string objectName = layerPrefix + "_tile_" + std::to_string(tileIndex);
 			objectManager.addObject(objectName.c_str(), tile);

@@ -418,6 +418,7 @@
          "objectgroup":
             {
              "draworder":"index",
+             "id":4,
              "name":"",
              "objects":[
                     {
@@ -3615,7 +3616,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":445
+                }],
+         "type":"chest"
         }, 
         {
          "id":444,
@@ -3641,7 +3654,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":446
+                }],
+         "type":"chest"
         }, 
         {
          "id":445,
@@ -3823,7 +3848,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":470
+                }],
+         "type":"chest"
         }, 
         {
          "id":469,
@@ -3849,7 +3886,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":471
+                }],
+         "type":"chest"
         }, 
         {
          "id":470,
@@ -3979,7 +4028,24 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"tile"
         }, 
         {
          "id":493,
@@ -4005,7 +4071,24 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"tile"
         }, 
         {
          "id":494,
@@ -4031,7 +4114,24 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"tile"
         }, 
         {
          "id":495,
@@ -4057,7 +4157,24 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"tile"
         }, 
         {
          "id":497,
@@ -4214,7 +4331,23 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }]
         }, 
         {
          "id":518,
@@ -4240,7 +4373,23 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }]
         }, 
         {
          "id":519,
@@ -4266,7 +4415,23 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }]
         }, 
         {
          "id":520,
@@ -4292,7 +4457,23 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }]
         }, 
         {
          "id":521,

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 // TODO: Make these state keys that correspond to states that are built-in to tiles
@@ -22,4 +23,7 @@ struct TileLayerConfig
 	float parallaxY = 1.0f;
 	TileCollisionMode collisionMode = TileCollisionMode::Solid;
 	int drawOrder = 0;
+	// Tiled's layer tint (ARGB, multiplied into each tile) and opacity.
+	uint32_t tintColor = 0xFFFFFFFFu;
+	float opacity = 1.0f;
 };
