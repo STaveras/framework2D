@@ -2,6 +2,9 @@
 #pragma once
 
 #include "Types.h"
+#include "Maths.h"
+
+#include <string>
 
 #define EVT_WINDOW_RESIZED "EVT_WINDOW_RESIZED"
 
@@ -21,6 +24,11 @@ class Window
 
 	const char* m_szWindowClassName;
 	std::string m_szWindowTitle;
+
+	// Frame capture for verification runs (AUTO_SCREENSHOT_FRAME / AUTO_SCREENSHOT_PATH).
+	long _renderedFrames = 0;
+	long _autoScreenshotFrame = -1;
+	std::string _autoScreenshotPath;
 
 public:
 	enum class ClientAPI
@@ -93,5 +101,14 @@ public:
 
 	void resize(void);
 	void toggleFullscreen(void);
+
+	// Saves the current OpenGL back buffer as a PNG. Call after a frame is drawn and before
+	// it is presented. Returns false without an OpenGL context or if writing fails.
+	bool saveScreenshot(const std::string& path);
+
+	// Called by the renderer once a frame is drawn, before presenting it. viewMin/viewMax is
+	// the world rectangle the frame shows. With AUTO_SCREENSHOT_FRAME=N and
+	// AUTO_SCREENSHOT_PATH set, frame N is saved there, with the view in "<path>.view".
+	void onFrameRendered(const vector2& viewMin, const vector2& viewMax);
 };
 // Author: Stanley Taveras

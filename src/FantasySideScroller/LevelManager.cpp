@@ -95,9 +95,11 @@ void LevelManager::refreshLevelBounds(const TileMapLoadResult& loadResult, const
 			continue;
 		}
 
+		// A layer's pixel offset only nudges its art; it does not make the level larger, so
+		// the camera must not scroll past the map's own edges because of it.
 		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
-		const float left = mapOffset.x + layerConfig.offsetX + ((float)layerConfig.startX * tileWidth);
-		const float top = mapOffset.y + layerConfig.offsetY + ((float)layerConfig.startY * tileHeight);
+		const float left = mapOffset.x + ((float)layerConfig.startX * tileWidth);
+		const float top = mapOffset.y + ((float)layerConfig.startY * tileHeight);
 		const float right = left + ((float)tileMap->getMapWidth() * tileWidth);
 		const float bottom = top + ((float)tileMap->getMapHeight() * tileHeight);
 

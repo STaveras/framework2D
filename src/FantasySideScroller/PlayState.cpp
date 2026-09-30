@@ -112,6 +112,13 @@ void PlayState::_initHUD()
 	// 	}
 	// }
 
+	if (!_keyIcon) {
+		// The key tile from Tiles.png, shown while the player holds a key.
+		_keyIcon = new Image(BasePath("Assets/Tiles.png").c_str(), 0, RECT{ 240, 320, 256, 336 });
+		_keyIcon->setVisibility(false);
+		_hudRenderList->push_back(_keyIcon);
+	}
+
 	if (!_cursor) {
 		_cursor = new Cursor();
 		if (_cursor->load(BasePath("cursors.png").c_str())) {
@@ -167,6 +174,11 @@ void PlayState::_updateHUD(float dt)
 	_staminaBarFill->setPosition(staminaFillOrigin);
 	_staminaBarFill->setScale(staminaFillWidth, kHUDStaminaHeight);
     _staminaBarFill->setVisibility(staminaFillWidth > 0.0f);
+
+	if (_keyIcon) {
+		_keyIcon->setPosition(hudOrigin + vector2(kHUDBackgroundWidth + 4.0f, -3.0f));
+		_keyIcon->setVisibility(_levelProps.getKeyCount() > 0);
+	}
     
     // if (_helloWorldText) {
     //     _helloWorldText->setPosition(hudOrigin + vector2(0.0f, kHUDTextOffsetY));
@@ -188,6 +200,9 @@ void PlayState::_shutdownHUD()
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
 		}
+		if (_keyIcon) {
+			_hudRenderList->remove(_keyIcon);
+		}
 		// if (_helloWorldText) {
 		// 	_hudRenderList->remove(_helloWorldText);
 		// }
@@ -205,6 +220,7 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_healthBarFill);
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
+	SAFE_DELETE(_keyIcon);
 	// SAFE_DELETE(_helloWorldText);
 	SAFE_DELETE(_cursor);
 }
@@ -241,6 +257,7 @@ void PlayState::onEnter(State* prev)
 #endif
 
 	_objectManager.addObject("Hero", _playableCharacter);
+	_levelProps.initialize(_levelManager.getTileMaps());
 	const std::vector<LevelEnemyDescriptor>& enemyDescriptors = _levelManager.getEnemyDescriptors();
 	_boars.reserve(enemyDescriptors.size());
 	for (size_t i = 0; i < enemyDescriptors.size(); ++i) {
@@ -425,14 +442,28 @@ bool PlayState::onExecute(float time)
 	_traversalMechanics.setFrameDeltaSeconds(time);
 	const bool keepRunning = GameState::onExecute(time);
 
-	// vector2 traversalRespawn(0.0f, 0.0f);
-	// if (_traversalMechanics.consumeRespawnRequest(traversalRespawn) && _playableCharacter) {
-	// 	_collisionSystem.reset();
-	// 	_playableCharacter->clearEvents();
-	// 	_playableCharacter->resetForRespawn();
-	// 	_playableCharacter->setState(_playableCharacter->getState("Falling"));
-	// 	_playableCharacter->setPosition(traversalRespawn);
-	// }
+	// Killzones (e.g. deep water) send the player back to the last checkpoint. Run
+	// timeouts still do not respawn, as before.
+	vector2 traversalRespawn(0.0f, 0.0f);
+	std::string respawnReason;
+	if (_traversalMechanics.consumeRespawnRequest(traversalRespawn, &respawnReason) &&
+		_playableCharacter && respawnReason != "timeout") {
+		_collisionSystem.reset();
+		_playableCharacter->clearEvents();
+		_playableCharacter->resetForRespawn();
+		_playableCharacter->setState(_playableCharacter->getState("Falling"));
+		_playableCharacter->setPosition(traversalRespawn);
+		_levelProps.resetPlatforms();
+	}
+
+	if (_playableCharacter) {
+		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
+		Action* interactAction = controller ? controller->getAction("INTERACT") : NULL;
+		const bool interactActive = interactAction && interactAction->isActive();
+		const bool interactPressed = interactActive && !_interactWasActive;
+		_interactWasActive = interactActive;
+		_levelProps.update(_playableCharacter, interactPressed, time);
+	}
 
 	for (Boar* boar : _boars) {
 		if (boar) boar->updateCombat(time);

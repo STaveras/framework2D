@@ -14,6 +14,10 @@ namespace
 constexpr float kDefaultTriggerExtent = 8.0f;
 constexpr float kDefaultHazardDamage = 10.0f;
 constexpr float kDefaultHazardInterval = 1.0f;
+constexpr float kDefaultHazardPushSpeed = 190.0f;
+constexpr float kDefaultHazardPushLock = 0.3f;
+// Sideways pushes also lift the character so it leaves the ground.
+constexpr float kHazardSidePushLift = 0.55f;
 }
 
 bool TraversalMechanics::operator()(GameObject* object)
@@ -105,10 +109,21 @@ bool TraversalMechanics::readBoolProperty(const LevelTriggerDescriptor& descript
 	return fallback;
 }
 
+std::string TraversalMechanics::readStringProperty(const LevelTriggerDescriptor& descriptor, const char* key)
+{
+	for (const TriggerPropertyDescriptor& property : descriptor.properties) {
+		if (StrUtils::IEquals(property.name, key)) {
+			return property.value;
+		}
+	}
+	return std::string();
+}
+
 void TraversalMechanics::requestRespawn(const vector2& position, const char* reason)
 {
 	_respawnPending = true;
 	_respawnPoint = position;
+	_respawnReason = reason ? reason : "respawn";
 	_runState.failed = true;
 	_runState.lastEvent = reason ? reason : "respawn";
 }
@@ -146,12 +161,32 @@ void TraversalMechanics::initialize(
 			trigger.oneShot = readBoolProperty(descriptor, "one_shot", true);
 			break;
 		case TraversalTriggerType::Checkpoint:
+		case TraversalTriggerType::Killzone:
+			// Both must keep working however many times the player passes or falls in.
 			trigger.oneShot = false;
 			break;
 		case TraversalTriggerType::Hazard:
 			trigger.value = readNumericProperty(descriptor, "damage", kDefaultHazardDamage);
 			trigger.interval = std::max(0.0f, readNumericProperty(descriptor, "interval", kDefaultHazardInterval));
 			trigger.oneShot = false;
+			{
+				// "push" names the direction the hazard points, and so throws the character.
+				const std::string direction = readStringProperty(descriptor, "push");
+				const float speed = readNumericProperty(descriptor, "push_speed", kDefaultHazardPushSpeed);
+				if (StrUtils::IEquals(direction, "left")) {
+					trigger.push = vector2(-speed, -speed * kHazardSidePushLift);
+				}
+				else if (StrUtils::IEquals(direction, "right")) {
+					trigger.push = vector2(speed, -speed * kHazardSidePushLift);
+				}
+				else if (StrUtils::IEquals(direction, "up")) {
+					trigger.push = vector2(0.0f, -speed);
+				}
+				else if (StrUtils::IEquals(direction, "down")) {
+					trigger.push = vector2(0.0f, speed);
+				}
+				trigger.pushLockSeconds = readNumericProperty(descriptor, "push_lock", kDefaultHazardPushLock);
+			}
 			break;
 		default:
 			trigger.oneShot = true;
@@ -251,6 +286,13 @@ void TraversalMechanics::update(Character* character, float dt)
 		case TraversalTriggerType::Hazard:
 			if (trigger.cooldownRemaining <= 0.0f && character->getHealth() > 0.0f) {
 				character->addHealth(-std::max(0.0f, trigger.value));
+				if (character->getHealth() <= 0.0f) {
+					// A lethal hit kills the character, as a boar's final bite does.
+					character->setState("Dead");
+				}
+				else if (trigger.push.x != 0.0f || trigger.push.y != 0.0f) {
+					character->applyKnockback(trigger.push, trigger.pushLockSeconds);
+				}
 				trigger.cooldownRemaining = trigger.interval;
 				_runState.lastEvent = "hazard";
 			}
@@ -269,7 +311,7 @@ void TraversalMechanics::update(Character* character, float dt)
 	}
 }
 
-bool TraversalMechanics::consumeRespawnRequest(vector2& outRespawnPoint)
+bool TraversalMechanics::consumeRespawnRequest(vector2& outRespawnPoint, std::string* outReason)
 {
 	if (!_respawnPending) {
 		return false;
@@ -277,5 +319,8 @@ bool TraversalMechanics::consumeRespawnRequest(vector2& outRespawnPoint)
 
 	_respawnPending = false;
 	outRespawnPoint = _respawnPoint;
+	if (outReason) {
+		*outReason = _respawnReason;
+	}
 	return true;
 }

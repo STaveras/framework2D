@@ -294,6 +294,7 @@
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
     <ClInclude Include="src\FantasySideScroller\Resources.h" />
     <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
+    <ClInclude Include="src\FantasySideScroller\LevelProps.h" />
     <ClInclude Include="src\InputTapeRecorder.h" />
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
@@ -426,6 +427,7 @@
     <ClCompile Include="src\FantasySideScroller\LevelManager.cpp" />
     <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
     <ClCompile Include="src\FantasySideScroller\TraversalMechanics.cpp" />
+    <ClCompile Include="src\FantasySideScroller\LevelProps.cpp" />
     <ClCompile Include="src\InputTapeRecorder.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />

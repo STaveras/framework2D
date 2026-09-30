@@ -71,4 +71,5 @@ public:
 	const std::vector<LevelTriggerDescriptor>& getTriggerDescriptors() const { return _triggerDescriptors; }
 	const std::vector<LevelEnemyDescriptor>& getEnemyDescriptors() const { return _enemyDescriptors; }
 	int getRuntimeLayerIndex() const { return _runtimeLayerIndex; }
+	const std::vector<TileMap*>& getTileMaps() const { return _tileMaps; }
 };
