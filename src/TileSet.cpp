@@ -9,6 +9,8 @@
 #include "PolygonDecomposition.h"
 #include "Square.h"
 
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 // I usually hate globals, but this one will only be accessible to TileSets
@@ -267,4 +269,97 @@ TileSet::CollisionLoadStats TileSet::getCollisionLoadStats(void)
 void TileSet::resetCollisionLoadStats(void)
 {
 	gCollisionLoadStats = TileSet::CollisionLoadStats();
+}
+
+vector2 TileSet::flipTilePoint(vector2 point, float size, unsigned int flipFlags)
+{
+	if (flipFlags & kFlipDiagonal) {
+		point = vector2(point.y, point.x);
+	}
+	if (flipFlags & kFlipHorizontal) {
+		point.x = size - point.x;
+	}
+	if (flipFlags & kFlipVertical) {
+		point.y = size - point.y;
+	}
+	return point;
+}
+
+// Builds a copy of a tile-local collider with the flip flags applied.
+static Collidable* cloneFlippedCollision(const Collidable* source, float size, unsigned int flipFlags)
+{
+	if (!source) {
+		return NULL;
+	}
+
+	switch (source->getType()) {
+	case COL_OBJ_SQUARE: {
+		const Square* square = (const Square*)source;
+		const vector2 a = TileSet::flipTilePoint(square->getPosition(), size, flipFlags);
+		const vector2 b = TileSet::flipTilePoint(
+			square->getPosition() + vector2(square->getWidth(), square->getHeight()), size, flipFlags);
+		Square* flipped = collisionObjects.createDerived<Square>();
+		flipped->setPosition(std::min(a.x, b.x), std::min(a.y, b.y));
+		flipped->setWidth(std::abs(b.x - a.x));
+		flipped->setHeight(std::abs(b.y - a.y));
+		return flipped;
+	}
+	case COL_OBJ_POLYGON: {
+		const PolygonCollider* polygon = (const PolygonCollider*)source;
+		std::vector<vector2> vertices;
+		vertices.reserve(polygon->getLocalVertices().size());
+		for (const vector2& vertex : polygon->getLocalVertices()) {
+			vertices.push_back(TileSet::flipTilePoint(polygon->getPosition() + vertex, size, flipFlags));
+		}
+
+		// Each flip is a reflection; an odd number of them reverses the winding, so
+		// restore the original order to keep edge normals facing the same way.
+		const bool h = (flipFlags & TileSet::kFlipHorizontal) != 0;
+		const bool v = (flipFlags & TileSet::kFlipVertical) != 0;
+		const bool d = (flipFlags & TileSet::kFlipDiagonal) != 0;
+		if (h ^ v ^ d) {
+			std::reverse(vertices.begin(), vertices.end());
+		}
+
+		PolygonCollider* flipped = collisionObjects.createDerived<PolygonCollider>();
+		flipped->setPosition(0.0f, 0.0f);
+		flipped->setLocalVertices(vertices);
+		return flipped;
+	}
+	case COL_OBJ_GROUP: {
+		CollidableGroup* flipped = collisionObjects.createDerived<CollidableGroup>();
+		for (const Collidable* member : *(const CollidableGroup*)source) {
+			if (Collidable* flippedMember = cloneFlippedCollision(member, size, flipFlags)) {
+				flipped->push_back(flippedMember);
+			}
+		}
+		return flipped;
+	}
+	default:
+		// Tile colliders are only loaded as squares and polygons.
+		return (Collidable*)source;
+	}
+}
+
+Collidable* TileSet::getCollision(int tileIndex, unsigned int flipFlags)
+{
+	auto infoItr = _tileInfo.find(tileIndex);
+	if (infoItr == _tileInfo.end() || !infoItr->second._collisionInfo) {
+		return NULL;
+	}
+
+	flipFlags &= kFlipMask;
+	if (flipFlags == 0) {
+		return infoItr->second._collisionInfo;
+	}
+
+	const std::pair<int, unsigned int> key(tileIndex, flipFlags);
+	auto flippedItr = _flippedCollision.find(key);
+	if (flippedItr != _flippedCollision.end()) {
+		return flippedItr->second;
+	}
+
+	Collidable* flipped = cloneFlippedCollision(infoItr->second._collisionInfo, getTileSize(), flipFlags);
+	_flippedCollision[key] = flipped;
+	return flipped;
 }

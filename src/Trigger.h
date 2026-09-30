@@ -78,7 +78,8 @@ enum class TraversalTriggerType
 	Checkpoint,
 	Killzone,
 	TimeBonus,
-	StaminaPickup
+	StaminaPickup,
+	Hazard
 };
 
 struct TraversalTrigger
@@ -90,5 +91,8 @@ struct TraversalTrigger
 	float value = 0.0f;
 	bool oneShot = true;
 	bool consumed = false;
+	// Hazards re-apply damage every interval while the character overlaps them.
+	float interval = 0.0f;
+	float cooldownRemaining = 0.0f;
 };
 // Author: Stanley Taveras
