@@ -7,6 +7,7 @@
 #include "../StrUtils.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 
 namespace
@@ -185,6 +186,10 @@ void TraversalMechanics::initialize(
 				else if (StrUtils::IEquals(direction, "down")) {
 					trigger.push = vector2(0.0f, speed);
 				}
+				else if (StrUtils::IEquals(direction, "away")) {
+					trigger.push = vector2(speed, -speed * kHazardSidePushLift);
+					trigger.pushAway = true;
+				}
 				trigger.pushLockSeconds = readNumericProperty(descriptor, "push_lock", kDefaultHazardPushLock);
 			}
 			break;
@@ -284,17 +289,33 @@ void TraversalMechanics::update(Character* character, float dt)
 			_runState.lastEvent = "stamina_pickup";
 			break;
 		case TraversalTriggerType::Hazard:
-			if (trigger.cooldownRemaining <= 0.0f && character->getHealth() > 0.0f) {
+			if (character->getHealth() <= 0.0f) {
+				break;
+			}
+			// Damage waits for the interval; the push applies on every touch, so a hazard also
+			// works as a barrier rather than letting the character through between hits.
+			if (trigger.cooldownRemaining <= 0.0f) {
 				character->addHealth(-std::max(0.0f, trigger.value));
+				trigger.cooldownRemaining = trigger.interval;
+				_runState.lastEvent = "hazard";
 				if (character->getHealth() <= 0.0f) {
 					// A lethal hit kills the character, as a boar's final bite does.
 					character->setState("Dead");
+					break;
 				}
-				else if (trigger.push.x != 0.0f || trigger.push.y != 0.0f) {
-					character->applyKnockback(trigger.push, trigger.pushLockSeconds);
+			}
+			if ((trigger.push.x != 0.0f || trigger.push.y != 0.0f) && !character->isKnockedBack()) {
+				vector2 push = trigger.push;
+				if (trigger.pushAway) {
+					vector2 bodyMin(0.0f, 0.0f), bodyMax(0.0f, 0.0f);
+					float bodyCenterX = character->getPosition().x;
+					if (Kinematics2D::tryGetActiveBounds(character->getCollidable(), bodyMin, bodyMax)) {
+						bodyCenterX = (bodyMin.x + bodyMax.x) * 0.5f;
+					}
+					const float triggerCenterX = trigger.position.x + trigger.size.x * 0.5f;
+					push.x = (bodyCenterX < triggerCenterX) ? -std::fabs(push.x) : std::fabs(push.x);
 				}
-				trigger.cooldownRemaining = trigger.interval;
-				_runState.lastEvent = "hazard";
+				character->applyKnockback(push, trigger.pushLockSeconds);
 			}
 			break;
 		case TraversalTriggerType::Unknown:
