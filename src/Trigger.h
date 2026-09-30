@@ -97,5 +97,8 @@ struct TraversalTrigger
 	// Hazards throw the character this way on each hit (pixels/second, +y down).
 	vector2 push = vector2(0.0f, 0.0f);
 	float pushLockSeconds = 0.0f;
+	// When set, the horizontal push points away from the hazard, toward whichever side the
+	// character touched it from (e.g. a hanging thorny vine).
+	bool pushAway = false;
 };
 // Author: Stanley Taveras

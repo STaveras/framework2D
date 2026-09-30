@@ -1278,6 +1278,33 @@
          "type":"tile"
         }, 
         {
+         "id":112,
+         "objectgroup":
+            {
+             "draworder":"index",
+             "name":"",
+             "objects":[
+                    {
+                     "height":5,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "rotation":0,
+                     "type":"square",
+                     "visible":true,
+                     "width":16,
+                     "x":0,
+                     "y":11
+                    }],
+             "opacity":1,
+             "type":"objectgroup",
+             "visible":true,
+             "x":0,
+             "y":0
+            },
+         "type":"tile"
+        }, 
+        {
          "id":125,
          "objectgroup":
             {
@@ -1658,6 +1685,60 @@
                      "width":15,
                      "x":1,
                      "y":0
+                    }],
+             "opacity":1,
+             "type":"objectgroup",
+             "visible":true,
+             "x":0,
+             "y":0
+            },
+         "type":"tile"
+        }, 
+        {
+         "id":162,
+         "objectgroup":
+            {
+             "draworder":"index",
+             "name":"",
+             "objects":[
+                    {
+                     "height":5,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "rotation":0,
+                     "type":"square",
+                     "visible":true,
+                     "width":16,
+                     "x":0,
+                     "y":11
+                    }],
+             "opacity":1,
+             "type":"objectgroup",
+             "visible":true,
+             "x":0,
+             "y":0
+            },
+         "type":"tile"
+        }, 
+        {
+         "id":163,
+         "objectgroup":
+            {
+             "draworder":"index",
+             "name":"",
+             "objects":[
+                    {
+                     "height":5,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "rotation":0,
+                     "type":"square",
+                     "visible":true,
+                     "width":16,
+                     "x":0,
+                     "y":11
                     }],
              "opacity":1,
              "type":"objectgroup",
@@ -2679,6 +2760,33 @@
                      "type":"square",
                      "visible":true,
                      "width":16,
+                     "x":0,
+                     "y":11
+                    }],
+             "opacity":1,
+             "type":"objectgroup",
+             "visible":true,
+             "x":0,
+             "y":0
+            },
+         "type":"tile"
+        }, 
+        {
+         "id":264,
+         "objectgroup":
+            {
+             "draworder":"index",
+             "name":"",
+             "objects":[
+                    {
+                     "height":5,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "rotation":0,
+                     "type":"square",
+                     "visible":true,
+                     "width":15,
                      "x":0,
                      "y":11
                     }],

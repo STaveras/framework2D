@@ -200,6 +200,42 @@ int main()
     assert(hero.getVelocity().y < 0.0f);
     assert(hero.isKnockedBack());
 
+    // An "away" hazard throws the character back toward the side it came from.
+    LevelTriggerDescriptor vine;
+    vine.typeName = "hazard";
+    vine.position = vector2(700.0f, 500.0f);
+    vine.size = vector2(12.0f, 80.0f);
+    vine.properties = { {"damage", "float", "10"}, {"push", "string", "away"}, {"push_speed", "float", "190"} };
+    for (float side : { -1.0f, 1.0f }) {
+        hero.resetForRespawn();
+        hero.setState("Idle");
+        TraversalMechanics thorns;
+        thorns.initialize({ vine }, vector2(0.0f, 0.0f));
+        centreBodyOn(hero, vector2(706.0f + side * 8.0f, 540.0f));
+        thorns.update(&hero, 0.016f);
+        assert(near(hero.getHealth(), hero.getMaxHealth() - 10.0f));
+        assert(hero.getVelocity().x * side > 100.0f);   // pushed further out on the same side
+        assert(hero.getVelocity().y < 0.0f);
+    }
+
+    // Between damage ticks the hazard still pushes (it must work as a barrier), without damage.
+    {
+        hero.resetForRespawn();
+        hero.setState("Idle");
+        TraversalMechanics thorns;
+        thorns.initialize({ vine }, vector2(0.0f, 0.0f));
+        centreBodyOn(hero, vector2(698.0f, 540.0f));
+        thorns.update(&hero, 0.016f);
+        assert(hero.isKnockedBack());
+        hero.resetForRespawn();                  // knockback over, full health; hazard cooldown still running
+        hero.setState("Idle");
+        assert(!hero.isKnockedBack());
+        centreBodyOn(hero, vector2(698.0f, 540.0f));
+        thorns.update(&hero, 0.016f);
+        assert(near(hero.getHealth(), hero.getMaxHealth()));   // still inside the damage interval
+        assert(hero.getVelocity().x < -100.0f);                // but thrown back again
+    }
+
     // A lethal hazard hit kills the character instead of throwing it.
     hero.resetForRespawn();
     hero.setState("Idle");
