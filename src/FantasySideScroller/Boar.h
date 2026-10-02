@@ -29,6 +29,7 @@ class Boar : public GameObject
     bool _turnAfterPause = false;
     bool _holdingAttackPosition = false;
     bool _wasChasing = false;
+    bool _aggro = false;
     bool _canAttack = false;
     bool _damageFlashOn = false;
     bool _defeated = false;
