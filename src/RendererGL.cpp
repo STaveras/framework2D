@@ -4,6 +4,7 @@
 
 #include "Animation.h"
 #include "Camera.h"
+#include "FramePacer.h"
 #include "CollisionSystem.h"
 #include "Debug.h"
 #include "Engine2D.h"
@@ -11,7 +12,9 @@
 #include "Frame.h"
 #include "Game.h"
 #include "GameState.h"
+#include "Renderer.h"
 #include "Sprite.h"
+#include "Window.h"
 #include "TextureGL.h"
 
 #include <algorithm>
@@ -606,5 +609,24 @@ void RendererGL::render(void)
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// Let the window capture this frame if asked (it needs the finished back buffer).
+	if (Renderer::mainWindow) {
+		vector2 viewMin(0.0f, 0.0f), viewMax(0.0f, 0.0f);
+		if (m_pCamera) {
+			setViewBounds(m_pCamera->getRenderPosition());
+			viewMin = _viewMin;
+			viewMax = _viewMax;
+		}
+		Renderer::mainWindow->onFrameRendered(viewMin, viewMax);
+	}
+
+	// When pacing, finish the GPU work before the swap too, so the pacer's
+	// work-time measurement includes it rather than mistaking it for vblank wait.
+	if (FramePacer::wantsHardSync()) glFinish();
+	FramePacer::presentBegin();
 	glfwSwapBuffers(_window);
+	// Block until the GPU has finished this frame so the driver cannot queue
+	// further frames behind it; the next input poll then lands on an idle GPU.
+	glFinish();
+	FramePacer::presentEnd();
 }

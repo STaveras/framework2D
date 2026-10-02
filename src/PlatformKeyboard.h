@@ -10,9 +10,13 @@
 // Keyboard input based on GLFW
 class PlatformKeyboard : public Keyboard
 {
+    Window* _owner;
     GLFWwindow* _window;
     std::vector<unsigned char> _keyStates;
     std::vector<unsigned char> _keyStatesLast;
+    // Presses seen by the key callback since the last update(); keeps taps
+    // shorter than a frame from being missed by polling alone
+    std::vector<unsigned char> _keyPressLatch;
 
 public:
    // TODO: Expose key definitions
@@ -22,6 +26,7 @@ protected:
 
 public:
     PlatformKeyboard(Window *window);
+    ~PlatformKeyboard(void);
 
     void release(void) {}
 

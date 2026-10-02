@@ -246,6 +246,18 @@ bool sampleSupportY(const Collidable* collidable, float sampleX, float& outY)
 	}
 }
 
+bool sampleSupportYInOverlap(const Collidable* collidable, float bodyMinX, float bodyMaxX, float& outY)
+{
+	vector2 surfaceMin(0.0f, 0.0f);
+	vector2 surfaceMax(0.0f, 0.0f);
+	if (!tryGetActiveBounds(collidable, surfaceMin, surfaceMax)) {
+		return false;
+	}
+	const float left = std::max(bodyMinX, surfaceMin.x);
+	const float right = std::min(bodyMaxX, surfaceMax.x);
+	return right > left && sampleSupportY(collidable, left + (right - left) * 0.5f, outY);
+}
+
 bool hasWalkableSupportNearFoot(
 	const Collidable* supportCollidable,
 	float footMinX,
@@ -422,9 +434,8 @@ bool shouldResolveAsOneWay(
 		return false;
 	}
 
-	const float sampleX = dynamicMin.x + ((dynamicMax.x - dynamicMin.x) * 0.5f);
 	float supportY = 0.0f;
-	if (!sampleSupportY(oneWayCollidable, sampleX, supportY)) {
+	if (!sampleSupportYInOverlap(oneWayCollidable, dynamicMin.x, dynamicMax.x, supportY)) {
 		return false;
 	}
 

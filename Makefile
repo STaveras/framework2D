@@ -35,7 +35,7 @@ else
 endif
 
 COMMON_SRCS := \
-  src/main.cpp src/Engine2D.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
+  src/main.cpp src/Engine2D.cpp src/RenderInterpolation.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
   src/ObjectManager.cpp src/CollisionSystem.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
   src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
   src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
@@ -48,7 +48,7 @@ COMMON_SRCS := \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
   src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
-  src/FantasySideScroller/TraversalMechanics.cpp
+  src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
@@ -86,6 +86,8 @@ $(OBJDIR)/%.o: %.mm
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 -include $(OBJS:.o=.d)
+# Test objects under tools/ need their header dependencies too, or they go stale.
+-include $(wildcard $(OBJDIR)/tools/*.d)
 
 clean:
 	rm -rf build/obj build/obj_release build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d
@@ -96,3 +98,15 @@ $(OBJDIR)/tools/boar_smoke_test.o: CXXFLAGS += -UNDEBUG
 test-boar: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/boar_smoke_test.o
 	$(CXX) $^ -o $(OBJDIR)/boar_smoke_test $(LDFLAGS)
 	./$(OBJDIR)/boar_smoke_test
+
+.PHONY: test-tile-flip
+$(OBJDIR)/tools/tile_flip_test.o: CXXFLAGS += -UNDEBUG
+test-tile-flip: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/tile_flip_test.o
+	$(CXX) $^ -o $(OBJDIR)/tile_flip_test $(LDFLAGS)
+	./$(OBJDIR)/tile_flip_test
+
+.PHONY: test-level-props
+$(OBJDIR)/tools/level_props_test.o: CXXFLAGS += -UNDEBUG
+test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/level_props_test.o
+	$(CXX) $^ -o $(OBJDIR)/level_props_test $(LDFLAGS)
+	./$(OBJDIR)/level_props_test
