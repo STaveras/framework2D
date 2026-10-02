@@ -346,6 +346,32 @@ bool PlayState::onExecute(float time)
 #endif
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+	const bool reloadDown = keyboard->keyDown(keyboard->getKeys().KBK_F5);
+	const bool reloadPressed = reloadDown && !_reloadWasDown;
+	_reloadWasDown = reloadDown;
+	if (Debug::Mode.isEnabled() && reloadPressed) {
+		// Shift+F5 respawns at the map-authored spawn point; plain F5 keeps the
+		// hero where it stands so map edits can be checked in place.
+		const bool respawn = keyboard->keyDown(keyboard->getKeys().KBK_LSHIFT) ||
+			keyboard->keyDown(keyboard->getKeys().KBK_RSHIFT);
+		const bool keepPosition = !respawn && _playableCharacter;
+		const vector2 heroPosition = keepPosition ? _playableCharacter->getPosition() : vector2();
+
+		// Drain queued events while their senders are still alive, then rebuild
+		// the stage through its normal lifecycle to reread map and tileset data.
+		Engine2D::getEventSystem()->processEvents();
+		onExit(nullptr);
+		_interactWasActive = false;
+		_paused = false;
+		onEnter(nullptr);
+		// Object-added events start the new objects and register their renderables.
+		Engine2D::getEventSystem()->processEvents();
+		if (keepPosition && _playableCharacter) {
+			_playableCharacter->setPosition(heroPosition);
+		}
+		DEBUG_MSG(keepPosition ? "Stage reloaded from disk in place.\n" :
+			"Stage reloaded from disk at spawn point.\n");
+	}
 	Controller* controller = _player ? _player->getController() : NULL;
 
 	// First frame after a pause: the pause overlay was popped and this state is
