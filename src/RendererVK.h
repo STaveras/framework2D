@@ -114,6 +114,8 @@ public:
 	void shutdown(void);
 	void render(void);
 
+	void setVerticalSync(bool vsyncEnabled) override;
+
 	VkDevice getDevice(void) const { return _device; }
 
 	VkCommandBuffer beginSingleTimeCommands(void);

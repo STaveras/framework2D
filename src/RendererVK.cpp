@@ -37,7 +37,9 @@
 //     PFN_vkInternalFreeNotification          pfnInternalFree;
 // }
 
-const int MAX_FRAMES_IN_FLIGHT = 2; // This should dynamically adjust based on the GPU's performance
+// One frame in flight: the CPU never runs ahead of the GPU, so input sampled
+// for a frame is not stuck behind older queued frames.
+const int MAX_FRAMES_IN_FLIGHT = 1;
 
 VkAllocationCallbacks vkCallbacks{};
 
@@ -273,10 +275,17 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes, bool verticalSync = false) {
 
+	// FIFO is the only mode the spec guarantees, and the only one that waits for vblank.
+	if (verticalSync)
+		return VK_PRESENT_MODE_FIFO_KHR;
 
-	// Check the vailable modes and filter for one of these two below... 
+	// Without vsync prefer IMMEDIATE (lowest latency, may tear), then MAILBOX (no tearing).
+	for (VkPresentModeKHR mode : { VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR }) {
+		if (std::find(availablePresentModes.begin(), availablePresentModes.end(), mode) != availablePresentModes.end())
+			return mode;
+	}
 
-	return (verticalSync) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR; // these two modes are definitely available
+	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
 VkExtent2D currentExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
@@ -521,10 +530,11 @@ void RendererVK::createSwapChain(VkPhysicalDevice physicalDevice, VkDevice devic
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes, m_bVerticalSync);
 	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, window);
 
-	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+	// Fewest images the surface allows: every extra image is another frame FIFO can queue ahead of the display.
+	uint32_t imageCount = std::max(2u, swapChainSupport.capabilities.minImageCount);
 
 	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
 		imageCount = swapChainSupport.capabilities.maxImageCount;
@@ -1044,6 +1054,16 @@ void RendererVK::cleanupSwapChain(void)
 	}
 }
 
+void RendererVK::setVerticalSync(bool vsyncEnabled)
+{
+	const bool changed = vsyncEnabled != m_bVerticalSync;
+	IRenderer::setVerticalSync(vsyncEnabled);
+
+	// The present mode is baked into the swap chain, so rebuild it if one exists.
+	if (changed && _swapChain != VK_NULL_HANDLE)
+		recreateSwapChain();
+}
+
 void RendererVK::recreateSwapChain(void)
 {
 	vkDeviceWaitIdle(_device);
@@ -1330,6 +1350,7 @@ void RendererVK::render(void)
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
 
+	const VkFence submittedFence = inFlightFences[currentFrame];
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
 	VkPresentInfoKHR presentInfo{};
@@ -1345,6 +1366,9 @@ void RendererVK::render(void)
 	presentInfo.pImageIndices = &imageIndex;
 
 	result = vkQueuePresentKHR(_presentQueue, &presentInfo);
+
+	// Finish this frame before returning so the next input poll lands on an idle GPU.
+	vkWaitForFences(_device, 1, &submittedFence, VK_TRUE, UINT64_MAX);
 
 	switch (result)
 	{
