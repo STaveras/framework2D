@@ -7,6 +7,7 @@
 #include "StrUtils.h"
 #include "FileSystem.h"
 
+#include <cstdlib>
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -164,7 +165,7 @@ public:
 		}
 	}
 
-	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex) 
+	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex, unsigned int flipFlags = 0) 
 	{
 		if (tileIndex < 0 && !this->getTile(x, y)) {
 			return;
@@ -174,7 +175,7 @@ public:
 			if (tileSet) {
 				tile->setTileSet(tileSet);
 			}
-			tile->setTileIndex(tileIndex);
+			tile->setTileIndex(tileIndex, flipFlags);
 			tile->setLayerCollisionMode(_layerConfig.collisionMode);
 			tile->setLayerName(_layerConfig.name);
 		}
@@ -587,6 +588,15 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.offsetY = readFloat(layer["offsety"], 0.0f);
 						layerConfig.parallaxX = readFloat(layer["parallaxx"], 1.0f);
 						layerConfig.parallaxY = readFloat(layer["parallaxy"], 1.0f);
+						layerConfig.opacity = readFloat(layer["opacity"], 1.0f);
+						if (layer["tintcolor"].is_string()) {
+							// Tiled writes "#RRGGBB" or "#AARRGGBB".
+							const std::string tint((std::string_view)layer["tintcolor"].get_string());
+							if (tint.size() == 7 || tint.size() == 9) {
+								uint32_t value = (uint32_t)std::strtoul(tint.c_str() + 1, nullptr, 16);
+								layerConfig.tintColor = (tint.size() == 7) ? (0xFF000000u | value) : value;
+							}
+						}
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
 						// User-selected default for missing property is non-colliding.
@@ -667,7 +677,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									const int cy = index / chunkW;
 									++index;
 
-										const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+										const int64_t rawGid = readInt64(gidElement, 0);
+										const unsigned int flipFlags = (unsigned int)(rawGid & 0xFFFFFFFFLL) & TileSet::kFlipMask;
+										const int64_t gid = normalizeGid(rawGid);
 										if (gid == 0) {
 											continue;
 										}
@@ -692,7 +704,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 										continue;
 									}
 
-									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex, flipFlags);
 								}
 							}
 						}
@@ -709,7 +721,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 								const int localY = index / mapWidth;
 								++index;
 
-									const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+									const int64_t rawGid = readInt64(gidElement, 0);
+									const unsigned int flipFlags = (unsigned int)(rawGid & 0xFFFFFFFFLL) & TileSet::kFlipMask;
+									const int64_t gid = normalizeGid(rawGid);
 									if (gid == 0) {
 										continue;
 									}
@@ -726,7 +740,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									continue;
 								}
 
-								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex, flipFlags);
 							}
 							}
 
