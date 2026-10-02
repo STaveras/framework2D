@@ -63,6 +63,12 @@
     <ClInclude Include="src\Engine2D.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\FramePacer.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderInterpolation.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\TextureD3D.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -466,6 +472,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine2D.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderInterpolation.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="src\TextureVK.cpp">

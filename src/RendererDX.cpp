@@ -8,6 +8,7 @@
 #include "RendererDX.h"
 #include "Animation.h"
 #include "Camera.h"
+#include "FramePacer.h"
 #include "Font.h"
 #include "Frame.h"
 #include "Renderable.h"
@@ -550,8 +551,10 @@ void RendererDX::render(void)
 //#endif
 		m_pD3DDevice->EndScene();
 	}
+	FramePacer::presentBegin();
 	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
 	_waitForGPU();
+	FramePacer::presentEnd();
 
 //#if _DEBUG
 //	m_Collidables.clear(); // Clear collidables after rendering
