@@ -320,6 +320,8 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 void Character::update(float time)
 {
 	_updateDamageFlash(time);
+	const bool knockedBack = _knockbackRemaining > 0.0f;
+	_knockbackRemaining = std::max(0.0f, _knockbackRemaining - time);
 	AutoTestRuntime& autoRuntime = CharacterPrivate::AutoRuntime();
 	initializeAutoTestRuntime(autoRuntime);
 	autoRuntime.elapsedSeconds += std::max(0.0, (double)time);
@@ -545,7 +547,7 @@ void Character::update(float time)
 			
 		const bool groundedForMovement = hasGroundSupport || (_kinematic2DState().timeWithoutGroundContact < kGroundLossGraceSeconds);
 
-		const int horizontalInput = canInputMove ? _getHorizontalInput() : 0;
+		const int horizontalInput = (canInputMove && !knockedBack) ? _getHorizontalInput() : 0;
 		const bool hasDirectionalIntent = horizontalInput != 0;
 		const bool runRequested = canInputMove && groundedForMovement && _isRunRequested();
 		_runBoostActive = runRequested && hasDirectionalIntent && _stamina > 0.0f;
@@ -571,7 +573,10 @@ void Character::update(float time)
 
 		float horizontalVelocity = this->getVelocity().x;
 		const float startingAbsHorizontalSpeed = std::fabs(horizontalVelocity);
-		if (canResidualMove) {
+		if (knockedBack) {
+			// Keep the knockback's horizontal velocity; steering resumes once it ends.
+		}
+		else if (canResidualMove) {
 			const float groundedMaxSpeed = _runBoostActive ? kRunMaxHorizontalSpeed : kWalkMaxHorizontalSpeed;
 			const float targetVelocityX = hasDirectionalIntent ?
 				((float)horizontalInput * (groundedForMovement ? groundedMaxSpeed : kAirMaxHorizontalSpeed)) :

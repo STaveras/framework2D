@@ -26,6 +26,8 @@ class Character : public GameObject
 	float _damageFlashRemaining = 0.0f;
 	float _damageFlashPhase = 0.0f;
 	bool _damageFlashOn = false;
+	// While positive, input steering is suspended so a knockback keeps its velocity.
+	float _knockbackRemaining = 0.0f;
 	// Reused by _findGroundSupportTile so support scans do not allocate each tick.
 	std::vector<GameObject*> _supportCandidates;
 	void _setDamageFlash(bool enabled);
@@ -68,6 +70,11 @@ public:
 	float getMaxHealth() const { return _maxHealth; }
 	float getHealthNormalized() const { return (_maxHealth > 0.0f) ? (_health / _maxHealth) : 0.0f; }
 	void addHealth(float amount);
+
+	// Launches the character with the given velocity (pixels/second, +y down) and
+	// suspends input steering for lockSeconds, e.g. when thrown off by spikes.
+	void applyKnockback(vector2 velocity, float lockSeconds);
+	bool isKnockedBack() const { return _knockbackRemaining > 0.0f; }
 
 	float getStamina() const { return _stamina; }
 	float getMaxStamina() const { return _maxStamina; }

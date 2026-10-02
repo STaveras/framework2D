@@ -68,6 +68,12 @@ D-pad to move, A (DualShock 4 Cross) to jump, X (Square) to attack, and the left
 bumper to run.
 Escape and the DualShock 4 Options button share the `PAUSE` action to pause and resume.
 
+With `--debug` enabled, press F5 during gameplay to reload the current stage
+and its tileset definitions from disk. This resets enemies, props, traversal
+progress, and the player's state, but keeps the player at their current
+position. Press Shift+F5 to reload and respawn the player at the map-authored
+spawn point instead. Holding either combination reloads only once.
+
 ## Support
 
 If you reuse any of this code, please give a shout out or buy me a coffee for support. <3

@@ -15,6 +15,7 @@
 class Tile : public GameObject
 {
    int _tileIndex = -1; // How far in the tileSheet this block is
+   unsigned int _flipFlags = 0; // TileSet::kFlip* bits from the map's gid
 
    TileSet* _tileSet = NULL;
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
@@ -115,10 +116,48 @@ public:
    }
 
    std::string getTileType(void) const {
-      return _tileSet->getTileInfo(_tileIndex)._typeName;
+      const TileSet::TileInfo* info = _tileSet ? _tileSet->findTileInfo(_tileIndex) : NULL;
+      return info ? info->_typeName : std::string();
+   }
+
+   unsigned int getFlipFlags(void) const {
+      return _flipFlags;
    }
 
 private:
+   // Reproduces the flip flags with the renderer's sprite transform. The renderer draws
+   // position + R(rotation) * S(scale) * (corner - center); the flips are an affine map
+   // F(p) = A*p + t of the tile box onto itself, so we need R*S = A and center = -A^T*t.
+   void applyFlipToImage(Image* image) const
+   {
+      if (!image || !_tileSet) {
+         return;
+      }
+
+      if (_flipFlags == 0) {
+         image->setCenter(vector2(0.0f, 0.0f));
+         image->setScale(vector2(1.0f, 1.0f));
+         image->setRotation(0.0f);
+         return;
+      }
+
+      const float size = _tileSet->getTileSize();
+      const vector2 t = TileSet::flipTilePoint(vector2(0.0f, 0.0f), size, _flipFlags);
+      const vector2 ax = (TileSet::flipTilePoint(vector2(size, 0.0f), size, _flipFlags) - t) * (1.0f / size);
+      const vector2 ay = (TileSet::flipTilePoint(vector2(0.0f, size), size, _flipFlags) - t) * (1.0f / size);
+
+      if (_flipFlags & TileSet::kFlipDiagonal) {
+         // A = [0 ay.x; ax.y 0] = R(90deg) * S(ax.y, -ay.x)
+         image->setRotation(1.57079632679f);
+         image->setScale(vector2(ax.y, -ay.x));
+      }
+      else {
+         image->setRotation(0.0f);
+         image->setScale(vector2(ax.x, ay.y));
+      }
+      image->setCenter(vector2(-(ax.x * t.x + ax.y * t.y), -(ay.x * t.x + ay.y * t.y)));
+   }
+
    SurfaceTraits2D buildSurfaceTraitsForLayer(void) const
    {
       SurfaceTraits2D traits;
@@ -177,6 +216,12 @@ private:
 
 public:
 
+   void setTileIndex(int tileIndex, unsigned int flipFlags)
+   {
+      _flipFlags = flipFlags & TileSet::kFlipMask;
+      setTileIndex(tileIndex);
+   }
+
    void setTileIndex(int tileIndex) 
    {
       _tileIndex = tileIndex;
@@ -184,6 +229,10 @@ public:
       GameObjectState* state = this->getState();
       if (state && _tileIndex < 0) {
          state->setCollidable(NULL);
+         // A cleared tile (e.g. a collected pickup) must stop drawing too.
+         if (Renderable* renderable = state->getRenderable()) {
+            renderable->setVisibility(false);
+         }
       }
 
       if (_tileSet && _tileIndex >= 0) {
@@ -202,17 +251,17 @@ public:
                   xPosition, yPosition, width, height
                };
 
+               // Reuse the tile's image when its index changes at runtime (e.g. a chest
+               // opening); only the source rect and sheet need updating.
                Image* tileImage = (Image*)state->getRenderable();
-
-               if (tileImage) {
-                  _tileImages.destroy(tileImage);
-               }
-               else {
+               if (!tileImage) {
                   tileImage = _tileImages.create();
-                  tileImage->setSrcRect(tileRect);
-                  tileImage->setTexture(_tileSet->getTileSheet());
                }
+               tileImage->setSrcRect(tileRect);
+               tileImage->setTexture(_tileSet->getTileSheet());
+               tileImage->setVisibility(true);
 
+               applyFlipToImage(tileImage);
                state->setRenderable(tileImage);
 
                TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);
@@ -222,7 +271,7 @@ public:
                }
 
                if (tileInfo._collisionInfo != NULL) {
-                  state->setCollidable(_tileSet->getTileInfo(tileIndex)._collisionInfo);
+                  state->setCollidable(_tileSet->getCollision(tileIndex, _flipFlags));
                   applyLayerSurfaceTraitsToCurrentState();
                }
                else {

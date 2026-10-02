@@ -27,7 +27,8 @@ build/**
 build-*/**
 out/
 out-test/
+cmake-macos-build
 framework/
 framework2D/
 *.app/**
-cmake-macos-build
+*.tiled-session
