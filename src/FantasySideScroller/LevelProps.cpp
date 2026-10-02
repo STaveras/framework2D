@@ -11,6 +11,7 @@
 #include <cmath>
 #include <functional>
 #include <cstring>
+#include <ctime>
 #include <limits>
 
 namespace
@@ -232,6 +233,11 @@ void LevelProps::update(Character* character, bool interactPressed, float dt)
 				DEBUG_MSG("LevelProps: key collected\n");
 #endif
 			}
+			// Make key float up and down slightly using accumulated time
+			key.lastTime += dt;
+			const float angle = 3.14159f * key.lastTime;
+			key.floatOffset = std::sin(angle) * 0.05f;
+			key.tile->setPosition(key.tile->getPosition() + vector2(0.0f, key.floatOffset));
 		}
 
 		if (interactPressed) {

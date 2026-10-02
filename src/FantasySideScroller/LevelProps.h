@@ -65,6 +65,8 @@ private:
 	struct Pickup {
 		Tile* tile = nullptr;
 		bool collected = false;
+		float floatOffset = 0.0f;
+		float lastTime = 0.0f;
 	};
 
 	std::vector<Pickup> _keys;
