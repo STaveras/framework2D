@@ -32,6 +32,7 @@ class LevelManager
 	TileSet* _tileSet = NULL;
 
 	std::vector<TileMap*> _tileMaps;
+	std::vector<Tile*> _registeredTiles;
 	std::vector<IRenderer::RenderList*> _mapLayerRenderLists;
 	bool _hasSpawnPoint = false;
 	vector2 _spawnPoint;
