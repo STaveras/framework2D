@@ -156,6 +156,10 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport)
 
 		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
+		if (_window->m_keyEventHandler) {
+			_window->m_keyEventHandler(key, scancode, action, mods);
+		}
+
 		if (key == GLFW_KEY_ENTER && action == GLFW_PRESS && mods == GLFW_MOD_ALT)
 		{
 			// Check if the window is currently fullscreen
@@ -214,8 +218,9 @@ void Window::update(void)
 	}
 #ifdef _WIN32
 	else {
+		// Drain the whole queue so input never waits a frame behind other messages
 		MSG msg;
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 				m_bHasQuit = true;

@@ -59,7 +59,17 @@ void Engine2D::update(void)
 
 	Engine2D::getEventSystem()->processEvents();
 
-	if (_input)
+	constexpr int kMaxSimulationStepsPerFrame = 8;
+	const double fixedDelta = std::max(0.000001, _fixedDeltaSeconds);
+	const bool runsDeterministicSteps = _game && _deterministicMode;
+	if (runsDeterministicSteps) {
+		const double maxAccumulator = fixedDelta * (double)kMaxSimulationStepsPerFrame;
+		_frameAccumulatorSeconds = std::min(maxAccumulator, _frameAccumulatorSeconds + frameDeltaSeconds);
+	}
+
+	// With a fixed step, frames that run no simulation step leave input
+	// untouched so a latched key press survives until a tick can see it
+	if (_input && (!runsDeterministicSteps || _frameAccumulatorSeconds + 1e-9 >= fixedDelta))
 		_input->update();
 
 	const bool interpolate = _deterministicMode && _renderInterpolation && _renderer;
@@ -67,11 +77,6 @@ void Engine2D::update(void)
 
 	if (_game) {
 		if (_deterministicMode) {
-			constexpr int kMaxSimulationStepsPerFrame = 8;
-			const double fixedDelta = std::max(0.000001, _fixedDeltaSeconds);
-			const double maxAccumulator = fixedDelta * (double)kMaxSimulationStepsPerFrame;
-			_frameAccumulatorSeconds = std::min(maxAccumulator, _frameAccumulatorSeconds + frameDeltaSeconds);
-
 			int simulationSteps = 0;
 			while (_frameAccumulatorSeconds + 1e-9 >= fixedDelta && simulationSteps < kMaxSimulationStepsPerFrame) {
 				if (interpolate)
