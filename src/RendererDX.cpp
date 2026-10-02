@@ -86,7 +86,8 @@ RendererDX::RendererDX(void) :
 	m_hWnd(NULL),
 	m_pD3D(NULL),
 	m_pD3DDevice(NULL),
-	m_pD3DSprite(NULL) {
+	m_pD3DSprite(NULL),
+	m_pFrameQuery(NULL) {
 
 }
 
@@ -95,7 +96,8 @@ RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, boo
 	m_hWnd(hWnd),
 	m_pD3D(NULL),
 	m_pD3DDevice(NULL),
-	m_pD3DSprite(NULL) {
+	m_pD3DSprite(NULL),
+	m_pFrameQuery(NULL) {
 
 }
 
@@ -128,6 +130,7 @@ HRESULT RendererDX::_attemptDeviceReset()
 {
 	// Release resources that are tied to the device
 	m_pD3DSprite->OnLostDevice();
+	_releaseFrameQuery();
 
 	D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
 
@@ -157,6 +160,49 @@ D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 	D3DPP.hDeviceWindow = m_hWnd;
 
 	return D3DPP;
+}
+
+void RendererDX::setVerticalSync(bool vsyncEnabled)
+{
+	const bool changed = vsyncEnabled != m_bVerticalSync;
+	IRenderer::setVerticalSync(vsyncEnabled);
+
+	// PresentationInterval only takes effect through a device reset.
+	if (changed && m_pD3DDevice && m_pD3DSprite)
+		_attemptDeviceReset();
+}
+
+void RendererDX::_releaseFrameQuery(void)
+{
+	if (m_pFrameQuery)
+	{
+		m_pFrameQuery->Release();
+		m_pFrameQuery = NULL;
+	}
+}
+
+// D3D9 lets the driver queue several frames ahead of the GPU, and each queued
+// frame delays when new input reaches the screen. Waiting on an event query
+// issued after Present caps the queue at one frame. (IDirect3DDevice9Ex::
+// SetMaximumFrameLatency would need a D3D9Ex device, which rejects the
+// D3DPOOL_MANAGED textures this renderer creates.)
+void RendererDX::_waitForGPU(void)
+{
+	if (!m_pFrameQuery && FAILED(m_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &m_pFrameQuery)))
+	{
+		m_pFrameQuery = NULL;
+		return;
+	}
+
+	if (FAILED(m_pFrameQuery->Issue(D3DISSUE_END)))
+		return;
+
+	HRESULT hr;
+	while ((hr = m_pFrameQuery->GetData(NULL, 0, D3DGETDATA_FLUSH)) == S_FALSE)
+		SwitchToThread();
+
+	if (hr == D3DERR_DEVICELOST)
+		_releaseFrameQuery();
 }
 
 // Why do we have offset? Center is already an offset...
@@ -366,6 +412,8 @@ void RendererDX::initialize(void)
 			m_pD3DSprite = nullptr;
 		}
 
+		_releaseFrameQuery();
+
 		HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
 		if (FAILED(hr))
 		{
@@ -391,6 +439,8 @@ void RendererDX::initialize(void)
 
 void RendererDX::shutdown(void)
 {
+	_releaseFrameQuery();
+
 	if (m_pD3DSprite)
 	{
 		m_pD3DSprite->Release();
@@ -501,6 +551,7 @@ void RendererDX::render(void)
 		m_pD3DDevice->EndScene();
 	}
 	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+	_waitForGPU();
 
 //#if _DEBUG
 //	m_Collidables.clear(); // Clear collidables after rendering
