@@ -11,6 +11,7 @@
 #include "Renderer.h"
 #include "Window.h"
 #include "RuntimeProfile.h"
+#include "FramePacer.h"
 
 #include <iostream>
 #include <chrono>
@@ -172,9 +173,32 @@ int main(int argc, const char *argv[])
    if (System::checkArgumentsForVSync(argc, argv))
       pRenderer->setVerticalSync(true);
 
+   // Late input sampling: on by default with VSync. AUTO_INPUT_PACING=0/1 overrides;
+   // AUTO_SIMULATE_VSYNC=1 paces against a virtual display (headless measurements).
+   {
+      FramePacer::Config pacing;
+      pacing.simulateVsync = System::checkEnvironmentFlag("AUTO_SIMULATE_VSYNC");
+      const double pacingSetting = System::checkEnvironmentDouble("AUTO_INPUT_PACING", -1.0);
+      pacing.enabled = (pacingSetting < 0.0)
+         ? (pRenderer && pRenderer->verticalSyncEnabled()) || pacing.simulateVsync
+         : pacingSetting > 0.0;
+      double refreshHz = System::checkEnvironmentDouble("AUTO_REFRESH_HZ", 0.0);
+      if (refreshHz <= 0.0 && window.getUnderlyingWindow()) {
+         GLFWmonitor* monitor = glfwGetWindowMonitor(window.getUnderlyingWindow());
+         if (!monitor) monitor = glfwGetPrimaryMonitor();
+         const GLFWvidmode* mode = monitor ? glfwGetVideoMode(monitor) : nullptr;
+         if (mode) refreshHz = mode->refreshRate;
+      }
+      pacing.refreshHz = (refreshHz > 0.0) ? refreshHz : 60.0;
+      pacing.marginMs = System::checkEnvironmentDouble("AUTO_INPUT_PACING_MARGIN_MS", pacing.marginMs);
+      FramePacer::configure(pacing);
+   }
+
    Engine2D *engine = Engine2D::getInstance();
    engine->setDeterministicMode(deterministicMode);
    engine->setFixedDeltaSeconds(fixedDtMs / 1000.0);
+   engine->setRenderInterpolation(System::checkEnvironmentDouble("AUTO_RENDER_INTERPOLATION", 1.0) > 0.0);
+   engine->setRenderInterpolationSnapDistance((float)System::checkEnvironmentDouble("AUTO_RENDER_INTERPOLATION_SNAP", 128.0));
    engine->setInputInterface(pInput);
    engine->setRenderer(pRenderer);
    engine->setGame(&game);
@@ -197,7 +221,9 @@ int main(int argc, const char *argv[])
          const auto frameStart = BenchmarkClock::now();
          RuntimeProfile::active = profileEnabled && !benchmarkNeedsStart &&
              std::chrono::duration<double>(frameStart - benchmarkStart).count() >= 1.0;
+         FramePacer::waitForInputDeadline();
          window.update();
+         FramePacer::markInputSampled();
          engine->update();
 
          // Compose window title with renderer and FPS info without overwriting one another
@@ -277,7 +303,10 @@ int main(int argc, const char *argv[])
                 << " over_16.67ms=" << overBudget << std::endl;
    }
    RuntimeProfile::active = false;
-   if (profileEnabled) RuntimeProfile::report(std::cout);
+   if (profileEnabled) {
+      RuntimeProfile::report(std::cout);
+      FramePacer::report(std::cout);
+   }
    engine->shutdown();
    
    Input::destroyInputInterface(pInput);

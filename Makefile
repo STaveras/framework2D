@@ -35,7 +35,7 @@ else
 endif
 
 COMMON_SRCS := \
-  src/main.cpp src/Engine2D.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
+  src/main.cpp src/Engine2D.cpp src/RenderInterpolation.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
   src/ObjectManager.cpp src/CollisionSystem.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
   src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
   src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \

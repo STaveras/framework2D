@@ -8,6 +8,7 @@
 #include "System.h"
 #include "Renderer.h"
 #include "Debug.h"
+#include "RenderInterpolation.h"
 
 #include <cstdint>
 
@@ -26,6 +27,8 @@ class Engine2D : public ISingleton<Engine2D>
    double _frameAccumulatorSeconds;
    uint64_t _simulationTick;
    double _simulationElapsedSeconds;
+   bool _renderInterpolation;
+   RenderInterpolation _interpolation;
 
 public:
    Engine2D(void);
@@ -50,6 +53,10 @@ public:
    static void setDeterministicMode(bool enabled) { Engine2D::getInstance()->_deterministicMode = enabled; }
    static double getFixedDeltaSeconds(void) { return Engine2D::getInstance()->_fixedDeltaSeconds; }
    static void setFixedDeltaSeconds(double seconds);
+   // Deterministic mode only: draw between the last two ticks (see RenderInterpolation.h).
+   static bool isRenderInterpolationEnabled(void) { return Engine2D::getInstance()->_renderInterpolation; }
+   static void setRenderInterpolation(bool enabled) { Engine2D::getInstance()->_renderInterpolation = enabled; }
+   static void setRenderInterpolationSnapDistance(float distance) { Engine2D::getInstance()->_interpolation.setSnapDistance(distance); }
    static uint64_t getSimulationTick(void) { return Engine2D::getInstance()->_simulationTick; }
    static double getSimulationElapsedSeconds(void) { return Engine2D::getInstance()->_simulationElapsedSeconds; }
 

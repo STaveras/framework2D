@@ -11,6 +11,7 @@
 
 #include "Engine2D.h"
 #include "FileSystem.h"
+#include "FramePacer.h"
 #include "System.h"
 #include "Camera.h"
 
@@ -1365,10 +1366,12 @@ void RendererVK::render(void)
 
 	presentInfo.pImageIndices = &imageIndex;
 
+	FramePacer::presentBegin();
 	result = vkQueuePresentKHR(_presentQueue, &presentInfo);
 
 	// Finish this frame before returning so the next input poll lands on an idle GPU.
 	vkWaitForFences(_device, 1, &submittedFence, VK_TRUE, UINT64_MAX);
+	FramePacer::presentEnd();
 
 	switch (result)
 	{
