@@ -574,4 +574,7 @@ void RendererGL::render(void)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glfwSwapBuffers(_window);
+	// Block until the GPU has finished this frame so the driver cannot queue
+	// further frames behind it; the next input poll then lands on an idle GPU.
+	glFinish();
 }
