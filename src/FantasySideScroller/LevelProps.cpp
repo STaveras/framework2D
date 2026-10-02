@@ -11,6 +11,7 @@
 #include <cmath>
 #include <functional>
 #include <cstring>
+#include <limits>
 
 namespace
 {
@@ -41,6 +42,31 @@ bool sinks(const Tile* tile)
 	return info && info->getFloatProperty("sink_speed", 0.0f) > 0.0f;
 }
 
+// Authored part coordinates keep each multi-tile platform together without joining
+// neighbouring copies. Transform the coordinates just as Tiled transforms the art.
+bool sameSinkingPlatform(const Tile* tile, const Tile* neighbour, int dx, int dy)
+{
+	const TileSet::TileInfo* info = infoOf(tile);
+	const TileSet::TileInfo* neighbourInfo = infoOf(neighbour);
+	const bool hasPart = info->hasProperty("platform_column") && info->hasProperty("platform_row");
+	const bool neighbourHasPart = neighbourInfo->hasProperty("platform_column") && neighbourInfo->hasProperty("platform_row");
+	if (!hasPart && !neighbourHasPart) {
+		return true;
+	}
+	if (hasPart != neighbourHasPart || tile->getTileSet() != neighbour->getTileSet() ||
+		tile->getFlipFlags() != neighbour->getFlipFlags()) {
+		return false;
+	}
+
+	const auto partPosition = [](const Tile* part, const TileSet::TileInfo* partInfo) {
+		return TileSet::flipTilePoint(vector2(
+			(float)partInfo->getIntProperty("platform_column", 0),
+			(float)partInfo->getIntProperty("platform_row", 0)), 1.0f, part->getFlipFlags());
+	};
+	const vector2 offset = partPosition(neighbour, neighbourInfo) - partPosition(tile, info);
+	return offset.x == (float)dx && offset.y == (float)dy;
+}
+
 // World bounds of a tile's collider, or of its cell when it has none.
 void tileBounds(Tile* tile, vector2& outMin, vector2& outMax)
 {
@@ -57,7 +83,8 @@ bool overlaps(const vector2& aMin, const vector2& aMax, const vector2& bMin, con
 }
 
 // Groups tiles matching the predicate that touch horizontally or vertically.
-std::vector<std::vector<Tile*>> connectedGroups(TileMap* layer, const std::function<bool(const Tile*)>& matches)
+std::vector<std::vector<Tile*>> connectedGroups(TileMap* layer, const std::function<bool(const Tile*)>& matches,
+	const std::function<bool(const Tile*, const Tile*, int, int)>& joins = {})
 {
 	std::vector<std::vector<Tile*>> groups;
 	const unsigned int width = layer->getMapWidth();
@@ -86,7 +113,9 @@ std::vector<std::vector<Tile*>> connectedGroups(TileMap* layer, const std::funct
 						continue;
 					}
 					const size_t index = (size_t)ny * width + (size_t)nx;
-					if (!visited[index] && matches(layer->getTile((unsigned int)nx, (unsigned int)ny))) {
+					Tile* neighbour = layer->getTile((unsigned int)nx, (unsigned int)ny);
+					if (!visited[index] && matches(neighbour) &&
+						(!joins || joins(layer->getTile(cell.first, cell.second), neighbour, offset[0], offset[1]))) {
 						visited[index] = true;
 						open.push_back({ (unsigned int)nx, (unsigned int)ny });
 					}
@@ -133,7 +162,7 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 			_chests.push_back(std::move(chest));
 		}
 
-		for (std::vector<Tile*>& group : connectedGroups(layer, sinks)) {
+		for (std::vector<Tile*>& group : connectedGroups(layer, sinks, sameSinkingPlatform)) {
 			SinkingPlatform platform;
 			platform.tiles = std::move(group);
 			for (Tile* tile : platform.tiles) {
@@ -238,28 +267,56 @@ void LevelProps::update(Character* character, bool interactPressed, float dt)
 		}
 	}
 
-	for (SinkingPlatform& platform : _platforms) {
-		updatePlatform(platform, bodyMin, bodyMax, hasBody, falling, dt);
-	}
-}
-
-void LevelProps::updatePlatform(SinkingPlatform& platform, const vector2& bodyMin, const vector2& bodyMax,
-	bool hasBody, bool falling, float dt)
-{
-	platform.occupied = false;
+	// Choose support before moving any tiles, so a body spanning two pads can only
+	// weigh down one. Prefer the closest surface, then the widest supporting overlap.
+	SinkingPlatform* occupiedPlatform = nullptr;
+	float bestDistance = std::numeric_limits<float>::max();
+	float bestOverlap = 0.0f;
+	constexpr float tieTolerance = 0.01f;
 	if (hasBody && falling) {
-		for (Tile* tile : platform.tiles) {
-			vector2 surfaceMin, surfaceMax;
-			if (!Kinematics2D::tryGetActiveBounds(tile->getCollidable(), surfaceMin, surfaceMax)) {
+		for (SinkingPlatform& platform : _platforms) {
+			float distance = std::numeric_limits<float>::max();
+			float overlap = 0.0f;
+			for (Tile* tile : platform.tiles) {
+				vector2 surfaceMin, surfaceMax;
+				if (!character->shouldCollideWith(*tile) ||
+					!Kinematics2D::tryGetActiveBounds(tile->getCollidable(), surfaceMin, surfaceMax)) {
+					continue;
+				}
+				const float width = std::min(bodyMax.x, surfaceMax.x) - std::max(bodyMin.x, surfaceMin.x);
+				float supportY = 0.0f;
+				if (width <= 0.0f || !Kinematics2D::sampleSupportYInOverlap(
+					tile->getCollidable(), bodyMin.x, bodyMax.x, supportY)) {
+					continue;
+				}
+				const float footDistance = std::fabs(bodyMax.y - supportY);
+				if (footDistance <= kStandTolerance) {
+					distance = std::min(distance, footDistance);
+					overlap += width;
+				}
+			}
+			if (overlap <= 0.0f) {
 				continue;
 			}
-			const bool above = bodyMax.x > surfaceMin.x && bodyMin.x < surfaceMax.x;
-			if (above && std::fabs(bodyMax.y - surfaceMin.y) <= kStandTolerance) {
-				platform.occupied = true;
-				break;
+			const bool sameDistance = std::fabs(distance - bestDistance) <= tieTolerance;
+			const bool sameOverlap = std::fabs(overlap - bestOverlap) <= tieTolerance;
+			if (!occupiedPlatform || distance < bestDistance - tieTolerance ||
+				(sameDistance && (overlap > bestOverlap + tieTolerance ||
+					(sameOverlap && platform.occupied && !occupiedPlatform->occupied)))) {
+				occupiedPlatform = &platform;
+				bestDistance = distance;
+				bestOverlap = overlap;
 			}
 		}
 	}
+	for (SinkingPlatform& platform : _platforms) {
+		updatePlatform(platform, &platform == occupiedPlatform, dt);
+	}
+}
+
+void LevelProps::updatePlatform(SinkingPlatform& platform, bool occupied, float dt)
+{
+	platform.occupied = occupied;
 
 	const float previousDepth = platform.depth;
 	if (platform.occupied) {
@@ -279,11 +336,11 @@ void LevelProps::updatePlatform(SinkingPlatform& platform, const vector2& bodyMi
 void LevelProps::resetPlatforms(void)
 {
 	for (SinkingPlatform& platform : _platforms) {
+		platform.occupied = false;
 		if (platform.depth == 0.0f) {
 			continue;
 		}
 		platform.depth = 0.0f;
-		platform.occupied = false;
 		for (size_t i = 0; i < platform.tiles.size(); ++i) {
 			platform.tiles[i]->setPosition(platform.restPositions[i]);
 		}
