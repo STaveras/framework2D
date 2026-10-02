@@ -18,7 +18,9 @@ class TileMap;
 //    of them restores that much health;
 //  - tiles with a "sink_speed" property (pixels/second) form floating platforms that sink
 //    while stood on and rise back when free ("rise_speed", "sink_depth" are optional).
-// Tiles that touch each other on the same layer act as one chest or platform.
+// Touching tiles on the same layer act as one chest or platform. Platform tiles can
+// specify "platform_column" and "platform_row" part coordinates to keep adjacent
+// copies independent. Only one platform carries the character at a time.
 class LevelProps
 {
 public:
@@ -72,6 +74,5 @@ private:
 	int _keysHeld = 0;
 	std::string _lastEvent;
 
-	void updatePlatform(SinkingPlatform& platform, const vector2& bodyMin, const vector2& bodyMax,
-		bool hasBody, bool falling, float dt);
+	void updatePlatform(SinkingPlatform& platform, bool occupied, float dt);
 };

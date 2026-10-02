@@ -68,6 +68,158 @@ void standAt(Character& hero, float x, float y)
 
 vector2 tileCentre(Tile* tile) { return tile->getPosition() + vector2(8.0f, 8.0f); }
 
+const LevelProps::SinkingPlatform& platformContaining(const LevelProps& props, Tile* part)
+{
+    for (const auto& platform : props.getPlatforms()) {
+        for (Tile* tile : platform.tiles) {
+            if (tile == part) {
+                return platform;
+            }
+        }
+    }
+    assert(false && "pad part must belong to a platform");
+    return props.getPlatforms().front();
+}
+
+void assertPlatformDepth(const LevelProps::SinkingPlatform& platform, float depth)
+{
+    assert(near(platform.depth, depth));
+    assert(platform.tiles.size() == platform.restPositions.size());
+    for (size_t i = 0; i < platform.tiles.size(); ++i) {
+        assert(near(platform.tiles[i]->getPosition().x, platform.restPositions[i].x));
+        assert(near(platform.tiles[i]->getPosition().y, platform.restPositions[i].y + depth));
+    }
+}
+
+void placePad(TileMap& map, TileSet* tiles, unsigned int x, unsigned int y,
+    int topLeft, int bottomLeft, unsigned int flipFlags)
+{
+    const bool mirrored = (flipFlags & TileSet::kFlipHorizontal) != 0;
+    map.setTile(x, y, tiles, topLeft + (mirrored ? 1 : 0), flipFlags);
+    map.setTile(x + 1, y, tiles, topLeft + (mirrored ? 0 : 1), flipFlags);
+    map.setTile(x, y + 1, tiles, bottomLeft + (mirrored ? 1 : 0), flipFlags);
+    map.setTile(x + 1, y + 1, tiles, bottomLeft + (mirrored ? 0 : 1), flipFlags);
+}
+
+void checkAdjacentPads(TileSet* tiles, Character& hero)
+{
+    TileLayerConfig config;
+    config.name = "adjacent pads";
+    config.collisionMode = TileCollisionMode::OneWay;
+    hero.setState("Idle");
+    hero.setVelocity(vector2(0.0f, 0.0f));
+
+    for (int rightVariant : {492, 494}) {
+        for (unsigned int flipFlags : {0u, TileSet::kFlipHorizontal}) {
+            TileMap pads(8, 5, tiles, config);
+            placePad(pads, tiles, 2, 2, 492, 517, flipFlags);
+            // The level also uses the second upper variant with the first variant's
+            // lower artwork. Those four cells must still make one complete pad.
+            placePad(pads, tiles, 4, 2, rightVariant, 517, flipFlags);
+            pads.arrangeTiles();
+
+            LevelProps props;
+            props.initialize({&pads});
+            assert(props.getPlatforms().size() == 2);
+            const auto& left = platformContaining(props, pads.getTile(2, 2));
+            const auto& right = platformContaining(props, pads.getTile(4, 2));
+            assert(&left != &right);
+            assert(left.tiles.size() == 4 && right.tiles.size() == 4);
+            for (unsigned int x : {2u, 3u}) {
+                assert(&platformContaining(props, pads.getTile(x, 2)) == &left);
+                assert(&platformContaining(props, pads.getTile(x, 3)) == &left);
+                assert(!pads.getTile(x, 3)->getCollidable());
+            }
+            for (unsigned int x : {4u, 5u}) {
+                assert(&platformContaining(props, pads.getTile(x, 2)) == &right);
+                assert(&platformContaining(props, pads.getTile(x, 3)) == &right);
+                assert(!pads.getTile(x, 3)->getCollidable());
+            }
+
+            vector2 leftMin, leftMax, rightMin, rightMax;
+            assert(Kinematics2D::tryGetActiveBounds(pads.getTile(3, 2)->getCollidable(), leftMin, leftMax));
+            assert(Kinematics2D::tryGetActiveBounds(pads.getTile(4, 2)->getCollidable(), rightMin, rightMax));
+            const float surfaceY = leftMin.y;
+            const float seamX = (leftMax.x + rightMin.x) * 0.5f;
+            assert(near(rightMin.y, surfaceY));
+
+            // A pad moves as a whole, including its decorative lower row. The pad
+            // touching it stays at the surface when the player stands on the left.
+            standAt(hero, 48.0f, surfaceY);
+            props.update(&hero, false, 0.2f);
+            assert(left.occupied && !right.occupied);
+            assertPlatformDepth(left, 1.4f);
+            assertPlatformDepth(right, 0.0f);
+
+            // The nearest feet surface wins even with more horizontal overlap on
+            // the other pad, which is still within the standing tolerance.
+            standAt(hero, seamX + 2.0f, surfaceY + left.depth);
+            props.update(&hero, false, 0.1f);
+            assert(left.occupied && !right.occupied);
+            assertPlatformDepth(left, 2.1f);
+            assertPlatformDepth(right, 0.0f);
+
+            // Stepping onto the right transfers the weight and lets the left rise.
+            standAt(hero, 80.0f, surfaceY);
+            props.update(&hero, false, 0.1f);
+            assert(!left.occupied && right.occupied);
+            assertPlatformDepth(left, 0.1f);
+            assertPlatformDepth(right, 0.7f);
+            props.update(nullptr, false, 0.1f);
+            assert(!left.occupied && !right.occupied);
+            assertPlatformDepth(left, 0.0f);
+            assertPlatformDepth(right, 0.0f);
+
+            for (float side : {-1.0f, 1.0f}) {
+                props.resetPlatforms();
+                standAt(hero, seamX + side * 2.0f, surfaceY);
+                vector2 bodyMin, bodyMax;
+                bodyBounds(hero, bodyMin, bodyMax);
+                // Both surfaces overlap the real player body near the seam.
+                assert(bodyMin.x < leftMax.x && bodyMax.x > rightMin.x);
+                props.update(&hero, false, 0.1f);
+                assert(left.occupied == (side < 0.0f));
+                assert(right.occupied == (side > 0.0f));
+                assertPlatformDepth(left, side < 0.0f ? 0.7f : 0.0f);
+                assertPlatformDepth(right, side > 0.0f ? 0.7f : 0.0f);
+
+                // Equal feet distance and equal overlap keep the previous pad.
+                props.resetPlatforms();
+                standAt(hero, seamX + side * 2.0f, surfaceY);
+                props.update(&hero, false, 0.0f);
+                standAt(hero, seamX, surfaceY);
+                props.update(&hero, false, 0.1f);
+                assert(left.occupied == (side < 0.0f));
+                assert(right.occupied == (side > 0.0f));
+                assertPlatformDepth(left, side < 0.0f ? 0.7f : 0.0f);
+                assertPlatformDepth(right, side > 0.0f ? 0.7f : 0.0f);
+            }
+
+            // Jumping off releases the pad even while the feet are at its surface.
+            props.resetPlatforms();
+            standAt(hero, 48.0f, surfaceY);
+            props.update(&hero, false, 0.2f);
+            standAt(hero, 48.0f, surfaceY + left.depth);
+            hero.setVelocity(vector2(0.0f, -20.0f));
+            props.update(&hero, false, 0.01f);
+            assert(!left.occupied && !right.occupied);
+            assertPlatformDepth(left, 1.2f);
+            assertPlatformDepth(right, 0.0f);
+            props.update(nullptr, false, 0.1f);
+            assertPlatformDepth(left, 0.0f);
+            assertPlatformDepth(right, 0.0f);
+            hero.setVelocity(vector2(0.0f, 0.0f));
+
+            // Respawning must clear occupancy even before the first sink step.
+            standAt(hero, 48.0f, surfaceY);
+            props.update(&hero, false, 0.0f);
+            assert(left.occupied && near(left.depth, 0.0f));
+            props.resetPlatforms();
+            assert(!left.occupied && !right.occupied);
+        }
+    }
+}
+
 } // namespace
 
 int main()
@@ -200,6 +352,8 @@ int main()
     assert(near(levelProps.getPlatforms()[0].depth, 14.0f, 0.05f));
     levelProps.resetPlatforms();
     assert(near(pad->getPosition().y, padRest.y));
+
+    checkAdjacentPads(tiles, hero);
 
     // Pots stay decorative when touched. Only the forward, active sword stroke
     // cracks them, using the matching size and colour from the source atlas.
