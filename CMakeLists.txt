@@ -33,8 +33,18 @@ if(APPLE)
   enable_language(OBJCXX)
 
   # Default to the host architecture to avoid accidental universal builds.
+  # CMAKE_HOST_SYSTEM_PROCESSOR is the architecture of the *running cmake
+  # process*, not the host: an x86_64 cmake (e.g. /usr/local/bin/cmake under
+  # Rosetta) would misreport x86_64 on Apple Silicon and break the build
+  # against arm64-only Homebrew libraries. Probe sysctl first.
   if(NOT CMAKE_OSX_ARCHITECTURES)
-    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+    execute_process(
+      COMMAND /usr/sbin/sysctl -n hw.optional.arm64
+      OUTPUT_VARIABLE _apple_silicon
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_VARIABLE _sysctl_error
+    )
+    if(_apple_silicon EQUAL 1)
       set(_default_arch "arm64")
     elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
       set(_default_arch "x86_64")
