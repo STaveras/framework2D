@@ -12,6 +12,7 @@ class TileMap;
 
 // Gameplay driven entirely by tile data painted in Tiled, so levels need no extra objects:
 //  - tiles of class "key" are picked up when the character touches them;
+//  - tiles of class "pot" crack when struck, swapping to "cracked_tile";
 //  - tiles of class "chest" open when the character interacts while holding a key. Each
 //    chest tile swaps to the tile id in its "open_tile" property; a "heal" property on any
 //    of them restores that much health;
@@ -38,6 +39,11 @@ public:
 		float depth = 0.0f;
 		bool occupied = false;
 	};
+	struct Pot {
+		Tile* tile = nullptr;
+		int crackedTile = -1;
+		bool cracked = false;
+	};
 
 	void initialize(const std::vector<TileMap*>& layers);
 	void clear(void);
@@ -51,6 +57,7 @@ public:
 	const std::string& getLastEvent(void) const { return _lastEvent; }
 	const std::vector<Chest>& getChests(void) const { return _chests; }
 	const std::vector<SinkingPlatform>& getPlatforms(void) const { return _platforms; }
+	const std::vector<Pot>& getPots(void) const { return _pots; }
 
 private:
 	struct Pickup {
@@ -61,6 +68,7 @@ private:
 	std::vector<Pickup> _keys;
 	std::vector<Chest> _chests;
 	std::vector<SinkingPlatform> _platforms;
+	std::vector<Pot> _pots;
 	int _keysHeld = 0;
 	std::string _lastEvent;
 
