@@ -3,10 +3,16 @@
 
 #include "Types.h"
 
+#include <functional>
+
 #define EVT_WINDOW_RESIZED "EVT_WINDOW_RESIZED"
 
 class Window
 {
+public:
+	typedef std::function<void(int key, int scancode, int action, int mods)> KeyEventHandler;
+
+private:
 	bool m_bHasQuit;
 	int m_nWidth;
 	int m_nHeight;
@@ -21,6 +27,8 @@ class Window
 
 	const char* m_szWindowClassName;
 	std::string m_szWindowTitle;
+
+	KeyEventHandler m_keyEventHandler;
 
 public:
 	enum class ClientAPI
@@ -84,6 +92,9 @@ public:
 	void setWidth(int nWidth);
 	void setHeight(int nHeight);
 	void setWindowTitle(const char* szWindowTitle);
+
+	// Receives every GLFW key event as it is delivered by glfwPollEvents()
+	void setKeyEventHandler(KeyEventHandler handler) { m_keyEventHandler = std::move(handler); }
 #ifdef _WIN32
 	void initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
 #endif
