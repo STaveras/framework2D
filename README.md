@@ -101,6 +101,45 @@ times. These are local variable-step idle measurements, not a cycle-identical
 replay or a frame-rate guarantee for every scene.
 
 Set `AUTO_PROFILE=1` to print inclusive region times and candidate counts on exit.
+With pacing active it also prints a `PACING` line: input-sample-to-vblank latency
+(mean/p95/p99), the average pre-input wait, and missed vblanks.
+
+### Late input sampling and render interpolation
+
+With `--vsync`, the loop no longer polls input straight after the swap. It
+sleeps until the predicted next vblank minus the recent worst update+render
+time (plus a margin), then polls input, updates and renders, so the frame
+that scans out carries input that is a few milliseconds old rather than a
+whole refresh old. On OpenGL the renderer also finishes GPU work before the
+swap while pacing, so that GPU time counts towards the measured work. If a
+vblank is missed the margin grows and then decays; the budget never exceeds
+one refresh, so the worst case matches the unpaced loop.
+
+| Variable | Effect |
+| --- | --- |
+| `AUTO_INPUT_PACING` | `0` disables pacing, `1` forces it on without VSync (default: on with VSync) |
+| `AUTO_INPUT_PACING_MARGIN_MS` | Safety margin on top of the measured work time (default 2) |
+| `AUTO_REFRESH_HZ` | Override the refresh rate read from the monitor |
+| `AUTO_SIMULATE_VSYNC` | Present to a virtual display that blocks until its next vblank, for A/B measurements where the driver has no real VSync (e.g. Xvfb) |
+| `AUTO_RENDER_INTERPOLATION` | `0` disables deterministic-mode interpolation (default on) |
+| `AUTO_RENDER_INTERPOLATION_SNAP` | Moves longer than this per tick are drawn as teleports (default 128) |
+
+In deterministic mode, world-space renderables and the camera are drawn
+between the last two ticks using the leftover accumulator fraction, then put
+back, so game code only sees simulation positions. This removes the judder of
+a tick rate that does not divide the refresh rate, at the cost of drawing up
+to one tick behind the newest simulated state.
+
+Local Linux measurement (Xvfb + Mesa llvmpipe, `AUTO_SIMULATE_VSYNC=1` at 60 Hz,
+idle scene, four alternating ten-second runs each):
+
+| | Input-to-vblank mean | p95 | p99 | Missed vblanks |
+| --- | ---: | ---: | ---: | ---: |
+| Pacing off | 16.70 ms | 16.65 ms | 16.65 ms | 0 |
+| Pacing on | 12.97 ms | 15.81 ms | 15.82 ms | 2–6 per ~595 frames |
+
+That machine renders in software on four shared cores, so its work time is
+long (~8 ms) and noisy; a real GPU leaves more of the refresh for the wait.
 See [spatial-query architecture, mutation rules, and tests](doc/spatial_queries.md)
 for the API contract and commands. All three headless regression suites pass,
 including reference-solver comparisons and real-map boar/support checks.
