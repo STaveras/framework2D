@@ -27,6 +27,7 @@ class PlayState : public GameState
 	bool _traversalOperatorRegistered = false;
 	LevelProps _levelProps;
 	bool _interactWasActive = false;
+	bool _reloadWasDown = false;
 
 	Character* _playableCharacter = NULL;
 	std::vector<Boar*> _boars;

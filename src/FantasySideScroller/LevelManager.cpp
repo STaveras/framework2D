@@ -242,6 +242,7 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 
 			std::string objectName = layerPrefix + "_tile_" + std::to_string(tileIndex);
 			objectManager.addObject(objectName.c_str(), tile);
+			_registeredTiles.push_back(tile);
 		}
 	}
 
@@ -421,20 +422,16 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 	_cameraPlayerAttach.setSource(NULL);
 	_cameraPlayerAttach.follow(NULL, true, true);
 
+	// Unregister exactly the tiles initialize() added. A tile's index can change
+	// at runtime (collected keys are cleared to -1), so it can't decide this.
+	for (Tile* tile : _registeredTiles) {
+		gameState.clearObjectRenderRoute(tile);
+		objectManager.removeObject(tile);
+	}
+	_registeredTiles.clear();
+
 	for (TileMap* tileMap : _tileMaps)
 	{
-		if (!tileMap) {
-			continue;
-		}
-
-		for (auto it = tileMap->getTiles().begin(); it != tileMap->getTiles().end(); ++it) {
-			Tile* tile = *it;
-			if (!tile || tile->getTileIndex() < 0) {
-				continue;
-			}
-			gameState.clearObjectRenderRoute(tile);
-			objectManager.removeObject(tile);
-		}
 		delete tileMap;
 	}
 	_tileMaps.clear();
