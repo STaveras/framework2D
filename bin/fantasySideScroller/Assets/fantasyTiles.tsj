@@ -507,6 +507,7 @@
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
              "objects":[
                     {
@@ -536,7 +537,7 @@
                              "y":12.9618163054696
                             }],
                      "rotation":0,
-                     "type":"ppolygon",
+                     "type":"polygon",
                      "visible":true,
                      "width":0,
                      "x":-0.0275197798417613,
@@ -603,6 +604,7 @@
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
              "objects":[
                     {
@@ -613,15 +615,15 @@
                      "polygon":[
                             {
                              "x":0,
-                             "y":0
+                             "y":2.09091
                             }, 
                             {
-                             "x":5,
-                             "y":1.18182
+                             "x":4,
+                             "y":2.09091
                             }, 
                             {
-                             "x":15.9091,
-                             "y":9
+                             "x":16,
+                             "y":10.09091
                             }, 
                             {
                              "x":16,
@@ -2461,83 +2463,14 @@
         }, 
         {
          "id":206,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":2.09091,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":16,
-                     "x":0,
-                     "y":13.9091
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
          "id":207,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":2,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":16,
-                     "x":0,
-                     "y":14
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
          "id":208,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":2.09091,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":16,
-                     "x":0,
-                     "y":13.9091
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            },
          "type":"tile"
         }, 
         {
@@ -5095,6 +5028,16 @@
             },
          "properties":[
                 {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
                  "name":"rise_speed",
                  "type":"float",
                  "value":20
@@ -5137,6 +5080,16 @@
              "y":0
             },
          "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":0
+                }, 
                 {
                  "name":"rise_speed",
                  "type":"float",
@@ -5181,6 +5134,16 @@
             },
          "properties":[
                 {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
                  "name":"rise_speed",
                  "type":"float",
                  "value":20
@@ -5223,6 +5186,16 @@
              "y":0
             },
          "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":0
+                }, 
                 {
                  "name":"rise_speed",
                  "type":"float",
@@ -5407,6 +5380,16 @@
          "id":517,
          "properties":[
                 {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
                  "name":"rise_speed",
                  "type":"float",
                  "value":20
@@ -5426,6 +5409,16 @@
         {
          "id":518,
          "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":1
+                }, 
                 {
                  "name":"rise_speed",
                  "type":"float",
@@ -5447,6 +5440,16 @@
          "id":519,
          "properties":[
                 {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
                  "name":"rise_speed",
                  "type":"float",
                  "value":20
@@ -5466,6 +5469,16 @@
         {
          "id":520,
          "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":1
+                }, 
                 {
                  "name":"rise_speed",
                  "type":"float",
