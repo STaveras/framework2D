@@ -155,6 +155,7 @@ void Boar::reset()
     _turnAfterPause = false;
     _holdingAttackPosition = false;
     _wasChasing = false;
+    _aggro = false;
     _canAttack = false;
     _defeated = false;
     setVelocity(vector2(0, 0));
@@ -233,9 +234,18 @@ void Boar::update(float time)
     float ground = 0.0f;
     const bool grounded = supportAt(position.x, position.y + kFoot, 3.0f, 4.0f, ground);
     const vector2 delta = _target.getPosition() - position;
+    const bool targetEligible = _target.getHealth() > 0.0f &&
+        std::fabs(delta.x) < kDetectionRange && std::fabs(delta.y) < 40.0f;
+    if (_aggro && targetEligible && delta.x != 0.0f) {
+        const int targetDirection = delta.x > 0.0f ? 1 : -1;
+        if (_direction != targetDirection) {
+            _direction = targetDirection;
+            _holdingAttackPosition = false;
+            animate(getState()->getName());
+        }
+    }
     const bool targetInFront = delta.x * static_cast<float>(_direction) > 0.0f;
-    const bool chase = targetInFront && _target.getHealth() > 0.0f && std::fabs(delta.x) < kDetectionRange &&
-        std::fabs(delta.y) < 40.0f;
+    const bool chase = targetEligible && (_aggro || targetInFront);
     if (chase && !_wasChasing && !_turnAfterPause) {
         _pause = std::min(_pause, kAggroReactionDelaySeconds);
     }
@@ -347,6 +357,7 @@ void Boar::updateCombat(float time)
             return;
         }
         startDamageFlash();
+        _aggro = true;
     }
 
     if (_target.getHealth() <= 0.0f || !_canAttack || _attackCooldown > 0.0f) return;
