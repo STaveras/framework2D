@@ -24,8 +24,11 @@ class Boar : public GameObject
     float _attackPoseTime = 0.0f;
     float _damageFlashRemaining = 0.0f;
     float _damageFlashPhase = 0.0f;
+    float _aggroRemaining = 0.0f;
     const char* _lastCountedPlayerAttack = nullptr;
     unsigned int _slashesTaken = 0;
+    // Hits landed on the target since aggro was last gained.
+    unsigned int _hitsLanded = 0;
     bool _turnAfterPause = false;
     bool _holdingAttackPosition = false;
     bool _wasChasing = false;
@@ -41,6 +44,7 @@ class Boar : public GameObject
     void setDamageFlash(bool enabled);
     void startDamageFlash();
     void updateDamageFlash(float time);
+    void clearAggro();
 
 protected:
     void handleCollisionContact(const CollisionContact& contact) override;

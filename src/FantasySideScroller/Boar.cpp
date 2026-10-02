@@ -31,6 +31,8 @@ constexpr float kDamageFlashDuration = 0.64f;
 constexpr float kDamageFlashHalfPeriod = 0.08f;
 constexpr float kDamageFlashOpacity = 0.85f;
 constexpr unsigned int kSlashesToDefeat = 2;
+constexpr unsigned int kHitsBeforeAggroReset = 3;
+constexpr float kAggroDurationSeconds = 10.0f;
 }
 
 Boar::Boar(ObjectManager& world, Character& target, vector2 nearSpawn)
@@ -139,6 +141,13 @@ void Boar::updateDamageFlash(float time)
     }
 }
 
+void Boar::clearAggro()
+{
+    _aggro = false;
+    _aggroRemaining = 0.0f;
+    _hitsLanded = 0;
+}
+
 void Boar::reset()
 {
     clearEvents();
@@ -152,10 +161,10 @@ void Boar::reset()
     setDamageFlash(false);
     _lastCountedPlayerAttack = nullptr;
     _slashesTaken = 0;
+    clearAggro();
     _turnAfterPause = false;
     _holdingAttackPosition = false;
     _wasChasing = false;
-    _aggro = false;
     _canAttack = false;
     _defeated = false;
     setVelocity(vector2(0, 0));
@@ -222,6 +231,11 @@ void Boar::update(float time)
     const vector2 position = getPosition();
     _attackPoseTime = std::max(0.0f, _attackPoseTime - time);
     _canAttack = false;
+
+    if (_aggro) {
+        _aggroRemaining -= time;
+        if (_aggroRemaining <= 0.0f) clearAggro();
+    }
 
     _pause = std::max(0.0f, _pause - time);
     if (_pause <= 0.0f && _turnAfterPause) {
@@ -358,6 +372,7 @@ void Boar::updateCombat(float time)
         }
         startDamageFlash();
         _aggro = true;
+        _aggroRemaining = kAggroDurationSeconds;
     }
 
     if (_target.getHealth() <= 0.0f || !_canAttack || _attackCooldown > 0.0f) return;
@@ -365,6 +380,10 @@ void Boar::updateCombat(float time)
     _attackCooldown = kAttackCooldownSeconds;
     _attackPoseTime = kAttackPoseSeconds;
     animate("Attack");
+    // After a few landed hits, or once aggro times out in update(), the boar
+    // calms down: it stops tracking the player, so stepping behind it no
+    // longer provokes a turn and chase.
+    if (++_hitsLanded >= kHitsBeforeAggroReset) clearAggro();
     if (_target.getHealth() <= 0.0f) {
         _target.setState("Dead");
     }

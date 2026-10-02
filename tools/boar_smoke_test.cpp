@@ -322,6 +322,52 @@ int main() {
     assertState("Walk");
     assert(boar.getVelocity().x == -28.0f);
 
+    // Three landed hits clear damage aggro: a player who then steps behind
+    // the boar is no longer tracked.
+    boar.reset();
+    hero.resetForRespawn();
+    hero.setPosition(135, 76);
+    auto* provoke = startPlayerAttack("Attack01", true);
+    advanceStrike(provoke);
+    boar.updateCombat(dt);
+    assert(boar.getRenderable()->isFlashing());
+    hero.setState("Idle");
+    boar.updateCombat(dt);
+    tickBoar(120); // Turn, charge, and settle at the attack gap.
+    assert(boar.getRenderable()->getScale().x < 0.0f); // Facing right.
+    for (int hit = 1; hit <= 3; ++hit) {
+        boar.update(dt);
+        boar.updateCombat(1.0f);
+        assert(hero.getHealth() == 100.0f - 10.0f * hit);
+    }
+    hero.setPosition(boar.getPosition().x - 60.0f, 76);
+    tickBoar(60);
+    assert(boar.getRenderable()->getScale().x < 0.0f); // Did not turn around.
+    assert(std::strcmp(boar.getState()->getName(), "Run") != 0);
+    assert(boar.getVelocity().x >= 0.0f);
+
+    // Damage aggro expires after ten seconds without another hit.
+    auto provokeThenWait = [&](int frames) {
+        boar.reset();
+        hero.resetForRespawn();
+        hero.setPosition(135, 76);
+        auto* slash = startPlayerAttack("Attack01", true);
+        advanceStrike(slash);
+        boar.updateCombat(dt);
+        assert(boar.getRenderable()->isFlashing());
+        hero.setState("Idle");
+        boar.updateCombat(dt);
+        hero.setPosition(-500, 76); // Out of detection while the timer runs.
+        tickBoar(frames);
+        // Step behind the boar, whichever way its patrol left it facing.
+        const bool facingRight = boar.getRenderable()->getScale().x < 0.0f;
+        hero.setPosition(boar.getPosition().x + (facingRight ? -60.0f : 60.0f), 76);
+        boar.update(dt);
+        return facingRight != (boar.getRenderable()->getScale().x < 0.0f);
+    };
+    assert(provokeThenWait(570));   // 9.5 seconds: still aggro, turns to track.
+    assert(!provokeThenWait(606));  // 10.1 seconds: calm, ignores the player behind.
+
     // A charge stops at a gap before attacking; body overlap is unnecessary.
     boar.reset();
     hero.resetForRespawn();
