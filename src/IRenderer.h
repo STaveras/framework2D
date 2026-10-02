@@ -122,6 +122,8 @@ public:
         return renderList;
     }
 	void destroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
+	size_t getRenderListCount(void) const { return _RenderLists.size(); }
+	RenderList *getRenderList(size_t index) { return _RenderLists.at((unsigned int)index); }
 
 	virtual void initialize(void) = 0;
 	virtual void shutdown(void) = 0;
