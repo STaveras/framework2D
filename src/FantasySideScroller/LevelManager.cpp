@@ -95,9 +95,11 @@ void LevelManager::refreshLevelBounds(const TileMapLoadResult& loadResult, const
 			continue;
 		}
 
+		// A layer's pixel offset only nudges its art; it does not make the level larger, so
+		// the camera must not scroll past the map's own edges because of it.
 		const TileLayerConfig& layerConfig = tileMap->getLayerConfig();
-		const float left = mapOffset.x + layerConfig.offsetX + ((float)layerConfig.startX * tileWidth);
-		const float top = mapOffset.y + layerConfig.offsetY + ((float)layerConfig.startY * tileHeight);
+		const float left = mapOffset.x + ((float)layerConfig.startX * tileWidth);
+		const float top = mapOffset.y + ((float)layerConfig.startY * tileHeight);
 		const float right = left + ((float)tileMap->getMapWidth() * tileWidth);
 		const float bottom = top + ((float)tileMap->getMapHeight() * tileHeight);
 
@@ -229,9 +231,18 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 			}
 
 			gameState.routeObjectToRenderList(tile, layerRenderList);
+			if (Renderable* renderable = tile->getState() ? tile->getState()->getRenderable() : NULL) {
+				// Tiled's layer tint and opacity multiply into every tile of the layer.
+				if (layerConfig.tintColor != 0xFFFFFFFFu || layerConfig.opacity < 1.0f) {
+					Color tint(layerConfig.tintColor);
+					tint.a = (byte)(tint.a * std::max(0.0f, std::min(1.0f, layerConfig.opacity)) + 0.5f);
+					renderable->setTint(tint);
+				}
+			}
 
 			std::string objectName = layerPrefix + "_tile_" + std::to_string(tileIndex);
 			objectManager.addObject(objectName.c_str(), tile);
+			_registeredTiles.push_back(tile);
 		}
 	}
 
@@ -411,20 +422,16 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 	_cameraPlayerAttach.setSource(NULL);
 	_cameraPlayerAttach.follow(NULL, true, true);
 
+	// Unregister exactly the tiles initialize() added. A tile's index can change
+	// at runtime (collected keys are cleared to -1), so it can't decide this.
+	for (Tile* tile : _registeredTiles) {
+		gameState.clearObjectRenderRoute(tile);
+		objectManager.removeObject(tile);
+	}
+	_registeredTiles.clear();
+
 	for (TileMap* tileMap : _tileMaps)
 	{
-		if (!tileMap) {
-			continue;
-		}
-
-		for (auto it = tileMap->getTiles().begin(); it != tileMap->getTiles().end(); ++it) {
-			Tile* tile = *it;
-			if (!tile || tile->getTileIndex() < 0) {
-				continue;
-			}
-			gameState.clearObjectRenderRoute(tile);
-			objectManager.removeObject(tile);
-		}
 		delete tileMap;
 	}
 	_tileMaps.clear();

@@ -6,6 +6,14 @@
 
 #include "Window.h"
 #include "Engine2D.h"
+#include "System.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
 
 #include <iostream>
 
@@ -156,6 +164,10 @@ void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport)
 
 		Window* _window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
+		if (_window->m_keyEventHandler) {
+			_window->m_keyEventHandler(key, scancode, action, mods);
+		}
+
 		if (key == GLFW_KEY_ENTER && action == GLFW_PRESS && mods == GLFW_MOD_ALT)
 		{
 			// Check if the window is currently fullscreen
@@ -214,8 +226,9 @@ void Window::update(void)
 	}
 #ifdef _WIN32
 	else {
+		// Drain the whole queue so input never waits a frame behind other messages
 		MSG msg;
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)
 				m_bHasQuit = true;
@@ -380,4 +393,42 @@ void Window::toggleFullscreen(void)
 			SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 	}
 #endif
+}
+
+bool Window::saveScreenshot(const std::string& path)
+{
+	if (!_window || !glfwGetCurrentContext() || path.empty()) {
+		return false;
+	}
+
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(_window, &width, &height);
+	if (width <= 0 || height <= 0) {
+		return false;
+	}
+
+	std::vector<unsigned char> pixels((size_t)width * height * 4);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glReadBuffer(GL_BACK);
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+	stbi_flip_vertically_on_write(1);   // GL rows start at the bottom
+	return stbi_write_png(path.c_str(), width, height, 4, pixels.data(), width * 4) != 0;
+}
+
+void Window::onFrameRendered(const vector2& viewMin, const vector2& viewMax)
+{
+	if (_renderedFrames == 0) {
+		const char* path = std::getenv("AUTO_SCREENSHOT_PATH");
+		_autoScreenshotPath = path ? path : "";
+		_autoScreenshotFrame = (long)System::checkEnvironmentDouble("AUTO_SCREENSHOT_FRAME", -1.0);
+	}
+
+	if (!_autoScreenshotPath.empty() && _renderedFrames == _autoScreenshotFrame &&
+		saveScreenshot(_autoScreenshotPath)) {
+		if (FILE* info = std::fopen((_autoScreenshotPath + ".view").c_str(), "w")) {
+			std::fprintf(info, "%f %f %f %f\n", viewMin.x, viewMin.y, viewMax.x, viewMax.y);
+			std::fclose(info);
+		}
+	}
+	++_renderedFrames;
 }

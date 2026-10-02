@@ -5,6 +5,7 @@
 #include "../Cursor.h"
 
 #include "LevelManager.h"
+#include "LevelProps.h"
 #include "TraversalMechanics.h"
 
 #include <vector>
@@ -24,6 +25,9 @@ class PlayState : public GameState
 	LevelManager _levelManager;
 	TraversalMechanics _traversalMechanics;
 	bool _traversalOperatorRegistered = false;
+	LevelProps _levelProps;
+	bool _interactWasActive = false;
+	bool _reloadWasDown = false;
 
 	Character* _playableCharacter = NULL;
 	std::vector<Boar*> _boars;
@@ -34,6 +38,7 @@ class PlayState : public GameState
 	Image* _healthBarFill = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
+	Image* _keyIcon = NULL;
 	// Font* _helloWorldText = NULL;
 	Cursor* _cursor = NULL;
 

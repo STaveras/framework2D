@@ -291,9 +291,11 @@
     <ClInclude Include="src\FantasySideScroller\Constants.h" />
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h" />
     <ClInclude Include="src\FantasySideScroller\LevelManager.h" />
+    <ClInclude Include="src\FantasySideScroller\PauseState.h" />
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
     <ClInclude Include="src\FantasySideScroller\Resources.h" />
     <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
+    <ClInclude Include="src\FantasySideScroller\LevelProps.h" />
     <ClInclude Include="src\InputTapeRecorder.h" />
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
@@ -301,6 +303,8 @@
     <ClInclude Include="src\Effect.h" />
     <ClInclude Include="src\EffectManager.h" />
     <ClInclude Include="src\Engine2D.h" />
+    <ClInclude Include="src\FramePacer.h" />
+    <ClInclude Include="src\RenderInterpolation.h" />
     <ClInclude Include="src\Event.h" />
     <ClInclude Include="src\EventSystem.h" />
     <ClInclude Include="src\EventSystem.hpp" />
@@ -424,13 +428,16 @@
     <ClCompile Include="src\FantasySideScroller\CharacterUpdate.cpp" />
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp" />
     <ClCompile Include="src\FantasySideScroller\LevelManager.cpp" />
+    <ClCompile Include="src\FantasySideScroller\PauseState.cpp" />
     <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
     <ClCompile Include="src\FantasySideScroller\TraversalMechanics.cpp" />
+    <ClCompile Include="src\FantasySideScroller\LevelProps.cpp" />
     <ClCompile Include="src\InputTapeRecorder.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />
     <ClCompile Include="src\DirectInput.cpp" />
     <ClCompile Include="src\Engine2D.cpp" />
+    <ClCompile Include="src\RenderInterpolation.cpp" />
     <ClCompile Include="src\EventSystem.cpp" />
     <ClCompile Include="src\Font.cpp" />
     <ClCompile Include="src\Frame.cpp" />

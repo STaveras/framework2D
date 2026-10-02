@@ -2,11 +2,20 @@
 #pragma once
 
 #include "Types.h"
+#include "Maths.h"
+
+#include <string>
+
+#include <functional>
 
 #define EVT_WINDOW_RESIZED "EVT_WINDOW_RESIZED"
 
 class Window
 {
+public:
+	typedef std::function<void(int key, int scancode, int action, int mods)> KeyEventHandler;
+
+private:
 	bool m_bHasQuit;
 	int m_nWidth;
 	int m_nHeight;
@@ -21,6 +30,13 @@ class Window
 
 	const char* m_szWindowClassName;
 	std::string m_szWindowTitle;
+
+	// Frame capture for verification runs (AUTO_SCREENSHOT_FRAME / AUTO_SCREENSHOT_PATH).
+	long _renderedFrames = 0;
+	long _autoScreenshotFrame = -1;
+	std::string _autoScreenshotPath;
+
+	KeyEventHandler m_keyEventHandler;
 
 public:
 	enum class ClientAPI
@@ -84,6 +100,9 @@ public:
 	void setWidth(int nWidth);
 	void setHeight(int nHeight);
 	void setWindowTitle(const char* szWindowTitle);
+
+	// Receives every GLFW key event as it is delivered by glfwPollEvents()
+	void setKeyEventHandler(KeyEventHandler handler) { m_keyEventHandler = std::move(handler); }
 #ifdef _WIN32
 	void initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
 #endif
@@ -93,5 +112,14 @@ public:
 
 	void resize(void);
 	void toggleFullscreen(void);
+
+	// Saves the current OpenGL back buffer as a PNG. Call after a frame is drawn and before
+	// it is presented. Returns false without an OpenGL context or if writing fails.
+	bool saveScreenshot(const std::string& path);
+
+	// Called by the renderer once a frame is drawn, before presenting it. viewMin/viewMax is
+	// the world rectangle the frame shows. With AUTO_SCREENSHOT_FRAME=N and
+	// AUTO_SCREENSHOT_PATH set, frame N is saved there, with the view in "<path>.view".
+	void onFrameRendered(const vector2& viewMin, const vector2& viewMax);
 };
 // Author: Stanley Taveras
