@@ -80,6 +80,22 @@ int main()
     TileSet* tiles = TileSet::loadFromFile("bin/fantasySideScroller/Assets/fantasyTiles.tsj");
     assert(tiles);
 
+    // Neither half of either cattail may create a physics shape, even if an artist
+    // places it on a solid layer. The pond plants must never become footholds.
+    TileLayerConfig cattailConfig;
+    cattailConfig.name = "cattails on terrain";
+    cattailConfig.collisionMode = TileCollisionMode::Solid;
+    TileMap cattails(2, 2, tiles, cattailConfig);
+    cattails.setTile(0, 0, tiles, 516);
+    cattails.setTile(0, 1, tiles, 541);
+    cattails.setTile(1, 0, tiles, 466);
+    cattails.setTile(1, 1, tiles, 491);
+    cattails.arrangeTiles();
+    assert(!cattails.getTile(0, 0)->getCollidable());
+    assert(!cattails.getTile(0, 1)->getCollidable());
+    assert(!cattails.getTile(1, 0)->getCollidable());
+    assert(!cattails.getTile(1, 1)->getCollidable());
+
     // Props layer: a key (516) and a closed chest (444-445 over 469-470), far apart.
     TileLayerConfig propsConfig;
     propsConfig.name = "props";
@@ -90,6 +106,10 @@ int main()
     props.setTile(11, 1, tiles, 444);
     props.setTile(10, 2, tiles, 468);
     props.setTile(11, 2, tiles, 469);
+    props.setTile(4, 2, tiles, 496);
+    props.setTile(5, 2, tiles, 521);
+    props.setTile(7, 2, tiles, 498);
+    props.setTile(8, 2, tiles, 523);
     props.setPosition(vector2(0.0f, 0.0f));
     props.arrangeTiles();
 
@@ -100,16 +120,21 @@ int main()
     TileMap pads(20, 12, tiles, padConfig);
     pads.setTile(15, 10, tiles, 492);
     pads.setTile(16, 10, tiles, 493);
+    pads.setTile(15, 11, tiles, 517);
+    pads.setTile(16, 11, tiles, 518);
     pads.setPosition(vector2(0.0f, 0.0f));
     pads.arrangeTiles();
 
     LevelProps levelProps;
     levelProps.initialize({ &props, &pads });
     assert(levelProps.getChests().size() == 1);
+    assert(levelProps.getPots().size() == 4);
     assert(levelProps.getChests()[0].tiles.size() == 4);
     assert(near(levelProps.getChests()[0].heal, 30.0f));
     assert(levelProps.getPlatforms().size() == 1);
-    assert(levelProps.getPlatforms()[0].tiles.size() == 2);
+    assert(levelProps.getPlatforms()[0].tiles.size() == 4);
+    assert(!pads.getTile(15, 11)->getCollidable());
+    assert(!pads.getTile(16, 11)->getCollidable());
     assert(near(levelProps.getPlatforms()[0].sinkSpeed, 7.0f));
 
     Character hero;
@@ -160,6 +185,7 @@ int main()
     assert(near(levelProps.getPlatforms()[0].depth, 7.0f, 0.05f));
     assert(near(pad->getPosition().y, padRest.y + 7.0f, 0.05f));
     assert(near(pads.getTile(16, 10)->getPosition().y, padRest.y + 7.0f, 0.05f));
+    assert(near(pads.getTile(15, 11)->getPosition().y, padRest.y + 16.0f + 7.0f, 0.05f));
     // It never sinks past sink_depth.
     for (int i = 0; i < 600; ++i) {
         standAt(hero, padMax.x, padMin.y + levelProps.getPlatforms()[0].depth);
@@ -174,6 +200,37 @@ int main()
     assert(near(levelProps.getPlatforms()[0].depth, 14.0f, 0.05f));
     levelProps.resetPlatforms();
     assert(near(pad->getPosition().y, padRest.y));
+
+    // Pots stay decorative when touched. Only the forward, active sword stroke
+    // cracks them, using the matching size and colour from the source atlas.
+    standAt(hero, 4 * 16.0f - 8.0f, 48.0f);
+    hero.setState("Idle");
+    levelProps.update(&hero, false, 0.016f);
+    assert(props.getTile(4, 2)->getTileIndex() == 496);
+    hero.setState("Attack01");
+    auto* slash = static_cast<Animation*>(hero.getRenderable());
+    slash->setScale(vector2(1.0f, 1.0f));
+    slash->play();
+    levelProps.update(&hero, false, 0.016f);
+    assert(props.getTile(4, 2)->getTileIndex() == 496);
+    slash->update(0.1f);
+    slash->update(0.001f);
+    assert(slash->getCurrentFrameIndex() > 0);
+    levelProps.update(&hero, false, 0.016f);
+    assert(props.getTile(4, 2)->getTileIndex() == 497);
+    assert(props.getTile(5, 2)->getTileIndex() == 522);
+    assert(props.getTile(7, 2)->getTileIndex() == 498);
+    hero.setState("Idle");
+    standAt(hero, 9 * 16.0f + 8.0f, 48.0f);
+    hero.setState("Attack01");
+    slash = static_cast<Animation*>(hero.getRenderable());
+    slash->setScale(vector2(-1.0f, 1.0f));
+    slash->play();
+    slash->update(0.1f);
+    slash->update(0.001f);
+    levelProps.update(&hero, false, 0.016f);
+    assert(props.getTile(7, 2)->getTileIndex() == 499);
+    assert(props.getTile(8, 2)->getTileIndex() == 524);
 
     // Knockback launches the character airborne and keeps its push while locked.
     hero.setState("Idle");

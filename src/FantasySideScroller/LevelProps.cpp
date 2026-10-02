@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <cstring>
 
 namespace
 {
@@ -112,6 +113,12 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 				_keys.push_back(Pickup{ tile, false });
 			}
 		}
+		// Each atlas cell is a complete pot, including the large variants.
+		for (const auto& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "pot"); })) {
+			for (Tile* tile : group) {
+				_pots.push_back(Pot{tile, infoOf(tile)->getIntProperty("cracked_tile", -1), false});
+			}
+		}
 
 		for (std::vector<Tile*>& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "chest"); })) {
 			Chest chest;
@@ -149,6 +156,7 @@ void LevelProps::clear(void)
 	_keys.clear();
 	_chests.clear();
 	_platforms.clear();
+	_pots.clear();
 	_keysHeld = 0;
 	_lastEvent.clear();
 }
@@ -159,6 +167,25 @@ void LevelProps::update(Character* character, bool interactPressed, float dt)
 	const bool hasBody = character && character->getHealth() > 0.0f &&
 		Kinematics2D::tryGetActiveBounds(character->getCollidable(), bodyMin, bodyMax);
 	const bool falling = character && character->getVelocity().y >= -1.0f;
+	const char* state = character && character->getState() ? character->getState()->getName() : "";
+	const bool attacking = !std::strcmp(state, "Attack01") || !std::strcmp(state, "Attack02");
+	auto* attackAnimation = attacking ? static_cast<Animation*>(character->getRenderable()) : nullptr;
+	const bool strikeActive = attackAnimation && attackAnimation->getCurrentFrameIndex() > 0;
+	if (hasBody && strikeActive) {
+		vector2 strikeMin = bodyMin, strikeMax = bodyMax;
+		if (attackAnimation->getScale().x < 0.0f) { strikeMin.x -= 32.0f; }
+		else { strikeMax.x += 32.0f; }
+		for (Pot& pot : _pots) {
+			if (pot.cracked || pot.crackedTile < 0) { continue; }
+			vector2 potMin, potMax;
+			tileBounds(pot.tile, potMin, potMax);
+			if (overlaps(strikeMin, strikeMax, potMin, potMax)) {
+				pot.tile->setTileIndex(pot.crackedTile, pot.tile->getFlipFlags());
+				pot.cracked = true;
+				_lastEvent = "pot_cracked";
+			}
+		}
+	}
 
 	if (hasBody) {
 		for (Pickup& key : _keys) {
