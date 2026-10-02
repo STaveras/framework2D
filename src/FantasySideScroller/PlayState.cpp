@@ -304,6 +304,8 @@ void PlayState::onEnter(State* prev)
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_UP));
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_W));
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
+	controller->addAction(Action("INTERACT", Gamepad::Button::DpadUp));
+	controller->addAction(Action("INTERACT", Gamepad::Button::LeftThumb));
 	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
 	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
