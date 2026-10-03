@@ -231,7 +231,15 @@ if(APPLE)
   list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
 endif()
 
-add_executable(${ROOT_DIR_NAME} ${SOURCES})
+# Headers are listed so IDE projects show them; they are not compiled.
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+  "${CMAKE_SOURCE_DIR}/src/*.h"
+  "${CMAKE_SOURCE_DIR}/src/*.hpp")
+
+add_executable(${ROOT_DIR_NAME} ${SOURCES} ${HEADERS})
+
+include(cmake/SourceGroups.cmake)
+framework_apply_source_groups("${CMAKE_SOURCE_DIR}/cmake/SourceGroups.txt" ${SOURCES} ${HEADERS})
 
 option(FRAMEWORK_ENABLE_VLD "Include Visual Leak Detector in Windows Debug builds" OFF)
 if(WIN32 AND FRAMEWORK_ENABLE_VLD)
