@@ -3,6 +3,7 @@
 
 #include "../GameState.h"
 #include "../Cursor.h"
+#include "../PlayerController.h"
 
 #include "LevelManager.h"
 #include "LevelProps.h"
@@ -22,6 +23,7 @@ class PlayState : public GameState
 	void _shutdownHUD();
 
 	Player* _player = NULL;
+	PlayerController _playerController;
 	LevelManager _levelManager;
 	TraversalMechanics _traversalMechanics;
 	bool _traversalOperatorRegistered = false;
