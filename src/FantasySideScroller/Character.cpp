@@ -19,12 +19,6 @@ namespace CharacterPrivate
 Telemetry2D::Runtime& AutoRuntime();
 }
 
-namespace {
-constexpr float kDamageFlashDuration = 0.64f;
-constexpr float kDamageFlashHalfPeriod = 0.08f;
-constexpr float kDamageFlashOpacity = 0.85f;
-}
-
 Character::Character(void) : 
 	Actor(GAME_OBJ_OBJECT),
 	_tile(NULL) {
@@ -82,10 +76,7 @@ void Character::resetForRespawn(void)
 	_longJumpMomentumActive = false;
 	_longJumpMomentumDirection = 0;
 	_longJumpMomentumSpeed = 0.0f;
-	_damageFlashRemaining = 0.0f;
-	_damageFlashPhase = 0.0f;
-	_damageFlashOn = false;
-	_setDamageFlash(false);
+	_damageFlash.stop(*this);
 	_knockbackRemaining = 0.0f;
 	_health = _maxHealth;
 	this->setVelocity(vector2(0.0f, 0.0f));
@@ -269,41 +260,6 @@ void Character::addHealth(float amount)
 {
 	const float previousHealth = _health;
 	_health = std::max(0.0f, std::min(_maxHealth, _health + amount));
-	if (_health < previousHealth) _startDamageFlash();
+	if (_health < previousHealth) _damageFlash.start(*this);
 }
 
-void Character::_setDamageFlash(bool enabled)
-{
-	for (auto stateIt = begin(); stateIt != end(); ++stateIt) {
-		GameObjectState* state = static_cast<GameObjectState*>(*stateIt);
-		if (Renderable* renderable = state->getRenderable()) {
-			renderable->setFlash(enabled, 0xFFFF5555, kDamageFlashOpacity);
-		}
-	}
-}
-
-void Character::_startDamageFlash()
-{
-	_damageFlashRemaining = kDamageFlashDuration;
-	_damageFlashPhase = kDamageFlashHalfPeriod;
-	_damageFlashOn = true;
-	_setDamageFlash(true);
-}
-
-void Character::_updateDamageFlash(float time)
-{
-	if (_damageFlashRemaining <= 0.0f) return;
-
-	_damageFlashRemaining = std::max(0.0f, _damageFlashRemaining - time);
-	_damageFlashPhase -= time;
-	while (_damageFlashPhase <= 0.0f && _damageFlashRemaining > 0.0f) {
-		_damageFlashOn = !_damageFlashOn;
-		_damageFlashPhase += kDamageFlashHalfPeriod;
-	}
-	if (_damageFlashRemaining <= 0.0f) {
-		_damageFlashOn = false;
-		_setDamageFlash(false);
-	} else {
-		_setDamageFlash(_damageFlashOn);
-	}
-}
