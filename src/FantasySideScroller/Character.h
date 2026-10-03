@@ -5,6 +5,7 @@
 #include "../GameObject.h"
 #include "../Tile.h"
 #include "../AnimationUtils.h"
+#include "../BlinkFlash.h"
 
 #include "Constants.h"
 #include "Resources.h"
@@ -23,16 +24,11 @@ class Character : public GameObject
 	float _longJumpMomentumSpeed = 0.0f;
 	int _longJumpMomentumDirection = 0;
 	bool _longJumpMomentumActive = false;
-	float _damageFlashRemaining = 0.0f;
-	float _damageFlashPhase = 0.0f;
-	bool _damageFlashOn = false;
+	BlinkFlash _damageFlash;
 	// While positive, input steering is suspended so a knockback keeps its velocity.
 	float _knockbackRemaining = 0.0f;
 	// Reused by _findGroundSupportTile so support scans do not allocate each tick.
 	std::vector<GameObject*> _supportCandidates;
-	void _setDamageFlash(bool enabled);
-	void _startDamageFlash();
-	void _updateDamageFlash(float time);
 
 protected:
 	// Initialize animation states and hitboxes
