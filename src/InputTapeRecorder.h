@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-class Controller;
+class InputMap;
 
 namespace InputTapeRecorder
 {
@@ -13,7 +13,7 @@ void shutdown(void);
 bool isRecording(void);
 bool isReplayEnabled(void);
 
-void onControllerTickStart(Controller* controller, uint64_t simulationTick, float controllerElapsedSeconds);
+void onControllerTickStart(InputMap* controller, uint64_t simulationTick, float controllerElapsedSeconds);
 bool isReplayControlledAction(const std::string& actionName);
 bool getReplayActionState(const std::string& actionName, bool fallbackState);
 

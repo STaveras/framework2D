@@ -17,19 +17,19 @@
 #define EVT_KEYDOWN "EVT_KEYDOWN"
 #define EVT_KEYUP "EVT_KEYUP"
 
-class Controller;
+class InputMap;
 
 class InputEvent : public Event
 {
 	float _timeStamp;
-	Controller* _controller;
+	InputMap* _inputMap;
 	std::string _actionName;
 
 public:
 	InputEvent(Event::event_key evtKey, void* pSender, float time, std::string actionName);
 
 	float getTimeStamp(void) const { return _timeStamp; }
-	Controller* getController(void) const { return _controller; }
+	InputMap* getInputMap(void) const { return _inputMap; }
 	std::string getActionName(void) const { return _actionName; }
 };
 

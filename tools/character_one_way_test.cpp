@@ -75,14 +75,14 @@ int main() {
     Engine2D::setGame(&game);
     TestState scene;
     game.push(&scene);
-    Controller controller;
+    InputMap controller;
     controller.addAction(Action("JUMP"));
     controller.addAction(Action("DOWN"));
     controller.addAction(Action("LEFT"));
     controller.addAction(Action("RIGHT"));
     Character hero;
     Player* player = game.addPlayer();
-    player->setController(&controller);
+    player->setInputMap(&controller);
     player->setGameObject(&hero);
     player->start();
     TestTileSet tiles(renderer.createTexture("bin/fantasySideScroller/Character/Idle/Idle-Sheet.png"));

@@ -105,12 +105,12 @@ bool Character::_isDropThroughRequested()
 	}
 
 	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getController()) {
+	if (!player || !player->getInputMap()) {
 		_kinematic2DState().dropThroughJumpWasDown = false;
 		return false;
 	}
 
-	Controller* controller = player->getController();
+	InputMap* controller = player->getInputMap();
 	Action* jumpAction = controller->getAction("JUMP");
 	Action* downAction = controller->getAction("DOWN");
 	if (!jumpAction || !downAction) {

@@ -5,5 +5,5 @@ InputEvent::InputEvent(Event::event_key evtKey, void* pSender, float time, std::
 	Event(evtKey, pSender, Event::event_priority_high),
 	_timeStamp(time),
 	_actionName(actionName) {
-	_controller = (Controller*)pSender;
+	_inputMap = (InputMap*)pSender;
 }

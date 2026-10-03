@@ -565,8 +565,8 @@ void Character::update(float time)
 
 		Player* player = Engine2D::getGame()->getPlayerWith(this);
 		bool downHeld = false;
-		if (player && player->getController()) {
-			if (Action* downAction = player->getController()->getAction("DOWN")) {
+		if (player && player->getInputMap()) {
+			if (Action* downAction = player->getInputMap()->getAction("DOWN")) {
 				downHeld = downAction->isActive();
 			}
 		}

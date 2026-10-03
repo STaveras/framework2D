@@ -3,7 +3,7 @@
 #include "EventSystem.h"
 #include "InputEvent.h"
 #include "Types.h"
-#include "Controller.h"
+#include "InputMap.h"
 
 InputManager::InputManager(void):
 	_eventSystem(NULL),
@@ -20,18 +20,18 @@ void InputManager::initialize(EventSystem* eventSystem, IInput* inputInterface)
 	_input		 = inputInterface;
 }
 
-Controller* InputManager::createController(void)
+InputMap* InputManager::createInputMap(void)
 {
-	Controller* controller = _controllers.create();
-	controller->setPadNumber((int)(_controllers.size() - 1));
+	InputMap* controller = _inputMaps.create();
+	controller->setPadNumber((int)(_inputMaps.size() - 1));
 	controller->setInputInterface(_input);
 	controller->setEventSystem(_eventSystem);
 	return controller;
 }
 
-void InputManager::destroyController(Controller* controller)
+void InputManager::destroyInputMap(InputMap* controller)
 {
-	_controllers.destroy(controller);
+	_inputMaps.destroy(controller);
 }
 
 void InputManager::update(float fTime)
@@ -39,14 +39,14 @@ void InputManager::update(float fTime)
 	if (!_input)
 		return;
 
-	for (auto& controller : _controllers) {
+	for (auto& controller : _inputMaps) {
 		controller->update(fTime);
 	}
 }
 
 void InputManager::shutdown(void)
 {
-	_controllers.clear();
+	_inputMaps.clear();
 
 	if (_eventSystem)
 		_eventSystem = NULL;
