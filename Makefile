@@ -48,7 +48,7 @@ COMMON_SRCS := \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
   src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
-  src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp
+  src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp src/BlinkFlash.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
