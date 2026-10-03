@@ -95,7 +95,7 @@ void RenderInterpolation::apply(IRenderer* renderer, float alpha)
 		if (shouldBlend(_cameraPrevious, _cameraCurrent)) {
 			// Only the camera's own position: GameObject::setPosition would also
 			// move whatever renderable the camera carries.
-			camera->Positionable::setPosition(lerp(_cameraPrevious, _cameraCurrent, alpha));
+			camera->setPositionSilently(lerp(_cameraPrevious, _cameraCurrent, alpha));
 			_cameraApplied = true;
 		}
 	}
@@ -108,7 +108,7 @@ void RenderInterpolation::restore(IRenderer* renderer)
 	}
 	_restore.clear();
 	if (_cameraApplied && renderer && renderer->getCamera() == _camera) {
-		_camera->Positionable::setPosition(_cameraCurrent);
+		_camera->setPositionSilently(_cameraCurrent);
 	}
 	_cameraApplied = false;
 }
