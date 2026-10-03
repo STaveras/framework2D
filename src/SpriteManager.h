@@ -6,7 +6,6 @@
 #include "Factory.h"
 #include "IRenderer.h"
 
-typedef class SpriteManager ImageManager;
 
 class SpriteManager : public Factory<Sprite> // Renderable, instead of containing a renderlist...?
 {

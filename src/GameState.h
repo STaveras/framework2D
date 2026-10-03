@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-class GameState : public ProgramState
+class GameState : public IProgramState
 {
 	virtual void _OnObjectAdded(const Event& e);
 	virtual void _OnObjectRemoved(const Event& e);
@@ -32,7 +32,7 @@ protected:
 	CollisionSystem  _collisionSystem;
 
 public:
-	GameState(void) : ProgramState() { }
+	GameState(void) : IProgramState() { }
 	~GameState(void) { }
 	
 	InputManager * getInputManager(void) { return &_inputManager; }

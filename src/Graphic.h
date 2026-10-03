@@ -10,10 +10,10 @@
 #include "Sprite.h"
 
 // Absolutely no use other than to display a simple graphic...
-class Graphic : public Widget, Image
+class Graphic : public Widget, Sprite
 {
 public:
-	Graphic(void) : Widget(), Image() {
+	Graphic(void) : Widget(), Sprite() {
 
 	}
 };

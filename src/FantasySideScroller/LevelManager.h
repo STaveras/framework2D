@@ -27,8 +27,8 @@ struct LevelEnemyDescriptor
 class LevelManager
 {
 	Camera* _camera = NULL;
-	Image* _background = NULL;
-	Image* _pixel = NULL;
+	Sprite* _background = NULL;
+	Sprite* _pixel = NULL;
 	TileSet* _tileSet = NULL;
 
 	std::vector<TileMap*> _tileMaps;
@@ -66,7 +66,7 @@ public:
 	void shutdown(ObjectManager& objectManager, GameState& gameState);
 
 	Camera* getCamera(void) const { return _camera; }
-	Image* getBackground(void) const { return _background; }
+	Sprite* getBackground(void) const { return _background; }
 	bool hasSpawnPoint() const { return _hasSpawnPoint; }
 	vector2 getSpawnPoint() const { return _spawnPoint; }
 	const std::vector<LevelTriggerDescriptor>& getTriggerDescriptors() const { return _triggerDescriptors; }

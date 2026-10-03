@@ -30,7 +30,7 @@ const CollisionSystem* getActiveCollisionSystem()
 		return nullptr;
 	}
 
-	ProgramState* topState = game->top();
+	IProgramState* topState = game->top();
 	GameState* gameState = dynamic_cast<GameState*>(topState);
 	if (!gameState) {
 		return nullptr;
@@ -543,7 +543,7 @@ void RendererGL::render(void)
 				break;
 				case RENDERABLE_TYPE_SPRITE:
 				{
-					Image* image = (Image*)(*o);
+					Sprite* image = (Sprite*)(*o);
 					_drawImage(image, image->getTintColor(), image->getOffset(), screenSpace);
 				}
 				break;

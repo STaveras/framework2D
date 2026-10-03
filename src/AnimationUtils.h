@@ -24,7 +24,7 @@ namespace Animations
 
    // Only works when each Frame have the same dimensions
    void createFramesForAnimation(Animation* animation, 
-                                 Texture* spriteSheet, 
+                                 ITexture* spriteSheet, 
                               vector2 frameDimensions, 
                        Factory<Sprite>& spriteFactory,
                               unsigned int startIndex = 0, 

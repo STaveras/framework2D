@@ -13,7 +13,7 @@
 
 class TileSet
 {
-   Texture*  _tileSheet;
+   ITexture*  _tileSheet;
 
    unsigned int _tileSize;  // Square tiles only for now
 
@@ -61,7 +61,7 @@ protected:
    std::map<std::pair<int, unsigned int>, Collidable*> _flippedCollision;
 
 public:
-   explicit TileSet(Texture* tileSheet, unsigned int tileSize) :
+   explicit TileSet(ITexture* tileSheet, unsigned int tileSize) :
       _tileSheet(tileSheet),
       _tileSize(tileSize) {
 
@@ -72,7 +72,7 @@ public:
 
    float getTileSize(void) const { return (float)_tileSize; }
    vector2 getTileCounts(void) const { return _tileCounts; }
-   Texture* getTileSheet(void) const { return _tileSheet; }
+   ITexture* getTileSheet(void) const { return _tileSheet; }
 
    TileInfo getTileInfo(int tileIndex) {
       return _tileInfo[tileIndex];

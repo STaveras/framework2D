@@ -356,11 +356,11 @@ void LevelManager::initialize(const char* mapFileName,
 	}
 
 	if (!_pixel) {
-		_pixel = new Image(BasePath("pixel.bmp").c_str());
+		_pixel = new Sprite(BasePath("pixel.bmp").c_str());
 	}
 
 	if (!_background && backgroundFileName && backgroundFileName[0] != '\0') {
-		_background = new Image(BasePath(backgroundFileName).c_str());
+		_background = new Sprite(BasePath(backgroundFileName).c_str());
 		_background->center();
 #ifdef _DEBUG
 		_background->setVisibility(false);

@@ -59,8 +59,7 @@ public:
 	virtual void update(void) = 0;
 };
 
-using Gamepad = IGamepad;
 
 }
 
-using framework::Gamepad;
+using framework::IGamepad;
