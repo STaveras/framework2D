@@ -8,6 +8,7 @@
 
 #include "Factory.h"
 #include "ITexture.h"
+#include <iterator>
 #include <list>
 #include <unordered_map>
 #include <vector>
@@ -119,8 +120,10 @@ public:
 	virtual ITexture *createTexture(const char *szFilename, Color colorKey = 0) = 0;
 	virtual bool destroyTexture(const ITexture *pTexture);
 
-	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList); }
-	void popRenderList(void) { _RenderLists.erase(_RenderLists.end()); }
+	// Pushed lists stay owned by the caller; pop removes the last list and
+	// deletes it only if the renderer created it.
+	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList, false); }
+	void popRenderList(void) { if (!_RenderLists.empty()) _RenderLists.erase(std::prev(_RenderLists.end())); }
 
     RenderList *createRenderList(bool screenSpace = false)
     {
