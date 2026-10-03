@@ -231,7 +231,15 @@ if(APPLE)
   list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
 endif()
 
-add_executable(${ROOT_DIR_NAME} ${SOURCES})
+# Headers are listed so IDE projects show them; they are not compiled.
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+  "${CMAKE_SOURCE_DIR}/src/*.h"
+  "${CMAKE_SOURCE_DIR}/src/*.hpp")
+
+add_executable(${ROOT_DIR_NAME} ${SOURCES} ${HEADERS})
+
+include(cmake/SourceGroups.cmake)
+framework_apply_source_groups("${CMAKE_SOURCE_DIR}/cmake/SourceGroups.txt" ${SOURCES} ${HEADERS})
 
 option(FRAMEWORK_ENABLE_VLD "Include Visual Leak Detector in Windows Debug builds" OFF)
 if(WIN32 AND FRAMEWORK_ENABLE_VLD)
@@ -430,7 +438,7 @@ if(FRAMEWORK_BUILD_TESTS)
     target_link_directories(framework_test_core PUBLIC ${_game_link_dirs})
   endif()
   target_link_libraries(framework_test_core PUBLIC ${PROJECT_LIBS})
-  foreach(_test boar_smoke_test spatial_query_test collision_spatial_test character_one_way_test tile_flip_test level_props_test)
+  foreach(_test factory_test boar_smoke_test spatial_query_test collision_spatial_test character_one_way_test tile_flip_test level_props_test)
     if(APPLE)
       set_source_files_properties("tools/${_test}.cpp" PROPERTIES LANGUAGE OBJCXX)
     endif()

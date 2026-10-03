@@ -10,6 +10,7 @@ enc_temp_folder/
 *.pdb
 *.ilk
 *.cmake
+!cmake/*.cmake
 *.o
 *.d
 *.spv
