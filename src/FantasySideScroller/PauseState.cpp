@@ -15,7 +15,7 @@ PauseState::PauseState()
     , _pauseText(NULL)
     , _hintText(NULL)
     , _cursor(NULL)
-    , _controller(NULL)
+    , _inputMap(NULL)
 {
 }
 
@@ -117,9 +117,9 @@ bool PauseState::onExecute(float time)
     Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
     // Use the same action as gameplay for either Escape or controller Options.
-    Action* pauseAction = _controller ? _controller->getAction("PAUSE") : NULL;
+    Action* pauseAction = _inputMap ? _inputMap->getAction("PAUSE") : NULL;
     const bool pausePressed = pauseAction
-        ? _controller->buttonPressed(pauseAction)
+        ? _inputMap->buttonPressed(pauseAction)
         : keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE);
     if (pausePressed) {
         Engine2D::getGame()->pop();

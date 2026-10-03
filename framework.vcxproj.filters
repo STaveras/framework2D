@@ -321,7 +321,7 @@
     <ClInclude Include="src\CommandEvent.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Controller.h">
+    <ClInclude Include="src\InputMap.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Debug.h">
@@ -618,7 +618,7 @@
     <ClCompile Include="src\Circle.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Controller.cpp">
+    <ClCompile Include="src\InputMap.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Debug.cpp">

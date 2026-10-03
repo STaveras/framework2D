@@ -8,7 +8,7 @@
 #include "../Font.h"
 
 class Cursor;
-class Controller;
+class InputMap;
 
 class PauseState : public GameState
 {
@@ -16,13 +16,13 @@ class PauseState : public GameState
     Font* _pauseText = NULL;
     Font* _hintText = NULL;
     Cursor* _cursor = NULL;
-    Controller* _controller = NULL;
+    InputMap* _inputMap = NULL;
 
 public:
     PauseState(void);
     virtual ~PauseState(void);
 
-    void setController(Controller* controller) { _controller = controller; }
+    void setInputMap(InputMap* controller) { _inputMap = controller; }
 
     void onEnter(State* prev) override;
     bool onExecute(float time) override;

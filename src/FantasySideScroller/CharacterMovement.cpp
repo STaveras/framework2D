@@ -162,11 +162,11 @@ int Character::_getHorizontalInput() const
 	}
 
 	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getController()) {
+	if (!player || !player->getInputMap()) {
 		return 0;
 	}
 
-	Controller* controller = player->getController();
+	InputMap* controller = player->getInputMap();
 	Action* leftAction = controller->getAction("LEFT");
 	Action* rightAction = controller->getAction("RIGHT");
 	const bool leftActive = leftAction && leftAction->isActive();
@@ -187,11 +187,11 @@ bool Character::_isRunRequested() const
 	}
 
 	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getController()) {
+	if (!player || !player->getInputMap()) {
 		return false;
 	}
 
-	Controller* controller = player->getController();
+	InputMap* controller = player->getInputMap();
 	Action* runAction = controller->getAction("RUN");
 	return runAction && runAction->isActive();
 }

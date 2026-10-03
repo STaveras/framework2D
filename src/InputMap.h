@@ -1,4 +1,4 @@
-// File: Controller.h
+// File: InputMap.h
 #pragma once
 
 #include "IInput.h"
@@ -9,17 +9,20 @@
 
 #include <list>
 
-class Controller
+// Named actions bound to keyboard keys, gamepad buttons and axes, updated
+// once per tick from an input interface. (Formerly Controller; a Controller
+// is now whatever drives an Actor, see Controller.h.)
+class InputMap
 {
 public:
-	Controller(void) :
+	InputMap(void) :
 		_connected(false),
 		_padNumber(-1),
 		_elapsedTime(0.0f),
 		_input(NULL),
 		_eventSystem(NULL) {
 	}
-	~Controller(void) {}
+	~InputMap(void) {}
 
 	bool isConnected(void) const { return _connected; }
 	int getPadNumber(void) const { return _padNumber; }

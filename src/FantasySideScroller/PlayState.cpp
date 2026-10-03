@@ -277,8 +277,8 @@ void PlayState::onEnter(State* prev)
 
 	// TODO: Save the keymappings to a file and load them here
 	_player->start();
-	_player->setController(_inputManager.createController());
-	Controller* controller = _player->getController();
+	_player->setInputMap(_inputManager.createInputMap());
+	InputMap* controller = _player->getInputMap();
 	controller->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
 	controller->addAction(Action("JUMP", Gamepad::Button::A));
 	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
@@ -374,7 +374,7 @@ bool PlayState::onExecute(float time)
 		DEBUG_MSG(keepPosition ? "Stage reloaded from disk in place.\n" :
 			"Stage reloaded from disk at spawn point.\n");
 	}
-	Controller* controller = _player ? _player->getController() : NULL;
+	InputMap* controller = _player ? _player->getInputMap() : NULL;
 
 	// First frame after a pause: the pause overlay was popped and this state is
 	// top again, so make the HUD cursor visible once more.
@@ -429,7 +429,7 @@ bool PlayState::onExecute(float time)
 		if (!_pauseState) {
 			_pauseState = new PauseState();
 		}
-		_pauseState->setController(controller);
+		_pauseState->setInputMap(controller);
 		Engine2D::getGame()->push(_pauseState);
 	}
 
