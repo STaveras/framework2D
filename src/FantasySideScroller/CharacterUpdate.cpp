@@ -319,7 +319,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 
 void Character::update(float time)
 {
-	_updateDamageFlash(time);
+	_damageFlash.update(*this, time);
 	const bool knockedBack = _knockbackRemaining > 0.0f;
 	_knockbackRemaining = std::max(0.0f, _knockbackRemaining - time);
 	AutoTestRuntime& autoRuntime = CharacterPrivate::AutoRuntime();
