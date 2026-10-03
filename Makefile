@@ -37,7 +37,7 @@ endif
 COMMON_SRCS := \
   src/main.cpp src/Engine2D.cpp src/RenderInterpolation.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
   src/ObjectManager.cpp src/CollisionSystem.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
-  src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
+  src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/InputMap.cpp src/Timer.cpp \
   src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
   src/InputTapeRecorder.cpp src/PlatformMouse.cpp src/PlatformGamepad.cpp src/Font.cpp src/Cursor.cpp \
   src/Physical.cpp src/Kinematics2D.cpp src/Telemetry2D.cpp src/StrUtils.cpp \
@@ -48,7 +48,8 @@ COMMON_SRCS := \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
   src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
-  src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp
+  src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp src/BlinkFlash.cpp \
+  src/Actor.cpp src/PlayerController.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 

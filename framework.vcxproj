@@ -274,6 +274,7 @@
     <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\Intent.h" />
     <ClInclude Include="src\PlayerController.h" />
+    <ClInclude Include="src\BlinkFlash.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Circle.h" />
     <ClInclude Include="src\Collidable.h" />
@@ -415,6 +416,7 @@
     <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Actor.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />
+    <ClCompile Include="src\BlinkFlash.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\AnimationUtils.cpp" />
