@@ -47,30 +47,3 @@ void Renderer::destroyRenderer(IRenderer *pRenderer)
 		delete pRenderer;
 	}
 }
-
-// void Renderer::render(Renderable* r)
-//{
-//     // TODO: Improve this massively.
-//     IRenderer::RenderList* renderList = Engine2D::getInstance()->GetRenderer()->createRenderList();
-//     renderList->push_back(r);
-//     Engine2D::getInstance()->GetRenderer()->destroyRenderList(renderList);
-// }
-//
-// void Renderer::AddToRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable) { pRenderList->push_back(pRenderable); }
-// bool Renderer::RemoveFromRenderList(IRenderer::renderList* pRenderList, Renderable* pRenderable)
-//{
-//	std::list<Renderable*>::iterator itr = pRenderList->begin();
-//	for(;itr != pRenderList->end();itr++)
-//	{
-//		if((*itr) == pRenderable)
-//		{
-//			pRenderList->erase(itr);
-//			return true;
-//		}
-//	}
-//
-//	return false;
-// }
-//
-// void Renderer::AddToRenderList(Renderable* pRenderable) { AddToRenderList(&g_RenderList, pRenderable); }
-// bool Renderer::RemoveFromRenderList(Renderable* pRenderable) { return RemoveFromRenderList(&g_RenderList, pRenderable); }

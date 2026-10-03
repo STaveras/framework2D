@@ -10,21 +10,7 @@
 
 class AnimationManager : public Factory<Animation>
 {
-	//IRenderer::RenderList* _renderList;
-
 public:
-	AnimationManager(void) /*: _renderList(NULL)*/ {
-		//if (!_renderList) {
-		//	_renderList = Engine2D::getInstance()->GetRenderer()->createRenderList();
-		//}
-	}
-
-	~AnimationManager(void) {
-		//if (_renderList) { // Just to be proper *_*
-		//	Engine2D::getInstance()->GetRenderer()->destroyRenderList(_renderList);
-		//}
-	}
-
 	Animation* GetAnimation(const char* szName);
 	Animation* CreateAnimation(const char* szName, std::vector<Sprite*>* vSprites = NULL, int nTargetFPS = 60);
 

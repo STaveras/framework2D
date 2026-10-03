@@ -123,15 +123,6 @@
     <ClInclude Include="src\XAudioFile.h">
       <Filter>Audio</Filter>
     </ClInclude>
-    <ClInclude Include="src\WorldOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="src\UpdateBackgroundOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="src\UpdateRenderableOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
     <ClInclude Include="src\Trigger.h">
       <Filter>Input</Filter>
     </ClInclude>
@@ -144,19 +135,10 @@
     <ClInclude Include="src\Timer.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="src\StrUtil.h">
-      <Filter>Math / Utilities</Filter>
-    </ClInclude>
     <ClInclude Include="src\Square.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="src\Stage.h">
-      <Filter>Objects / Entities</Filter>
-    </ClInclude>
     <ClInclude Include="src\AnimationUtils.h">
-      <Filter>Assets / Resources</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Background.h">
       <Filter>Assets / Resources</Filter>
     </ClInclude>
     <ClInclude Include="src\Shader.h">
@@ -170,9 +152,6 @@
     </ClInclude>
     <ClInclude Include="src\Logger.h">
       <Filter>Debugging</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Text.h">
-      <Filter>Assets / Resources</Filter>
     </ClInclude>
     <ClInclude Include="src\SpriteManager.h">
       <Filter>Assets / Resources</Filter>
@@ -231,9 +210,6 @@
     <ClInclude Include="src\InputManager.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Command.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="src\EventSystem.h">
       <Filter>Events</Filter>
     </ClInclude>
@@ -255,19 +231,7 @@
     <ClInclude Include="src\Camera.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
-    <ClInclude Include="src\CullObjectOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
     <ClInclude Include="src\FollowObjectOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ApplyVelocityOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ForceDegradation.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ForceOperator.h">
       <Filter>Operators / Simulation</Filter>
     </ClInclude>
     <ClInclude Include="src\ProgramState.h">
@@ -282,32 +246,11 @@
     <ClInclude Include="src\Player.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
-    <ClInclude Include="src\Popup.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ScrollBar.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Slider.h">
-      <Filter>UI</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SCROLLBAR_TYPE.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="src\Positionable.h">
       <Filter>Physics</Filter>
     </ClInclude>
     <ClInclude Include="src\Material.h">
       <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Mesh.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\EffectManager.h">
-      <Filter>Objects / Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Effect.h">
-      <Filter>Objects / Entities</Filter>
     </ClInclude>
     <ClInclude Include="src\GameState.h">
       <Filter>Core</Filter>
@@ -317,9 +260,6 @@
     </ClInclude>
     <ClInclude Include="src\ISingleton.h">
       <Filter>Math / Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CommandEvent.h">
-      <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Controller.h">
       <Filter>Input</Filter>
@@ -336,13 +276,7 @@
     <ClInclude Include="src\DIMouse.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphic.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="src\SOUND_PLAYBACK_MODE.h">
-      <Filter>Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SoundManager.h">
       <Filter>Audio</Filter>
     </ClInclude>
     <ClInclude Include="src\IAudioSystem.h">
@@ -375,22 +309,13 @@
     <ClInclude Include="src\IMouse.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Hardware.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="src\MOUSE_BUTTONS.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\ImageLoaders.h">
       <Filter>Assets / Resources</Filter>
     </ClInclude>
-    <ClInclude Include="src\MaxVelocityOperator.h">
-      <Filter>Operators / Simulation</Filter>
-    </ClInclude>
     <ClInclude Include="src\ITexture.h">
-      <Filter>Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ShaderUtils.h">
       <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\SDSNode.h">
@@ -459,9 +384,6 @@
     <ClInclude Include="src\CollidableGroup.h">
       <Filter>Physics\Collision</Filter>
     </ClInclude>
-    <ClInclude Include="src\CollisionEvent.h">
-      <Filter>Physics\Collision</Filter>
-    </ClInclude>
     <ClInclude Include="src\Cursor.h" />
     <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
     <ClInclude Include="src\PlatformMouse.h" />
@@ -522,12 +444,6 @@
     <ClCompile Include="src\XAudio.cpp">
       <Filter>Audio</Filter>
     </ClCompile>
-    <ClCompile Include="src\WorldOperator.cpp">
-      <Filter>Operators / Simulation</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UpdateBackgroundOperator.cpp">
-      <Filter>Operators / Simulation</Filter>
-    </ClCompile>
     <ClCompile Include="src\Trigger.cpp">
       <Filter>Input</Filter>
     </ClCompile>
@@ -536,9 +452,6 @@
     </ClCompile>
     <ClCompile Include="src\Square.cpp">
       <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Stage.cpp">
-      <Filter>Objects / Entities</Filter>
     </ClCompile>
     <ClCompile Include="src\AnimationUtils.cpp">
       <Filter>Assets / Resources</Filter>
@@ -588,9 +501,6 @@
     <ClCompile Include="src\InputManager.cpp">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="src\Command.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
     <ClCompile Include="src\EventSystem.cpp">
       <Filter>Events</Filter>
     </ClCompile>
@@ -599,9 +509,6 @@
     </ClCompile>
     <ClCompile Include="src\Camera.cpp">
       <Filter>Objects / Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CullObjectOperator.cpp">
-      <Filter>Operators / Simulation</Filter>
     </ClCompile>
     <ClCompile Include="src\ProgramStack.cpp">
       <Filter>Core</Filter>
@@ -691,9 +598,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\project.d">
-      <Filter>Misc</Filter>
-    </None>
     <None Include="README.md" />
   </ItemGroup>
 </Project>

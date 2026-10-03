@@ -268,20 +268,14 @@
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\AnimationManager.h" />
     <ClInclude Include="src\AnimationUtils.h" />
-    <ClInclude Include="src\ApplyVelocityOperator.h" />
-    <ClInclude Include="src\Background.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Circle.h" />
     <ClInclude Include="src\Collidable.h" />
     <ClInclude Include="src\CollidableGroup.h" />
-    <ClInclude Include="src\CollisionEvent.h" />
     <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
-    <ClInclude Include="src\Command.h" />
-    <ClInclude Include="src\CommandEvent.h" />
     <ClInclude Include="src\Controller.h" />
-    <ClInclude Include="src\CullObjectOperator.h" />
     <ClInclude Include="src\Cursor.h" />
     <ClInclude Include="src\Cyclable.h" />
     <ClInclude Include="src\Debug.h" />
@@ -300,8 +294,6 @@
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
     <ClInclude Include="src\DirectInput.h" />
-    <ClInclude Include="src\Effect.h" />
-    <ClInclude Include="src\EffectManager.h" />
     <ClInclude Include="src\Engine2D.h" />
     <ClInclude Include="src\FramePacer.h" />
     <ClInclude Include="src\RenderInterpolation.h" />
@@ -314,15 +306,11 @@
     <ClInclude Include="src\FileSystem.h" />
     <ClInclude Include="src\FollowObjectOperator.h" />
     <ClInclude Include="src\Font.h" />
-    <ClInclude Include="src\ForceDegradation.h" />
-    <ClInclude Include="src\ForceOperator.h" />
     <ClInclude Include="src\Frame.h" />
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\GameState.h" />
     <ClInclude Include="src\Gamepad.h" />
-    <ClInclude Include="src\Graphic.h" />
-    <ClInclude Include="src\Hardware.h" />
     <ClInclude Include="src\IAudioSystem.h" />
     <ClInclude Include="src\IInput.h" />
     <ClInclude Include="src\ImageLoaders.h" />
@@ -344,8 +332,6 @@
     <ClInclude Include="src\Telemetry2D.h" />
     <ClInclude Include="src\maths\Vector2.h" />
     <ClInclude Include="src\maths\Vector3.h" />
-    <ClInclude Include="src\MaxVelocityOperator.h" />
-    <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\MOUSE_BUTTONS.h" />
     <ClInclude Include="src\ObjectManager.h" />
     <ClInclude Include="src\SpatialIndex2D.h" />
@@ -360,7 +346,6 @@
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Polygon.h" />
     <ClInclude Include="src\PolygonDecomposition.h" />
-    <ClInclude Include="src\Popup.h" />
     <ClInclude Include="src\Positionable.h" />
     <ClInclude Include="src\ProgramStack.h" />
     <ClInclude Include="src\ProgramState.h" />
@@ -369,26 +354,18 @@
     <ClInclude Include="src\RendererDX.h" />
     <ClInclude Include="src\RendererGL.h" />
     <ClInclude Include="src\RendererVK.h" />
-    <ClInclude Include="src\ScrollBar.h" />
-    <ClInclude Include="src\SCROLLBAR_TYPE.h" />
     <ClInclude Include="src\SDSNode.h" />
     <ClInclude Include="src\SDSParser.h" />
     <ClInclude Include="src\Shader.h" />
-    <ClInclude Include="src\ShaderUtils.h" />
-    <ClInclude Include="src\Slider.h" />
     <ClInclude Include="src\Sound.h" />
-    <ClInclude Include="src\SoundManager.h" />
     <ClInclude Include="src\SOUND_PLAYBACK_MODE.h" />
     <ClInclude Include="src\Sprite.h" />
     <ClInclude Include="src\SpriteManager.h" />
     <ClInclude Include="src\Square.h" />
-    <ClInclude Include="src\Stage.h" />
     <ClInclude Include="src\State.h" />
     <ClInclude Include="src\StateMachine.h" />
     <ClInclude Include="src\StateMachineEvent.h" />
-    <ClInclude Include="src\StrUtil.h" />
     <ClInclude Include="src\System.h" />
-    <ClInclude Include="src\Text.h" />
     <ClInclude Include="src\TextureD3D.h" />
     <ClInclude Include="src\TextureVK.h" />
     <ClInclude Include="src\Tile.h" />
@@ -399,11 +376,8 @@
     <ClInclude Include="src\TreeNode.hpp" />
     <ClInclude Include="src\Trigger.h" />
     <ClInclude Include="src\Types.h" />
-    <ClInclude Include="src\UpdateBackgroundOperator.h" />
-    <ClInclude Include="src\UpdateRenderableOperator.h" />
     <ClInclude Include="src\Vertex.h" />
     <ClInclude Include="src\Window.h" />
-    <ClInclude Include="src\WorldOperator.h" />
     <ClInclude Include="src\XAudio.h" />
     <ClInclude Include="src\XAudioFile.h" />
   </ItemGroup>
@@ -416,9 +390,7 @@
     <ClCompile Include="src\Circle.cpp" />
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\CollisionSystem.cpp" />
-    <ClCompile Include="src\Command.cpp" />
     <ClCompile Include="src\Controller.cpp" />
-    <ClCompile Include="src\CullObjectOperator.cpp" />
     <ClCompile Include="src\Cursor.cpp" />
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\FantasySideScroller\Character.cpp" />
@@ -474,7 +446,6 @@
     <ClCompile Include="src\Sprite.cpp" />
     <ClCompile Include="src\SpriteManager.cpp" />
     <ClCompile Include="src\Square.cpp" />
-    <ClCompile Include="src\Stage.cpp" />
     <ClCompile Include="src\StateMachine.cpp" />
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\TextureGL.cpp" />
@@ -482,15 +453,12 @@
     <ClCompile Include="src\TileSet.cpp" />
     <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\Trigger.cpp" />
-    <ClCompile Include="src\UpdateBackgroundOperator.cpp" />
     <ClCompile Include="src\Window.cpp" />
-    <ClCompile Include="src\WorldOperator.cpp" />
     <ClCompile Include="src\XAudio.cpp" />
     <ClCompile Include="src\XAudioFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="src\project.d" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

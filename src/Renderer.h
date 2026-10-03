@@ -36,7 +36,6 @@ namespace Renderer
 	IRenderer* createGLRenderer(Window* window);
 	
 	void destroyRenderer(IRenderer* pRenderer);
-  //void render(Renderable* r); // TODO: You can use it to draw stuff in real-time (kinda slow, but uses less overall memory)
 }
 
 #endif
