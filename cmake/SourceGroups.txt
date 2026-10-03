@@ -60,6 +60,8 @@ src/TextureMTL.mm
 src/TextureVK.cpp
 src/TextureVK.h
 src/Vertex.h
+src/BlinkFlash.cpp
+src/BlinkFlash.h
 
 [Input]
 src/Action.cpp
@@ -67,7 +69,7 @@ src/Action.h
 src/Command.cpp
 src/Command.h
 src/CommandEvent.h
-src/Controller.cpp
+src/InputMap.cpp
 src/Controller.h
 src/Cursor.cpp
 src/Cursor.h
@@ -102,6 +104,10 @@ src/PlatformMouse.cpp
 src/PlatformMouse.h
 src/Trigger.cpp
 src/Trigger.h
+src/InputMap.h
+src/Intent.h
+src/PlayerController.cpp
+src/PlayerController.h
 
 [Physics]
 src/Circle.cpp
@@ -233,6 +239,8 @@ src/Stage.cpp
 src/Stage.h
 src/Tile.h
 src/TileMap.h
+src/Actor.cpp
+src/Actor.h
 
 [Applications\FantasySideScroller]
 src/FantasySideScroller/*
