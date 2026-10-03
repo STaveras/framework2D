@@ -102,6 +102,7 @@ src/PlatformMouse.cpp
 src/PlatformMouse.h
 src/Trigger.cpp
 src/Trigger.h
+src/ButtonState.h
 
 [Physics]
 src/Circle.cpp

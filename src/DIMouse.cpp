@@ -110,8 +110,6 @@ void DIMouse::update(void) {
    _setCursorVisibility(!cursorInsideClient);
 
    if (m_lpDevice) {
-      memcpy_s(&_mouseStateOld, sizeof(DIMOUSESTATE2), &_mouseState, sizeof(DIMOUSESTATE2));
-
       if (SUCCEEDED(m_lpDevice->Poll())) {
          if (m_lpDevice->GetDeviceState(sizeof(DIMOUSESTATE2), &_mouseState) == DI_OK) {
             // DirectInput reports relative movement, but the OS cursor is
@@ -149,6 +147,11 @@ void DIMouse::update(void) {
       }
       else
          m_bDeviceLost = true;
+
+      _buttons.beginFrame();
+      for (int button = 0; button < 8; ++button) {
+         _buttons.set(button, _mouseState.rgbButtons[button] != 0);
+      }
    }
 
 #ifdef _DEBUG
