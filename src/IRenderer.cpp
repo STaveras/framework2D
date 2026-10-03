@@ -4,11 +4,16 @@
 // Modified: 4/1/2022
 
 #include "IRenderer.h"
+#include "Animation.h"
 #include "Camera.h"
+#include "Font.h"
+#include "Frame.h"
+#include "Sprite.h"
 #include "Timer.h"
 
 #include "Engine2D.h"
 #include <algorithm>
+#include <cmath>
 
 IRenderer::~IRenderer() {
 	m_Textures.clear();
@@ -120,4 +125,116 @@ bool IRenderer::destroyTexture(const ITexture* pTexture)
 
 void IRenderer::render(void) {
 	_backgroundColorShift();
+}
+
+void IRenderer::_drawRenderLists(bool screenSpace)
+{
+	for (RenderList* renderList : _RenderLists) {
+		if (!renderList || renderList->screenSpace != screenSpace) {
+			continue;
+		}
+
+		_beginRenderList(*renderList);
+
+		for (Renderable* renderable : *renderList) {
+			if (!renderable || !renderable->isVisible()) {
+				continue;
+			}
+
+			switch (renderable->getRenderableType()) {
+			case RENDERABLE_TYPE_SPRITE:
+			{
+				Sprite* sprite = (Sprite*)renderable;
+				_renderSprite(sprite, sprite->getTintColor(), sprite->getOffset(), *renderList);
+			}
+			break;
+			case RENDERABLE_TYPE_ANIMATION:
+			{
+				Animation* animation = (Animation*)renderable;
+				Frame* frame = animation->getFrameCount() ? animation->getCurrentFrame() : NULL;
+				Sprite* sprite = frame ? frame->getSprite() : NULL;
+				if (sprite) {
+					_renderSprite(sprite, sprite->getTintColor(), animation->getOffset(), *renderList);
+				}
+			}
+			break;
+			case RENDERABLE_TYPE_FONT:
+			{
+				Font* font = (Font*)renderable;
+				_renderFont(font, font->getTintColor(), font->getOffset(), *renderList);
+			}
+			break;
+			default:
+				break;
+			}
+		}
+
+		_endRenderList(*renderList);
+	}
+}
+
+vector2 IRenderer::_parallaxCameraPosition(const vector2& parallaxFactor, const vector2& parallaxOrigin) const
+{
+	const vector2 baseCameraPosition = m_pCamera->getRenderPosition();
+	return parallaxOrigin + ((baseCameraPosition - parallaxOrigin) * parallaxFactor);
+}
+
+vector2 IRenderer::_parallaxCameraPosition(const RenderList& renderList) const
+{
+	return _parallaxCameraPosition(
+		vector2(renderList.parallaxX, renderList.parallaxY),
+		vector2(renderList.parallaxOriginX, renderList.parallaxOriginY));
+}
+
+void IRenderer::_viewBounds(const vector2& cameraPosition, vector2& viewMin, vector2& viewMax) const
+{
+	viewMin = vector2(INFINITY, INFINITY);
+	viewMax = vector2(-INFINITY, -INFINITY);
+	const float zoom = m_pCamera && m_pCamera->getZoom() > 0 ? m_pCamera->getZoom() : 1.0f;
+	const float angle = m_pCamera ? -m_pCamera->getRotation() : 0.0f;
+	const float c = std::cos(angle), sn = std::sin(angle);
+	for (int i = 0; i < 4; ++i) {
+		vector2 point((i & 1) ? m_nWidth : 0, (i & 2) ? m_nHeight : 0);
+		if (m_pCamera && m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter)
+			point = point - m_pCamera->getCenter();
+		point /= zoom;
+		point = vector2(c * point.x - sn * point.y, sn * point.x + c * point.y);
+		if (m_pCamera) {
+			point = point + cameraPosition;
+			if (m_pCamera->getZoomAnchorMode() != Camera::ZoomAnchorMode::TargetCenter)
+				point = point - m_pCamera->getCenter();
+		}
+		viewMin.x = std::min(viewMin.x, point.x); viewMin.y = std::min(viewMin.y, point.y);
+		viewMax.x = std::max(viewMax.x, point.x); viewMax.y = std::max(viewMax.y, point.y);
+	}
+}
+
+vector2 IRenderer::_worldToScreen(const vector2& worldPosition, const vector2& cameraPosition) const
+{
+	if (!m_pCamera) {
+		return worldPosition;
+	}
+
+	const vector2 center = m_pCamera->getCenter();
+	const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+	const float rotation = m_pCamera->getRotation();
+	const float cosTheta = std::cos(rotation);
+	const float sinTheta = std::sin(rotation);
+
+	if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		const vector2 translated = worldPosition - cameraPosition;
+		const vector2 rotated(
+			(translated.x * cosTheta) - (translated.y * sinTheta),
+			(translated.x * sinTheta) + (translated.y * cosTheta));
+		return vector2(
+			center.x + (rotated.x * zoom),
+			center.y + (rotated.y * zoom));
+	}
+
+	// Preserve legacy origin-oriented behavior.
+	const vector2 legacyTranslated = worldPosition - (cameraPosition - center);
+	const vector2 legacyRotated(
+		(legacyTranslated.x * cosTheta) - (legacyTranslated.y * sinTheta),
+		(legacyTranslated.x * sinTheta) + (legacyTranslated.y * cosTheta));
+	return vector2(legacyRotated.x * zoom, legacyRotated.y * zoom);
 }
