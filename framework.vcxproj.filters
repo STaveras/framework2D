@@ -252,6 +252,9 @@
     <ClInclude Include="src\StateMachineEvent.h">
       <Filter>Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\ButtonState.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\Camera.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>

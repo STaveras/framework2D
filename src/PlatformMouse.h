@@ -13,6 +13,7 @@
 #pragma once
 
 #include "IMouse.h"
+#include "ButtonState.h"
 
 class Window;
 
@@ -21,10 +22,9 @@ class PlatformMouse : public IMouse
    GLFWwindow* _window;
    bool _cursorHidden;
 
-   // Per-button down state for the current and previous frame, indexed by the
-   // framework's MOUSE_BUTTONS enum (mirrors DIMouse rgbButtons[eBtn]).
-   unsigned char _mouseState[8];
-   unsigned char _mouseStateOld[8];
+   // Per-button state indexed by the framework's MOUSE_BUTTONS enum
+   // (mirrors DIMouse rgbButtons[eBtn]).
+   ButtonStateSet _buttons{8};
 
 public:
    explicit PlatformMouse(Window *window);
