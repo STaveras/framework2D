@@ -26,10 +26,13 @@ void KeyboardDI::update(void)
 
    if (m_lpDevice) {
 
-      memcpy_s(m_cBackBuffer, 256, m_cKeyBuffer, 256);
-      
       if (m_lpDevice->GetDeviceState(sizeof(m_cKeyBuffer), (LPVOID)&m_cKeyBuffer) == DIERR_INPUTLOST)
          m_bDeviceLost = true;
+
+      _keys.beginFrame();
+      for (int key = 0; key < 256; ++key) {
+         _keys.set(key, (m_cKeyBuffer[key] & 0x80) != 0);
+      }
    }
 }
 

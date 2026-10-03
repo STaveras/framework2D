@@ -3,6 +3,7 @@
 #ifdef _WIN32
 #include "IMouse.h"
 #include "DirectInput.h"
+#include "ButtonState.h"
 
 class DIMouse : public IMouse, IDIDevice
 {
@@ -10,8 +11,9 @@ class DIMouse : public IMouse, IDIDevice
 
    HWND _hWnd;
    bool _cursorHidden;
-   DIMOUSESTATE2 _mouseStateOld;
    DIMOUSESTATE2 _mouseState;
+   // Indexed by MOUSE_BUTTONS, fed from _mouseState.rgbButtons in update().
+   ButtonStateSet _buttons{8};
 
    bool _cursorIsInsideClient(void) const;
    bool _syncPositionToClientCursor(void);
@@ -26,21 +28,10 @@ public:
 
    ~DIMouse(void);
 
-   bool buttonPressed(MOUSE_BUTTONS eBtn) {
-      return ((bool)_mouseState.rgbButtons[eBtn] && !(bool)_mouseStateOld.rgbButtons[eBtn]);
-   }
-
-   bool buttonReleased(MOUSE_BUTTONS eBtn) {
-      return (!(bool)_mouseState.rgbButtons[eBtn] && (bool)_mouseStateOld.rgbButtons[eBtn]);
-   }
-
-   bool buttonDown(MOUSE_BUTTONS eBtn) {
-      return (bool)_mouseState.rgbButtons[eBtn];
-   }
-
-   bool buttonUp(MOUSE_BUTTONS eBtn) {
-      return !(bool)_mouseState.rgbButtons[eBtn];
-   }
+   bool buttonPressed(MOUSE_BUTTONS eBtn) { return _buttons.pressed((int)eBtn); }
+   bool buttonReleased(MOUSE_BUTTONS eBtn) { return _buttons.released((int)eBtn); }
+   bool buttonDown(MOUSE_BUTTONS eBtn) { return _buttons.down((int)eBtn); }
+   bool buttonUp(MOUSE_BUTTONS eBtn) { return _buttons.up((int)eBtn); }
 
    bool acquire(LPDIRECTINPUT8 pDI, HWND hWnd = NULL);
    void update(void);
