@@ -255,6 +255,9 @@
     <ClInclude Include="src\ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="src\BlinkFlash.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="src\Camera.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
@@ -499,6 +502,9 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\RendererVK.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BlinkFlash.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\Animation.cpp">
