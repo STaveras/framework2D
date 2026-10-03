@@ -156,44 +156,19 @@ int Character::_getHorizontalIntent() const
 
 int Character::_getHorizontalInput() const
 {
-	Game* game = Engine2D::getGame();
-	if (!game) {
-		return 0;
+	const float moveX = getIntent().move.x;
+	if (moveX > 0.0f) {
+		return 1;
 	}
-
-	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getInputMap()) {
-		return 0;
+	if (moveX < 0.0f) {
+		return -1;
 	}
-
-	InputMap* controller = player->getInputMap();
-	Action* leftAction = controller->getAction("LEFT");
-	Action* rightAction = controller->getAction("RIGHT");
-	const bool leftActive = leftAction && leftAction->isActive();
-	const bool rightActive = rightAction && rightAction->isActive();
-
-	if (leftActive == rightActive) {
-		return 0;
-	}
-
-	return rightActive ? 1 : -1;
+	return 0;
 }
 
 bool Character::_isRunRequested() const
 {
-	Game* game = Engine2D::getGame();
-	if (!game) {
-		return false;
-	}
-
-	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getInputMap()) {
-		return false;
-	}
-
-	InputMap* controller = player->getInputMap();
-	Action* runAction = controller->getAction("RUN");
-	return runAction && runAction->isActive();
+	return getIntent().isHeld(ACTION_RUN);
 }
 
 bool Character::_getStateFootLocalY(const GameObjectState* state, float& outFootY) const

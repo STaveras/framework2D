@@ -310,6 +310,9 @@ void PlayState::onEnter(State* prev)
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
 	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
 	_player->setGameObject(_playableCharacter);
+	_playerController.setInputMap(controller);
+	Character::bindPlayerActions(_playerController);
+	_playableCharacter->possess(&_playerController);
 
 	_traversalMechanics.initialize(_levelManager.getTriggerDescriptors(),
 									spawnPoint,
