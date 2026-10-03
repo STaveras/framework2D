@@ -12,7 +12,7 @@ class GameObject;
 struct CollisionContact;
 
 // For actually making physics a thing in this "engine" sometime in the future...
-class Physical : public Positionable, public Cyclable
+class Physical : public Positionable, public virtual Cyclable
 {
 public:
 	struct KinematicConfig2D
@@ -70,7 +70,6 @@ protected:
 
 public:
 	Physical(void) :
-		Cyclable(),
 		_static(false),
 		_mass(1.0f),
 		_rotation(0.0f),

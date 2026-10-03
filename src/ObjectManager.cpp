@@ -282,7 +282,7 @@ void ObjectManager::update(float fTime)
 	// 1) Update all objects and apply operators.
 	for (GameObject* object : objects)
 	{
-		if (!object || !this->contains(object) || object->isStatic()) {
+		if (!object || !this->contains(object) || object->isStatic() || !object->isEnabled()) {
 			continue;
 		}
 
