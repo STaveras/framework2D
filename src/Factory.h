@@ -10,10 +10,19 @@
 
 #include <list>
 #include <map>
+#include <unordered_set>
 
+// One collection per type. Items made with create() or adopted with store()
+// are owned and deleted by the Factory; items stored with owned = false are
+// only referenced, so destroy(), erase() and clear() remove them without
+// deleting them.
 template<class Type>
 class Factory: public std::list<Type*>
 {
+	std::unordered_set<const Type*> _borrowed;
+
+	void _release(Type* item);
+
 public:
 	Factory(void) {}
 	~Factory() { clear(); }
@@ -37,8 +46,9 @@ public:
 	void erase(unsigned int index);
 	void erase(factory_iterator itr);
 	void erase(const_factory_iterator itr);
-	void destroy(Type* item); // Do not call destroy on 'stored' items
-	void store(Type* item);
+	void destroy(Type* item);
+	void store(Type* item, bool owned = true);
+	bool owns(const Type* item) const { return item && !_borrowed.count(item); }
 	void clear(void);
 
    Type* find(const Type& itemDesc); // BROKEN

@@ -27,9 +27,6 @@ constexpr float kAttackPoseSeconds = 0.30f;
 constexpr float kAttackDamage = 10.0f;
 constexpr float kChaseSpeed = 100.0f;
 constexpr float kPatrolSpeed = 28.0f;
-constexpr float kDamageFlashDuration = 0.64f;
-constexpr float kDamageFlashHalfPeriod = 0.08f;
-constexpr float kDamageFlashOpacity = 0.85f;
 constexpr unsigned int kSlashesToDefeat = 2;
 constexpr unsigned int kHitsBeforeAggroReset = 3;
 constexpr float kAggroDurationSeconds = 10.0f;
@@ -105,42 +102,6 @@ void Boar::animate(const char* name)
     if (mirrored != (_direction > 0)) animation->mirror(true, false);
 }
 
-void Boar::setDamageFlash(bool enabled)
-{
-    for (auto stateIt = begin(); stateIt != end(); ++stateIt) {
-        GameObjectState* state = static_cast<GameObjectState*>(*stateIt);
-        if (Renderable* renderable = state->getRenderable()) {
-            renderable->setFlash(enabled, 0xFFFF5555, kDamageFlashOpacity);
-        }
-    }
-}
-
-void Boar::startDamageFlash()
-{
-    _damageFlashRemaining = kDamageFlashDuration;
-    _damageFlashPhase = kDamageFlashHalfPeriod;
-    _damageFlashOn = true;
-    setDamageFlash(true);
-}
-
-void Boar::updateDamageFlash(float time)
-{
-    if (_damageFlashRemaining <= 0.0f) return;
-
-    _damageFlashRemaining = std::max(0.0f, _damageFlashRemaining - time);
-    _damageFlashPhase -= time;
-    while (_damageFlashPhase <= 0.0f && _damageFlashRemaining > 0.0f) {
-        _damageFlashOn = !_damageFlashOn;
-        _damageFlashPhase += kDamageFlashHalfPeriod;
-    }
-    if (_damageFlashRemaining <= 0.0f) {
-        _damageFlashOn = false;
-        setDamageFlash(false);
-    } else {
-        setDamageFlash(_damageFlashOn);
-    }
-}
-
 void Boar::clearAggro()
 {
     _aggro = false;
@@ -155,10 +116,7 @@ void Boar::reset()
     _pause = kInitialIdleSeconds;
     _attackCooldown = 0.0f;
     _attackPoseTime = 0.0f;
-    _damageFlashRemaining = 0.0f;
-    _damageFlashPhase = 0.0f;
-    _damageFlashOn = false;
-    setDamageFlash(false);
+    _damageFlash.stop(*this);
     _lastCountedPlayerAttack = nullptr;
     _slashesTaken = 0;
     clearAggro();
@@ -227,7 +185,7 @@ void Boar::update(float time)
     if (_defeated) {
         return;
     }
-    updateDamageFlash(time);
+    _damageFlash.update(*this, time);
     const vector2 position = getPosition();
     _attackPoseTime = std::max(0.0f, _attackPoseTime - time);
     _canAttack = false;
@@ -370,7 +328,7 @@ void Boar::updateCombat(float time)
             getRenderable()->setVisibility(false);
             return;
         }
-        startDamageFlash();
+        _damageFlash.start(*this);
         _aggro = true;
         _aggroRemaining = kAggroDurationSeconds;
     }
