@@ -26,9 +26,18 @@ const Type* Factory<Type>::at(unsigned int index) const
 }
 
 template<typename Type>
+void Factory<Type>::_release(Type* item)
+{
+	if (_borrowed.erase(item) == 0) {
+		delete item;
+	}
+}
+
+template<typename Type>
 Type* Factory<Type>::create()
 {
 	Type* item = new Type();
+	_borrowed.erase(item);
 	this->push_back(item);
 	return item;
 }
@@ -37,6 +46,7 @@ template<typename Type>
 Type* Factory<Type>::create(const Type& rhs)
 {
 	Type* item = new Type(rhs);
+	_borrowed.erase(item);
 	this->push_back(item);
 	return item;
 }
@@ -50,7 +60,7 @@ void Factory<Type>::destroy(Type* item)
 	{
 		if ((*itr) == item)
 		{
-			delete (*itr);
+			_release(*itr);
 			std::list<Type*>::erase(itr);
 			break;
 		}
@@ -63,15 +73,22 @@ void Factory<Type>::clear()
 	typename std::list<Type*>::iterator itr = this->begin();
 
 	for(;itr != this->end(); itr++) {
-		delete (*itr);
+		_release(*itr);
 	}
 
 	std::list<Type*>::clear();
+	_borrowed.clear();
 }
 
 template<typename Type>
-void Factory<Type>::store(Type* item)
+void Factory<Type>::store(Type* item, bool owned)
 {
+	if (owned) {
+		_borrowed.erase(item);
+	}
+	else {
+		_borrowed.insert(item);
+	}
 	this->push_back(item);
 }
 
@@ -84,6 +101,7 @@ void Factory<Type>::erase(unsigned int index)
 	{
 		if (i == index) {
 			this->erase(itr);
+			return;
 		}
 	}
 }
@@ -91,21 +109,15 @@ void Factory<Type>::erase(unsigned int index)
 template<typename Type>
 void Factory<Type>::erase(factory_iterator itr)
 {
-	Type* item = (*itr);
-	if (item) {
-		delete item;
-	}
-	std::list<Type*>::erase(itr); 
+	_release(*itr);
+	std::list<Type*>::erase(itr);
 }
 
 template<typename Type>
 void Factory<Type>::erase(const_factory_iterator itr) 
 {
-	Type* item = (*itr);
-	if (item) {
-		delete item;
-	}
-	std::list<Type*>::erase(itr); 
+	_release(*itr);
+	std::list<Type*>::erase(itr);
 }
 
 template<typename Type>
@@ -127,6 +139,7 @@ template<class Derived>
 Derived* Factory<Type>::createDerived(void)
 {
 	Derived* item = new Derived();
+	_borrowed.erase((Type*)item);
 	this->push_back((Type*)item); // Would using dynamic cast here be safer...?
 	return item;
 }
@@ -136,6 +149,7 @@ template<class Derived>
 Derived* Factory<Type>::createDerived(const Derived& rhs)
 {
 	Derived* item = new Derived(rhs);
+	_borrowed.erase((Type*)item);
 	this->push_back((Type*)item);
 	return item;
 }
