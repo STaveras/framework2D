@@ -5,7 +5,7 @@
 // GLFW each frame for the cursor position (window/client pixel coordinates,
 // origin at top-left) and button state, exposing them through the same IMouse
 // contract used by the Windows implementation:
-//   - Position: Positionable::getPosition() / _position / _x / _y
+//   - Position: Positionable::getPosition()
 //   - Buttons:  buttonPressed / buttonReleased / buttonDown / buttonUp
 //
 // Position is clamped to the window's client area, mirroring DIMouse::update().

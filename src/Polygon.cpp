@@ -280,15 +280,10 @@ void PolygonCollider::setLocalVertices(const std::vector<vector2>& vertices)
 	markDirty();
 }
 
-void PolygonCollider::setPosition(vector2 position)
+void PolygonCollider::onPositionChanged(vector2 previous, vector2 current)
 {
-	Positionable::setPosition(position);
-	markDirty();
-}
-
-void PolygonCollider::setPosition(float x, float y)
-{
-	Positionable::setPosition(x, y);
+	(void)previous;
+	(void)current;
 	markDirty();
 }
 

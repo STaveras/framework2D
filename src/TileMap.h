@@ -249,7 +249,7 @@ public:
 					if (Debug::dbgTiles) {
 						if (Collidable* collidable = tile->getCollidable()) {
 							char buffer[128];
-							sprintf_s(buffer, sizeof(buffer), "pos{%f, %f}\tcpos{%f, %f}\n", tile->_x, tile->_y, collidable->_position.x, collidable->_position.y);
+							sprintf_s(buffer, sizeof(buffer), "pos{%f, %f}\tcpos{%f, %f}\n", tile->getPosition().x, tile->getPosition().y, collidable->getPosition().x, collidable->getPosition().y);
 							DEBUG_MSG(buffer);
 						}
 					}
