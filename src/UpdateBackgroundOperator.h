@@ -23,10 +23,10 @@ class UpdateBackgroundOperator: public ObjectOperator
 
    bool _firstRun = true;
 
-   Image* _background;
+   Sprite* _background;
    Camera* _camera; 
 
-   std::vector<Image*> _cache; // Stores the extra images for other modes
+   std::vector<Sprite*> _cache; // Stores the extra images for other modes
 
    Background::Mode _mode;
 
@@ -40,10 +40,10 @@ public:
       _resetCache();
    }
 
-   Image* getBackground(void) const { return _background; }
+   Sprite* getBackground(void) const { return _background; }
 
    void setMode(Background::Mode mode) { _mode = mode; }
-   void setBackground(Image *image) { _background = image; _resetCache(); }
+   void setBackground(Sprite *image) { _background = image; _resetCache(); }
    void setCamera(Camera *camera) { _camera = camera; }
 
    void useRenderList(IRenderer::RenderList *renderList) { _renderList = renderList; _resetCache(); }

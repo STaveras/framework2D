@@ -9,11 +9,11 @@
 #include "State.h"
 
 namespace framework {
-	typedef class IProgramState : public State {
+	class IProgramState : public State {
 		// TODO: Make this special 
-	} ProgramState;
+	};
 }
 
-using framework::ProgramState;
+using framework::IProgramState;
 
 #endif

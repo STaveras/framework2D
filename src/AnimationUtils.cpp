@@ -268,7 +268,7 @@ namespace Animations {
    }
 
    // Only works when each Frame has the same dimensions
-   void createFramesForAnimation(Animation* animation, Texture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory, unsigned int startIndex, unsigned int count)
+   void createFramesForAnimation(Animation* animation, ITexture* spriteSheet, vector2 frameDimensions, Factory<Sprite>& spriteFactory, unsigned int startIndex, unsigned int count)
    {
       if (!animation || !spriteSheet)
          return;

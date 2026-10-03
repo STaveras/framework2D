@@ -17,7 +17,7 @@ class InputManager
 {
 protected:
 	EventSystem* _eventSystem;
-	InputInterface* _input;
+	IInput* _input;
 
 private:
 	Factory<Controller> _controllers;
@@ -32,9 +32,9 @@ public:
 	Controller* getController(unsigned int uiIndex) { return _controllers.at(uiIndex); }
 	void destroyController(Controller* controller);
 
-	Keyboard* getKeyboard(void) { return _input ? _input->getKeyboard() : NULL; }
-	Mouse*	 getMouse(void)	 { return _input ? _input->getMouse() : NULL; }
-	Gamepad* getGamepad(void) { return _input ? _input->getGamepad() : NULL; }
+	IKeyboard* getKeyboard(void) { return _input ? _input->getKeyboard() : NULL; }
+	IMouse*	 getMouse(void)	 { return _input ? _input->getMouse() : NULL; }
+	IGamepad* getGamepad(void) { return _input ? _input->getGamepad() : NULL; }
 	
 	void update(float fTime);
 	void shutdown(void);

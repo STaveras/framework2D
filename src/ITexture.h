@@ -10,7 +10,7 @@
 
 #include <string>
 
-typedef class ITexture
+class ITexture
 {
 	Color _clearKeyColor; // transparent color
 	std::string _fileName;
@@ -28,6 +28,6 @@ public:
 	void setFilename(const char* szFilename) { _fileName = szFilename; }
 	void setKeyColor(Color clrColor) { _clearKeyColor = clrColor; }
 	
-}Texture;
+};
 
 #endif

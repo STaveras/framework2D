@@ -8,7 +8,7 @@
 
 #include "Engine2D.h"
 
-class KeyboardDI : public framework::KeyboardInterface, IDIDevice
+class KeyboardDI : public framework::IKeyboard, IDIDevice
 {
 	friend class DirectInput;
 

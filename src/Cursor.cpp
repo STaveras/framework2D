@@ -40,7 +40,7 @@ bool Cursor::load(const std::string& filePath)
 	
 	unload();
 
-	_image = new Image(filePath.c_str(), 0, _makeCursorRect(kCursorIndex));
+	_image = new Sprite(filePath.c_str(), 0, _makeCursorRect(kCursorIndex));
 	// The Sprite file-path constructor swallows a failed texture load: on a
 	// null createTexture it leaves a null texture rather than signaling.
 	// Detect that here so callers can distinguish a real failure and skip
@@ -94,7 +94,7 @@ void Cursor::setDragging(bool dragging)
 	}
 }
 
-void Cursor::updateFromMouse(Mouse* mouse)
+void Cursor::updateFromMouse(IMouse* mouse)
 {
 	if (!mouse) {
 		setIdle();

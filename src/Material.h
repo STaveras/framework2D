@@ -13,4 +13,3 @@ typedef struct material
 }Material;
 
 typedef Material* materalId;
-typedef class Factory<Material> MaterialManager;

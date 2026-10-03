@@ -572,7 +572,7 @@ Tile* Character::_findGroundSupportTile(float footY, float maxSnapDistance, floa
 		return NULL;
 	}
 
-	ProgramState* activeProgramState = game->top();
+	IProgramState* activeProgramState = game->top();
 	GameState* activeGameState = dynamic_cast<GameState*>(activeProgramState);
 	if (!activeGameState) {
 		return NULL;

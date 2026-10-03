@@ -30,7 +30,7 @@ void Stage::setVisibility(bool bVisible)
    }
 }
 
-void Stage::AddLayer(Image* layer, vector2 position)
+void Stage::AddLayer(Sprite* layer, vector2 position)
 {
    layer->setPosition(position); m_lsBackgroundLayers.push_back(Layer(layer, position));
 
