@@ -270,6 +270,7 @@
     <ClInclude Include="src\AnimationUtils.h" />
     <ClInclude Include="src\ApplyVelocityOperator.h" />
     <ClInclude Include="src\Background.h" />
+    <ClInclude Include="src\BlinkFlash.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Circle.h" />
     <ClInclude Include="src\Collidable.h" />
@@ -409,6 +410,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Action.cpp" />
+    <ClCompile Include="src\BlinkFlash.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\AnimationUtils.cpp" />
