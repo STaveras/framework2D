@@ -19,10 +19,10 @@ class Stage
 public:
 	 struct Layer
 	 {
-		  Image* m_pImage; // Use Texture instead?
+		  Sprite* m_pImage; // Use Texture instead?
 		  vector2 m_Position;
 
-		  Layer(Image* pImage, vector2 position) :m_pImage(pImage), m_Position(position) {}
+		  Layer(Sprite* pImage, vector2 position) :m_pImage(pImage), m_Position(position) {}
 	 };
 
 	 bool _bVisible;
@@ -43,7 +43,7 @@ public:
 	 Music* GetRoundMusic(unsigned int uiIndex) { return m_lsRoundMusic[uiIndex]; }
 	 void AddRoundMusic(Music* pMusic) { m_lsRoundMusic.push_back(pMusic); }
 
-	 void AddLayer(Image* layer, vector2 position);
+	 void AddLayer(Sprite* layer, vector2 position);
 	 void PopLayer(void);
 	 void Move(vector2 amount);
 	 bool LoadFromFile(const char* filepath);

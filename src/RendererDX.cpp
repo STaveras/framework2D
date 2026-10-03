@@ -504,7 +504,7 @@ void RendererDX::render(void)
 							{
 							case RENDERABLE_TYPE_SPRITE:
 							{
-								Image* image = (Image*)(*o);
+								Sprite* image = (Sprite*)(*o);
 								_drawImage(image, image->getTintColor(), image->getOffset(), 0.0f, screenSpace,
 									renderList->parallaxX, renderList->parallaxY,
 									renderList->parallaxOriginX, renderList->parallaxOriginY);

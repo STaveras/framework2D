@@ -66,7 +66,7 @@ void Character::_initStates() {
 	vector2 idleFrameDimensions{ 64, 80 };
 
 	if (!idleLoaded) {
-		Texture* idleSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Idle/Idle-Sheet.png").c_str());
+		ITexture* idleSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Idle/Idle-Sheet.png").c_str());
 		Animations::createFramesForAnimation(idleAnimation, idleSheet, idleFrameDimensions, _spriteManager);
 		idleAnimation->setMode(Animation::Mode::eOscillate);
 		idleAnimation->setFrameRate(30);
@@ -94,7 +94,7 @@ void Character::_initStates() {
 	Animation* risingAnimation = getAnimation("Rising", risingLoaded);
 	vector2 risingDimensions{ 64, 64 };
 	if (!risingLoaded) {
-		Texture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
+		ITexture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
 		Animations::createFramesForAnimation(risingAnimation, risingSheet, risingDimensions, _spriteManager);
 		risingAnimation->setFrameRate(30);
 	}
@@ -124,7 +124,7 @@ void Character::_initStates() {
 	vector2 jumpDimensions{ 64, 64 };
 
 	if (!jumpLoaded) {
-		Texture* jumpSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jumlp-All/Jump-All-Sheet.png").c_str());
+		ITexture* jumpSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jumlp-All/Jump-All-Sheet.png").c_str());
 		Animations::createFramesForAnimation(jumpAnimation, jumpSheet, jumpDimensions, _spriteManager, 4, 8);
 		jumpAnimation->setMode(Animation::Mode::eOscillate);
 		jumpAnimation->setFrameRate(60);
@@ -169,7 +169,7 @@ void Character::_initStates() {
 	landing->setRenderable(landingAnimation);
 
 	if (!landingLoaded) {
-		Texture* landingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-End/Jump-End-Sheet.png").c_str());
+		ITexture* landingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-End/Jump-End-Sheet.png").c_str());
 		Animations::createFramesForAnimation(landingAnimation, landingSheet, landingDimensions, _spriteManager);
 		landingAnimation->setFrameRate(30);
 		landingAnimation->setSpeed(2.7f);
@@ -205,7 +205,7 @@ void Character::_initStates() {
 	runningRight->setRenderable(runningRightAnimation);
 
 	if (!runningLeftLoaded || !runningRightLoaded) {
-		Texture* runningSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Run/Run-Sheet.png").c_str());
+		ITexture* runningSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Run/Run-Sheet.png").c_str());
 		if (!runningLeftLoaded) {
 			Animations::createFramesForAnimation(runningLeftAnimation, runningSheet, runningDimensions, _spriteManager);
 		}
@@ -245,7 +245,7 @@ void Character::_initStates() {
 
 	vector2 attackDimensions{ 96.0, 80.0 };
 
-	Texture* attackSheet = nullptr;
+	ITexture* attackSheet = nullptr;
 	bool attack01Loaded = false;
 	bool attack02Loaded = false;
 	Animation* attack01Animation = getAnimation("Attack01", attack01Loaded);
@@ -297,7 +297,7 @@ void Character::_initStates() {
 
 	vector2 deadDimensions{ 80, 64 };
 
-	Texture* deadSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Dead/Dead-Sheet.png").c_str());
+	ITexture* deadSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Dead/Dead-Sheet.png").c_str());
 
 	bool deadLoaded = false;
 	Animation* deadAnimation = getAnimation("Dead", deadLoaded);

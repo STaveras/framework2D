@@ -8,7 +8,7 @@
 #include <vector>
 
 // Keyboard input based on GLFW
-class PlatformKeyboard : public Keyboard
+class PlatformKeyboard : public IKeyboard
 {
     Window* _owner;
     GLFWwindow* _window;

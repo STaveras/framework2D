@@ -8,7 +8,7 @@
 
 class ITexture;
 
-typedef class Sprite : public Renderable
+class Sprite : public Renderable
 {
 	 const ITexture* _texture;
 	 RECT _sourceRect;
@@ -38,6 +38,6 @@ public:
 
 	 virtual Sprite* load(const char* filePath, Color clearColor = 0, const RECT& srcRect = {-1,-1,-1,-1});
 	 virtual void unload(void);
-}Image;
+};
 #endif  
 //_SPRITE_H

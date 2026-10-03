@@ -10,9 +10,9 @@
 
 #include <stack>
 
-class ProgramStack : private std::stack<ProgramState*>
+class ProgramStack : private std::stack<IProgramState*>
 {
-	typedef std::stack<ProgramState*> _ProgramStack;
+	typedef std::stack<IProgramState*> _ProgramStack;
 
 public:
 	ProgramStack(void) {}
@@ -22,7 +22,7 @@ public:
 	using _ProgramStack::size;
 	using _ProgramStack::top;
 
-	void push(ProgramState* state);
+	void push(IProgramState* state);
 	void pop(void);
 	void clear(void);
 };

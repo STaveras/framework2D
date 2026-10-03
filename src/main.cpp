@@ -120,8 +120,8 @@ int main(int argc, const char *argv[])
 
    Renderer::mainWindow = &window;
 
-   RenderingInterface* pRenderer = nullptr;
-   InputInterface* pInput = nullptr;
+   IRenderer* pRenderer = nullptr;
+   IInput* pInput = nullptr;
 
    const bool useVulkan = System::checkArgumentsForVulkan(argc, argv);
    const bool useOpenGL = System::checkArgumentsForOpenGL(argc, argv);
@@ -130,12 +130,12 @@ int main(int argc, const char *argv[])
    if (useOpenGL) {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+      pRenderer = (IRenderer*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
    else if (useVulkan) {
       window.initialize(Window::ClientAPI::None, true);
       pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
+      pRenderer = (IRenderer*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
 #if _WIN32
    else {
@@ -147,18 +147,18 @@ int main(int argc, const char *argv[])
    else {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+      pRenderer = (IRenderer*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #elif __APPLE__
    else if(bool useMetal = false) {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
+      pRenderer = (IRenderer*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
    else {
       window.initialize(Window::ClientAPI::OpenGL);
       pInput = (IInput*)Input::createInputInterface(&window);
-      pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
+      pRenderer = (IRenderer*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #endif
 

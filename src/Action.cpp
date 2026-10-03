@@ -25,9 +25,9 @@ bool Action::simultaneous(const Action& rhs)
 		return false; 
 }
 
-void Action::unassign(Keyboard::KEY eKey)
+void Action::unassign(IKeyboard::KEY eKey)
 {
-	std::list<Keyboard::KEY>::iterator itr = _inputAssignments.begin();
+	std::list<IKeyboard::KEY>::iterator itr = _inputAssignments.begin();
 	for(;itr != _inputAssignments.end(); itr++)
 	{
 		if(eKey == (*itr))
@@ -38,9 +38,9 @@ void Action::unassign(Keyboard::KEY eKey)
 	}
 }
 
-void Action::unassign(Gamepad::Button button)
+void Action::unassign(IGamepad::Button button)
 {
-	std::list<Gamepad::Button>::iterator itr = _gamepadButtonAssignments.begin();
+	std::list<IGamepad::Button>::iterator itr = _gamepadButtonAssignments.begin();
 	for (; itr != _gamepadButtonAssignments.end(); ++itr) {
 		if (button == *itr) {
 			_gamepadButtonAssignments.erase(itr);
@@ -49,7 +49,7 @@ void Action::unassign(Gamepad::Button button)
 	}
 }
 
-void Action::unassignAxis(Gamepad::Axis axis, float threshold)
+void Action::unassignAxis(IGamepad::Axis axis, float threshold)
 {
 	std::list<AxisAssignment>::iterator itr = _gamepadAxisAssignments.begin();
 	for (; itr != _gamepadAxisAssignments.end(); ++itr) {
