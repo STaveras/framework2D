@@ -3,6 +3,7 @@
 #include "../src/GameState.h"
 #include "../src/InputEvent.h"
 #include "../src/Kinematics2D.h"
+#include "../src/PlayerController.h"
 #include "../src/Square.h"
 #include "stb/stb_image.h"
 #include <cassert>
@@ -84,6 +85,9 @@ int main() {
     Player* player = game.addPlayer();
     player->setInputMap(&controller);
     player->setGameObject(&hero);
+    PlayerController heroController(&controller);
+    Character::bindPlayerActions(heroController);
+    hero.possess(&heroController);
     player->start();
     TestTileSet tiles(renderer.createTexture("bin/fantasySideScroller/Character/Idle/Idle-Sheet.png"));
     Tile platform(0, &tiles), floor(0, &tiles), lower(0, &tiles), adjacent(0, &tiles);

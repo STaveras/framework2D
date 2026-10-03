@@ -317,7 +317,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 	}
 }
 
-void Character::update(float time)
+void Character::onUpdate(float time)
 {
 	_updateDamageFlash(time);
 	const bool knockedBack = _knockbackRemaining > 0.0f;
@@ -563,13 +563,8 @@ void Character::update(float time)
 			_runBoostActive = false;
 		}
 
-		Player* player = Engine2D::getGame()->getPlayerWith(this);
-		bool downHeld = false;
-		if (player && player->getInputMap()) {
-			if (Action* downAction = player->getInputMap()->getAction("DOWN")) {
-				downHeld = downAction->isActive();
-			}
-		}
+		const bool possessed = isPossessed();
+		const bool downHeld = getIntent().isHeld(ACTION_DOWN);
 
 		float horizontalVelocity = this->getVelocity().x;
 		const float startingAbsHorizontalSpeed = std::fabs(horizontalVelocity);
@@ -708,7 +703,7 @@ void Character::update(float time)
 			}
 		}
 
-		if (player) {
+		if (possessed) {
 //#if _DEBUG
 			if (KEYBOARD) {
 				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {

@@ -252,6 +252,18 @@
     <ClInclude Include="src\StateMachineEvent.h">
       <Filter>Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Actor.h">
+      <Filter>Objects / Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Controller.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Intent.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerController.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\Camera.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
@@ -497,6 +509,12 @@
     </ClCompile>
     <ClCompile Include="src\RendererVK.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actor.cpp">
+      <Filter>Objects / Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerController.cpp">
+      <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Animation.cpp">
       <Filter>Assets / Resources</Filter>
