@@ -68,12 +68,11 @@ void ::Animation::_reset(void)
 	_frameIndex = m_bForward ? 0 : (unsigned int)(m_Frames.size() - 1);
 }
 
-void Animation::onPositionChanged(vector2 previous, vector2 current)
+void Animation::onPositionChanged(vector2 position)
 {
-	(void)previous;
 	Factory<Frame>::factory_iterator i = m_Frames.begin();
 	for (; i != m_Frames.end(); i++)
-		(*i)->getSprite()->setPosition(current);
+		(*i)->getSprite()->setPosition(position);
 }
 
 void Animation::mirror(bool horizontal, bool vertical)

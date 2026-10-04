@@ -32,7 +32,7 @@ protected:
    void _advanceFrame(void);
    void _lastFrame(void);
    void _reset(void);
-   void onPositionChanged(vector2 previous, vector2 current) override;
+   void onPositionChanged(vector2 position) override;
 
 public:
    Animation(void);

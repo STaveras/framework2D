@@ -22,7 +22,7 @@ class PolygonCollider : public Collidable
 	void rebuildValidation(void);
 
 protected:
-	void onPositionChanged(vector2 previous, vector2 current) override;
+	void onPositionChanged(vector2 position) override;
 
 public:
 	PolygonCollider(void) : Collidable(COL_OBJ_POLYGON) {}

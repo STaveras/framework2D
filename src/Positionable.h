@@ -12,9 +12,10 @@ class Positionable {
 protected:
    vector2 _position;
 
-   // Called after every setPosition, including when the value didn't change,
-   // so it can double as a "refresh from position" call.
-   virtual void onPositionChanged(vector2 previous, vector2 current) { (void)previous; (void)current; }
+   // Called after every setPosition with the new position (already stored in
+   // _position), including when the value didn't change, so it can double as
+   // a "refresh from position" call.
+   virtual void onPositionChanged(vector2 position) { (void)position; }
 
 public:
    Positionable(void) :
@@ -30,9 +31,8 @@ public:
 
    void setPosition(vector2 position)
    {
-      const vector2 previous = _position;
       _position = position;
-      this->onPositionChanged(previous, _position);
+      this->onPositionChanged(_position);
    }
    void setPosition(float x, float y) { this->setPosition(vector2(x, y)); }
 

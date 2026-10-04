@@ -138,10 +138,9 @@ void GameObject::start(void)
 	this->updateComponents();
 }
 
-void GameObject::onPositionChanged(vector2 previous, vector2 current)
+void GameObject::onPositionChanged(vector2 position)
 {
-	(void)previous;
-	(void)current;
+	(void)position;
 	this->updateComponents();
 }
 
