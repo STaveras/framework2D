@@ -34,11 +34,11 @@ class PlayState : public GameState
 	bool _paused = false;
 	PauseState* _pauseState = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;
-	Image* _healthBarBackground = NULL;
-	Image* _healthBarFill = NULL;
-	Image* _staminaBarBackground = NULL;
-	Image* _staminaBarFill = NULL;
-	Image* _keyIcon = NULL;
+	Sprite* _healthBarBackground = NULL;
+	Sprite* _healthBarFill = NULL;
+	Sprite* _staminaBarBackground = NULL;
+	Sprite* _staminaBarFill = NULL;
+	Sprite* _keyIcon = NULL;
 	// Font* _helloWorldText = NULL;
 	Cursor* _cursor = NULL;
 

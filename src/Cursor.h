@@ -35,17 +35,17 @@ public:
 	void setIdle();
 	void setClicking(bool clicking);
 	void setDragging(bool dragging);
-	void updateFromMouse(Mouse* mouse);
+	void updateFromMouse(IMouse* mouse);
 	void setPosition(const vector2& pos);
 
 	CursorState getState() const { return _state; }
-	Image* getImage() { return _image; }
-	const Image* getImage() const { return _image; }
+	Sprite* getImage() { return _image; }
+	const Sprite* getImage() const { return _image; }
 
 private:
 	RECT _makeCursorRect(long index) const;
 	void _applyStateToImage();
 
 	CursorState _state;
-	Image* _image;
+	Sprite* _image;
 };

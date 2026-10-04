@@ -60,7 +60,7 @@ void PlayState::_initHUD()
 	}
 
 	if (!_healthBarBackground) {
-		_healthBarBackground = new Image(BasePath("pixel.bmp").c_str());
+		_healthBarBackground = new Sprite(BasePath("pixel.bmp").c_str());
 		_healthBarBackground->setTint(0xAA101018);
 		_healthBarBackground->setScale(kHUDBackgroundWidth, kHUDBackgroundHeight);
 		_healthBarBackground->setOffset(vector2(0.0f, 0.0f));
@@ -69,7 +69,7 @@ void PlayState::_initHUD()
 	}
 
 	if (!_healthBarFill) {
-		_healthBarFill = new Image(BasePath("pixel.bmp").c_str());
+		_healthBarFill = new Sprite(BasePath("pixel.bmp").c_str());
 		_healthBarFill->setTint(0xFF32D060);
 		_healthBarFill->setScale(kHUDFillMaxWidth, kHUDFillHeight);
 		_healthBarFill->setOffset(vector2(0.0f, 0.0f));
@@ -78,7 +78,7 @@ void PlayState::_initHUD()
 	}
 
 	if (!_staminaBarBackground) {
-		_staminaBarBackground = new Image(BasePath("pixel.bmp").c_str());
+		_staminaBarBackground = new Sprite(BasePath("pixel.bmp").c_str());
 		_staminaBarBackground->setTint(0xAA101018);
 		_staminaBarBackground->setScale(kHUDBackgroundWidth, kHUDStaminaHeight);
 		_staminaBarBackground->setOffset(vector2(0.0f, 0.0f));
@@ -87,7 +87,7 @@ void PlayState::_initHUD()
 	}
 
 	if (!_staminaBarFill) {
-		_staminaBarFill = new Image(BasePath("pixel.bmp").c_str());
+		_staminaBarFill = new Sprite(BasePath("pixel.bmp").c_str());
 		_staminaBarFill->setTint(0xFF38A8E8);
 		_staminaBarFill->setScale(kHUDFillMaxWidth, kHUDStaminaHeight);
 		_staminaBarFill->setOffset(vector2(0.0f, 0.0f));
@@ -114,7 +114,7 @@ void PlayState::_initHUD()
 
 	if (!_keyIcon) {
 		// The key tile from Tiles.png, shown while the player holds a key.
-		_keyIcon = new Image(BasePath("Assets/Tiles.png").c_str(), 0, RECT{ 240, 320, 256, 336 });
+		_keyIcon = new Sprite(BasePath("Assets/Tiles.png").c_str(), 0, RECT{ 240, 320, 256, 336 });
 		_keyIcon->setVisibility(false);
 		_hudRenderList->push_back(_keyIcon);
 	}
@@ -273,42 +273,42 @@ void PlayState::onEnter(State* prev)
 		_objectManager.addObject(objectName.c_str(), boar);
 	}
 
-	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+	IKeyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
 	// TODO: Save the keymappings to a file and load them here
 	_player->start();
 	_player->setController(_inputManager.createController());
 	Controller* controller = _player->getController();
 	controller->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
-	controller->addAction(Action("JUMP", Gamepad::Button::A));
+	controller->addAction(Action("JUMP", IGamepad::Button::A));
 	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
 	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
-	controller->addAction(Action("LEFT", Gamepad::Button::DpadLeft));
+	controller->addAction(Action("LEFT", IGamepad::Button::DpadLeft));
 	Action leftStick("LEFT");
-	leftStick.assignAxis(Gamepad::Axis::LeftX, -0.25f);
+	leftStick.assignAxis(IGamepad::Axis::LeftX, -0.25f);
 	controller->addAction(leftStick);
 	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
 	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
-	controller->addAction(Action("RIGHT", Gamepad::Button::DpadRight));
+	controller->addAction(Action("RIGHT", IGamepad::Button::DpadRight));
 	Action rightStick("RIGHT");
-	rightStick.assignAxis(Gamepad::Axis::LeftX, 0.25f);
+	rightStick.assignAxis(IGamepad::Axis::LeftX, 0.25f);
 	controller->addAction(rightStick);
 	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
 	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
-	controller->addAction(Action("DOWN", Gamepad::Button::DpadDown));
+	controller->addAction(Action("DOWN", IGamepad::Button::DpadDown));
 	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
 	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_Z));
-	controller->addAction(Action("ATTACK", Gamepad::Button::X));
+	controller->addAction(Action("ATTACK", IGamepad::Button::X));
 	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
-	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
+	controller->addAction(Action("RUN", IGamepad::Button::LeftBumper));
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_UP));
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_W));
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
-	controller->addAction(Action("INTERACT", Gamepad::Button::DpadUp));
-	controller->addAction(Action("INTERACT", Gamepad::Button::LeftThumb));
+	controller->addAction(Action("INTERACT", IGamepad::Button::DpadUp));
+	controller->addAction(Action("INTERACT", IGamepad::Button::LeftThumb));
 	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
-	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
+	controller->addAction(Action("PAUSE", IGamepad::Button::Start));
 	_player->setGameObject(_playableCharacter);
 
 	_traversalMechanics.initialize(_levelManager.getTriggerDescriptors(),
@@ -347,7 +347,7 @@ bool PlayState::onExecute(float time)
 	}
 #endif
 
-	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+	IKeyboard* keyboard = Engine2D::getInput()->getKeyboard();
 	const bool reloadDown = keyboard->keyDown(keyboard->getKeys().KBK_F5);
 	const bool reloadPressed = reloadDown && !_reloadWasDown;
 	_reloadWasDown = reloadDown;
@@ -509,7 +509,7 @@ bool PlayState::onExecute(float time)
 	// list). Convert the mouse's client coordinates into the renderer's logical
 	// screen coordinates; do not convert through the camera/world transform.
 	if (!_paused && _cursor) {
-		Mouse* mouse = Engine2D::getInput()->getMouse();
+		IMouse* mouse = Engine2D::getInput()->getMouse();
 		if (mouse) {
 			_cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
 			_cursor->updateFromMouse(mouse);

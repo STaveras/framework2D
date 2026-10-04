@@ -3,37 +3,37 @@
 #include <algorithm>
 
 namespace {
-int glfwButton(Gamepad::Button button)
+int glfwButton(IGamepad::Button button)
 {
 	switch (button) {
-	case Gamepad::Button::A: return GLFW_GAMEPAD_BUTTON_A;
-	case Gamepad::Button::B: return GLFW_GAMEPAD_BUTTON_B;
-	case Gamepad::Button::X: return GLFW_GAMEPAD_BUTTON_X;
-	case Gamepad::Button::Y: return GLFW_GAMEPAD_BUTTON_Y;
-	case Gamepad::Button::LeftBumper: return GLFW_GAMEPAD_BUTTON_LEFT_BUMPER;
-	case Gamepad::Button::RightBumper: return GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER;
-	case Gamepad::Button::Back: return GLFW_GAMEPAD_BUTTON_BACK;
-	case Gamepad::Button::Start: return GLFW_GAMEPAD_BUTTON_START;
-	case Gamepad::Button::Guide: return GLFW_GAMEPAD_BUTTON_GUIDE;
-	case Gamepad::Button::LeftThumb: return GLFW_GAMEPAD_BUTTON_LEFT_THUMB;
-	case Gamepad::Button::RightThumb: return GLFW_GAMEPAD_BUTTON_RIGHT_THUMB;
-	case Gamepad::Button::DpadUp: return GLFW_GAMEPAD_BUTTON_DPAD_UP;
-	case Gamepad::Button::DpadRight: return GLFW_GAMEPAD_BUTTON_DPAD_RIGHT;
-	case Gamepad::Button::DpadDown: return GLFW_GAMEPAD_BUTTON_DPAD_DOWN;
-	case Gamepad::Button::DpadLeft: return GLFW_GAMEPAD_BUTTON_DPAD_LEFT;
+	case IGamepad::Button::A: return GLFW_GAMEPAD_BUTTON_A;
+	case IGamepad::Button::B: return GLFW_GAMEPAD_BUTTON_B;
+	case IGamepad::Button::X: return GLFW_GAMEPAD_BUTTON_X;
+	case IGamepad::Button::Y: return GLFW_GAMEPAD_BUTTON_Y;
+	case IGamepad::Button::LeftBumper: return GLFW_GAMEPAD_BUTTON_LEFT_BUMPER;
+	case IGamepad::Button::RightBumper: return GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER;
+	case IGamepad::Button::Back: return GLFW_GAMEPAD_BUTTON_BACK;
+	case IGamepad::Button::Start: return GLFW_GAMEPAD_BUTTON_START;
+	case IGamepad::Button::Guide: return GLFW_GAMEPAD_BUTTON_GUIDE;
+	case IGamepad::Button::LeftThumb: return GLFW_GAMEPAD_BUTTON_LEFT_THUMB;
+	case IGamepad::Button::RightThumb: return GLFW_GAMEPAD_BUTTON_RIGHT_THUMB;
+	case IGamepad::Button::DpadUp: return GLFW_GAMEPAD_BUTTON_DPAD_UP;
+	case IGamepad::Button::DpadRight: return GLFW_GAMEPAD_BUTTON_DPAD_RIGHT;
+	case IGamepad::Button::DpadDown: return GLFW_GAMEPAD_BUTTON_DPAD_DOWN;
+	case IGamepad::Button::DpadLeft: return GLFW_GAMEPAD_BUTTON_DPAD_LEFT;
 	}
 	return -1;
 }
 
-int glfwAxis(Gamepad::Axis axis)
+int glfwAxis(IGamepad::Axis axis)
 {
 	switch (axis) {
-	case Gamepad::Axis::LeftX: return GLFW_GAMEPAD_AXIS_LEFT_X;
-	case Gamepad::Axis::LeftY: return GLFW_GAMEPAD_AXIS_LEFT_Y;
-	case Gamepad::Axis::RightX: return GLFW_GAMEPAD_AXIS_RIGHT_X;
-	case Gamepad::Axis::RightY: return GLFW_GAMEPAD_AXIS_RIGHT_Y;
-	case Gamepad::Axis::LeftTrigger: return GLFW_GAMEPAD_AXIS_LEFT_TRIGGER;
-	case Gamepad::Axis::RightTrigger: return GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER;
+	case IGamepad::Axis::LeftX: return GLFW_GAMEPAD_AXIS_LEFT_X;
+	case IGamepad::Axis::LeftY: return GLFW_GAMEPAD_AXIS_LEFT_Y;
+	case IGamepad::Axis::RightX: return GLFW_GAMEPAD_AXIS_RIGHT_X;
+	case IGamepad::Axis::RightY: return GLFW_GAMEPAD_AXIS_RIGHT_Y;
+	case IGamepad::Axis::LeftTrigger: return GLFW_GAMEPAD_AXIS_LEFT_TRIGGER;
+	case IGamepad::Axis::RightTrigger: return GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER;
 	}
 	return -1;
 }
@@ -43,7 +43,7 @@ bool axisIsDown(float value, float threshold)
 	return threshold < 0.0f ? value <= threshold : value >= threshold;
 }
 
-float normalizedAxis(const GLFWgamepadstate& state, Gamepad::Axis axis)
+float normalizedAxis(const GLFWgamepadstate& state, IGamepad::Axis axis)
 {
 	const int index = glfwAxis(axis);
 	if (index < 0) {
@@ -51,7 +51,7 @@ float normalizedAxis(const GLFWgamepadstate& state, Gamepad::Axis axis)
 	}
 
 	const float value = state.axes[index];
-	if (axis == Gamepad::Axis::LeftTrigger || axis == Gamepad::Axis::RightTrigger) {
+	if (axis == IGamepad::Axis::LeftTrigger || axis == IGamepad::Axis::RightTrigger) {
 		return std::max(0.0f, std::min(1.0f, (value + 1.0f) * 0.5f));
 	}
 	return std::max(-1.0f, std::min(1.0f, value));

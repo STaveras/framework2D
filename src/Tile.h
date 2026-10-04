@@ -22,7 +22,7 @@ class Tile : public GameObject
    std::string _layerName;
 
    // TODO: Move this to TileSet
-   Factory<Image> _tileImages;
+   Factory<Sprite> _tileImages;
 
 public:
    Tile(void) : GameObject(GAME_OBJ_TILE) {
@@ -128,7 +128,7 @@ private:
    // Reproduces the flip flags with the renderer's sprite transform. The renderer draws
    // position + R(rotation) * S(scale) * (corner - center); the flips are an affine map
    // F(p) = A*p + t of the tile box onto itself, so we need R*S = A and center = -A^T*t.
-   void applyFlipToImage(Image* image) const
+   void applyFlipToImage(Sprite* image) const
    {
       if (!image || !_tileSet) {
          return;
@@ -253,7 +253,7 @@ public:
 
                // Reuse the tile's image when its index changes at runtime (e.g. a chest
                // opening); only the source rect and sheet need updating.
-               Image* tileImage = (Image*)state->getRenderable();
+               Sprite* tileImage = (Sprite*)state->getRenderable();
                if (!tileImage) {
                   tileImage = _tileImages.create();
                }

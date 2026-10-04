@@ -15,7 +15,7 @@
 
 class Camera;
 
-typedef class IRenderer
+class IRenderer
 {
 public:
 typedef struct RenderList : public std::list<class Renderable *>
@@ -142,26 +142,26 @@ public:
 
 	TYPE renderingAPI(void) const { return _type; }
 	
-} RenderingInterface;
+};
 
 // Mapping from enum to string
-static const std::unordered_map<RenderingInterface::TYPE, std::string> apiTypeToString{
-	 { RenderingInterface::TYPE::RENDERER_TYPE_DX, "DirectX9" },
-	 { RenderingInterface::TYPE::RENDERER_TYPE_GL, "OpenGL" },
-	 { RenderingInterface::TYPE::RENDERER_TYPE_VK, "Vulkan" }
+static const std::unordered_map<IRenderer::TYPE, std::string> apiTypeToString{
+	 { IRenderer::TYPE::RENDERER_TYPE_DX, "DirectX9" },
+	 { IRenderer::TYPE::RENDERER_TYPE_GL, "OpenGL" },
+	 { IRenderer::TYPE::RENDERER_TYPE_VK, "Vulkan" }
 };
 
 // Mapping from string to enum
-static const std::unordered_map<std::string, RenderingInterface::TYPE> stringToAPIType{
-	 { "DirectX9",  RenderingInterface::TYPE::RENDERER_TYPE_DX},
-	 { "OpenGL", RenderingInterface::TYPE::RENDERER_TYPE_GL },
-	 { "Vulkan",  RenderingInterface::TYPE::RENDERER_TYPE_VK }
+static const std::unordered_map<std::string, IRenderer::TYPE> stringToAPIType{
+	 { "DirectX9",  IRenderer::TYPE::RENDERER_TYPE_DX},
+	 { "OpenGL", IRenderer::TYPE::RENDERER_TYPE_GL },
+	 { "Vulkan",  IRenderer::TYPE::RENDERER_TYPE_VK }
 };
 
 namespace RENDERER_API_TYPE {
 
 	// Convert enum to string
-	static std::string toString(RenderingInterface::TYPE type) {
+	static std::string toString(IRenderer::TYPE type) {
 		auto it = apiTypeToString.find(type);
 		if (it != apiTypeToString.end()) {
 			return it->second;

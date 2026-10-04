@@ -50,7 +50,7 @@ private:
 	bool _connected;
 	int _padNumber;
 	float _elapsedTime;
-	InputInterface* _input;
+	IInput* _input;
 	EventSystem* _eventSystem;
 
 	std::list<Action> _actions;

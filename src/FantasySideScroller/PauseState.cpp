@@ -114,7 +114,7 @@ void PauseState::onEnter(State* prev)
 
 bool PauseState::onExecute(float time)
 {
-    Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+    IKeyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
     // Use the same action as gameplay for either Escape or controller Options.
     Action* pauseAction = _controller ? _controller->getAction("PAUSE") : NULL;
@@ -134,7 +134,7 @@ bool PauseState::onExecute(float time)
 
     // Keep the menu cursor tracking the mouse while paused.
     if (_cursor) {
-        Mouse* mouse = Engine2D::getInput()->getMouse();
+        IMouse* mouse = Engine2D::getInput()->getMouse();
         if (mouse) {
             _cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
             _cursor->updateFromMouse(mouse);

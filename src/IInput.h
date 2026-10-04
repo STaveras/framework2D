@@ -13,22 +13,22 @@
 #include "IMouse.h"
 #include "Gamepad.h"
 
-typedef class IInput
+class IInput
 {
 protected:
-	Keyboard* _keyboard;
-	Mouse* _mouse;
-	Gamepad* _gamepad;
+	IKeyboard* _keyboard;
+	IMouse* _mouse;
+	IGamepad* _gamepad;
 
 public:
 	IInput(void) : _keyboard(NULL), _mouse(NULL), _gamepad(NULL) {}
 	virtual ~IInput(void) = 0;
 
-	virtual Keyboard* getKeyboard(void) { return _keyboard; }
-	virtual Mouse* getMouse(void) { return _mouse; }
-	virtual Gamepad* getGamepad(void) { return _gamepad; }
+	virtual IKeyboard* getKeyboard(void) { return _keyboard; }
+	virtual IMouse* getMouse(void) { return _mouse; }
+	virtual IGamepad* getGamepad(void) { return _gamepad; }
 
 	virtual void initialize(void) = 0;
 	virtual void update(void) = 0;
 	virtual void shutdown(void) = 0;
-}InputInterface;
+};

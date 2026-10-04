@@ -9,7 +9,7 @@ namespace framework {
 
 #define KEYBOARD Engine2D::getInput()->getKeyboard()
 
-	typedef class IKeyboard
+	class IKeyboard
 	{
 	public:
 		typedef int32_t KEY;
@@ -175,12 +175,11 @@ namespace framework {
 
 		virtual ~IKeyboard(void) = default;
 
-	}Keyboard;
+	};
 
-	typedef Keyboard KeyboardInterface;
 
 #endif
 
 }
 
-using framework::Keyboard;
+using framework::IKeyboard;

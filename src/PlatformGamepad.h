@@ -6,7 +6,7 @@
 #include <array>
 #include <vector>
 
-class PlatformGamepad : public Gamepad
+class PlatformGamepad : public IGamepad
 {
 	struct JoystickState
 	{

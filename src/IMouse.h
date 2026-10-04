@@ -12,13 +12,13 @@
 
 #include "Positionable.h"
 
-typedef class IMouse : public Positionable
+class IMouse : public Positionable
 {
 public:
    virtual bool buttonPressed(MOUSE_BUTTONS eBtn) = 0;
    virtual bool buttonReleased(MOUSE_BUTTONS eBtn) = 0;
    virtual bool buttonDown(MOUSE_BUTTONS eBtn) = 0;
    virtual bool buttonUp(MOUSE_BUTTONS eBtn) = 0;
-}Mouse;
+};
 
 #endif

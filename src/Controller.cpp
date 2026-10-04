@@ -12,10 +12,10 @@ void Controller::addAction(Action action)
 		return;
 	}
 
-	std::list<Keyboard::KEY>& existingAssignments = existingAction->getAssignments();
-	for (Keyboard::KEY assignment : action.getAssignments()) {
+	std::list<IKeyboard::KEY>& existingAssignments = existingAction->getAssignments();
+	for (IKeyboard::KEY assignment : action.getAssignments()) {
 		bool alreadyAssigned = false;
-		for (Keyboard::KEY existingAssignment : existingAssignments) {
+		for (IKeyboard::KEY existingAssignment : existingAssignments) {
 			if (existingAssignment == assignment) {
 				alreadyAssigned = true;
 				break;
@@ -27,7 +27,7 @@ void Controller::addAction(Action action)
 		}
 	}
 
-	for (Gamepad::Button button : action.getGamepadButtonAssignments()) {
+	for (IGamepad::Button button : action.getGamepadButtonAssignments()) {
 		const auto& assignments = existingAction->getGamepadButtonAssignments();
 		if (std::find(assignments.begin(), assignments.end(), button) == assignments.end()) {
 			existingAction->assign(button);
@@ -72,16 +72,16 @@ bool Controller::buttonPressed(Action* action)
 		return false;
 	}
 
-	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Keyboard::KEY key : action->getAssignments()) {
+	if (IKeyboard* keyboard = _input->getKeyboard()) {
+		for (IKeyboard::KEY key : action->getAssignments()) {
 			if (keyboard->keyPressed(key)) {
 				return true;
 			}
 		}
 	}
 
-	if (Gamepad* gamepad = _input->getGamepad()) {
-		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
+	if (IGamepad* gamepad = _input->getGamepad()) {
+		for (IGamepad::Button button : action->getGamepadButtonAssignments()) {
 			if (gamepad->buttonPressed(button, _padNumber)) {
 				return true;
 			}
@@ -102,16 +102,16 @@ bool Controller::buttonReleased(Action* action)
 		return false;
 	}
 
-	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Keyboard::KEY key : action->getAssignments()) {
+	if (IKeyboard* keyboard = _input->getKeyboard()) {
+		for (IKeyboard::KEY key : action->getAssignments()) {
 			if (keyboard->keyReleased(key)) {
 				return true;
 			}
 		}
 	}
 
-	if (Gamepad* gamepad = _input->getGamepad()) {
-		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
+	if (IGamepad* gamepad = _input->getGamepad()) {
+		for (IGamepad::Button button : action->getGamepadButtonAssignments()) {
 			if (gamepad->buttonReleased(button, _padNumber)) {
 				return true;
 			}
@@ -132,16 +132,16 @@ bool Controller::buttonDown(Action* action)
 		return false;
 	}
 
-	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Keyboard::KEY key : action->getAssignments()) {
+	if (IKeyboard* keyboard = _input->getKeyboard()) {
+		for (IKeyboard::KEY key : action->getAssignments()) {
 			if (keyboard->keyDown(key)) {
 				return true;
 			}
 		}
 	}
 
-	if (Gamepad* gamepad = _input->getGamepad()) {
-		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
+	if (IGamepad* gamepad = _input->getGamepad()) {
+		for (IGamepad::Button button : action->getGamepadButtonAssignments()) {
 			if (gamepad->buttonDown(button, _padNumber)) {
 				return true;
 			}
