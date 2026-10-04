@@ -59,7 +59,7 @@ private:
 	std::list<Action> _actions;
 
 public:
-	class EventListener : public Cyclable
+	class EventListener : public virtual Cyclable
 	{
 	public:
 		virtual void onButtonDown(const Event& evt) = 0;
