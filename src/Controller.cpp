@@ -1,6 +1,7 @@
 
 #include "Controller.h"
 #include "InputTapeRecorder.h"
+#include "ButtonState.h"
 
 #include <algorithm>
 
@@ -184,14 +185,14 @@ void Controller::update(float time)
 			const bool replayState = InputTapeRecorder::getReplayActionState(actionName, previousActive);
 			isDown = replayState;
 			isUp = !replayState;
-			isPressed = replayState && !previousActive;
-			isReleased = !replayState && previousActive;
+			isPressed = ButtonEdge::pressed(replayState, previousActive);
+			isReleased = ButtonEdge::released(replayState, previousActive);
 		}
 		else {
 			isDown = this->buttonDown(&action);
 			isUp = !isDown;
-			isPressed = isDown && !previousActive;
-			isReleased = isUp && previousActive;
+			isPressed = ButtonEdge::pressed(isDown, previousActive);
+			isReleased = ButtonEdge::released(isDown, previousActive);
 		}
 
 		if (isDown) {

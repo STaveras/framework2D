@@ -4,6 +4,7 @@
 
 #include "Keyboard.h"
 #include "PlatformInput.h"
+#include "ButtonState.h"
 
 #include <vector>
 
@@ -12,11 +13,9 @@ class PlatformKeyboard : public Keyboard
 {
     Window* _owner;
     GLFWwindow* _window;
-    std::vector<unsigned char> _keyStates;
-    std::vector<unsigned char> _keyStatesLast;
-    // Presses seen by the key callback since the last update(); keeps taps
-    // shorter than a frame from being missed by polling alone
-    std::vector<unsigned char> _keyPressLatch;
+    // Presses seen by the key callback are latched until the next update();
+    // keeps taps shorter than a frame from being missed by polling alone
+    ButtonStateSet _keys;
 
 public:
    // TODO: Expose key definitions
