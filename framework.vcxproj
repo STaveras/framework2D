@@ -275,6 +275,7 @@
     <ClInclude Include="src\Intent.h" />
     <ClInclude Include="src\PlayerController.h" />
     <ClInclude Include="src\BlinkFlash.h" />
+    <ClInclude Include="src\ButtonState.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Circle.h" />
     <ClInclude Include="src\Collidable.h" />

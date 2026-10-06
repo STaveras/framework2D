@@ -264,6 +264,9 @@
     <ClInclude Include="src\PlayerController.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="src\ButtonState.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\BlinkFlash.h">
       <Filter>Rendering</Filter>
     </ClInclude>

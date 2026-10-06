@@ -5,6 +5,7 @@
 
 #include "Keyboard.h"
 #include "DirectInput.h"
+#include "ButtonState.h"
 
 #include "Engine2D.h"
 
@@ -12,17 +13,17 @@ class KeyboardDI : public framework::KeyboardInterface, IDIDevice
 {
 	friend class DirectInput;
 
-	// This two buffers should probably just be in IKeyboard
+	// Raw DirectInput buffer; update() feeds its high bits into _keys.
 	char m_cKeyBuffer[256];
-	char m_cBackBuffer[256];
+	ButtonStateSet _keys{256};
 
 public:
 	KeyboardDI(void);
 
-	bool keyUp(KEY nKey) { return (m_lpDevice && !(m_cKeyBuffer[(int)nKey] & 0x80)); }
-	bool keyDown(KEY nKey) { return (m_lpDevice && m_cKeyBuffer[(int)nKey] & 0x80); }
-	bool keyPressed(KEY nKey) { return (m_lpDevice && m_cBackBuffer[(int)nKey] != m_cKeyBuffer[(int)nKey] && keyDown(nKey)); }
-	bool keyReleased(KEY nKey) { return (m_lpDevice && m_cBackBuffer[(int)nKey] != m_cKeyBuffer[(int)nKey] && keyUp(nKey)); }
+	bool keyUp(KEY nKey) { return (m_lpDevice && _keys.up((int)nKey)); }
+	bool keyDown(KEY nKey) { return (m_lpDevice && _keys.down((int)nKey)); }
+	bool keyPressed(KEY nKey) { return (m_lpDevice && _keys.pressed((int)nKey)); }
+	bool keyReleased(KEY nKey) { return (m_lpDevice && _keys.released((int)nKey)); }
 
 	void update(void);
 

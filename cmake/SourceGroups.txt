@@ -108,6 +108,7 @@ src/InputMap.h
 src/Intent.h
 src/PlayerController.cpp
 src/PlayerController.h
+src/ButtonState.h
 
 [Physics]
 src/Circle.cpp
