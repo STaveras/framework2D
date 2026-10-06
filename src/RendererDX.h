@@ -20,6 +20,12 @@ class RendererDX : public IRenderer
     void _drawImage(Sprite* pSprite, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0), float zValue = 0.0f, bool screenSpace = false,
        float parallaxX = 1.0f, float parallaxY = 1.0f, float parallaxOriginX = 0.0f, float parallaxOriginY = 0.0f);
    void _drawText(Text* text, Color tint = 0xFFFFFFFF, D3DXVECTOR2 offset = D3DXVECTOR2(0, 0));
+   D3DXVECTOR2 _toScreen(const vector2& worldPosition, bool screenSpace,
+      float parallaxX, float parallaxY, float parallaxOriginX, float parallaxOriginY) const;
+
+protected:
+   void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) override;
+   void _renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList) override;
 
 private:
    bool _checkDeviceLost(void);

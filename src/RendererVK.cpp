@@ -473,6 +473,11 @@ void RendererVK::_drawImage(Sprite* sprite, VkCommandBuffer commandBuffer)
 	vkFreeMemory(_device, vertexBufferMemory, nullptr);
 }
 
+void RendererVK::_renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawImage(sprite, _recordingCommandBuffer);
+}
+
 uint32_t RendererVK::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
@@ -995,42 +1000,11 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 		vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewMat);
 	}
 
-	if (!_RenderLists.empty())
-	{
-		for (const auto& renderList : _RenderLists) {
-
-			std::list<Renderable*>::iterator renderListIter = renderList->begin();
-
-			for (; renderListIter != renderList->end(); renderListIter++) {
-
-				Renderable* renderable = (*renderListIter);
-
-				if (renderable->isVisible()) {
-
-					switch (renderable->getRenderableType())
-					{
-					case RENDERABLE_TYPE_NULL:
-					case RENDERABLE_TYPE_WIDGET:
-					case RENDERABLE_TYPE_FONT:
-						break;
-					case RENDERABLE_TYPE_SPRITE: // Rename to image
-						_drawImage((Sprite*)renderable, commandBuffer);
-						break;
-					case RENDERABLE_TYPE_ANIMATION:
-					{
-						Animation* animation = (Animation*)renderable;
-						Frame* frame = animation->getCurrentFrame();
-
-						if (frame) {
-							_drawImage(frame->getSprite(), commandBuffer);
-						}
-					}
-					break;
-					}
-				}
-			}
-		}
-	}
+	// World-space lists first, then screen-space, matching the other backends.
+	_recordingCommandBuffer = commandBuffer;
+	_drawRenderLists(false);
+	_drawRenderLists(true);
+	_recordingCommandBuffer = VK_NULL_HANDLE;
 
 	vkCmdEndRenderPass(commandBuffer);
 

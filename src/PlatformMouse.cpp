@@ -37,12 +37,6 @@ PlatformMouse::PlatformMouse(Window *window) :
       _window = window->getUnderlyingWindow();
    }
 
-   for (int i = 0; i < 8; ++i)
-   {
-      _mouseState[i] = 0;
-      _mouseStateOld[i] = 0;
-   }
-
    this->setPosition(0.0f, 0.0f);
 }
 
@@ -56,37 +50,22 @@ PlatformMouse::~PlatformMouse(void)
 
 bool PlatformMouse::buttonPressed(MOUSE_BUTTONS eBtn)
 {
-   const int i = (int)eBtn;
-   if (i < 0 || i >= 8)
-   {
-      return false;
-   }
-   return ((bool)_mouseState[i] && !(bool)_mouseStateOld[i]);
+   return _buttons.pressed((int)eBtn);
 }
 
 bool PlatformMouse::buttonReleased(MOUSE_BUTTONS eBtn)
 {
-   const int i = (int)eBtn;
-   if (i < 0 || i >= 8)
-   {
-      return false;
-   }
-   return (!(bool)_mouseState[i] && (bool)_mouseStateOld[i]);
+   return _buttons.released((int)eBtn);
 }
 
 bool PlatformMouse::buttonDown(MOUSE_BUTTONS eBtn)
 {
-   const int i = (int)eBtn;
-   if (i < 0 || i >= 8)
-   {
-      return false;
-   }
-   return (bool)_mouseState[i];
+   return _buttons.down((int)eBtn);
 }
 
 bool PlatformMouse::buttonUp(MOUSE_BUTTONS eBtn)
 {
-   return !buttonDown(eBtn);
+   return _buttons.up((int)eBtn);
 }
 
 void PlatformMouse::update(void)
@@ -96,25 +75,12 @@ void PlatformMouse::update(void)
       return;
    }
 
-   // Preserve the previous frame's state so edge detection (pressed/released)
-   // matches DIMouse's _mouseStateOld / _mouseState pairing.
-   for (int i = 0; i < 8; ++i)
-   {
-      _mouseStateOld[i] = _mouseState[i];
-   }
-
    // Button state.
+   _buttons.beginFrame();
    for (int e = 0; e < 8; ++e)
    {
       const int glfwBtn = glfwButtonFor((MOUSE_BUTTONS)e);
-      if (glfwBtn >= 0)
-      {
-         _mouseState[e] = (glfwGetMouseButton(_window, glfwBtn) == GLFW_PRESS) ? 1 : 0;
-      }
-      else
-      {
-         _mouseState[e] = 0;
-      }
+      _buttons.set(e, glfwBtn >= 0 && glfwGetMouseButton(_window, glfwBtn) == GLFW_PRESS);
    }
 
    // Cursor position in window/client pixels (origin top-left), matching how

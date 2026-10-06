@@ -422,6 +422,70 @@ void RendererGL::shutdown(void)
 	}
 }
 
+void RendererGL::_applyCameraTransform(const vector2& cameraPosition)
+{
+	if (!m_pCamera) {
+		return;
+	}
+
+	const vector2 cameraCenter = m_pCamera->getCenter();
+	const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+	const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
+
+	if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
+		glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+		glScalef(zoom, zoom, 1.0f);
+		glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
+	}
+	else {
+		const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
+		glScalef(zoom, zoom, 1.0f);
+		glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+		glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
+	}
+}
+
+void RendererGL::_beginRenderList(const RenderList& renderList)
+{
+	if (renderList.screenSpace) {
+		return;
+	}
+
+	_flushBatch();
+	glPushMatrix();
+	glLoadIdentity();
+	if (m_pCamera) {
+		const vector2 cameraPosition = _parallaxCameraPosition(renderList);
+		_applyCameraTransform(cameraPosition);
+		_viewBounds(cameraPosition, _viewMin, _viewMax);
+	}
+	else {
+		_viewMin = vector2(-INFINITY, -INFINITY);
+		_viewMax = vector2(INFINITY, INFINITY);
+	}
+}
+
+void RendererGL::_endRenderList(const RenderList& renderList)
+{
+	if (renderList.screenSpace) {
+		return;
+	}
+
+	_flushBatch();
+	glPopMatrix();
+}
+
+void RendererGL::_renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawImage(sprite, tint, offset, renderList.screenSpace);
+}
+
+void RendererGL::_renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawFont(font, tint, offset);
+}
+
 void RendererGL::render(void)
 {
 	if (!_window) {
@@ -449,130 +513,11 @@ void RendererGL::render(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	const auto applyCameraTransform = [this](const vector2& cameraPosition)
-	{
-		if (!m_pCamera) {
-			return;
-		}
-
-		const vector2 cameraCenter = m_pCamera->getCenter();
-		const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
-		const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
-
-		if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
-			glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
-			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
-			glScalef(zoom, zoom, 1.0f);
-			glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
-		}
-		else {
-			const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
-			glScalef(zoom, zoom, 1.0f);
-			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
-			glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
-		}
-	};
-
-	const auto setViewBounds = [this](const vector2& cameraPosition)
-	{
-		_viewMin = vector2(INFINITY, INFINITY);
-		_viewMax = vector2(-INFINITY, -INFINITY);
-		const float zoom = m_pCamera && m_pCamera->getZoom() > 0 ? m_pCamera->getZoom() : 1.0f;
-		const float angle = m_pCamera ? -m_pCamera->getRotation() : 0.0f;
-		const float c = std::cos(angle), sn = std::sin(angle);
-		for (int i = 0; i < 4; ++i) {
-			vector2 point((i & 1) ? m_nWidth : 0, (i & 2) ? m_nHeight : 0);
-			if (m_pCamera && m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter)
-				point = point - m_pCamera->getCenter();
-			point /= zoom;
-			point = vector2(c * point.x - sn * point.y, sn * point.x + c * point.y);
-			if (m_pCamera) {
-				point = point + cameraPosition;
-				if (m_pCamera->getZoomAnchorMode() != Camera::ZoomAnchorMode::TargetCenter)
-					point = point - m_pCamera->getCenter();
-			}
-			_viewMin.x = std::min(_viewMin.x, point.x); _viewMin.y = std::min(_viewMin.y, point.y);
-			_viewMax.x = std::max(_viewMax.x, point.x); _viewMax.y = std::max(_viewMax.y, point.y);
-		}
-	};
-
-	const auto drawRenderLists = [this, &applyCameraTransform, &setViewBounds](bool screenSpace)
-	{
-		if (_RenderLists.empty()) {
-			return;
-		}
-
-		for (unsigned int i = 0; i < _RenderLists.size(); i++) {
-			RenderList* renderList = _RenderLists.at(i);
-			if (!renderList || renderList->screenSpace != screenSpace) {
-				continue;
-			}
-
-			if (!screenSpace) {
-				_flushBatch();
-				glPushMatrix();
-				glLoadIdentity();
-				if (m_pCamera) {
-					const vector2 parallaxFactor(renderList->parallaxX, renderList->parallaxY);
-					const vector2 parallaxOrigin(renderList->parallaxOriginX, renderList->parallaxOriginY);
-					const vector2 baseCameraPosition = m_pCamera->getRenderPosition();
-					const vector2 cameraPosition = parallaxOrigin + ((baseCameraPosition - parallaxOrigin) * parallaxFactor);
-					applyCameraTransform(cameraPosition);
-					setViewBounds(cameraPosition);
-				}
-				else {
-					_viewMin = vector2(-INFINITY, -INFINITY);
-					_viewMax = vector2(INFINITY, INFINITY);
-				}
-			}
-
-			for (RenderList::iterator o = renderList->begin(); o != renderList->end(); o++) {
-				if (!(*o) || !(*o)->isVisible()) {
-					continue;
-				}
-
-				switch ((*o)->getRenderableType()) {
-				case RENDERABLE_TYPE_NULL:
-				case RENDERABLE_TYPE_WIDGET:
-					break;
-				case RENDERABLE_TYPE_FONT:
-				{
-					Font* font = (Font*)(*o);
-					_drawFont(font, font->getTintColor(), font->getOffset());
-				}
-				break;
-				case RENDERABLE_TYPE_SPRITE:
-				{
-					Image* image = (Image*)(*o);
-					_drawImage(image, image->getTintColor(), image->getOffset(), screenSpace);
-				}
-				break;
-				case RENDERABLE_TYPE_ANIMATION:
-				{
-					Animation* animation = (Animation*)(*o);
-					if (animation->getFrameCount()) {
-						_drawImage(animation->getCurrentFrame()->getSprite(),
-								   animation->getCurrentFrame()->getSprite()->getTintColor(),
-								   animation->getOffset(), screenSpace);
-					}
-				}
-				break;
-				default:
-					break;
-				}
-			}
-
-			if (!screenSpace) {
-				_flushBatch();
-				glPopMatrix();
-			}
-		}
-	};
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
-	drawRenderLists(false);
+	_drawRenderLists(false);
 
 	_flushBatch();
 	
@@ -586,7 +531,7 @@ void RendererGL::render(void)
 			glPushMatrix();
 			glLoadIdentity();
 			if (m_pCamera) {
-				applyCameraTransform(m_pCamera->getRenderPosition());
+				_applyCameraTransform(m_pCamera->getRenderPosition());
 			}
 			drawCollisionDebugOverlay(*collisionSystem);
 			glPopMatrix();
@@ -601,7 +546,7 @@ void RendererGL::render(void)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
-	drawRenderLists(true);
+	_drawRenderLists(true);
 	_flushBatch();
 
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -613,9 +558,7 @@ void RendererGL::render(void)
 	if (Renderer::mainWindow) {
 		vector2 viewMin(0.0f, 0.0f), viewMax(0.0f, 0.0f);
 		if (m_pCamera) {
-			setViewBounds(m_pCamera->getRenderPosition());
-			viewMin = _viewMin;
-			viewMax = _viewMax;
+			_viewBounds(m_pCamera->getRenderPosition(), viewMin, viewMax);
 		}
 		Renderer::mainWindow->onFrameRendered(viewMin, viewMax);
 	}
