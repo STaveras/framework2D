@@ -5,20 +5,20 @@
 
 #include "Types.h"
 #include "Cyclable.h"
-#include "Controller.h"
+#include "InputMap.h"
 
 // I don't think there should be a Player class, anymore :(
 // We should move to the "Controller" paradigm
 
 class GameObject;
 
-class Player : public Controller::EventListener
+class Player : public InputMap::EventListener
 {
 	friend class GameState;
 
 	vector2 _heading;
 
-	Controller* _pad = NULL;
+	InputMap* _pad = NULL;
 	GameObject* _object = NULL;
 
 	void onButtonPressed(const Event& evt);
@@ -33,8 +33,8 @@ public:
 	GameObject* getGameObject(void) const { return _object; }
 	void setGameObject(GameObject* object) { _object = object; }
 
-	Controller* getController(void) const { return _pad; } // Could be an AI (e.g. machine) Controller!
-	void setController(Controller* pad) { _pad = pad; }
+	InputMap* getInputMap(void) const { return _pad; }
+	void setInputMap(InputMap* pad) { _pad = pad; }
 
 	void start(void);
 	void update(float time);

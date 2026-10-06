@@ -1,11 +1,11 @@
 
-#include "Controller.h"
+#include "InputMap.h"
 #include "InputTapeRecorder.h"
 #include "ButtonState.h"
 
 #include <algorithm>
 
-void Controller::addAction(Action action)
+void InputMap::addAction(Action action)
 {
 	Action* existingAction = this->getAction(action.getActionName());
 	if (!existingAction) {
@@ -43,7 +43,7 @@ void Controller::addAction(Action action)
 	}
 }
 
-Action* Controller::getAction(std::string actionName)
+Action* InputMap::getAction(std::string actionName)
 {
 	std::list<Action>::iterator itr = _actions.begin();
 	for (; itr != _actions.end(); itr++) {
@@ -55,7 +55,7 @@ Action* Controller::getAction(std::string actionName)
 	return NULL;
 }
 
-void Controller::removeAction(Action action)
+void InputMap::removeAction(Action action)
 {
 	std::list<Action>::iterator itr = _actions.begin();
 	for (; itr != _actions.end(); itr++)
@@ -67,7 +67,7 @@ void Controller::removeAction(Action action)
 	}
 }
 
-bool Controller::buttonPressed(Action* action)
+bool InputMap::buttonPressed(Action* action)
 {
 	if (!_input || !action) {
 		return false;
@@ -97,7 +97,7 @@ bool Controller::buttonPressed(Action* action)
 	return false;
 }
 
-bool Controller::buttonReleased(Action* action)
+bool InputMap::buttonReleased(Action* action)
 {
 	if (!_input || !action) {
 		return false;
@@ -127,7 +127,7 @@ bool Controller::buttonReleased(Action* action)
 	return false;
 }
 
-bool Controller::buttonDown(Action* action)
+bool InputMap::buttonDown(Action* action)
 {
 	if (!_input || !action) {
 		return false;
@@ -157,12 +157,12 @@ bool Controller::buttonDown(Action* action)
 	return false;
 }
 
-bool Controller::buttonUp(Action* action)
+bool InputMap::buttonUp(Action* action)
 {
 	return action && !buttonDown(action);
 }
 
-void Controller::update(float time)
+void InputMap::update(float time)
 {
 	if (_input && _input->getGamepad()) {
 		_connected = _input->getGamepad()->isConnected(_padNumber);

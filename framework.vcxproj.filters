@@ -255,6 +255,18 @@
     <ClInclude Include="src\ButtonState.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="src\Actor.h">
+      <Filter>Objects / Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Controller.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Intent.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerController.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\BlinkFlash.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -327,7 +339,7 @@
     <ClInclude Include="src\CommandEvent.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Controller.h">
+    <ClInclude Include="src\InputMap.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Debug.h">
@@ -504,6 +516,12 @@
     <ClCompile Include="src\RendererVK.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\Actor.cpp">
+      <Filter>Objects / Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerController.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
     <ClCompile Include="src\BlinkFlash.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
@@ -627,7 +645,7 @@
     <ClCompile Include="src\Circle.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Controller.cpp">
+    <ClCompile Include="src\InputMap.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Debug.cpp">

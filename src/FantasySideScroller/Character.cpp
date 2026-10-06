@@ -6,6 +6,7 @@
 #include "../Animation.h"
 #include "../GameState.h"
 #include "../Kinematics2D.h"
+#include "../PlayerController.h"
 #include "../Square.h"
 #include "../Telemetry2D.h"
 
@@ -19,7 +20,7 @@ Telemetry2D::Runtime& AutoRuntime();
 }
 
 Character::Character(void) : 
-	GameObject(GAME_OBJ_OBJECT),
+	Actor(GAME_OBJ_OBJECT),
 	_tile(NULL) {
 
 	// TODO: Write a loadObjectFromJSON function to load the character from a JSON file, otherwise, call the init functions directly
@@ -89,30 +90,19 @@ bool Character::_isOneWayTile(const Tile* tile) const
 
 bool Character::_isDropThroughRequested()
 {
-	Game* game = Engine2D::getGame();
-	if (!game) {
-		_kinematic2DState().dropThroughJumpWasDown = false;
-		return false;
-	}
-
-	Player* player = game->getPlayerWith((GameObject*)this);
-	if (!player || !player->getController()) {
-		_kinematic2DState().dropThroughJumpWasDown = false;
-		return false;
-	}
-
-	Controller* controller = player->getController();
-	Action* jumpAction = controller->getAction("JUMP");
-	Action* downAction = controller->getAction("DOWN");
-	if (!jumpAction || !downAction) {
-		_kinematic2DState().dropThroughJumpWasDown = false;
-		return false;
-	}
-
-	const bool jumpDown = jumpAction->isActive();
+	const Intent& intent = getIntent();
+	const bool jumpDown = intent.isHeld(ACTION_JUMP);
 	const bool jumpPressed = jumpDown && !_kinematic2DState().dropThroughJumpWasDown;
 	_kinematic2DState().dropThroughJumpWasDown = jumpDown;
-	return jumpPressed && downAction->isActive();
+	return jumpPressed && intent.isHeld(ACTION_DOWN);
+}
+
+void Character::bindPlayerActions(PlayerController& controller)
+{
+	controller.bindAction(ACTION_JUMP, "JUMP");
+	controller.bindAction(ACTION_DOWN, "DOWN");
+	controller.bindAction(ACTION_RUN, "RUN");
+	controller.bindMoveX("LEFT", "RIGHT");
 }
 
 void Character::_startDropThrough()

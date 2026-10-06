@@ -1,6 +1,6 @@
 #include "InputTapeRecorder.h"
 
-#include "Controller.h"
+#include "InputMap.h"
 #include "StrUtils.h"
 
 #include <algorithm>
@@ -383,7 +383,7 @@ bool isReplayEnabled(void)
 	return gReplayEnabled;
 }
 
-void onControllerTickStart(Controller* controller, uint64_t simulationTick, float controllerElapsedSeconds)
+void onControllerTickStart(InputMap* controller, uint64_t simulationTick, float controllerElapsedSeconds)
 {
 	(void)controller;
 

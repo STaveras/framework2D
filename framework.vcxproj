@@ -270,6 +270,10 @@
     <ClInclude Include="src\AnimationUtils.h" />
     <ClInclude Include="src\ApplyVelocityOperator.h" />
     <ClInclude Include="src\Background.h" />
+    <ClInclude Include="src\Actor.h" />
+    <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\Intent.h" />
+    <ClInclude Include="src\PlayerController.h" />
     <ClInclude Include="src\BlinkFlash.h" />
     <ClInclude Include="src\ButtonState.h" />
     <ClInclude Include="src\Camera.h" />
@@ -282,7 +286,7 @@
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
     <ClInclude Include="src\Command.h" />
     <ClInclude Include="src\CommandEvent.h" />
-    <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\InputMap.h" />
     <ClInclude Include="src\CullObjectOperator.h" />
     <ClInclude Include="src\Cursor.h" />
     <ClInclude Include="src\Cyclable.h" />
@@ -411,6 +415,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Action.cpp" />
+    <ClCompile Include="src\Actor.cpp" />
+    <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\BlinkFlash.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
@@ -420,7 +426,7 @@
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\Command.cpp" />
-    <ClCompile Include="src\Controller.cpp" />
+    <ClCompile Include="src\InputMap.cpp" />
     <ClCompile Include="src\CullObjectOperator.cpp" />
     <ClCompile Include="src\Cursor.cpp" />
     <ClCompile Include="src\Debug.cpp" />
