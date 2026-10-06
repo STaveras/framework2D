@@ -20,6 +20,13 @@ class RendererGL : public IRenderer
 	void _flushBatch();
 	void _drawImage(Sprite* sprite, Color tint, vector2 offset, bool screenSpace = false);
 	void _drawFont(Font* font, Color tint, vector2 offset);
+	void _applyCameraTransform(const vector2& cameraPosition);
+
+protected:
+	void _beginRenderList(const RenderList& renderList) override;
+	void _endRenderList(const RenderList& renderList) override;
+	void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) override;
+	void _renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList) override;
 
 public:
 	RendererGL();

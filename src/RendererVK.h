@@ -73,6 +73,8 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 	//void _updateBillboards(const std::vector<Renderable*>& renderList);
 	//void _drawImage(Sprite* sprite, Color tint = 0xFFFFFFFF, vector2 offset = {0,0}, float zValue = 0.0f);
 	void _drawImage(Sprite* sprite, VkCommandBuffer commandBuffer);
+	// Command buffer being recorded; _renderSprite draws into it.
+	VkCommandBuffer _recordingCommandBuffer = VK_NULL_HANDLE;
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
@@ -106,6 +108,9 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 	void onWindowResized(const Event& e);
 
 	uint32_t currentFrame = 0;
+
+protected:
+	void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) override;
 
 public:
 	RendererVK(void);
