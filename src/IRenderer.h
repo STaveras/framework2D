@@ -14,6 +14,8 @@
 #include <vector>
 
 class Camera;
+class Font;
+class Sprite;
 
 typedef class IRenderer
 {
@@ -66,6 +68,26 @@ protected:
 	RENDERER_API_TYPE _type;
 
 	ITexture *_textureExists(const char *szFilename);
+
+	// Shared front end. Walks every render list whose screenSpace flag matches,
+	// in list order, and hands each visible renderable to the backend hooks
+	// below: sprites and the current frame of an animation go to _renderSprite,
+	// fonts to _renderFont. Backends only implement the hooks they support.
+	void _drawRenderLists(bool screenSpace);
+	virtual void _beginRenderList(const RenderList& renderList) {}
+	virtual void _endRenderList(const RenderList& renderList) {}
+	virtual void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) {}
+	virtual void _renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList) {}
+
+	// Camera math shared by every backend. All of them expect a camera to be set.
+	// Camera position for a list with the given parallax factor and origin.
+	vector2 _parallaxCameraPosition(const vector2& parallaxFactor, const vector2& parallaxOrigin) const;
+	vector2 _parallaxCameraPosition(const RenderList& renderList) const;
+	// World-space rectangle visible from cameraPosition (rotation and zoom included).
+	void _viewBounds(const vector2& cameraPosition, vector2& viewMin, vector2& viewMax) const;
+	// Screen position of a world point seen from cameraPosition. Without a camera
+	// the point is returned unchanged.
+	vector2 _worldToScreen(const vector2& worldPosition, const vector2& cameraPosition) const;
 
 public:
 	IRenderer(RENDERER_API_TYPE renderingAPI = RENDERER_TYPE_NULL, 
