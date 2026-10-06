@@ -71,6 +71,16 @@ int PlatformGamepad::_joystickForPad(int padIndex) const
 	return _connectedJoysticks[(size_t)padIndex];
 }
 
+bool PlatformGamepad::_axisDown(const JoystickState& joystick, Axis axis, float threshold)
+{
+	return joystick.stateValid && axisIsDown(normalizedAxis(joystick.state, axis), threshold);
+}
+
+bool PlatformGamepad::_axisWasDown(const JoystickState& joystick, Axis axis, float threshold)
+{
+	return joystick.previousStateValid && axisIsDown(normalizedAxis(joystick.previousState, axis), threshold);
+}
+
 int PlatformGamepad::getConnectedCount(void) const
 {
 	return (int)_connectedJoysticks.size();
@@ -109,7 +119,7 @@ bool PlatformGamepad::buttonDown(Button button, int padIndex) const
 		return false;
 	}
 	const JoystickState& joystick = _joysticks[(size_t)jid];
-	return joystick.stateValid && joystick.state.buttons[index] == GLFW_PRESS;
+	return joystick.buttons.down(index);
 }
 
 bool PlatformGamepad::buttonUp(Button button, int padIndex) const
@@ -125,8 +135,7 @@ bool PlatformGamepad::buttonPressed(Button button, int padIndex) const
 		return false;
 	}
 	const JoystickState& joystick = _joysticks[(size_t)jid];
-	return joystick.stateValid && joystick.state.buttons[index] == GLFW_PRESS &&
-		(!joystick.previousStateValid || joystick.previousState.buttons[index] != GLFW_PRESS);
+	return joystick.buttons.pressed(index);
 }
 
 bool PlatformGamepad::buttonReleased(Button button, int padIndex) const
@@ -137,8 +146,7 @@ bool PlatformGamepad::buttonReleased(Button button, int padIndex) const
 		return false;
 	}
 	const JoystickState& joystick = _joysticks[(size_t)jid];
-	return joystick.previousStateValid && joystick.previousState.buttons[index] == GLFW_PRESS &&
-		(!joystick.stateValid || joystick.state.buttons[index] != GLFW_PRESS);
+	return joystick.buttons.released(index);
 }
 
 float PlatformGamepad::getAxis(Axis axis, int padIndex) const
@@ -158,7 +166,7 @@ bool PlatformGamepad::axisDown(Axis axis, float threshold, int padIndex) const
 		return false;
 	}
 	const JoystickState& joystick = _joysticks[(size_t)jid];
-	return joystick.stateValid && axisIsDown(normalizedAxis(joystick.state, axis), threshold);
+	return _axisDown(joystick, axis, threshold);
 }
 
 bool PlatformGamepad::axisPressed(Axis axis, float threshold, int padIndex) const
@@ -168,8 +176,7 @@ bool PlatformGamepad::axisPressed(Axis axis, float threshold, int padIndex) cons
 		return false;
 	}
 	const JoystickState& joystick = _joysticks[(size_t)jid];
-	return joystick.stateValid && axisIsDown(normalizedAxis(joystick.state, axis), threshold) &&
-		(!joystick.previousStateValid || !axisIsDown(normalizedAxis(joystick.previousState, axis), threshold));
+	return ButtonEdge::pressed(_axisDown(joystick, axis, threshold), _axisWasDown(joystick, axis, threshold));
 }
 
 bool PlatformGamepad::axisReleased(Axis axis, float threshold, int padIndex) const
@@ -179,8 +186,7 @@ bool PlatformGamepad::axisReleased(Axis axis, float threshold, int padIndex) con
 		return false;
 	}
 	const JoystickState& joystick = _joysticks[(size_t)jid];
-	return joystick.previousStateValid && axisIsDown(normalizedAxis(joystick.previousState, axis), threshold) &&
-		(!joystick.stateValid || !axisIsDown(normalizedAxis(joystick.state, axis), threshold));
+	return ButtonEdge::released(_axisDown(joystick, axis, threshold), _axisWasDown(joystick, axis, threshold));
 }
 
 void PlatformGamepad::update(void)
@@ -195,6 +201,10 @@ void PlatformGamepad::update(void)
 		joystick.stateValid = joystick.connected && glfwGetGamepadState(jid, &joystick.state) == GLFW_TRUE;
 		if (!joystick.stateValid) {
 			joystick.state = GLFWgamepadstate{};
+		}
+		joystick.buttons.beginFrame();
+		for (int button = 0; button <= GLFW_GAMEPAD_BUTTON_LAST; ++button) {
+			joystick.buttons.set(button, joystick.state.buttons[button] == GLFW_PRESS);
 		}
 		if (joystick.connected) {
 			_connectedJoysticks.push_back(jid);
