@@ -68,9 +68,31 @@ CPPFLAGS := $(INCLUDES)
 CXXFLAGS := $(STD) $(WARN) $(DIAG) $(DEBUG_FLAGS) $(PLATFORM_COMPILE_FLAGS)
 LDFLAGS := $(LIBS) $(PLATFORM_LINK_FLAGS) $(PLATFORM_RPATH)
 
-.PHONY: all clean
+.PHONY: all clean shaders
 
-all: $(TARGET)
+all: $(TARGET) shaders
+
+# Vulkan shaders, compiled to where RendererVK loads them (as utl/compile-shaders.sh does;
+# the CMake and Visual Studio builds run that script after linking).
+GLSLC ?= glslc
+SHADER_SRC_DIR := bin/fantasySideScroller/Shaders
+SHADER_OUT_DIR := bin/cache/shader
+SHADERS := $(SHADER_OUT_DIR)/tri.v.spv $(SHADER_OUT_DIR)/tri.f.spv
+
+ifeq ($(shell command -v $(GLSLC) 2>/dev/null),)
+shaders:
+	@echo "warning: $(GLSLC) not found; Vulkan shaders in $(SHADER_OUT_DIR) were not rebuilt"
+else
+shaders: $(SHADERS)
+endif
+
+$(SHADER_OUT_DIR)/tri.v.spv: $(SHADER_SRC_DIR)/triangle.vert
+	@mkdir -p $(dir $@)
+	$(GLSLC) $< -o $@
+
+$(SHADER_OUT_DIR)/tri.f.spv: $(SHADER_SRC_DIR)/triangle.frag
+	@mkdir -p $(dir $@)
+	$(GLSLC) $< -o $@
 
 $(TARGET): $(OBJS)
 	@mkdir -p $(dir $@)
