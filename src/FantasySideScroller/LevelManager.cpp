@@ -422,20 +422,8 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 	_cameraPlayerAttach.setSource(NULL);
 	_cameraPlayerAttach.follow(NULL, true, true);
 
-	// Unregister exactly the tiles initialize() added. A tile's index can change
-	// at runtime (collected keys are cleared to -1), so it can't decide this.
-	for (Tile* tile : _registeredTiles) {
-		gameState.clearObjectRenderRoute(tile);
-		objectManager.removeObject(tile);
-	}
-	_registeredTiles.clear();
-
-	for (TileMap* tileMap : _tileMaps)
-	{
-		delete tileMap;
-	}
-	_tileMaps.clear();
-
+	// Drop the layer render lists before the tiles: the game state then forgets what it
+	// placed in them, instead of searching a layer's list for each tile it removes.
 	for (IRenderer::RenderList* renderList : _mapLayerRenderLists) {
 		if (renderList) {
 			Engine2D::getRenderer()->destroyRenderList(renderList);
@@ -445,6 +433,17 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 
 	gameState.setDefaultRenderList(gameState.getBaseRenderList());
 	gameState.clearRenderRoutes();
+
+	// Unregister exactly the tiles initialize() added. A tile's index can change
+	// at runtime (collected keys are cleared to -1), so it can't decide this.
+	objectManager.removeObjects(_registeredTiles);
+	_registeredTiles.clear();
+
+	for (TileMap* tileMap : _tileMaps)
+	{
+		delete tileMap;
+	}
+	_tileMaps.clear();
 	clearCachedMapMetadata();
 
 	objectManager.removeObject(_camera);

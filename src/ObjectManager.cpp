@@ -350,6 +350,35 @@ void ObjectManager::removeObject(const char* name)
 	}
 }
 
+void ObjectManager::removeObjects(const std::vector<GameObject*>& objects)
+{
+	std::unordered_set<GameObject*> pending(objects.begin(), objects.end());
+	pending.erase(nullptr);
+
+	// Like removeObject(GameObject*), only each object's first entry goes. Finish and
+	// unlink them all before notifying, so handlers can't invalidate the walk.
+	std::vector<GameObject*> removed;
+	removed.reserve(pending.size());
+	for (auto itr = m_mObjects.begin(); itr != m_mObjects.end() && !pending.empty();) {
+		GameObject* object = itr->second;
+		if (pending.erase(object) == 0) {
+			++itr;
+			continue;
+		}
+		object->finish();
+		itr = m_mObjects.erase(itr);
+		removed.push_back(object);
+	}
+
+	if (removed.empty()) {
+		return;
+	}
+	m_spatialMembershipDirty = true;
+	for (GameObject* object : removed) {
+		Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object, Event::event_priority_immediate);
+	}
+}
+
 void ObjectManager::addObject(const char* name, GameObject* object)
 {
 	std::string requestedName = (name && name[0] != '\0') ? std::string(name) : std::string("object");

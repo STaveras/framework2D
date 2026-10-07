@@ -11,16 +11,15 @@ class EventSystem
 {
 	size_t m_uiFloodLimit;
 
-	Factory<Event> _events;
-
 	std::multimap<Event::event_key, Event::event_delegate> m_CallbackMap;
+	// Owns the queued events; each is deleted once dispatched or flushed.
 	std::priority_queue<Event*, std::deque<Event*>, Event::event_compare> m_EventQueue;
 
 	void _querySubscribers(const Event& e);
 
 public:
 	EventSystem(void);
-	~EventSystem(void){}
+	~EventSystem(void) { flushEvents(); }
 
 	size_t getFloodLimit(void) const { return m_uiFloodLimit; }
 	void setFloodLimit(size_t uiFloodLimit) { m_uiFloodLimit = uiFloodLimit; }

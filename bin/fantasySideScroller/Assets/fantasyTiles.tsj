@@ -507,7 +507,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -604,7 +603,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -6038,108 +6036,16 @@
          "type":"prop"
         }, 
         {
-         "id":542,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":5,
-                     "x":11,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            }
+         "id":542
         }, 
         {
-         "id":543,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":5,
-                     "x":0,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            }
+         "id":543
         }, 
         {
-         "id":544,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":5,
-                     "x":11,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            }
+         "id":544
         }, 
         {
-         "id":545,
-         "objectgroup":
-            {
-             "draworder":"index",
-             "name":"",
-             "objects":[
-                    {
-                     "height":16,
-                     "id":1,
-                     "name":"",
-                     "opacity":1,
-                     "rotation":0,
-                     "type":"square",
-                     "visible":true,
-                     "width":5,
-                     "x":0,
-                     "y":0
-                    }],
-             "opacity":1,
-             "type":"objectgroup",
-             "visible":true,
-             "x":0,
-             "y":0
-            }
+         "id":545
         }, 
         {
          "id":550,

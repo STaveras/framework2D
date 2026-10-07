@@ -58,6 +58,9 @@ public:
 	void addObject(const char* name, GameObject* object);
 	void removeObject(GameObject* object);
 	void removeObject(const char* name);
+	// Same as removeObject(object) for each, in one pass over the objects; use it for
+	// bulk teardown (a level's tiles), where per-object removal would be quadratic.
+	void removeObjects(const std::vector<GameObject*>& objects);
 
 	void pushOperator(ObjectOperator* objOperation);
 	void popOperator(void);

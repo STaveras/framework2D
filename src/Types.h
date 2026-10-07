@@ -109,7 +109,9 @@ using byte = uint8_t;
 #define sprintf_s snprintf
 #define strtok_s strtok_r
 #define _strdup strdup
-#define INFINITE INFINITY
+// Windows' DWORD value. It's passed as a count (the event flood limit); a float
+// INFINITY converted to an integer is undefined and left the limit as garbage.
+#define INFINITE 0xFFFFFFFF
 #define UINT unsigned int
 
 typedef struct rect {
