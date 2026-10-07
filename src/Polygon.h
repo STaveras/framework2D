@@ -21,6 +21,9 @@ class PolygonCollider : public Collidable
 	void rebuildCache(void) const;
 	void rebuildValidation(void);
 
+protected:
+	void onPositionChanged(vector2 position) override;
+
 public:
 	PolygonCollider(void) : Collidable(COL_OBJ_POLYGON) {}
 	PolygonCollider(const PolygonCollider& rhs);
@@ -35,9 +38,6 @@ public:
 	bool isValid(void) const { return _isValid; }
 
 	void setLocalVertices(const std::vector<vector2>& vertices);
-
-	virtual void setPosition(vector2 position) override;
-	virtual void setPosition(float x, float y) override;
 
 	virtual bool collidesWith(vector2 point) override;
 	virtual bool collidesWith(const Collidable* collidable) override;

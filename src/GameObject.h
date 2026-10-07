@@ -105,10 +105,9 @@ public:
       virtual void onExit(State* next);
    };
 
-   void setPosition(vector2 position);
-   void setPosition(float x, float y) { this->setPosition(vector2(x, y)); }
-
 protected:
+   void onPositionChanged(vector2 position) override;
+
 
    void updateComponents();
    CollisionPredicate _collisionPredicate = NULL;

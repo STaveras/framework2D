@@ -277,7 +277,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 	if (DEBUGGING && Debug::dbgCollision && Debug::dbgTiles)
 	{
 		char buffer[256];
-		sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", tile->getTileIndex(), tile->_position.x, tile->_position.y);
+		sprintf_s(buffer, sizeof(buffer), "Tile (%i):\n\tpos{ % f,% f }\n", tile->getTileIndex(), tile->getPosition().x, tile->getPosition().y);
 		DEBUG_MSG(buffer);
 
 		if (Renderable* renderable = tile->getRenderable()) {
@@ -289,7 +289,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 			switch (collidable->getType()) {
 			case COL_OBJ_SQUARE: {
 				Square* square = (Square*)contact.other->getCollidable();
-				sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
+				sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->getPosition().x, square->getPosition().y, square->getMax().x, square->getMax().y);
 				DEBUG_MSG(buffer);
 				break;
 			}
@@ -885,7 +885,7 @@ void Character::onUpdate(float time)
 			switch (collidable->getType()) {
 			case COL_OBJ_SQUARE: {
 				Square* square = (Square*)this->getCollidable();
-				sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->_x, square->_y, square->getMax().x, square->getMax().y);
+				sprintf_s(buffer, sizeof(buffer), "\tcolSquare{%f, %f, %f, %f}\n", square->getPosition().x, square->getPosition().y, square->getMax().x, square->getMax().y);
 				DEBUG_MSG(buffer);
 				break;
 			}

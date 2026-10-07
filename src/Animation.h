@@ -32,6 +32,7 @@ protected:
    void _advanceFrame(void);
    void _lastFrame(void);
    void _reset(void);
+   void onPositionChanged(vector2 position) override;
 
 public:
    Animation(void);
@@ -54,9 +55,6 @@ public:
    void setMode(Mode eMode) { m_eMode = eMode; }
    void setSpeed(float fSpeed) { m_fSpeed = fSpeed; }
    void setName(const char* szName) { m_szName = szName; }
-
-   void setPosition(vector2 position);
-   void setPosition(float x, float y) { setPosition(vector2(x, y)); }
 
    void play(void) { this->_reset(); m_bPlaying = true; }
    void pause(void) { m_bPlaying = false; }

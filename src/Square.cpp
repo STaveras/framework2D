@@ -17,8 +17,8 @@ bool WithCircle(const Square* square, const Circle* circle)
    float bottom = square->getMax().y;
 
    // Just to make things a bit more readable later on...
-   float cx = circle->_x;
-   float cy = circle->_y;
+   float cx = circle->getPosition().x;
+   float cy = circle->getPosition().y;
    float radius = circle->getRadius();
 
    //int midx = (int)Paddle.m_Properties.m_Position.x;

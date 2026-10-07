@@ -138,10 +138,9 @@ void GameObject::start(void)
 	this->updateComponents();
 }
 
-void GameObject::setPosition(vector2 position) 
+void GameObject::onPositionChanged(vector2 position)
 {
-	Positionable::setPosition(position);
-	
+	(void)position;
 	this->updateComponents();
 }
 
