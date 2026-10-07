@@ -250,6 +250,7 @@ src/FantasySideScroller/*
 src/Collidable.h
 src/CollidableGroup.cpp
 src/CollidableGroup.h
+src/CollisionDebugDraw.h
 src/CollisionSystem.cpp
 src/CollisionSystem.h
 src/Kinematics2D.cpp

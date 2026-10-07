@@ -2,6 +2,10 @@
 
 #include "Types.h"
 
+// The one stb_image implementation, shared by every texture backend
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
 // int32_t flipEndianness(int32_t value) {
 
 // 	// // byte flippedValue[4] = (byte*)(&value);

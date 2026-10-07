@@ -229,6 +229,11 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 if(APPLE)
   file(GLOB APPLE_OBJCXX_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.mm")
   list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
+  # The Metal backend uses ARC; everything else is manually reference counted.
+  set_source_files_properties(
+    "${CMAKE_SOURCE_DIR}/src/RendererMTL.mm"
+    "${CMAKE_SOURCE_DIR}/src/TextureMTL.mm"
+    PROPERTIES COMPILE_OPTIONS -fobjc-arc)
 endif()
 
 # Headers are listed so IDE projects show them; they are not compiled.

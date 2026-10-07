@@ -14,6 +14,8 @@ class Window
 {
 public:
 	typedef std::function<void(int key, int scancode, int action, int mods)> KeyEventHandler;
+	// Saves the frame being rendered as a PNG at path; false if it could not.
+	typedef std::function<bool(const std::string& path)> FrameCapture;
 
 private:
 	bool m_bHasQuit;
@@ -27,6 +29,9 @@ private:
 	WINDOWPLACEMENT m_wpPrev;
 #endif
 	GLFWwindow* _window;
+#if FRAMEWORK_IOS
+	void* _nativeView = nullptr; // UIView whose layer is a CAMetalLayer
+#endif
 
 	const char* m_szWindowClassName;
 	std::string m_szWindowTitle;
@@ -86,6 +91,11 @@ public:
 	LPSTR getCmdLineArgs(void) const { return m_lpCmdLine; }
 #endif
 	GLFWwindow * getUnderlyingWindow(void) { return _window; }
+#if FRAMEWORK_IOS
+	// The game view; set before initialize(). Sizes are in points.
+	void* getNativeView(void) const { return _nativeView; }
+	void setNativeView(void* view) { _nativeView = view; }
+#endif
 
 	bool hasQuit(void) const { return m_bHasQuit; }
 	int getWidth(void) const { return m_nWidth; }
@@ -120,6 +130,7 @@ public:
 	// Called by the renderer once a frame is drawn, before presenting it. viewMin/viewMax is
 	// the world rectangle the frame shows. With AUTO_SCREENSHOT_FRAME=N and
 	// AUTO_SCREENSHOT_PATH set, frame N is saved there, with the view in "<path>.view".
-	void onFrameRendered(const vector2& viewMin, const vector2& viewMax);
+	// Renderers without an OpenGL back buffer pass their own capture.
+	void onFrameRendered(const vector2& viewMin, const vector2& viewMax, const FrameCapture& capture = FrameCapture());
 };
 // Author: Stanley Taveras

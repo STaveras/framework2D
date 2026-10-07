@@ -88,6 +88,9 @@ void Window::initialize(HINSTANCE hInstance, LPSTR lpCmdLine)
 }
 #endif
 
+#if !FRAMEWORK_IOS
+// GLFW windows. The iOS versions of initialize() through saveScreenshot() are
+// in src/iOS/Window.mm.
 void Window::initialize(ClientAPI clientAPI, bool requireVulkanSupport) 
 {
 #if __APPLE__
@@ -414,8 +417,9 @@ bool Window::saveScreenshot(const std::string& path)
 	stbi_flip_vertically_on_write(1);   // GL rows start at the bottom
 	return stbi_write_png(path.c_str(), width, height, 4, pixels.data(), width * 4) != 0;
 }
+#endif // !FRAMEWORK_IOS
 
-void Window::onFrameRendered(const vector2& viewMin, const vector2& viewMax)
+void Window::onFrameRendered(const vector2& viewMin, const vector2& viewMax, const FrameCapture& capture)
 {
 	if (_renderedFrames == 0) {
 		const char* path = std::getenv("AUTO_SCREENSHOT_PATH");
@@ -424,7 +428,7 @@ void Window::onFrameRendered(const vector2& viewMin, const vector2& viewMax)
 	}
 
 	if (!_autoScreenshotPath.empty() && _renderedFrames == _autoScreenshotFrame &&
-		saveScreenshot(_autoScreenshotPath)) {
+		(capture ? capture(_autoScreenshotPath) : saveScreenshot(_autoScreenshotPath))) {
 		if (FILE* info = std::fopen((_autoScreenshotPath + ".view").c_str(), "w")) {
 			std::fprintf(info, "%f %f %f %f\n", viewMin.x, viewMin.y, viewMax.x, viewMax.y);
 			std::fclose(info);

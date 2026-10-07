@@ -150,8 +150,9 @@ int main(int argc, const char *argv[])
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #elif __APPLE__
-   else if(bool useMetal = false) {
-      window.initialize(Window::ClientAPI::OpenGL);
+   else if (System::checkArgumentsForMetal(argc, argv)) {
+      // Metal draws into a CAMetalLayer, so the window gets no OpenGL context
+      window.initialize(Window::ClientAPI::None);
       pInput = (IInput*)Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }

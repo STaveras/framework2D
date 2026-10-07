@@ -13,13 +13,11 @@ IRenderer *Renderer::createDXRenderer(HWND hWnd, int nWidth, int nHeight, bool b
 #elif __APPLE__
 IRenderer *Renderer::createMTLRenderer(Window *window)
 {
-	IRenderer* renderer = new RendererMTL(glfwGetCocoaWindow(window->getUnderlyingWindow()), 
-										  window->getWidth(), window->getHeight(), 
-										  false);
-	return renderer;
+	return new RendererMTL(window);
 }
 #endif
 
+#if !FRAMEWORK_IOS
 // We should probably do as above, and allow dimensions and other settings to be specified from the get go, instead of just being inferred from the window properties...?
 IRenderer* Renderer::createVKRenderer(Window* window)
 {
@@ -38,6 +36,7 @@ IRenderer* Renderer::createGLRenderer(Window* window)
 	}
 	return renderer;
 }
+#endif
 
 void Renderer::destroyRenderer(IRenderer *pRenderer)
 {

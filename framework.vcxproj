@@ -281,6 +281,7 @@
     <ClInclude Include="src\Collidable.h" />
     <ClInclude Include="src\CollidableGroup.h" />
     <ClInclude Include="src\CollisionEvent.h" />
+    <ClInclude Include="src\CollisionDebugDraw.h" />
     <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
