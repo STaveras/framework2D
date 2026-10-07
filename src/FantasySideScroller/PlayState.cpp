@@ -8,6 +8,7 @@
 #include "../Camera.h"
 #include "../Debug.h"
 #include "../Font.h"
+#include "../Gamepad.h"
 #include "../Sprite.h"
 #include "../Cursor.h"
 #include "PauseState.h"
@@ -16,6 +17,7 @@
 #include "Constants.h"
 #include "Character.h"
 #include "Boar.h"
+#include "../StrUtils.h"
 
 namespace {
 constexpr float kHUDPaddingX = 12.0f;
@@ -110,7 +112,16 @@ void PlayState::_initHUD()
 	// 	}
 	// }
 
-	if (!_cursor) {
+	if (!_keyIcon) {
+		// The key tile from Tiles.png, shown while the player holds a key.
+		_keyIcon = new Image(BasePath("Assets/Tiles.png").c_str(), 0, RECT{ 240, 320, 256, 336 });
+		_keyIcon->setVisibility(false);
+		_hudRenderList->push_back(_keyIcon);
+	}
+
+	// No cursor without a pointer (touch-only iOS has no mouse).
+	IInput* input = Engine2D::getInput();
+	if (!_cursor && (!input || input->getMouse())) {
 		_cursor = new Cursor();
 		if (_cursor->load(BasePath("cursors.png").c_str())) {
 			_cursor->getImage()->setVisibility(true);
@@ -165,6 +176,11 @@ void PlayState::_updateHUD(float dt)
 	_staminaBarFill->setPosition(staminaFillOrigin);
 	_staminaBarFill->setScale(staminaFillWidth, kHUDStaminaHeight);
     _staminaBarFill->setVisibility(staminaFillWidth > 0.0f);
+
+	if (_keyIcon) {
+		_keyIcon->setPosition(hudOrigin + vector2(kHUDBackgroundWidth + 4.0f, -3.0f));
+		_keyIcon->setVisibility(_levelProps.getKeyCount() > 0);
+	}
     
     // if (_helloWorldText) {
     //     _helloWorldText->setPosition(hudOrigin + vector2(0.0f, kHUDTextOffsetY));
@@ -186,6 +202,9 @@ void PlayState::_shutdownHUD()
 		if (_staminaBarFill) {
 			_hudRenderList->remove(_staminaBarFill);
 		}
+		if (_keyIcon) {
+			_hudRenderList->remove(_keyIcon);
+		}
 		// if (_helloWorldText) {
 		// 	_hudRenderList->remove(_helloWorldText);
 		// }
@@ -203,6 +222,7 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_healthBarFill);
 	SAFE_DELETE(_staminaBarBackground);
 	SAFE_DELETE(_staminaBarFill);
+	SAFE_DELETE(_keyIcon);
 	// SAFE_DELETE(_helloWorldText);
 	SAFE_DELETE(_cursor);
 }
@@ -214,7 +234,7 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	_levelManager.initialize("mosswood_hollow.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize("old_mine_trail.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
 	vector2 spawnPoint = START_POSITION;
@@ -239,24 +259,62 @@ void PlayState::onEnter(State* prev)
 #endif
 
 	_objectManager.addObject("Hero", _playableCharacter);
-	_boar = new Boar(_objectManager, *_playableCharacter, spawnPoint + vector2(140.0f, 10.0f));
-	_objectManager.addObject("Boar", _boar);
+	_levelProps.initialize(_levelManager.getTileMaps());
+	const std::vector<LevelEnemyDescriptor>& enemyDescriptors = _levelManager.getEnemyDescriptors();
+	_boars.reserve(enemyDescriptors.size());
+	for (size_t i = 0; i < enemyDescriptors.size(); ++i) {
+		const LevelEnemyDescriptor& descriptor = enemyDescriptors[i];
+		if (!StrUtils::IEquals(descriptor.typeName, "boar")) {
+			continue;
+		}
+
+		Boar* boar = new Boar(_objectManager, *_playableCharacter, descriptor.position);
+		_boars.push_back(boar);
+		const int objectId = (descriptor.objectId >= 0) ? descriptor.objectId : (int)i + 1;
+		const std::string objectName = "Boar_" + std::to_string(objectId);
+		_objectManager.addObject(objectName.c_str(), boar);
+	}
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
 	// TODO: Save the keymappings to a file and load them here
 	_player->start();
-	_player->setController(_inputManager.createController());
-	_player->getController()->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
-	_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
-	_player->getController()->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
-	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
-	_player->getController()->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
-	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
-	_player->getController()->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
-	_player->getController()->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
-	_player->getController()->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
+	_player->setInputMap(_inputManager.createInputMap());
+	InputMap* controller = _player->getInputMap();
+	controller->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
+	controller->addAction(Action("JUMP", Gamepad::Button::A));
+	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
+	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
+	controller->addAction(Action("LEFT", Gamepad::Button::DpadLeft));
+	Action leftStick("LEFT");
+	leftStick.assignAxis(Gamepad::Axis::LeftX, -0.25f);
+	controller->addAction(leftStick);
+	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
+	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
+	controller->addAction(Action("RIGHT", Gamepad::Button::DpadRight));
+	Action rightStick("RIGHT");
+	rightStick.assignAxis(Gamepad::Axis::LeftX, 0.25f);
+	controller->addAction(rightStick);
+	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
+	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
+	controller->addAction(Action("DOWN", Gamepad::Button::DpadDown));
+	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
+	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_Z));
+	controller->addAction(Action("ATTACK", Gamepad::Button::X));
+	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
+	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
+	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_UP));
+	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_W));
+	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
+	controller->addAction(Action("INTERACT", Gamepad::Button::DpadUp));
+	controller->addAction(Action("INTERACT", Gamepad::Button::LeftThumb));
+	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
+	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
+	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
 	_player->setGameObject(_playableCharacter);
+	_playerController.setInputMap(controller);
+	Character::bindPlayerActions(_playerController);
+	_playableCharacter->possess(&_playerController);
 
 	_traversalMechanics.initialize(_levelManager.getTriggerDescriptors(),
 									spawnPoint,
@@ -295,6 +353,33 @@ bool PlayState::onExecute(float time)
 #endif
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+	const bool reloadDown = keyboard->keyDown(keyboard->getKeys().KBK_F5);
+	const bool reloadPressed = reloadDown && !_reloadWasDown;
+	_reloadWasDown = reloadDown;
+	if (Debug::Mode.isEnabled() && reloadPressed) {
+		// Shift+F5 respawns at the map-authored spawn point; plain F5 keeps the
+		// hero where it stands so map edits can be checked in place.
+		const bool respawn = keyboard->keyDown(keyboard->getKeys().KBK_LSHIFT) ||
+			keyboard->keyDown(keyboard->getKeys().KBK_RSHIFT);
+		const bool keepPosition = !respawn && _playableCharacter;
+		const vector2 heroPosition = keepPosition ? _playableCharacter->getPosition() : vector2();
+
+		// Drain queued events while their senders are still alive, then rebuild
+		// the stage through its normal lifecycle to reread map and tileset data.
+		Engine2D::getEventSystem()->processEvents();
+		onExit(nullptr);
+		_interactWasActive = false;
+		_paused = false;
+		onEnter(nullptr);
+		// Object-added events start the new objects and register their renderables.
+		Engine2D::getEventSystem()->processEvents();
+		if (keepPosition && _playableCharacter) {
+			_playableCharacter->setPosition(heroPosition);
+		}
+		DEBUG_MSG(keepPosition ? "Stage reloaded from disk in place.\n" :
+			"Stage reloaded from disk at spawn point.\n");
+	}
+	InputMap* controller = _player ? _player->getInputMap() : NULL;
 
 	// First frame after a pause: the pause overlay was popped and this state is
 	// top again, so make the HUD cursor visible once more.
@@ -308,7 +393,10 @@ bool PlayState::onExecute(float time)
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
 		_collisionSystem.reset();
-		if (_boar) _boar->reset();
+		for (Boar* boar : _boars) {
+			if (boar) boar->reset();
+		}
+		_levelProps.resetPlatforms();
 		_playableCharacter->clearEvents();
 		_playableCharacter->resetForRespawn();
 		_playableCharacter->setState(_playableCharacter->getState("Falling"));
@@ -330,7 +418,8 @@ bool PlayState::onExecute(float time)
 #endif
 	}
 
-	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
+	Action* pauseAction = controller ? controller->getAction("PAUSE") : NULL;
+	if (controller && controller->buttonPressed(pauseAction)) {
 		// Hide the HUD cursor before pushing the pause overlay: its screen-space
 		// list stays registered (push does not call onExit), and its position is
 		// frozen because onExecute stops running, so leaving it visible would
@@ -345,6 +434,7 @@ bool PlayState::onExecute(float time)
 		if (!_pauseState) {
 			_pauseState = new PauseState();
 		}
+		_pauseState->setInputMap(controller);
 		Engine2D::getGame()->push(_pauseState);
 	}
 
@@ -390,16 +480,32 @@ bool PlayState::onExecute(float time)
 	_traversalMechanics.setFrameDeltaSeconds(time);
 	const bool keepRunning = GameState::onExecute(time);
 
-	// vector2 traversalRespawn(0.0f, 0.0f);
-	// if (_traversalMechanics.consumeRespawnRequest(traversalRespawn) && _playableCharacter) {
-	// 	_collisionSystem.reset();
-	// 	_playableCharacter->clearEvents();
-	// 	_playableCharacter->resetForRespawn();
-	// 	_playableCharacter->setState(_playableCharacter->getState("Falling"));
-	// 	_playableCharacter->setPosition(traversalRespawn);
-	// }
+	// Killzones (e.g. deep water) send the player back to the last checkpoint. Run
+	// timeouts still do not respawn, as before.
+	vector2 traversalRespawn(0.0f, 0.0f);
+	std::string respawnReason;
+	if (_traversalMechanics.consumeRespawnRequest(traversalRespawn, &respawnReason) &&
+		_playableCharacter && respawnReason != "timeout") {
+		_collisionSystem.reset();
+		_playableCharacter->clearEvents();
+		_playableCharacter->resetForRespawn();
+		_playableCharacter->setState(_playableCharacter->getState("Falling"));
+		_playableCharacter->setPosition(traversalRespawn);
+		_levelProps.resetPlatforms();
+	}
 
-	if (_boar) _boar->updateCombat(time);
+	if (_playableCharacter) {
+		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
+		Action* interactAction = controller ? controller->getAction("INTERACT") : NULL;
+		const bool interactActive = interactAction && interactAction->isActive();
+		const bool interactPressed = interactActive && !_interactWasActive;
+		_interactWasActive = interactActive;
+		_levelProps.update(_playableCharacter, interactPressed, time);
+	}
+
+	for (Boar* boar : _boars) {
+		if (boar) boar->updateCombat(time);
+	}
 	_levelManager.update();
 	_updateHUD(time);
 
@@ -433,11 +539,17 @@ void PlayState::onExit(State* next)
 		_objectManager.removeObject(_playableCharacter);
 	}
 
-	if (_boar) _objectManager.removeObject(_boar);
-	SAFE_DELETE(_boar);
+	for (Boar* boar : _boars) {
+		if (boar) {
+			_objectManager.removeObject(boar);
+			delete boar;
+		}
+	}
+	_boars.clear();
 	SAFE_DELETE(_playableCharacter);
 	
-	_levelManager.shutdown(_objectManager, *this);
+	_levelProps.clear();
+ 	_levelManager.shutdown(_objectManager, *this);
 
 	if (_player) {
 		Engine2D::getGame()->getPlayers()->destroy(_player);

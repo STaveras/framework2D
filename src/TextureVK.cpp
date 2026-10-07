@@ -3,22 +3,35 @@
 #include "TextureVK.h"
 #include "RendererVK.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE)
+TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE), _descriptorSet(VK_NULL_HANDLE), _descriptorPool(VK_NULL_HANDLE)
 {
    // Load image using stb_image library
    int texWidth, texHeight, texChannels;
    stbi_uc* pixels = stbi_load(path, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-   VkDeviceSize imageSize = texWidth * texHeight * 4;
 
    if (!pixels) {
       throw std::runtime_error("Failed to load texture image!");
    }
 
-   _width = static_cast<uint32_t>(texWidth);
-   _height = static_cast<uint32_t>(texHeight);
+   _upload(pixels, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+
+   // Free the original image data
+   stbi_image_free(pixels);
+}
+
+TextureVK::TextureVK(const char* name, const unsigned char* rgbaPixels, uint32_t width, uint32_t height) : ITexture(name), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE), _descriptorSet(VK_NULL_HANDLE), _descriptorPool(VK_NULL_HANDLE)
+{
+   _upload(rgbaPixels, width, height);
+}
+
+void TextureVK::_upload(const unsigned char* rgbaPixels, uint32_t texWidth, uint32_t texHeight)
+{
+   VkDeviceSize imageSize = static_cast<VkDeviceSize>(texWidth) * texHeight * 4;
+
+   _width = texWidth;
+   _height = texHeight;
 
    RendererVK* rendererVK = (RendererVK*)Renderer::get();
 
@@ -34,11 +47,8 @@ TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE),
    // Copy image data to staging buffer
    void* data;
    vkMapMemory(rendererVK->getDevice(), stagingBufferMemory, 0, imageSize, 0, &data);
-   memcpy(data, pixels, static_cast<size_t>(imageSize));
+   memcpy(data, rgbaPixels, static_cast<size_t>(imageSize));
    vkUnmapMemory(rendererVK->getDevice(), stagingBufferMemory);
-
-   // Free the original image data
-   stbi_image_free(pixels);
 
    // Create image resource
    rendererVK->createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _image, _imageMemory);
@@ -59,11 +69,18 @@ TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE),
 
    // Create sampler
    _sampler = rendererVK->createSampler();
+
+   // Bind both for the fragment shader
+   _descriptorSet = rendererVK->allocateTextureDescriptorSet(_imageView, _sampler, _descriptorPool);
 }
 
 TextureVK::~TextureVK()
 {
-   if (RendererVK* rendererVK = (RendererVK*)Renderer::get()) {
+   RendererVK* rendererVK = (RendererVK*)Renderer::get();
+
+   // The renderer releases its textures before destroying the device.
+   if (rendererVK && rendererVK->getDevice() != VK_NULL_HANDLE) {
+      rendererVK->freeTextureDescriptorSet(_descriptorPool, _descriptorSet);
       vkDestroySampler(rendererVK->getDevice(), _sampler, nullptr);
       vkDestroyImageView(rendererVK->getDevice(), _imageView, nullptr);
       vkDestroyImage(rendererVK->getDevice(), _image, nullptr);

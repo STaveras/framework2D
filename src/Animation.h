@@ -92,6 +92,15 @@ public:
        }
    }
 
+   void setFlash(bool isFlashing, Color flashColor = 0xFFFFFFFF, float flashOpacity = 1.0f) override {
+       Renderable::setFlash(isFlashing, flashColor, flashOpacity);
+       for (unsigned int i = 0; i < m_Frames.size(); i++) {
+           if (Sprite* sprite = m_Frames[i]->getSprite()) {
+               sprite->setFlash(isFlashing, flashColor, flashOpacity);
+           }
+       }
+   }
+
    void center(void) {
       for (unsigned int i = 0; i < m_Frames.size(); i++) {
          m_Frames[i]->getSprite()->center();

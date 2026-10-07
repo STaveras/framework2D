@@ -1,6 +1,6 @@
 // File: PauseState.cpp
 // A pause state that sits on top of PlayState so the game freezes while the
-// world stays visible. Pushed when Esc is pressed; popping it resumes play.
+// world stays visible. Pushed when PAUSE is pressed; pressing it again resumes.
 
 #include "PauseState.h"
 #include "../Cursor.h"
@@ -15,6 +15,7 @@ PauseState::PauseState()
     , _pauseText(NULL)
     , _hintText(NULL)
     , _cursor(NULL)
+    , _inputMap(NULL)
 {
 }
 
@@ -74,12 +75,17 @@ void PauseState::onEnter(State* prev)
         }
     }
 
-    // Create "Press ESC to Resume" hint text - centered below PAUSE
+    // Create the resume hint text - centered below PAUSE
     if (!_hintText) {
         _hintText = new Font();
         const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
         if (_hintText->loadFromJSON(fontPath)) {
-            _hintText->setText("Press ESC to Resume");
+#if FRAMEWORK_IOS
+            // The touch controls' pause button, or a controller's menu button
+            _hintText->setText("|| / MENU to Resume");
+#else
+            _hintText->setText("ESC / OPTIONS to Resume");
+#endif
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
@@ -101,7 +107,9 @@ void PauseState::onEnter(State* prev)
     // Create the mouse cursor so it stays visible while the game is paused.
     // It lives in this screen-space render list (created after the game's HUD
     // list) so it draws on top of the menu text.
-    if (!_cursor) {
+    // No cursor without a pointer (touch-only iOS has no mouse).
+    IInput* input = Engine2D::getInput();
+    if (!_cursor && (!input || input->getMouse())) {
         _cursor = new Cursor();
         if (_cursor->load(BasePath("cursors.png").c_str())) {
             _menuRenderList->push_back(_cursor->getImage());
@@ -115,8 +123,12 @@ bool PauseState::onExecute(float time)
 {
     Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
-    // ESC to resume (pop this state)
-    if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
+    // Use the same action as gameplay for either Escape or controller Options.
+    Action* pauseAction = _inputMap ? _inputMap->getAction("PAUSE") : NULL;
+    const bool pausePressed = pauseAction
+        ? _inputMap->buttonPressed(pauseAction)
+        : keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE);
+    if (pausePressed) {
         Engine2D::getGame()->pop();
         return false;  // Stop executing this state
     }

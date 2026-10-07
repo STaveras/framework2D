@@ -63,6 +63,12 @@
     <ClInclude Include="src\Engine2D.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="src\FramePacer.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderInterpolation.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\TextureD3D.h">
       <Filter>Rendering</Filter>
     </ClInclude>
@@ -204,6 +210,12 @@
     <ClInclude Include="src\PlatformInput.h">
       <Filter>Input</Filter>
     </ClInclude>
+    <ClInclude Include="src\PlatformGamepad.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Gamepad.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\PlatformKeyboard.h">
       <Filter>Input</Filter>
     </ClInclude>
@@ -239,6 +251,24 @@
     </ClInclude>
     <ClInclude Include="src\StateMachineEvent.h">
       <Filter>Events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Actor.h">
+      <Filter>Objects / Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Controller.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Intent.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerController.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ButtonState.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BlinkFlash.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\Camera.h">
       <Filter>Objects / Entities</Filter>
@@ -309,7 +339,7 @@
     <ClInclude Include="src\CommandEvent.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Controller.h">
+    <ClInclude Include="src\InputMap.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Debug.h">
@@ -399,9 +429,6 @@
     <ClInclude Include="src\FantasySideScroller\Constants.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
-    <ClInclude Include="src\FantasySideScroller\Cursor.h">
-      <Filter>Applications\FantasySideScroller</Filter>
-    </ClInclude>
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClInclude>
@@ -429,6 +456,9 @@
     <ClInclude Include="src\RendererGL.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\CollisionDebugDraw.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
     <ClInclude Include="src\CollisionSystem.h">
       <Filter>Physics\Collision</Filter>
     </ClInclude>
@@ -453,9 +483,19 @@
     <ClInclude Include="src\CollisionEvent.h">
       <Filter>Physics\Collision</Filter>
     </ClInclude>
+    <ClInclude Include="src\Cursor.h" />
+    <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
+    <ClInclude Include="src\PlatformMouse.h" />
+    <ClInclude Include="src\StrUtils.h" />
+    <ClInclude Include="src\FantasySideScroller\PauseState.h">
+      <Filter>Assets / Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Engine2D.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderInterpolation.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="src\TextureVK.cpp">
@@ -477,6 +517,15 @@
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\RendererVK.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actor.cpp">
+      <Filter>Objects / Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerController.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BlinkFlash.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\Animation.cpp">
@@ -554,6 +603,9 @@
     <ClCompile Include="src\PlatformInput.cpp">
       <Filter>Input</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlatformGamepad.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
     <ClCompile Include="src\PlatformKeyboard.cpp">
       <Filter>Input</Filter>
     </ClCompile>
@@ -596,7 +648,7 @@
     <ClCompile Include="src\Circle.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="src\Controller.cpp">
+    <ClCompile Include="src\InputMap.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\Debug.cpp">
@@ -621,9 +673,6 @@
       <Filter>Applications\FantasySideScroller</Filter>
     </ClCompile>
     <ClCompile Include="src\FantasySideScroller\Character.cpp">
-      <Filter>Applications\FantasySideScroller</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FantasySideScroller\Cursor.cpp">
       <Filter>Applications\FantasySideScroller</Filter>
     </ClCompile>
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp">
@@ -659,6 +708,16 @@
     </ClCompile>
     <ClCompile Include="src\CollidableGroup.cpp">
       <Filter>Physics\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Cursor.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterMovement.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterStateSetup.cpp" />
+    <ClCompile Include="src\FantasySideScroller\CharacterUpdate.cpp" />
+    <ClCompile Include="src\FantasySideScroller\TraversalMechanics.cpp" />
+    <ClCompile Include="src\PlatformMouse.cpp" />
+    <ClCompile Include="src\StrUtils.cpp" />
+    <ClCompile Include="src\FantasySideScroller\PauseState.cpp">
+      <Filter>Assets / Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

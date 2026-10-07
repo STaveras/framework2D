@@ -33,8 +33,18 @@ if(APPLE)
   enable_language(OBJCXX)
 
   # Default to the host architecture to avoid accidental universal builds.
+  # CMAKE_HOST_SYSTEM_PROCESSOR is the architecture of the *running cmake
+  # process*, not the host: an x86_64 cmake (e.g. /usr/local/bin/cmake under
+  # Rosetta) would misreport x86_64 on Apple Silicon and break the build
+  # against arm64-only Homebrew libraries. Probe sysctl first.
   if(NOT CMAKE_OSX_ARCHITECTURES)
-    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+    execute_process(
+      COMMAND /usr/sbin/sysctl -n hw.optional.arm64
+      OUTPUT_VARIABLE _apple_silicon
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_VARIABLE _sysctl_error
+    )
+    if(_apple_silicon EQUAL 1)
       set(_default_arch "arm64")
     elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$")
       set(_default_arch "x86_64")
@@ -219,9 +229,22 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.cpp")
 if(APPLE)
   file(GLOB APPLE_OBJCXX_SOURCES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/*.mm")
   list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
+  # The Metal backend uses ARC; everything else is manually reference counted.
+  set_source_files_properties(
+    "${CMAKE_SOURCE_DIR}/src/RendererMTL.mm"
+    "${CMAKE_SOURCE_DIR}/src/TextureMTL.mm"
+    PROPERTIES COMPILE_OPTIONS -fobjc-arc)
 endif()
 
-add_executable(${ROOT_DIR_NAME} ${SOURCES})
+# Headers are listed so IDE projects show them; they are not compiled.
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+  "${CMAKE_SOURCE_DIR}/src/*.h"
+  "${CMAKE_SOURCE_DIR}/src/*.hpp")
+
+add_executable(${ROOT_DIR_NAME} ${SOURCES} ${HEADERS})
+
+include(cmake/SourceGroups.cmake)
+framework_apply_source_groups("${CMAKE_SOURCE_DIR}/cmake/SourceGroups.txt" ${SOURCES} ${HEADERS})
 
 option(FRAMEWORK_ENABLE_VLD "Include Visual Leak Detector in Windows Debug builds" OFF)
 if(WIN32 AND FRAMEWORK_ENABLE_VLD)
@@ -420,7 +443,10 @@ if(FRAMEWORK_BUILD_TESTS)
     target_link_directories(framework_test_core PUBLIC ${_game_link_dirs})
   endif()
   target_link_libraries(framework_test_core PUBLIC ${PROJECT_LIBS})
-  foreach(_test boar_smoke_test spatial_query_test collision_spatial_test)
+  foreach(_test factory_test boar_smoke_test cyclable_test spatial_query_test collision_spatial_test character_one_way_test tile_flip_test level_props_test)
+    if(APPLE)
+      set_source_files_properties("tools/${_test}.cpp" PROPERTIES LANGUAGE OBJCXX)
+    endif()
     add_executable(${_test} "tools/${_test}.cpp")
     target_link_libraries(${_test} PRIVATE framework_test_core)
     target_compile_definitions(${_test} PRIVATE $<$<CONFIG:Debug>:_DEBUG>)

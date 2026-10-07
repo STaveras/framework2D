@@ -1,6 +1,6 @@
 // File: PauseState.h
 // A pause state that sits on top of PlayState so the game freezes while the
-// world stays visible. Pushed when Esc is pressed; popping it resumes play.
+// world stays visible. Pushed when PAUSE is pressed; pressing it again resumes.
 
 #pragma once
 
@@ -8,6 +8,7 @@
 #include "../Font.h"
 
 class Cursor;
+class InputMap;
 
 class PauseState : public GameState
 {
@@ -15,10 +16,13 @@ class PauseState : public GameState
     Font* _pauseText = NULL;
     Font* _hintText = NULL;
     Cursor* _cursor = NULL;
+    InputMap* _inputMap = NULL;
 
 public:
     PauseState(void);
     virtual ~PauseState(void);
+
+    void setInputMap(InputMap* controller) { _inputMap = controller; }
 
     void onEnter(State* prev) override;
     bool onExecute(float time) override;

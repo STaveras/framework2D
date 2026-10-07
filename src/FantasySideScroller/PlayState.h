@@ -3,9 +3,13 @@
 
 #include "../GameState.h"
 #include "../Cursor.h"
+#include "../PlayerController.h"
 
 #include "LevelManager.h"
+#include "LevelProps.h"
 #include "TraversalMechanics.h"
+
+#include <vector>
 
 class Character;
 class Boar;
@@ -19,12 +23,16 @@ class PlayState : public GameState
 	void _shutdownHUD();
 
 	Player* _player = NULL;
+	PlayerController _playerController;
 	LevelManager _levelManager;
 	TraversalMechanics _traversalMechanics;
 	bool _traversalOperatorRegistered = false;
+	LevelProps _levelProps;
+	bool _interactWasActive = false;
+	bool _reloadWasDown = false;
 
 	Character* _playableCharacter = NULL;
-	Boar* _boar = nullptr;
+	std::vector<Boar*> _boars;
 	bool _paused = false;
 	PauseState* _pauseState = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;
@@ -32,6 +40,7 @@ class PlayState : public GameState
 	Image* _healthBarFill = NULL;
 	Image* _staminaBarBackground = NULL;
 	Image* _staminaBarFill = NULL;
+	Image* _keyIcon = NULL;
 	// Font* _helloWorldText = NULL;
 	Cursor* _cursor = NULL;
 

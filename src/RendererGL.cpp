@@ -4,6 +4,8 @@
 
 #include "Animation.h"
 #include "Camera.h"
+#include "FramePacer.h"
+#include "CollisionDebugDraw.h"
 #include "CollisionSystem.h"
 #include "Debug.h"
 #include "Engine2D.h"
@@ -11,7 +13,9 @@
 #include "Frame.h"
 #include "Game.h"
 #include "GameState.h"
+#include "Renderer.h"
 #include "Sprite.h"
+#include "Window.h"
 #include "TextureGL.h"
 
 #include <algorithm>
@@ -45,141 +49,15 @@ void drawLine(const vector2& start, const vector2& end, float r, float g, float 
 	glEnd();
 }
 
-void drawCross(const vector2& position, float radius, float r, float g, float b, float a)
-{
-	drawLine(
-		vector2(position.x - radius, position.y),
-		vector2(position.x + radius, position.y),
-		r, g, b, a);
-	drawLine(
-		vector2(position.x, position.y - radius),
-		vector2(position.x, position.y + radius),
-		r, g, b, a);
-}
-
-void drawRect(const vector2& min, const vector2& max, float r, float g, float b, float a)
-{
-	glColor4f(r, g, b, a);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(min.x, min.y);
-	glVertex2f(max.x, min.y);
-	glVertex2f(max.x, max.y);
-	glVertex2f(min.x, max.y);
-	glEnd();
-}
-
-void drawPolygonLoop(const std::vector<vector2>& vertices, float r, float g, float b, float a)
-{
-	if (vertices.size() < 3) {
-		return;
-	}
-
-	glColor4f(r, g, b, a);
-	glBegin(GL_LINE_LOOP);
-	for (const vector2& vertex : vertices) {
-		glVertex2f(vertex.x, vertex.y);
-	}
-	glEnd();
-}
-
 void drawCollisionDebugOverlay(const CollisionSystem& collisionSystem)
 {
-	const auto& shapes = collisionSystem.getDebugShapes();
-	const auto& contacts = collisionSystem.getDebugContacts();
-	if (shapes.empty() && contacts.empty()) {
+	if (collisionSystem.getDebugShapes().empty() && collisionSystem.getDebugContacts().empty()) {
 		return;
 	}
 
 	glDisable(GL_TEXTURE_2D);
 	glLineWidth(1.0f);
-
-	for (const CollisionDebugShape& shape : shapes) {
-		if (!shape.collidable || (!shape.hasBounds && !shape.hasPolygon)) {
-			continue;
-		}
-
-		float r = 0.2f;
-		float g = 0.95f;
-		float b = 0.25f;
-		float a = 0.9f;
-		if (shape.hasPolygon) {
-			r = 0.3f;
-			g = 0.8f;
-			b = 1.0f;
-		}
-
-		if (!shape.collidableActive) {
-			r = 0.45f;
-			g = 0.45f;
-			b = 0.45f;
-		}
-		else if (shape.hasContact) {
-			switch (shape.phase) {
-			case CollisionPhase::Enter:
-				r = 1.0f;
-				g = 0.25f;
-				b = 0.25f;
-				break;
-			case CollisionPhase::Stay:
-				r = 1.0f;
-				g = 0.9f;
-				b = 0.15f;
-				break;
-			case CollisionPhase::Exit:
-				r = 1.0f;
-				g = 0.35f;
-				b = 1.0f;
-				break;
-			}
-		}
-
-		// For polygon/group colliders, the SAT loop is the source of truth.
-		// Drawing both polygon loops and AABB boxes makes it look like there are
-		// extra square collision volumes around ramps.
-		if (shape.hasBounds && !shape.hasPolygon) {
-			drawRect(shape.min, shape.max, r, g, b, a);
-		}
-		for (const std::vector<vector2>& polygonLoop : shape.polygonLoops) {
-			drawPolygonLoop(polygonLoop, r, g, b, a);
-		}
-		if (shape.hasSweep) {
-			drawLine(shape.sweepStart, shape.sweepEnd, 0.15f, 0.75f, 1.0f, 0.8f);
-		}
-		drawCross(shape.objectPosition, 2.0f, 1.0f, 1.0f, 1.0f, 0.9f);
-		drawCross(shape.collisionAnchor, 2.0f, 0.0f, 1.0f, 1.0f, 0.9f);
-
-		if (shape.renderableOffset.x != 0.0f || shape.renderableOffset.y != 0.0f) {
-			drawCross(shape.anchorWithRenderableOffset, 2.0f, 0.7f, 0.4f, 1.0f, 0.9f);
-			drawLine(shape.objectPosition, shape.anchorWithRenderableOffset, 0.35f, 0.35f, 1.0f, 0.75f);
-		}
-	}
-
-	for (const CollisionDebugContact& contact : contacts) {
-		if (!contact.overlapping || !contact.midpoint.has_value()) {
-			continue;
-		}
-
-		const vector2& midpoint = contact.midpoint.value();
-		drawCross(midpoint, 2.0f, 1.0f, 0.4f, 0.0f, 0.9f);
-
-			if (contact.normal.has_value()) {
-				vector2 normal = contact.normal.value();
-				float normalLength = std::sqrt((normal.x * normal.x) + (normal.y * normal.y));
-				if (normalLength > 0.0f) {
-					normal = vector2(normal.x / normalLength, normal.y / normalLength);
-					float lineLength = 12.0f + (contact.penetrationDepth.value_or(0.0f) * 4.0f);
-					if (contact.timeOfImpact.has_value()) {
-						lineLength += std::max(0.0f, (1.0f - contact.timeOfImpact.value())) * 6.0f;
-					}
-					drawLine(midpoint, midpoint + (normal * lineLength), 1.0f, 0.4f, 0.0f, 1.0f);
-				}
-			}
-
-			if (contact.separation.has_value()) {
-				drawLine(midpoint, midpoint + contact.separation.value(), 0.15f, 0.9f, 0.2f, 0.9f);
-			}
-		}
-
+	CollisionDebugDraw::draw(collisionSystem, drawLine);
 	glEnable(GL_TEXTURE_2D);
 }
 }
@@ -419,6 +297,70 @@ void RendererGL::shutdown(void)
 	}
 }
 
+void RendererGL::_applyCameraTransform(const vector2& cameraPosition)
+{
+	if (!m_pCamera) {
+		return;
+	}
+
+	const vector2 cameraCenter = m_pCamera->getCenter();
+	const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+	const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
+
+	if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
+		glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+		glScalef(zoom, zoom, 1.0f);
+		glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
+	}
+	else {
+		const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
+		glScalef(zoom, zoom, 1.0f);
+		glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
+		glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
+	}
+}
+
+void RendererGL::_beginRenderList(const RenderList& renderList)
+{
+	if (renderList.screenSpace) {
+		return;
+	}
+
+	_flushBatch();
+	glPushMatrix();
+	glLoadIdentity();
+	if (m_pCamera) {
+		const vector2 cameraPosition = _parallaxCameraPosition(renderList);
+		_applyCameraTransform(cameraPosition);
+		_viewBounds(cameraPosition, _viewMin, _viewMax);
+	}
+	else {
+		_viewMin = vector2(-INFINITY, -INFINITY);
+		_viewMax = vector2(INFINITY, INFINITY);
+	}
+}
+
+void RendererGL::_endRenderList(const RenderList& renderList)
+{
+	if (renderList.screenSpace) {
+		return;
+	}
+
+	_flushBatch();
+	glPopMatrix();
+}
+
+void RendererGL::_renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawImage(sprite, tint, offset, renderList.screenSpace);
+}
+
+void RendererGL::_renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawFont(font, tint, offset);
+}
+
 void RendererGL::render(void)
 {
 	if (!_window) {
@@ -446,103 +388,11 @@ void RendererGL::render(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	const auto drawRenderLists = [this](bool screenSpace)
-	{
-		if (_RenderLists.empty()) {
-			return;
-		}
-
-		for (unsigned int i = 0; i < _RenderLists.size(); i++) {
-			RenderList* renderList = _RenderLists.at(i);
-			if (!renderList || renderList->screenSpace != screenSpace) {
-				continue;
-			}
-
-			for (RenderList::iterator o = renderList->begin(); o != renderList->end(); o++) {
-				if (!(*o) || !(*o)->isVisible()) {
-					continue;
-				}
-
-				switch ((*o)->getRenderableType()) {
-				case RENDERABLE_TYPE_NULL:
-				case RENDERABLE_TYPE_WIDGET:
-					break;
-				case RENDERABLE_TYPE_FONT:
-				{
-					Font* font = (Font*)(*o);
-					_drawFont(font, font->getTintColor(), font->getOffset());
-				}
-				break;
-				case RENDERABLE_TYPE_SPRITE:
-				{
-					Image* image = (Image*)(*o);
-					_drawImage(image, image->getTintColor(), image->getOffset(), screenSpace);
-				}
-				break;
-				case RENDERABLE_TYPE_ANIMATION:
-				{
-					Animation* animation = (Animation*)(*o);
-					if (animation->getFrameCount()) {
-						_drawImage(animation->getCurrentFrame()->getSprite(),
-								   animation->getCurrentFrame()->getSprite()->getTintColor(),
-								   animation->getOffset(), screenSpace);
-					}
-				}
-				break;
-				default:
-					break;
-				}
-			}
-		}
-	};
-
-	if (m_pCamera) {
-		const vector2 cameraPosition = m_pCamera->getRenderPosition();
-		const vector2 cameraCenter = m_pCamera->getCenter();
-		const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
-		const float cameraRotationDegrees = m_pCamera->getRotation() * kRadiansToDegrees;
-
-		if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
-			// screen = center + rotate(scale(world - cameraPos))
-			glTranslatef(cameraCenter.x, cameraCenter.y, 0.0f);
-			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
-			glScalef(zoom, zoom, 1.0f);
-			glTranslatef(-cameraPosition.x, -cameraPosition.y, 0.0f);
-		}
-		else {
-			// Preserve legacy origin-oriented behavior.
-			const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
-			glScalef(zoom, zoom, 1.0f);
-			glRotatef(cameraRotationDegrees, 0.0f, 0.0f, 1.0f);
-			glTranslatef(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f);
-		}
-	}
-
-	// Inverse-transform viewport corners to a conservative world-space AABB.
-	_viewMin = vector2(INFINITY, INFINITY);
-	_viewMax = vector2(-INFINITY, -INFINITY);
-	const float zoom = m_pCamera && m_pCamera->getZoom() > 0 ? m_pCamera->getZoom() : 1.0f;
-	const float angle = m_pCamera ? -m_pCamera->getRotation() : 0.0f;
-	const float c = std::cos(angle), sn = std::sin(angle);
-	for (int i = 0; i < 4; ++i) {
-		vector2 point((i & 1) ? m_nWidth : 0, (i & 2) ? m_nHeight : 0);
-		if (m_pCamera && m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter)
-			point = point - m_pCamera->getCenter();
-		point /= zoom;
-		point = vector2(c*point.x - sn*point.y, sn*point.x + c*point.y);
-		if (m_pCamera) {
-			point = point + m_pCamera->getRenderPosition();
-			if (m_pCamera->getZoomAnchorMode() != Camera::ZoomAnchorMode::TargetCenter)
-				point = point - m_pCamera->getCenter();
-		}
-		_viewMin.x = std::min(_viewMin.x, point.x); _viewMin.y = std::min(_viewMin.y, point.y);
-		_viewMax.x = std::max(_viewMax.x, point.x); _viewMax.y = std::max(_viewMax.y, point.y);
-	}
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
-	drawRenderLists(false);
+	_drawRenderLists(false);
 
 	_flushBatch();
 	
@@ -553,7 +403,13 @@ void RendererGL::render(void)
 
 	if (DEBUGGING/* && Debug::dbgCollision*/) {
 		if (const CollisionSystem* collisionSystem = getActiveCollisionSystem()) {
+			glPushMatrix();
+			glLoadIdentity();
+			if (m_pCamera) {
+				_applyCameraTransform(m_pCamera->getRenderPosition());
+			}
 			drawCollisionDebugOverlay(*collisionSystem);
+			glPopMatrix();
 		}
 	}
 
@@ -565,7 +421,7 @@ void RendererGL::render(void)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 
-	drawRenderLists(true);
+	_drawRenderLists(true);
 	_flushBatch();
 
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -573,5 +429,22 @@ void RendererGL::render(void)
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// Let the window capture this frame if asked (it needs the finished back buffer).
+	if (Renderer::mainWindow) {
+		vector2 viewMin(0.0f, 0.0f), viewMax(0.0f, 0.0f);
+		if (m_pCamera) {
+			_viewBounds(m_pCamera->getRenderPosition(), viewMin, viewMax);
+		}
+		Renderer::mainWindow->onFrameRendered(viewMin, viewMax);
+	}
+
+	// When pacing, finish the GPU work before the swap too, so the pacer's
+	// work-time measurement includes it rather than mistaking it for vblank wait.
+	if (FramePacer::wantsHardSync()) glFinish();
+	FramePacer::presentBegin();
 	glfwSwapBuffers(_window);
+	// Block until the GPU has finished this frame so the driver cannot queue
+	// further frames behind it; the next input poll then lands on an idle GPU.
+	glFinish();
+	FramePacer::presentEnd();
 }

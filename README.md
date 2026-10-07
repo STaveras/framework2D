@@ -22,7 +22,7 @@ The `/bin/fantasySideScroller` folder contains free-to-use assets from anokolisa
 - **Tile Map Support**: Level editing with Tiled Map Editor (.tmj, .tmx)
 - **Animation System**: Sprite-based animations with frame interpolation
 - **Collision System**: AABB-based collision detection and physics operators
-- **Event-Driven Input**: Keyboard, mouse, and gamepad input handling
+- **Event-Driven Input**: Keyboard, mouse, and mapped gamepad input handling
 - **JSON Data-Driven**: Configuration via JSON for currencies, upgrades, and content
 
 ## Build Dependencies
@@ -30,7 +30,7 @@ The `/bin/fantasySideScroller` folder contains free-to-use assets from anokolisa
 - **DirectX 9 SDK** (June 2010) - Windows only
 - **Vulkan SDK**
 - **GLM** (math library)
-- **GLFW3** (windowing/input)
+- **GLFW 3.3+** (windowing/input and standardized gamepad mappings)
 - **TinyXML2** (parsing)
 - **SIMDJSON** (JSON processing)
 - **stb** suite (image loading)
@@ -56,6 +56,85 @@ via the .sln and .vcxproj files.
 
 On macOS, you can build just by running 'make'.
 
+### Metal
+
+`RendererMTL` draws through Metal on macOS and iOS. On macOS, pass `--metal`
+(OpenGL stays the default; `--opengl` and `--vulkan` select the others). It
+batches sprites like the OpenGL renderer, scales the game's resolution to fit
+the window (letterboxed if the shapes differ), draws the `--debug` collision
+overlay, and supports `AUTO_SCREENSHOT_FRAME`/`AUTO_SCREENSHOT_PATH`.
+
+### iOS
+
+`platform/ios` generates an Xcode project for iPhone and iPad (iOS 16 or
+later) that runs FantasySideScroller with the Metal renderer. It needs Xcode,
+CMake 3.24+ and glm's headers (`brew install glm`). simdjson's single-file
+source is downloaded and checked against a pinned SHA-256 when the project is
+generated, because Homebrew only ships it for macOS.
+
+```bash
+make ios-run
+```
+
+builds for the simulator (`IOS_SIMULATOR`, default "iPhone 17 Pro"), installs
+the app and launches it. `make ios` only builds; `make ios-project` only
+generates `build/ios/framework2D.xcodeproj`. To run on a device, generate the
+project with your team ID and a bundle ID you can sign, then open it in Xcode:
+
+```bash
+cmake -S platform/ios -B build/ios -G Xcode -DFRAMEWORK_IOS_TEAM=<team id> -DFRAMEWORK_IOS_BUNDLE_ID=<bundle id>
+```
+
+Xcode runs the Debug configuration by default, which is unoptimized and holds
+only about 30 fps on an iPhone 15 Pro; the Release configuration holds 60.
+
+On iPhone the game runs in landscape, keeping its 192-pixel height and widening
+the view to fit the screen (inside the safe area). iPads allow any orientation
+and window size, with the game letterboxed to fit. The engine sources for iOS are in
+`src/iOS`: the UIKit app and its CADisplayLink game loop, `Window` for a
+UIView, and input through the GameController framework: game controllers,
+hardware keyboards (the desktop key bindings apply) and on-screen touch
+controls. Desktop flags such as `--debug`, `--dbg-collision`,
+`--deterministic` and `--static-bg` can be passed as launch arguments
+(`xcrun simctl launch booted <bundle id> --debug`), and the `AUTO_*`
+environment variables work with a `SIMCTL_CHILD_` prefix.
+
+#### Touch controls
+
+When no game controller is connected, touch controls appear over the game:
+
+- **Left:** a stick to move. Touch anywhere on the left half; it re-centres
+  under your thumb. Pushing it up or down holds the D-pad (interact, drop).
+- **Right:** JUMP (A), ATTACK (X), USE (interact) and RUN. RUN is a toggle
+  that switches off when you let go of the stick. Fingers can slide between
+  buttons.
+- **Top right:** pause (Start).
+
+Connecting a controller hides them, and disconnecting the last one brings them
+back. With a controller connected, touching the screen shows them again until
+the controller is next used; both work together as the first player's pad.
+The iOS simulator always reports a virtual game controller, so tap the screen
+there to bring the touch controls up.
+
+## Gamepad input
+
+GLFW-mapped gamepads (GameController extended gamepads on iOS) are available
+through `Engine2D::getInput()->getGamepad()`.
+Button names use the standard layout (`A`, `B`, `X`, `Y`, bumpers, and D-pad),
+and the API also exposes the left and right sticks and triggers. Stick values
+range from -1 to 1; trigger values range from 0 to 1. `Action` can bind keyboard
+keys, gamepad buttons, and signed axis thresholds, so one action can accept
+multiple input devices. The FantasySideScroller sample uses the left stick or
+D-pad to move, A (DualShock 4 Cross) to jump, X (Square) to attack, and the left
+bumper to run.
+Escape and the DualShock 4 Options button share the `PAUSE` action to pause and resume.
+
+With `--debug` enabled, press F5 during gameplay to reload the current stage
+and its tileset definitions from disk. This resets enemies, props, traversal
+progress, and the player's state, but keeps the player at their current
+position. Press Shift+F5 to reload and respawn the player at the map-authored
+spawn point instead. Holding either combination reloads only once.
+
 ## Support
 
 If you reuse any of this code, please give a shout out or buy me a coffee for support. <3
@@ -66,11 +145,16 @@ Contact: stan.taveras@gmail.com
 
 ## Boar enemy
 
-A boar spawns to the right of the entrance in Mosswood Hollow. It patrols,
-turns at ledges, and charges nearby players. Contact costs 15 health with a
-one-second cooldown. Face it and press Left Ctrl to defeat it; press R to
-reset both the player and boar. Idle, walk, run, and hit/vanish animations use
-the original `Mob/Boar` sprite sheets.
+A boar spawns to the right of the entrance in Mosswood Hollow. It idles for two
+seconds, patrols until a ledge or wall, waits two seconds, turns around, then
+waits another two seconds before moving. When a player is in front, it charges
+and stops just short of the character, then holds position while attacking.
+A player detection interrupts a regular patrol idle after a 0.25-second
+reaction; the boar finishes any pending wall turn first.
+Each attack deals 10 health
+once per second, so ten hits from full health are fatal. The first frame of the
+Hit-Vanish sheet is used as its one-shot attack pose; it takes two sword slashes
+to defeat the boar. Press R to reset the player and all boars.
 
 Run `make test-boar` for headless asset, movement, combat, respawn, and map
 collision checks. Build the game with `make`.
@@ -101,6 +185,45 @@ times. These are local variable-step idle measurements, not a cycle-identical
 replay or a frame-rate guarantee for every scene.
 
 Set `AUTO_PROFILE=1` to print inclusive region times and candidate counts on exit.
+With pacing active it also prints a `PACING` line: input-sample-to-vblank latency
+(mean/p95/p99), the average pre-input wait, and missed vblanks.
+
+### Late input sampling and render interpolation
+
+With `--vsync`, the loop no longer polls input straight after the swap. It
+sleeps until the predicted next vblank minus the recent worst update+render
+time (plus a margin), then polls input, updates and renders, so the frame
+that scans out carries input that is a few milliseconds old rather than a
+whole refresh old. On OpenGL the renderer also finishes GPU work before the
+swap while pacing, so that GPU time counts towards the measured work. If a
+vblank is missed the margin grows and then decays; the budget never exceeds
+one refresh, so the worst case matches the unpaced loop.
+
+| Variable | Effect |
+| --- | --- |
+| `AUTO_INPUT_PACING` | `0` disables pacing, `1` forces it on without VSync (default: on with VSync) |
+| `AUTO_INPUT_PACING_MARGIN_MS` | Safety margin on top of the measured work time (default 2) |
+| `AUTO_REFRESH_HZ` | Override the refresh rate read from the monitor |
+| `AUTO_SIMULATE_VSYNC` | Present to a virtual display that blocks until its next vblank, for A/B measurements where the driver has no real VSync (e.g. Xvfb) |
+| `AUTO_RENDER_INTERPOLATION` | `0` disables deterministic-mode interpolation (default on) |
+| `AUTO_RENDER_INTERPOLATION_SNAP` | Moves longer than this per tick are drawn as teleports (default 128) |
+
+In deterministic mode, world-space renderables and the camera are drawn
+between the last two ticks using the leftover accumulator fraction, then put
+back, so game code only sees simulation positions. This removes the judder of
+a tick rate that does not divide the refresh rate, at the cost of drawing up
+to one tick behind the newest simulated state.
+
+Local Linux measurement (Xvfb + Mesa llvmpipe, `AUTO_SIMULATE_VSYNC=1` at 60 Hz,
+idle scene, four alternating ten-second runs each):
+
+| | Input-to-vblank mean | p95 | p99 | Missed vblanks |
+| --- | ---: | ---: | ---: | ---: |
+| Pacing off | 16.70 ms | 16.65 ms | 16.65 ms | 0 |
+| Pacing on | 12.97 ms | 15.81 ms | 15.82 ms | 2–6 per ~595 frames |
+
+That machine renders in software on four shared cores, so its work time is
+long (~8 ms) and noisy; a real GPU leaves more of the refresh for the wait.
 See [spatial-query architecture, mutation rules, and tests](doc/spatial_queries.md)
 for the API contract and commands. All three headless regression suites pass,
 including reference-solver comparisons and real-map boar/support checks.

@@ -8,6 +8,7 @@
 #include "RendererDX.h"
 #include "Animation.h"
 #include "Camera.h"
+#include "FramePacer.h"
 #include "Font.h"
 #include "Frame.h"
 #include "Renderable.h"
@@ -27,38 +28,6 @@
 #include <cmath>
 
 namespace {
-D3DXVECTOR2 worldToScreen(const Camera* camera, const vector2& worldPosition)
-{
-	if (!camera) {
-		return D3DXVECTOR2(worldPosition.x, worldPosition.y);
-	}
-
-	const vector2 cameraPosition = camera->getRenderPosition();
-	const vector2 center = camera->getCenter();
-	const float zoom = (camera->getZoom() > 0.0f) ? camera->getZoom() : 1.0f;
-	const float rotation = camera->getRotation();
-	const float cosTheta = std::cos(rotation);
-	const float sinTheta = std::sin(rotation);
-
-	vector2 translated = worldPosition - cameraPosition;
-	vector2 rotated(
-		(translated.x * cosTheta) - (translated.y * sinTheta),
-		(translated.x * sinTheta) + (translated.y * cosTheta));
-
-	if (camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
-		return D3DXVECTOR2(
-			center.x + (rotated.x * zoom),
-			center.y + (rotated.y * zoom));
-	}
-
-	// Preserve legacy origin-oriented behavior.
-	vector2 legacyTranslated = worldPosition - (cameraPosition - center);
-	vector2 legacyRotated(
-		(legacyTranslated.x * cosTheta) - (legacyTranslated.y * sinTheta),
-		(legacyTranslated.x * sinTheta) + (legacyTranslated.y * cosTheta));
-	return D3DXVECTOR2(legacyRotated.x * zoom, legacyRotated.y * zoom);
-}
-
 LPDIRECT3DTEXTURE9 getFontPixelTexture(LPDIRECT3DDEVICE9 device)
 {
 	static LPDIRECT3DTEXTURE9 s_texture = NULL;
@@ -84,7 +53,8 @@ RendererDX::RendererDX(void) :
 	m_hWnd(NULL),
 	m_pD3D(NULL),
 	m_pD3DDevice(NULL),
-	m_pD3DSprite(NULL) {
+	m_pD3DSprite(NULL),
+	m_pFrameQuery(NULL) {
 
 }
 
@@ -93,7 +63,8 @@ RendererDX::RendererDX(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, boo
 	m_hWnd(hWnd),
 	m_pD3D(NULL),
 	m_pD3DDevice(NULL),
-	m_pD3DSprite(NULL) {
+	m_pD3DSprite(NULL),
+	m_pFrameQuery(NULL) {
 
 }
 
@@ -126,6 +97,7 @@ HRESULT RendererDX::_attemptDeviceReset()
 {
 	// Release resources that are tied to the device
 	m_pD3DSprite->OnLostDevice();
+	_releaseFrameQuery();
 
 	D3DPRESENT_PARAMETERS D3DPP = _d3dPresentParams();
 
@@ -157,20 +129,86 @@ D3DPRESENT_PARAMETERS RendererDX::_d3dPresentParams(void)
 	return D3DPP;
 }
 
+void RendererDX::setVerticalSync(bool vsyncEnabled)
+{
+	const bool changed = vsyncEnabled != m_bVerticalSync;
+	IRenderer::setVerticalSync(vsyncEnabled);
+
+	// PresentationInterval only takes effect through a device reset.
+	if (changed && m_pD3DDevice && m_pD3DSprite)
+		_attemptDeviceReset();
+}
+
+void RendererDX::_releaseFrameQuery(void)
+{
+	if (m_pFrameQuery)
+	{
+		m_pFrameQuery->Release();
+		m_pFrameQuery = NULL;
+	}
+}
+
+// D3D9 lets the driver queue several frames ahead of the GPU, and each queued
+// frame delays when new input reaches the screen. Waiting on an event query
+// issued after Present caps the queue at one frame. (IDirect3DDevice9Ex::
+// SetMaximumFrameLatency would need a D3D9Ex device, which rejects the
+// D3DPOOL_MANAGED textures this renderer creates.)
+void RendererDX::_waitForGPU(void)
+{
+	if (!m_pFrameQuery && FAILED(m_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &m_pFrameQuery)))
+	{
+		m_pFrameQuery = NULL;
+		return;
+	}
+
+	if (FAILED(m_pFrameQuery->Issue(D3DISSUE_END)))
+		return;
+
+	HRESULT hr;
+	while ((hr = m_pFrameQuery->GetData(NULL, 0, D3DGETDATA_FLUSH)) == S_FALSE)
+		SwitchToThread();
+
+	if (hr == D3DERR_DEVICELOST)
+		_releaseFrameQuery();
+}
+
+D3DXVECTOR2 RendererDX::_toScreen(const vector2& worldPosition, bool screenSpace,
+	float parallaxX, float parallaxY, float parallaxOriginX, float parallaxOriginY) const
+{
+	if (screenSpace || !m_pCamera) {
+		return D3DXVECTOR2(worldPosition.x, worldPosition.y);
+	}
+
+	const vector2 cameraPosition = _parallaxCameraPosition(
+		vector2(parallaxX, parallaxY), vector2(parallaxOriginX, parallaxOriginY));
+	const vector2 screenPosition = _worldToScreen(worldPosition, cameraPosition);
+	return D3DXVECTOR2(screenPosition.x, screenPosition.y);
+}
+
+void RendererDX::_renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawImage(sprite, tint, D3DXVECTOR2(offset.x, offset.y), 0.0f, renderList.screenSpace,
+		renderList.parallaxX, renderList.parallaxY,
+		renderList.parallaxOriginX, renderList.parallaxOriginY);
+}
+
+void RendererDX::_renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawFont(font, tint, D3DXVECTOR2(offset.x, offset.y), 0.0f, renderList.screenSpace,
+		renderList.parallaxX, renderList.parallaxY,
+		renderList.parallaxOriginX, renderList.parallaxOriginY);
+}
+
 // Why do we have offset? Center is already an offset...
-void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace)
+void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace,
+	float parallaxX, float parallaxY, float parallaxOriginX, float parallaxOriginY)
 {
 	vector2 resolvedPosition = image->getPosition() + vector2(offset.x, offset.y);
-	D3DXVECTOR2 screenPosition;
+	D3DXVECTOR2 screenPosition = _toScreen(resolvedPosition, screenSpace,
+		parallaxX, parallaxY, parallaxOriginX, parallaxOriginY);
 	float cameraZoom = 1.0f;
-	if (screenSpace) {
-		screenPosition = D3DXVECTOR2(resolvedPosition.x, resolvedPosition.y);
-	}
-	else {
-		screenPosition = worldToScreen(m_pCamera, resolvedPosition);
-		if (m_pCamera && m_pCamera->getZoom() > 0.0f) {
-			cameraZoom = m_pCamera->getZoom();
-		}
+	if (!screenSpace && m_pCamera && m_pCamera->getZoom() > 0.0f) {
+		cameraZoom = m_pCamera->getZoom();
 	}
 	const D3DXVECTOR2 spriteScale = image->getScale();
 
@@ -205,7 +243,8 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 		tint._color);
 }
 
-void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace)
+void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace,
+	float parallaxX, float parallaxY, float parallaxOriginX, float parallaxOriginY)
 {
 	if (!font || !m_pD3DSprite || !m_pD3DDevice) {
 		return;
@@ -217,16 +256,11 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 	}
 
 	vector2 resolvedPosition = font->getPosition() + vector2(offset.x, offset.y);
-	D3DXVECTOR2 screenPosition;
+	D3DXVECTOR2 screenPosition = _toScreen(resolvedPosition, screenSpace,
+		parallaxX, parallaxY, parallaxOriginX, parallaxOriginY);
 	float cameraZoom = 1.0f;
-	if (screenSpace) {
-		screenPosition = D3DXVECTOR2(resolvedPosition.x, resolvedPosition.y);
-	}
-	else {
-		screenPosition = worldToScreen(m_pCamera, resolvedPosition);
-		if (m_pCamera && m_pCamera->getZoom() > 0.0f) {
-			cameraZoom = m_pCamera->getZoom();
-		}
+	if (!screenSpace && m_pCamera && m_pCamera->getZoom() > 0.0f) {
+		cameraZoom = m_pCamera->getZoom();
 	}
 	const float pixelWidth = font->getScale().x * cameraZoom;
 	const float pixelHeight = font->getScale().y * cameraZoom;
@@ -360,6 +394,8 @@ void RendererDX::initialize(void)
 			m_pD3DSprite = nullptr;
 		}
 
+		_releaseFrameQuery();
+
 		HRESULT hr = m_pD3DDevice->Reset(&D3DPP);
 		if (FAILED(hr))
 		{
@@ -385,6 +421,8 @@ void RendererDX::initialize(void)
 
 void RendererDX::shutdown(void)
 {
+	_releaseFrameQuery();
+
 	if (m_pD3DSprite)
 	{
 		m_pD3DSprite->Release();
@@ -426,57 +464,8 @@ void RendererDX::render(void)
 			D3DXMatrixIdentity(&viewMat);
 			m_pD3DDevice->SetTransform(D3DTS_VIEW, &viewMat);
 
-			if (!_RenderLists.empty())
-			{
-				const auto drawRenderLists = [this](bool screenSpace)
-				{
-					for (unsigned int i = 0; i < _RenderLists.size(); i++)
-					{
-						RenderList* renderList = _RenderLists.at(i);
-						if (!renderList || renderList->screenSpace != screenSpace) {
-							continue;
-						}
-
-						for (RenderList::iterator o = renderList->begin(); o != renderList->end(); o++)
-						{
-							if (!(*o) || !(*o)->isVisible()) {
-								continue;
-							}
-
-							switch ((*o)->getRenderableType())
-							{
-							case RENDERABLE_TYPE_SPRITE:
-							{
-								Image* image = (Image*)(*o);
-								_drawImage(image, image->getTintColor(), image->getOffset(), 0.0f, screenSpace);
-							}
-							break;
-							case RENDERABLE_TYPE_ANIMATION:
-							{
-								Animation* animation = (Animation*)(*o);
-								if (animation->getFrameCount()) {
-									_drawImage(animation->getCurrentFrame()->getSprite(),
-										animation->getCurrentFrame()->getSprite()->getTintColor(),
-										animation->getOffset(), 0.0f, screenSpace);
-								}
-							}
-							break;
-							case RENDERABLE_TYPE_FONT:
-							{
-								Font* font = (Font*)(*o);
-								_drawFont(font, font->getTintColor(), font->getOffset(), 0.0f, screenSpace);
-							}
-							break;
-							default:
-								break;
-							}
-						}
-					}
-				};
-
-				drawRenderLists(false);
-				drawRenderLists(true);
-			}
+			_drawRenderLists(false);
+			_drawRenderLists(true);
 
 			m_pD3DSprite->End();
 		}
@@ -488,7 +477,10 @@ void RendererDX::render(void)
 //#endif
 		m_pD3DDevice->EndScene();
 	}
+	FramePacer::presentBegin();
 	m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+	_waitForGPU();
+	FramePacer::presentEnd();
 
 //#if _DEBUG
 //	m_Collidables.clear(); // Clear collidables after rendering

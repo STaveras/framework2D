@@ -18,7 +18,8 @@ Engine2D::Engine2D(void) :
 	_fixedDeltaSeconds(1.0 / 60.0),
 	_frameAccumulatorSeconds(0.0),
 	_simulationTick(0),
-	_simulationElapsedSeconds(0.0)
+	_simulationElapsedSeconds(0.0),
+	_renderInterpolation(true)
 {}
 
 void Engine2D::setFixedDeltaSeconds(double seconds)
@@ -34,6 +35,7 @@ void Engine2D::initialize(void)
 	Engine2D::getInstance()->_frameAccumulatorSeconds = 0.0;
 	Engine2D::getInstance()->_simulationTick = 0;
 	Engine2D::getInstance()->_simulationElapsedSeconds = 0.0;
+	Engine2D::getInstance()->_interpolation.clear();
 	InputTapeRecorder::initializeFromEnvironment();
 
 	if (_input)
@@ -57,18 +59,28 @@ void Engine2D::update(void)
 
 	Engine2D::getEventSystem()->processEvents();
 
-	if (_input)
+	constexpr int kMaxSimulationStepsPerFrame = 8;
+	const double fixedDelta = std::max(0.000001, _fixedDeltaSeconds);
+	const bool runsDeterministicSteps = _game && _deterministicMode;
+	if (runsDeterministicSteps) {
+		const double maxAccumulator = fixedDelta * (double)kMaxSimulationStepsPerFrame;
+		_frameAccumulatorSeconds = std::min(maxAccumulator, _frameAccumulatorSeconds + frameDeltaSeconds);
+	}
+
+	// With a fixed step, frames that run no simulation step leave input
+	// untouched so a latched key press survives until a tick can see it
+	if (_input && (!runsDeterministicSteps || _frameAccumulatorSeconds + 1e-9 >= fixedDelta))
 		_input->update();
+
+	const bool interpolate = _deterministicMode && _renderInterpolation && _renderer;
+	float interpolationAlpha = 1.0f;
 
 	if (_game) {
 		if (_deterministicMode) {
-			constexpr int kMaxSimulationStepsPerFrame = 8;
-			const double fixedDelta = std::max(0.000001, _fixedDeltaSeconds);
-			const double maxAccumulator = fixedDelta * (double)kMaxSimulationStepsPerFrame;
-			_frameAccumulatorSeconds = std::min(maxAccumulator, _frameAccumulatorSeconds + frameDeltaSeconds);
-
 			int simulationSteps = 0;
 			while (_frameAccumulatorSeconds + 1e-9 >= fixedDelta && simulationSteps < kMaxSimulationStepsPerFrame) {
+				if (interpolate)
+					_interpolation.snapshot(_renderer);
 				timer->setManualDeltaTime(fixedDelta);
 				++_simulationTick;
 				_simulationElapsedSeconds += fixedDelta;
@@ -81,6 +93,7 @@ void Engine2D::update(void)
 				++simulationSteps;
 			}
 			timer->clearManualDeltaTime();
+			interpolationAlpha = (float)std::clamp(_frameAccumulatorSeconds / fixedDelta, 0.0, 1.0);
 		}
 		else {
 			timer->clearManualDeltaTime();
@@ -95,7 +108,11 @@ void Engine2D::update(void)
 
 	if (_renderer) {
 		RuntimeProfile::Scope profile(RuntimeProfile::Region::Render);
+		if (interpolate)
+			_interpolation.apply(_renderer, interpolationAlpha);
 		_renderer->render();
+		if (interpolate)
+			_interpolation.restore(_renderer);
 	}
 }
 

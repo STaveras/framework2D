@@ -11,13 +11,14 @@
 
 #include "Engine2D.h"
 #include "FileSystem.h"
+#include "FramePacer.h"
 #include "System.h"
 #include "Camera.h"
 
 #include "Animation.h"
-#include "Billboard.h"
+#include "Font.h"
+#include "Sprite.h"
 #include "TextureVK.h"
-#include "Vertex.h"
 
 // NOTE: We should try and decouple the ide of a "window" from this, considering we may want to use this to render off-screen
 #include <iostream>
@@ -26,6 +27,11 @@
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
 #include <algorithm> // Necessary for std::clamp
+#include <filesystem>
+
+#if __APPLE__
+#include <mach-o/dyld.h> // _NSGetExecutablePath
+#endif
 
 // NOTE: We may need this in the future to directly handle memory
 // typedef struct VkAllocationCallbacks {
@@ -37,7 +43,12 @@
 //     PFN_vkInternalFreeNotification          pfnInternalFree;
 // }
 
-const int MAX_FRAMES_IN_FLIGHT = 2; // This should dynamically adjust based on the GPU's performance
+// One frame in flight: the CPU never runs ahead of the GPU, so input sampled
+// for a frame is not stuck behind older queued frames.
+const int MAX_FRAMES_IN_FLIGHT = 1;
+
+// Descriptor sets (one per texture) per pool; more pools are added when one fills.
+const uint32_t TEXTURES_PER_DESCRIPTOR_POOL = 256;
 
 VkAllocationCallbacks vkCallbacks{};
 
@@ -56,9 +67,10 @@ const std::vector<const char*> deviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+// Set per frame, so the pipeline does not depend on the swap chain size.
 std::vector<VkDynamicState> dynamicStates = {
 	VK_DYNAMIC_STATE_VIEWPORT,
-	VK_DYNAMIC_STATE_LINE_WIDTH
+	VK_DYNAMIC_STATE_SCISSOR
 };
 
 #ifdef NDEBUG
@@ -136,9 +148,73 @@ RendererVK::RendererVK(void)
 	  _pipelineLayout(VK_NULL_HANDLE),
 	  _renderPass(VK_NULL_HANDLE),
 	  _commandPool(VK_NULL_HANDLE),
-	  _descriptorPool(VK_NULL_HANDLE),
-	  _uniformDescriptorSetLayout(VK_NULL_HANDLE),
 	  _samplerDescriptorSetLayout(VK_NULL_HANDLE) {
+}
+
+// Directory of the running executable, or empty if it cannot be determined.
+static std::filesystem::path executableDirectory(void)
+{
+	namespace fs = std::filesystem;
+
+	fs::path executable;
+#if defined(_WIN32)
+	wchar_t buffer[MAX_PATH];
+	const DWORD length = GetModuleFileNameW(NULL, buffer, MAX_PATH);
+	if (length > 0 && length < MAX_PATH) {
+		executable = fs::path(std::wstring(buffer, length));
+	}
+#elif __APPLE__
+	uint32_t size = 0;
+	_NSGetExecutablePath(nullptr, &size);
+	std::string buffer(size, '\0');
+	if (_NSGetExecutablePath(buffer.data(), &size) == 0) {
+		executable = buffer.c_str();
+	}
+#else
+	std::error_code readError;
+	executable = fs::read_symlink("/proc/self/exe", readError);
+#endif
+
+	if (executable.empty()) {
+		return fs::path();
+	}
+
+	std::error_code canonicalError;
+	const fs::path resolved = fs::weakly_canonical(executable, canonicalError);
+	return (canonicalError ? executable : resolved).parent_path();
+}
+
+// Compiled shaders go to bin/cache/shader (utl/compile-shaders.*), next to the
+// executable that every build places in bin/. Look there first so the working
+// directory does not matter, then next to the data directory, which also sits in bin/.
+static std::vector<char> readShader(const char* fileName)
+{
+	namespace fs = std::filesystem;
+
+	std::vector<fs::path> searchDirectories;
+
+	const fs::path exeDirectory = executableDirectory();
+	if (!exeDirectory.empty()) {
+		searchDirectories.push_back(exeDirectory / "cache" / "shader");
+	}
+
+	std::error_code absoluteError;
+	const fs::path dataShaderDirectory = fs::absolute(fs::path(System::GlobalDataPath()).parent_path() / "cache" / "shader", absoluteError).lexically_normal();
+	if (std::find(searchDirectories.begin(), searchDirectories.end(), dataShaderDirectory) == searchDirectories.end()) {
+		searchDirectories.push_back(dataShaderDirectory);
+	}
+
+	std::string searched;
+	for (const fs::path& directory : searchDirectories) {
+		const fs::path shaderPath = directory / fileName;
+		std::vector<char> code = FileSystem::File::Read(shaderPath.string());
+		if (!code.empty()) {
+			return code;
+		}
+		searched += "\n\t" + shaderPath.string();
+	}
+
+	throw std::runtime_error("Vulkan: could not find shader " + std::string(fileName) + ", looked for:" + searched);
 }
 
 bool checkValidationLayerSupport(std::vector<const char*>  validationLayers) {
@@ -259,9 +335,10 @@ RendererVK::SwapChainSupportDetails RendererVK::querySwapChainSupport(VkPhysical
 
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
-	// Find the one we want...
+	// Texels and colors are written as-is, like the OpenGL backend's default
+	// framebuffer; an sRGB swap chain would re-encode them and wash them out.
 	for (const auto& availableFormat : availableFormats) {
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM &&
 			availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return availableFormat;
 		}
@@ -273,10 +350,17 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes, bool verticalSync = false) {
 
+	// FIFO is the only mode the spec guarantees, and the only one that waits for vblank.
+	if (verticalSync)
+		return VK_PRESENT_MODE_FIFO_KHR;
 
-	// Check the vailable modes and filter for one of these two below... 
+	// Without vsync prefer IMMEDIATE (lowest latency, may tear), then MAILBOX (no tearing).
+	for (VkPresentModeKHR mode : { VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_MAILBOX_KHR }) {
+		if (std::find(availablePresentModes.begin(), availablePresentModes.end(), mode) != availablePresentModes.end())
+			return mode;
+	}
 
-	return (verticalSync) ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR; // these two modes are definitely available
+	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
 VkExtent2D currentExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
@@ -389,78 +473,272 @@ void RendererVK::pickPhysicalDevice(VkInstance instance)
 	}
 }
 
-void RendererVK::_textureDescriptorSet(VkDescriptorSet& descriptorSet)
+void RendererVK::_queueQuad(VkDescriptorSet descriptorSet, const SpriteVertex (&quad)[4])
 {
-	// Allocate the descriptor set
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = _descriptorPool; // Descriptor pool defined elsewhere
-	allocInfo.descriptorSetCount = 1;
-	allocInfo.pSetLayouts = &_samplerDescriptorSetLayout;
+	if (_listStarted || _spriteBatches.empty() || _spriteBatches.back().descriptorSet != descriptorSet) {
+		_spriteBatches.push_back({ descriptorSet, _listTransform, static_cast<uint32_t>(_spriteVertices.size()), 0 });
+		_listStarted = false;
+	}
 
-	if (vkAllocateDescriptorSets(_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to allocate descriptor sets!");
+	// Corners run clockwise from the top left; split into two triangles.
+	for (int corner : { 0, 1, 2, 2, 3, 0 }) {
+		_spriteVertices.push_back(quad[corner]);
+	}
+	_spriteBatches.back().vertexCount += 6;
+}
+
+void RendererVK::_drawImage(Sprite* sprite, Color tint, vector2 offset, bool screenSpace)
+{
+	if (!sprite) {
+		return;
+	}
+
+	TextureVK* texture = static_cast<TextureVK*>(const_cast<ITexture*>(sprite->getTexture()));
+	if (!texture) {
+		return;
+	}
+
+	const RECT& srcRect = sprite->getSrcRect();
+	const float srcWidth = static_cast<float>(srcRect.right - srcRect.left);
+	const float srcHeight = static_cast<float>(srcRect.bottom - srcRect.top);
+
+	if (srcWidth <= 0.0f || srcHeight <= 0.0f) {
+		return;
+	}
+
+	const float texWidth = static_cast<float>(texture->getWidth());
+	const float texHeight = static_cast<float>(texture->getHeight());
+	if (texWidth <= 0.0f || texHeight <= 0.0f) {
+		return;
+	}
+
+	// Same texture coordinates as RendererGL: sub-rectangles of a sheet are inset
+	// by half a texel so neighbouring cells do not bleed in.
+	const bool isSubRect =
+		srcRect.left > 0 ||
+		srcRect.top > 0 ||
+		srcRect.right < static_cast<int>(texWidth) ||
+		srcRect.bottom < static_cast<int>(texHeight);
+
+	float uInset = 0.0f;
+	float vInset = 0.0f;
+	if (isSubRect && srcWidth > 1.0f && srcHeight > 1.0f) {
+		uInset = 0.5f / texWidth;
+		vInset = 0.5f / texHeight;
+	}
+
+	const float u0 = (srcRect.left / texWidth) + uInset;
+	const float v0 = (srcRect.top / texHeight) + vInset;
+	const float u1 = (srcRect.right / texWidth) - uInset;
+	const float v1 = (srcRect.bottom / texHeight) - vInset;
+
+	const vector2 position = sprite->getPosition() + offset;
+	const vector2 center = sprite->getCenter();
+	const vector2 scale = sprite->getScale();
+	const float rotationRadians = sprite->getRotation();
+
+	// Transform on the CPU so sprites sharing a texture share one draw call.
+	const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
+	const float xs[4] = { -center.x, srcWidth - center.x, srcWidth - center.x, -center.x };
+	const float ys[4] = { -center.y, -center.y, srcHeight - center.y, srcHeight - center.y };
+	const float us[4] = { u0, u1, u1, u0 }, vs[4] = { v0, v0, v1, v1 };
+	SpriteVertex quad[4];
+	vector2 lo(INFINITY, INFINITY), hi(-INFINITY, -INFINITY);
+	for (int i = 0; i < 4; ++i) {
+		const float x = xs[i] * scale.x, y = ys[i] * scale.y;
+		quad[i] = { position.x + c * x - sn * y, position.y + sn * x + c * y,
+			us[i], vs[i], tint.r, tint.g, tint.b, tint.a };
+		lo.x = std::min(lo.x, quad[i].x); lo.y = std::min(lo.y, quad[i].y);
+		hi.x = std::max(hi.x, quad[i].x); hi.y = std::max(hi.y, quad[i].y);
+	}
+	if (!screenSpace && (hi.x < _viewMin.x || lo.x > _viewMax.x || hi.y < _viewMin.y || lo.y > _viewMax.y)) {
+		return;
+	}
+
+	_queueQuad(texture->getDescriptorSet(), quad);
+}
+
+void RendererVK::_drawFont(Font* font, Color tint, vector2 offset)
+{
+	if (!font || !_whiteTexture) {
+		return;
+	}
+
+	const std::string& text = font->getText();
+	if (text.empty()) {
+		return;
+	}
+
+	const int fontHeight = font->getHeight();
+	if (fontHeight <= 0) {
+		return;
+	}
+
+	const vector2 position = font->getPosition() + offset;
+	const vector2 center = font->getCenter();
+	const vector2 scale = font->getScale();
+	const float rotationRadians = font->getRotation();
+	const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
+
+	// Glyph bitmaps are drawn one quad per set bit, laid out like RendererGL's.
+	const auto toVertex = [&](float x, float y) -> SpriteVertex {
+		x *= scale.x;
+		y *= scale.y;
+		return { position.x + c * x - sn * y, position.y + sn * x + c * y,
+			0.5f, 0.5f, tint.r, tint.g, tint.b, tint.a };
+	};
+
+	float penX = -center.x;
+	float penY = -center.y;
+	const float lineAdvance = static_cast<float>(fontHeight + 1);
+
+	for (char ch : text) {
+		if (ch == '\n') {
+			penX = -center.x;
+			penY += lineAdvance;
+			continue;
+		}
+
+		const std::vector<int>& bitmap = font->getBitmap(ch);
+		const int glyphWidth = std::max(font->getWidth(ch), 0);
+		const int glyphAdvance = std::max(font->getBitmapWidth(), 1);
+		for (int rowIndex = 0; rowIndex < static_cast<int>(bitmap.size()); ++rowIndex) {
+			const int rowBits = bitmap[rowIndex];
+			for (int column = 0; column < glyphWidth; ++column) {
+				if (((rowBits >> column) & 1) == 0) {
+					continue;
+				}
+
+				const float left = penX + static_cast<float>(column);
+				const float top = penY + static_cast<float>(rowIndex);
+				const SpriteVertex quad[4] = {
+					toVertex(left, top),
+					toVertex(left + 1.0f, top),
+					toVertex(left + 1.0f, top + 1.0f),
+					toVertex(left, top + 1.0f)
+				};
+				_queueQuad(_whiteTexture->getDescriptorSet(), quad);
+			}
+		}
+
+		penX += static_cast<float>(glyphAdvance + 1);
 	}
 }
 
-void RendererVK::_drawImage(Sprite* sprite, VkCommandBuffer commandBuffer)
+glm::mat4 RendererVK::_cameraTransform(const vector2& cameraPosition) const
 {
-	// Ensure the texture is valid
-	if (!sprite) return;
+	// The transform RendererGL builds with glTranslate/glRotate/glScale.
+	const vector2 cameraCenter = m_pCamera->getCenter();
+	const float zoom = (m_pCamera->getZoom() > 0.0f) ? m_pCamera->getZoom() : 1.0f;
+	const float rotation = m_pCamera->getRotation();
+	const glm::vec3 zAxis(0.0f, 0.0f, 1.0f);
 
-	// Create a billboard for the sprite
-	Billboard billboard(sprite);
+	glm::mat4 transform(1.0f);
+	if (m_pCamera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) {
+		transform = glm::translate(transform, glm::vec3(cameraCenter.x, cameraCenter.y, 0.0f));
+		transform = glm::rotate(transform, rotation, zAxis);
+		transform = glm::scale(transform, glm::vec3(zoom, zoom, 1.0f));
+		transform = glm::translate(transform, glm::vec3(-cameraPosition.x, -cameraPosition.y, 0.0f));
+	}
+	else {
+		const vector2 legacyCameraOffset = cameraPosition - cameraCenter;
+		transform = glm::scale(transform, glm::vec3(zoom, zoom, 1.0f));
+		transform = glm::rotate(transform, rotation, zAxis);
+		transform = glm::translate(transform, glm::vec3(-legacyCameraOffset.x, -legacyCameraOffset.y, 0.0f));
+	}
+	return transform;
+}
 
-	// Correct the size calculation for the vertices
-	size_t verticesSize = sizeof(Vertex) * 4; // Assuming 4 vertices for the quad
+void RendererVK::_beginRenderList(const RenderList& renderList)
+{
+	// Game pixels to clip space. Vulkan's clip-space y points down, as screen y does.
+	const glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(m_nWidth), 0.0f, static_cast<float>(m_nHeight));
 
-	// Create a staging buffer for the vertices
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-	createBuffer(verticesSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer, vertexBufferMemory);
+	_listTransform = projection;
+	_listStarted = true;
 
-	// Copy the vertices to the staging buffer
-	void* data;
-	vkMapMemory(_device, vertexBufferMemory, 0, verticesSize, 0, &data);
-	memcpy(data, billboard.getVertices(), verticesSize);
-	vkUnmapMemory(_device, vertexBufferMemory);
+	if (renderList.screenSpace) {
+		return;
+	}
 
-	// Create descriptor sets to bind the texture
-	VkDescriptorSet descriptorSet;
-	_textureDescriptorSet(descriptorSet);
+	if (m_pCamera) {
+		const vector2 cameraPosition = _parallaxCameraPosition(renderList);
+		_listTransform = projection * _cameraTransform(cameraPosition);
+		_viewBounds(cameraPosition, _viewMin, _viewMax);
+	}
+	else {
+		_viewMin = vector2(-INFINITY, -INFINITY);
+		_viewMax = vector2(INFINITY, INFINITY);
+	}
+}
 
-	TextureVK* texture = (TextureVK*)sprite->getTexture();
+void RendererVK::_renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawImage(sprite, tint, offset, renderList.screenSpace);
+}
 
-	// Update the descriptor set with the texture's image view and sampler
-	VkDescriptorImageInfo imageInfo{};
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; // Ensuring optimal layout for shader read
-	imageInfo.imageView = texture->getImageView(); // Image view of the texture
-	imageInfo.sampler = texture->getSampler(); // Sampler of the texture
+void RendererVK::_renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList)
+{
+	_drawFont(font, tint, offset);
+}
 
-	VkWriteDescriptorSet descriptorWrite{};
-	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptorWrite.dstSet = descriptorSet;
-	descriptorWrite.dstBinding = 0; // Binding number in the shader
-	descriptorWrite.dstArrayElement = 0;
-	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptorWrite.descriptorCount = 1;
-	descriptorWrite.pImageInfo = &imageInfo;
+void RendererVK::_uploadSpriteVertices(VertexBuffer& vertexBuffer)
+{
+	const VkDeviceSize size = sizeof(SpriteVertex) * _spriteVertices.size();
 
-	vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+	// This frame's fence has signalled, so the GPU is done with the old buffer.
+	if (size > vertexBuffer.capacity) {
+		const VkDeviceSize capacity = std::max(size, vertexBuffer.capacity * 2);
+		_destroyVertexBuffer(vertexBuffer);
 
-	// Record drawing commands
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicsPipeline);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
+		createBuffer(capacity, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			vertexBuffer.buffer, vertexBuffer.memory);
+		vkMapMemory(_device, vertexBuffer.memory, 0, VK_WHOLE_SIZE, 0, &vertexBuffer.mapped);
+		vertexBuffer.capacity = capacity;
+	}
 
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
+	memcpy(vertexBuffer.mapped, _spriteVertices.data(), static_cast<size_t>(size));
+}
 
-	// Draw the quad
-	vkCmdDraw(commandBuffer, 4, 1, 0, 0);
+void RendererVK::_destroyVertexBuffer(VertexBuffer& vertexBuffer)
+{
+	if (vertexBuffer.memory != VK_NULL_HANDLE) {
+		vkUnmapMemory(_device, vertexBuffer.memory);
+		vkFreeMemory(_device, vertexBuffer.memory, nullptr);
+	}
+	if (vertexBuffer.buffer != VK_NULL_HANDLE) {
+		vkDestroyBuffer(_device, vertexBuffer.buffer, nullptr);
+	}
+	vertexBuffer = VertexBuffer();
+}
 
-	// Clean up resources
-	vkDestroyBuffer(_device, vertexBuffer, nullptr);
-	vkFreeMemory(_device, vertexBufferMemory, nullptr);
+void RendererVK::_drawSpriteBatches(VkCommandBuffer commandBuffer)
+{
+	if (_spriteVertices.empty()) {
+		return;
+	}
+
+	VertexBuffer& vertexBuffer = _vertexBuffers[currentFrame];
+	_uploadSpriteVertices(vertexBuffer);
+
+	const VkDeviceSize offset = 0;
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer.buffer, &offset);
+
+	VkDescriptorSet boundDescriptorSet = VK_NULL_HANDLE;
+	const glm::mat4* pushedTransform = nullptr;
+
+	for (const SpriteBatch& batch : _spriteBatches) {
+		if (batch.descriptorSet != boundDescriptorSet) {
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, 0, 1, &batch.descriptorSet, 0, nullptr);
+			boundDescriptorSet = batch.descriptorSet;
+		}
+		if (!pushedTransform || *pushedTransform != batch.transform) {
+			vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &batch.transform);
+			pushedTransform = &batch.transform;
+		}
+		vkCmdDraw(commandBuffer, batch.vertexCount, 1, batch.firstVertex, 0);
+	}
 }
 
 uint32_t RendererVK::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -521,10 +799,11 @@ void RendererVK::createSwapChain(VkPhysicalDevice physicalDevice, VkDevice devic
 	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes, m_bVerticalSync);
 	VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, window);
 
-	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+	// Fewest images the surface allows: every extra image is another frame FIFO can queue ahead of the display.
+	uint32_t imageCount = std::max(2u, swapChainSupport.capabilities.minImageCount);
 
 	if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
 		imageCount = swapChainSupport.capabilities.maxImageCount;
@@ -612,20 +891,26 @@ void RendererVK::createImageViews(VkDevice device)
 
 void RendererVK::createGraphicsPipeline(VkDevice device) {
 
-	auto bindingDescription = Vertex::getBindingDescription();
-	auto attributeDescriptions = Vertex::getAttributeDescriptions();
+	VkVertexInputBindingDescription bindingDescription{};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = sizeof(SpriteVertex);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	// Position and texture coordinate in floats, tint as normalized bytes
+	VkVertexInputAttributeDescription attributeDescriptions[3]{};
+	attributeDescriptions[0] = { 0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(SpriteVertex, x) };
+	attributeDescriptions[1] = { 1, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(SpriteVertex, u) };
+	attributeDescriptions[2] = { 2, 0, VK_FORMAT_R8G8B8A8_UNORM, offsetof(SpriteVertex, r) };
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 1; // Number of vertex bindings (1 in this case)
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
 	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()); // Number of vertex attributes (3 in this case)
-	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+	vertexInputInfo.vertexAttributeDescriptionCount = COUNT_OF(attributeDescriptions);
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions;
 
-	// We need a shader loader that automatically reads and compiles shaders from files.
-	// auto vertShaderCode = FileSystem::File::Read("./data/cache/shader/tri.v.spv");
-	auto vertShaderCode = FileSystem::File::Read("../cache/shader/tri.v.spv");
-	auto fragShaderCode = FileSystem::File::Read("../cache/shader/tri.f.spv");
+	auto vertShaderCode = readShader("tri.v.spv");
+	auto fragShaderCode = readShader("tri.f.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(device, vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(device, fragShaderCode);
@@ -652,24 +937,11 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)_swapChainExtent.width;
-	viewport.height = (float)_swapChainExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = _swapChainExtent;
-
+	// Viewport and scissor are dynamic state, set when each frame is recorded.
 	VkPipelineViewportStateCreateInfo viewportState{};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewportState.viewportCount = 1;
-	viewportState.pViewports = &viewport;
 	viewportState.scissorCount = 1;
-	viewportState.pScissors = &scissor;
 
 	VkPipelineRasterizationStateCreateInfo rasterizer{};
 	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -677,7 +949,7 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_NONE; // Mirrored sprites (negative scale) flip winding
 	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -703,15 +975,14 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_FALSE;
-	// colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
-	// colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
+	// Alpha blending, as glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) in RendererGL
+	colorBlendAttachment.blendEnable = VK_TRUE;
 	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD; // Optional
-	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Optional
-	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO; // Optional
-	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; // Optional
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 	VkPipelineColorBlendStateCreateInfo colorBlending{};
 	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -728,24 +999,6 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
-
-	// Define the layout for the uniform block (Transformations)
-	VkDescriptorSetLayoutBinding uniformLayoutBinding{};
-	uniformLayoutBinding.binding = 0; // Binding number in the shader (consistent with vertex stage)
-	uniformLayoutBinding.descriptorCount = 1;
-	uniformLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // Uniform buffer type
-	uniformLayoutBinding.pImmutableSamplers = nullptr;
-	uniformLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // Accessible from the vertex shader
-
-	// Create the descriptor set layout with the defined binding
-	VkDescriptorSetLayoutCreateInfo uniformLayoutInfo{};
-	uniformLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	uniformLayoutInfo.bindingCount = 1;
-	uniformLayoutInfo.pBindings = &uniformLayoutBinding;
-
-	if (vkCreateDescriptorSetLayout(_device, &uniformLayoutInfo, nullptr, &_uniformDescriptorSetLayout) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to create uniform descriptor set layout!");
-	}
 
 	// Define the layout for a combined image sampler
 	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
@@ -764,20 +1017,19 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 		throw std::runtime_error("Failed to create descriptor set layout!");
 	}
 
-	// Include both descriptor set layouts in the pipeline layout
-	VkDescriptorSetLayout descriptorSetLayouts[] = {
-		_uniformDescriptorSetLayout, 
-		_samplerDescriptorSetLayout
-	};
+	// The vertex shader's transform (pixels to clip space) changes per render list.
+	VkPushConstantRange pushConstantRange{};
+	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof(glm::mat4);
 
+	// Set 0 is the texture being drawn
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 2; // Include both descriptor set layouts
-	pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts;
-	// Other configurations remain the same
-	// pipelineLayoutInfo.pSetLayouts = nullptr;         // Optional
-	// pipelineLayoutInfo.pushConstantRangeCount = 0;    // Optional
-	// pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &_samplerDescriptorSetLayout;
+	pipelineLayoutInfo.pushConstantRangeCount = 1;
+	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &_pipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create pipeline layout!");
@@ -793,6 +1045,7 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 	pipelineInfo.pRasterizationState = &rasterizer;
 	pipelineInfo.pMultisampleState = &multisampling;
 	pipelineInfo.pColorBlendState = &colorBlending;
+	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.layout = _pipelineLayout;
 	pipelineInfo.renderPass = _renderPass;
 	pipelineInfo.subpass = 0;
@@ -804,27 +1057,75 @@ void RendererVK::createGraphicsPipeline(VkDevice device) {
 	}
 }
 
-void RendererVK::createDescriptorPool(void)
+VkDescriptorPool RendererVK::createDescriptorPool(void)
 {
-	// Define the type and number of descriptors that can be allocated from the pool
+	// One combined image sampler per set: each set is one texture.
 	VkDescriptorPoolSize poolSize{};
 	poolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSize.descriptorCount = 100; // Number of descriptors you want to allocate (adjust as needed)
+	poolSize.descriptorCount = TEXTURES_PER_DESCRIPTOR_POOL;
 
-	// Create the descriptor pool with the defined size
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT; // Textures free their own set
 	poolInfo.poolSizeCount = 1;
 	poolInfo.pPoolSizes = &poolSize;
-	poolInfo.maxSets = 100; // Maximum number of descriptor sets that can be allocated (adjust as needed)
+	poolInfo.maxSets = TEXTURES_PER_DESCRIPTOR_POOL;
 
-	if (vkCreateDescriptorPool(_device, &poolInfo, nullptr, &_descriptorPool) != VK_SUCCESS) {
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+	if (vkCreateDescriptorPool(_device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create descriptor pool!");
 	}
+
+	_descriptorPools.push_back(descriptorPool);
+	return descriptorPool;
 }
 
-void createDescriptorSets(void) {
+VkDescriptorSet RendererVK::allocateTextureDescriptorSet(VkImageView imageView, VkSampler sampler, VkDescriptorPool& pool)
+{
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorSetCount = 1;
+	allocInfo.pSetLayouts = &_samplerDescriptorSetLayout;
 
+	VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+
+	// Use the newest pool; when it is full, add another and try once more.
+	pool = _descriptorPools.empty() ? createDescriptorPool() : _descriptorPools.back();
+	allocInfo.descriptorPool = pool;
+
+	if (vkAllocateDescriptorSets(_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+		pool = createDescriptorPool();
+		allocInfo.descriptorPool = pool;
+
+		if (vkAllocateDescriptorSets(_device, &allocInfo, &descriptorSet) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to allocate descriptor sets!");
+		}
+	}
+
+	VkDescriptorImageInfo imageInfo{};
+	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	imageInfo.imageView = imageView;
+	imageInfo.sampler = sampler;
+
+	VkWriteDescriptorSet descriptorWrite{};
+	descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptorWrite.dstSet = descriptorSet;
+	descriptorWrite.dstBinding = 0; // Binding number in the shader
+	descriptorWrite.dstArrayElement = 0;
+	descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptorWrite.descriptorCount = 1;
+	descriptorWrite.pImageInfo = &imageInfo;
+
+	vkUpdateDescriptorSets(_device, 1, &descriptorWrite, 0, nullptr);
+
+	return descriptorSet;
+}
+
+void RendererVK::freeTextureDescriptorSet(VkDescriptorPool pool, VkDescriptorSet descriptorSet)
+{
+	if (_device != VK_NULL_HANDLE && pool != VK_NULL_HANDLE && descriptorSet != VK_NULL_HANDLE) {
+		vkFreeDescriptorSets(_device, pool, 1, &descriptorSet);
+	}
 }
 
 void RendererVK::createRenderPass(VkDevice device)
@@ -958,68 +1259,30 @@ void RendererVK::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t ima
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = _swapChainExtent;
 
-	VkClearValue clearColor = { {{m_ClearColor.a / 255.0f, m_ClearColor.r / 255.0f, m_ClearColor.g / 255.0f, m_ClearColor.b / 255.0f}} };
+	VkClearValue clearColor = { {{m_ClearColor.r / 255.0f, m_ClearColor.g / 255.0f, m_ClearColor.b / 255.0f, m_ClearColor.a / 255.0f}} };
 	renderPassInfo.pClearValues = &clearColor;
 	renderPassInfo.clearValueCount = 1;
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicsPipeline);
-	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-	if (m_pCamera)
-	{
-		glm::mat4 viewMat = glm::mat4(1.0f);
+	// The whole framebuffer; the projection maps the game resolution onto it.
+	VkViewport viewport{};
+	viewport.width = static_cast<float>(_swapChainExtent.width);
+	viewport.height = static_cast<float>(_swapChainExtent.height);
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-		glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), glm::vec3(m_pCamera->getZoom(), m_pCamera->getZoom(), 1.0f));
+	VkRect2D scissor{};
+	scissor.extent = _swapChainExtent;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		glm::mat4 rotationMat = glm::rotate(glm::mat4(1.0f), m_pCamera->getRotation(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		glm::vec2 position = m_pCamera->getPosition() - m_pCamera->getCenter();
-
-		viewMat[3][0] = -glm::dot(glm::vec2(1.0f, 0.0f), position);
-		viewMat[3][1] = -glm::dot(glm::vec2(0.0f, 1.0f), position);
-
-		viewMat = scaleMat * rotationMat * viewMat;
-
-		vkCmdPushConstants(commandBuffer, _pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewMat);
-	}
-
-	if (!_RenderLists.empty())
-	{
-		for (const auto& renderList : _RenderLists) {
-
-			std::list<Renderable*>::iterator renderListIter = renderList->begin();
-
-			for (; renderListIter != renderList->end(); renderListIter++) {
-
-				Renderable* renderable = (*renderListIter);
-
-				if (renderable->isVisible()) {
-
-					switch (renderable->getRenderableType())
-					{
-					case RENDERABLE_TYPE_NULL:
-					case RENDERABLE_TYPE_WIDGET:
-					case RENDERABLE_TYPE_FONT:
-						break;
-					case RENDERABLE_TYPE_SPRITE: // Rename to image
-						_drawImage((Sprite*)renderable, commandBuffer);
-						break;
-					case RENDERABLE_TYPE_ANIMATION:
-					{
-						Animation* animation = (Animation*)renderable;
-						Frame* frame = animation->getCurrentFrame();
-
-						if (frame) {
-							_drawImage(frame->getSprite(), commandBuffer);
-						}
-					}
-					break;
-					}
-				}
-			}
-		}
-	}
+	// Queue world-space lists first, then screen-space, matching the other backends.
+	_spriteVertices.clear();
+	_spriteBatches.clear();
+	_drawRenderLists(false);
+	_drawRenderLists(true);
+	_drawSpriteBatches(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -1041,7 +1304,22 @@ void RendererVK::cleanupSwapChain(void)
 		}
 
 		vkDestroySwapchainKHR(_device, _swapChain, nullptr);
+		_swapChain = VK_NULL_HANDLE;
 	}
+
+	_swapChainFramebuffers.clear();
+	swapChainImageViews.clear();
+	_swapChainImages.clear();
+}
+
+void RendererVK::setVerticalSync(bool vsyncEnabled)
+{
+	const bool changed = vsyncEnabled != m_bVerticalSync;
+	IRenderer::setVerticalSync(vsyncEnabled);
+
+	// The present mode is baked into the swap chain, so rebuild it if one exists.
+	if (changed && _swapChain != VK_NULL_HANDLE)
+		recreateSwapChain();
 }
 
 void RendererVK::recreateSwapChain(void)
@@ -1216,6 +1494,11 @@ void RendererVK::initialize(void)
 			createCommandBuffers(_device);
 			createSyncObjects();
 			createDescriptorPool();
+
+			_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+			const unsigned char white[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
+			_whiteTexture = new TextureVK("vulkan:white", white, 1, 1);
 		}
 	}
 }
@@ -1235,7 +1518,23 @@ void RendererVK::shutdown(void)
 				vkDestroyFence(_device, inFlightFences[i], nullptr);
 			}
 
-			vkDestroyDescriptorPool(_device, _descriptorPool, nullptr);
+			// Textures hold device objects and descriptor sets, so release them while the device exists.
+			m_Textures.clear();
+			delete _whiteTexture;
+			_whiteTexture = nullptr;
+
+			for (VertexBuffer& vertexBuffer : _vertexBuffers) {
+				_destroyVertexBuffer(vertexBuffer);
+			}
+			_vertexBuffers.clear();
+
+			for (VkDescriptorPool descriptorPool : _descriptorPools) {
+				vkDestroyDescriptorPool(_device, descriptorPool, nullptr);
+			}
+			_descriptorPools.clear();
+
+			vkDestroyDescriptorSetLayout(_device, _samplerDescriptorSetLayout, nullptr);
+			_samplerDescriptorSetLayout = VK_NULL_HANDLE;
 
 			vkDestroyCommandPool(_device, _commandPool, nullptr);
 
@@ -1250,6 +1549,7 @@ void RendererVK::shutdown(void)
 			for (auto shaderModule : _shaderModules) {
 				vkDestroyShaderModule(_device, shaderModule, nullptr);
 			}
+			_shaderModules.clear();
 
 			if (_device != VK_NULL_HANDLE) {
 				vkDestroyDevice(_device, nullptr);
@@ -1276,12 +1576,6 @@ void RendererVK::shutdown(void)
 
 void RendererVK::render(void)
 {
-	const std::vector<Vertex> vertices = {
-		 {{0.0f, -0.5f, 0.0f}, {0, 0}, {1.0f, 1.0f, 0.0f, 0.0f}},
-		 {{0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 1.0f, 0.0f}},
-		 {{-0.5f, 0.5f, 0.0f}, {0, 0}, {1.0f, 0.0f, 0.0f, 1.0f}}
-	};
-
 	IRenderer::render();
 
 	if (_device == VK_NULL_HANDLE)
@@ -1330,6 +1624,7 @@ void RendererVK::render(void)
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
 
+	const VkFence submittedFence = inFlightFences[currentFrame];
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
 	VkPresentInfoKHR presentInfo{};
@@ -1344,7 +1639,12 @@ void RendererVK::render(void)
 
 	presentInfo.pImageIndices = &imageIndex;
 
+	FramePacer::presentBegin();
 	result = vkQueuePresentKHR(_presentQueue, &presentInfo);
+
+	// Finish this frame before returning so the next input poll lands on an idle GPU.
+	vkWaitForFences(_device, 1, &submittedFence, VK_TRUE, UINT64_MAX);
+	FramePacer::presentEnd();
 
 	switch (result)
 	{
@@ -1601,18 +1901,20 @@ VkSampler RendererVK::createSampler(void)
 {
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	// Nearest and clamped like TextureGL, so pixel art stays crisp and sheet edges do not wrap.
+	// Anisotropy stays off: the samplerAnisotropy device feature is not enabled.
 	samplerInfo.magFilter = VK_FILTER_NEAREST;
 	samplerInfo.minFilter = VK_FILTER_NEAREST;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.anisotropyEnable = VK_TRUE;
-	samplerInfo.maxAnisotropy = 16;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	samplerInfo.anisotropyEnable = VK_FALSE;
+	samplerInfo.maxAnisotropy = 1.0f;
 	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerInfo.unnormalizedCoordinates = VK_FALSE;
 	samplerInfo.compareEnable = VK_FALSE;
 	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 	samplerInfo.mipLodBias = 0.0f;
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = 0.0f;
@@ -1634,9 +1936,10 @@ ITexture* RendererVK::createTexture(const char* szFilename, Color colorKey)
 	if (!pTexture)
 	{
 		pTexture = (ITexture*)new TextureVK(szFilename);
-		//pTexture->setKeyColor(colorKey);
+		pTexture->setKeyColor(colorKey);
 
-		//m_Textures.store(pTexture);
+		// Cache it like the other backends, so sprites sharing an image share one texture.
+		m_Textures.store(pTexture);
 
 		//D3DXCreateTextureFromFileEx(
 		//	m_pD3DDevice, szFilename,

@@ -280,6 +280,19 @@ namespace System
         return false;
     }
 
+    static bool checkArgumentsForMetal(int argc, const char** argv)
+    {
+        if (argc > 1) {
+
+            for (int i = 0; i < argc; i++) {
+                if (!strcmp(argv[i], "--metal") || !strcmp(argv[i], "-mtl")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // Get the current operating system.
     const char* GetOperatingSystem();
     
@@ -341,7 +354,8 @@ namespace System
     uint32_t GetGPUNumberOfVideoMemory();
 
     // Additionally we might want to store the environment information like the current working directory, the current user, etc.
-    static const char* GlobalDataPath(const char *dataPath = NULL)
+    // inline, not static: one cached path for the whole program, not one per file
+    inline const char* GlobalDataPath(const char *dataPath = NULL)
     {
         static std::string path;
 

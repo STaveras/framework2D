@@ -7,6 +7,7 @@
 #include "StrUtils.h"
 #include "FileSystem.h"
 
+#include <cstdlib>
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -78,6 +79,8 @@ struct TileMapLoadResult
 	int mapHeight = 0;
 	int tileWidth = 0;
 	int tileHeight = 0;
+	float parallaxOriginX = 0.0f;
+	float parallaxOriginY = 0.0f;
 	std::vector<MapLayerDescriptor> layers;
 	std::vector<TileMap*> tileMaps;
 	std::vector<TileObjectLayerDescriptor> objectLayers;
@@ -162,7 +165,7 @@ public:
 		}
 	}
 
-	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex) 
+	void setTile(unsigned int x, unsigned int y, TileSet* tileSet, int tileIndex, unsigned int flipFlags = 0) 
 	{
 		if (tileIndex < 0 && !this->getTile(x, y)) {
 			return;
@@ -172,7 +175,7 @@ public:
 			if (tileSet) {
 				tile->setTileSet(tileSet);
 			}
-			tile->setTileIndex(tileIndex);
+			tile->setTileIndex(tileIndex, flipFlags);
 			tile->setLayerCollisionMode(_layerConfig.collisionMode);
 			tile->setLayerName(_layerConfig.name);
 		}
@@ -472,6 +475,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 		result.mapHeight = readInt(json["height"], 0);
 		result.tileWidth = readInt(json["tilewidth"], 0);
 		result.tileHeight = readInt(json["tileheight"], 0);
+		result.parallaxOriginX = readFloat(json["parallaxoriginx"], 0.0f);
+		result.parallaxOriginY = readFloat(json["parallaxoriginy"], 0.0f);
 
 		const std::string mapDirectory = FileSystem::File::GetFilePath(filePath);
 
@@ -578,8 +583,20 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.name = layerDescriptor.name;
 						layerConfig.startX = readInt(layer["startx"], 0);
 						layerConfig.startY = readInt(layer["starty"], 0);
-						layerConfig.offsetX = readFloat(layer["x"], 0.0f);
-						layerConfig.offsetY = readFloat(layer["y"], 0.0f);
+						// Tiled stores pixel offsets separately from the layer's tile position.
+						layerConfig.offsetX = readFloat(layer["offsetx"], 0.0f);
+						layerConfig.offsetY = readFloat(layer["offsety"], 0.0f);
+						layerConfig.parallaxX = readFloat(layer["parallaxx"], 1.0f);
+						layerConfig.parallaxY = readFloat(layer["parallaxy"], 1.0f);
+						layerConfig.opacity = readFloat(layer["opacity"], 1.0f);
+						if (layer["tintcolor"].is_string()) {
+							// Tiled writes "#RRGGBB" or "#AARRGGBB".
+							const std::string tint((std::string_view)layer["tintcolor"].get_string());
+							if (tint.size() == 7 || tint.size() == 9) {
+								uint32_t value = (uint32_t)std::strtoul(tint.c_str() + 1, nullptr, 16);
+								layerConfig.tintColor = (tint.size() == 7) ? (0xFF000000u | value) : value;
+							}
+						}
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
 						// User-selected default for missing property is non-colliding.
@@ -660,7 +677,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									const int cy = index / chunkW;
 									++index;
 
-										const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+										const int64_t rawGid = readInt64(gidElement, 0);
+										const unsigned int flipFlags = (unsigned int)(rawGid & 0xFFFFFFFFLL) & TileSet::kFlipMask;
+										const int64_t gid = normalizeGid(rawGid);
 										if (gid == 0) {
 											continue;
 										}
@@ -685,7 +704,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 										continue;
 									}
 
-									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+									tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex, flipFlags);
 								}
 							}
 						}
@@ -702,7 +721,9 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 								const int localY = index / mapWidth;
 								++index;
 
-									const int64_t gid = normalizeGid(readInt64(gidElement, 0));
+									const int64_t rawGid = readInt64(gidElement, 0);
+									const unsigned int flipFlags = (unsigned int)(rawGid & 0xFFFFFFFFLL) & TileSet::kFlipMask;
+									const int64_t gid = normalizeGid(rawGid);
 									if (gid == 0) {
 										continue;
 									}
@@ -719,7 +740,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									continue;
 								}
 
-								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex);
+								tileMap->setTile((unsigned int)localX, (unsigned int)localY, resolvedTileSet, resolvedTileIndex, flipFlags);
 							}
 							}
 
@@ -753,8 +774,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 					objectLayer.visible = layerDescriptor.visible;
 					objectLayer.traversalIndex = layerDescriptor.traversalIndex;
 
-					const float layerOffsetX = readFloat(layer["x"], 0.0f);
-					const float layerOffsetY = readFloat(layer["y"], 0.0f);
+					const float layerOffsetX = readFloat(layer["x"], 0.0f) + readFloat(layer["offsetx"], 0.0f);
+					const float layerOffsetY = readFloat(layer["y"], 0.0f) + readFloat(layer["offsety"], 0.0f);
 					if (!layer["objects"].is_null() && layer["objects"].is_array()) {
 						for (auto object : layer["objects"]) {
 							TileObjectDescriptor descriptor;

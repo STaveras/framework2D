@@ -8,11 +8,14 @@
 
 #include "Factory.h"
 #include "ITexture.h"
+#include <iterator>
 #include <list>
 #include <unordered_map>
 #include <vector>
 
 class Camera;
+class Font;
+class Sprite;
 
 typedef class IRenderer
 {
@@ -20,9 +23,17 @@ public:
 typedef struct RenderList : public std::list<class Renderable *>
 {
     bool screenSpace;
+    float parallaxX;
+    float parallaxY;
+    float parallaxOriginX;
+    float parallaxOriginY;
 
     RenderList()
-        : screenSpace(false)
+        : screenSpace(false),
+          parallaxX(1.0f),
+          parallaxY(1.0f),
+          parallaxOriginX(0.0f),
+          parallaxOriginY(0.0f)
     {}
 } RenderList;
 
@@ -57,6 +68,26 @@ protected:
 	RENDERER_API_TYPE _type;
 
 	ITexture *_textureExists(const char *szFilename);
+
+	// Shared front end. Walks every render list whose screenSpace flag matches,
+	// in list order, and hands each visible renderable to the backend hooks
+	// below: sprites and the current frame of an animation go to _renderSprite,
+	// fonts to _renderFont. Backends only implement the hooks they support.
+	void _drawRenderLists(bool screenSpace);
+	virtual void _beginRenderList(const RenderList& renderList) {}
+	virtual void _endRenderList(const RenderList& renderList) {}
+	virtual void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) {}
+	virtual void _renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList) {}
+
+	// Camera math shared by every backend. All of them expect a camera to be set.
+	// Camera position for a list with the given parallax factor and origin.
+	vector2 _parallaxCameraPosition(const vector2& parallaxFactor, const vector2& parallaxOrigin) const;
+	vector2 _parallaxCameraPosition(const RenderList& renderList) const;
+	// World-space rectangle visible from cameraPosition (rotation and zoom included).
+	void _viewBounds(const vector2& cameraPosition, vector2& viewMin, vector2& viewMax) const;
+	// Screen position of a world point seen from cameraPosition. Without a camera
+	// the point is returned unchanged.
+	vector2 _worldToScreen(const vector2& worldPosition, const vector2& cameraPosition) const;
 
 public:
 	IRenderer(RENDERER_API_TYPE renderingAPI = RENDERER_TYPE_NULL, 
@@ -111,8 +142,10 @@ public:
 	virtual ITexture *createTexture(const char *szFilename, Color colorKey = 0) = 0;
 	virtual bool destroyTexture(const ITexture *pTexture);
 
-	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList); }
-	void popRenderList(void) { _RenderLists.erase(_RenderLists.end()); }
+	// Pushed lists stay owned by the caller; pop removes the last list and
+	// deletes it only if the renderer created it.
+	void pushRenderList(RenderList *pRenderList) { _RenderLists.store(pRenderList, false); }
+	void popRenderList(void) { if (!_RenderLists.empty()) _RenderLists.erase(std::prev(_RenderLists.end())); }
 
     RenderList *createRenderList(bool screenSpace = false)
     {
@@ -122,6 +155,8 @@ public:
         return renderList;
     }
 	void destroyRenderList(RenderList *list) { _RenderLists.destroy(list); }
+	size_t getRenderListCount(void) const { return _RenderLists.size(); }
+	RenderList *getRenderList(size_t index) { return _RenderLists.at((unsigned int)index); }
 
 	virtual void initialize(void) = 0;
 	virtual void shutdown(void) = 0;
@@ -135,6 +170,7 @@ public:
 static const std::unordered_map<RenderingInterface::TYPE, std::string> apiTypeToString{
 	 { RenderingInterface::TYPE::RENDERER_TYPE_DX, "DirectX9" },
 	 { RenderingInterface::TYPE::RENDERER_TYPE_GL, "OpenGL" },
+	 { RenderingInterface::TYPE::RENDERER_TYPE_MTL, "Metal" },
 	 { RenderingInterface::TYPE::RENDERER_TYPE_VK, "Vulkan" }
 };
 
@@ -142,6 +178,7 @@ static const std::unordered_map<RenderingInterface::TYPE, std::string> apiTypeTo
 static const std::unordered_map<std::string, RenderingInterface::TYPE> stringToAPIType{
 	 { "DirectX9",  RenderingInterface::TYPE::RENDERER_TYPE_DX},
 	 { "OpenGL", RenderingInterface::TYPE::RENDERER_TYPE_GL },
+	 { "Metal",  RenderingInterface::TYPE::RENDERER_TYPE_MTL },
 	 { "Vulkan",  RenderingInterface::TYPE::RENDERER_TYPE_VK }
 };
 

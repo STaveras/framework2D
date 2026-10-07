@@ -2,18 +2,37 @@
 
 #pragma once
 
-#include "../GameObject.h"
+#include "../Actor.h"
 #include "../Tile.h"
 #include "../AnimationUtils.h"
+#include "../BlinkFlash.h"
 
 #include "Constants.h"
 #include "Resources.h"
 
 #include <vector>
 
-class Character : public GameObject
+class PlayerController;
+
+class Character : public Actor
 {
+public:
+	// Intent action slots a Controller fills for a Character. Horizontal
+	// movement comes from Intent::move.x.
+	enum Action
+	{
+		ACTION_JUMP,
+		ACTION_DOWN,
+		ACTION_RUN
+	};
+
+	// Bind the FantasySideScroller input actions (JUMP, DOWN, RUN, LEFT,
+	// RIGHT) to a player controller.
+	static void bindPlayerActions(PlayerController& controller);
+
+private:
 	Tile* _tile = NULL; // The tile the character is on
+	float _dropThroughSupportY = 0.0f;
 	float _health = 100.0f;
 	float _maxHealth = 100.0f;
 	float _stamina = 100.0f;
@@ -22,6 +41,9 @@ class Character : public GameObject
 	float _longJumpMomentumSpeed = 0.0f;
 	int _longJumpMomentumDirection = 0;
 	bool _longJumpMomentumActive = false;
+	BlinkFlash _damageFlash;
+	// While positive, input steering is suspended so a knockback keeps its velocity.
+	float _knockbackRemaining = 0.0f;
 	// Reused by _findGroundSupportTile so support scans do not allocate each tick.
 	std::vector<GameObject*> _supportCandidates;
 
@@ -51,6 +73,7 @@ protected:
 	virtual void handleCollisionContact(const CollisionContact& contact) override;
 	virtual void onStateDidEnter(State* previous, State* current) override;
 	virtual const char* mapCollisionToCommand(const CollisionContact& contact) const override;
+	void onUpdate(float time) override;
 
 public:
 	Character(void);
@@ -61,6 +84,11 @@ public:
 	float getMaxHealth() const { return _maxHealth; }
 	float getHealthNormalized() const { return (_maxHealth > 0.0f) ? (_health / _maxHealth) : 0.0f; }
 	void addHealth(float amount);
+
+	// Launches the character with the given velocity (pixels/second, +y down) and
+	// suspends input steering for lockSeconds, e.g. when thrown off by spikes.
+	void applyKnockback(vector2 velocity, float lockSeconds);
+	bool isKnockedBack() const { return _knockbackRemaining > 0.0f; }
 
 	float getStamina() const { return _stamina; }
 	float getMaxStamina() const { return _maxStamina; }
@@ -73,5 +101,4 @@ public:
 	}
 
 	bool shouldCollideWith(const GameObject& other) const override;
-	void update(float time) override;
 };

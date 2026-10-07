@@ -1,7 +1,7 @@
 #version 450
 
 // Sampler for the sprite texture
-layout(binding = 0) uniform sampler2D spriteTexture;
+layout(set = 0, binding = 0) uniform sampler2D spriteTexture;
 
 // Inputs from vertex shader
 layout(location = 0) in vec2 fragTexCoord; // Texture coordinate

@@ -12,6 +12,8 @@ bool hasPolygonSurface(const Collidable* collidable);
 bool tryGetBounds(const Collidable* collidable, vector2& outMin, vector2& outMax);
 bool tryGetActiveBounds(const Collidable* collidable, vector2& outMin, vector2& outMax);
 bool sampleSupportY(const Collidable* collidable, float sampleX, float& outY);
+// Sample the portion of a surface actually underneath the body, including edges.
+bool sampleSupportYInOverlap(const Collidable* collidable, float bodyMinX, float bodyMaxX, float& outY);
 
 bool hasWalkableSupportNearFoot(
 	const Collidable* supportCollidable,

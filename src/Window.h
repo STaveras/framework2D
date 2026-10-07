@@ -2,11 +2,22 @@
 #pragma once
 
 #include "Types.h"
+#include "Maths.h"
+
+#include <string>
+
+#include <functional>
 
 #define EVT_WINDOW_RESIZED "EVT_WINDOW_RESIZED"
 
 class Window
 {
+public:
+	typedef std::function<void(int key, int scancode, int action, int mods)> KeyEventHandler;
+	// Saves the frame being rendered as a PNG at path; false if it could not.
+	typedef std::function<bool(const std::string& path)> FrameCapture;
+
+private:
 	bool m_bHasQuit;
 	int m_nWidth;
 	int m_nHeight;
@@ -18,9 +29,19 @@ class Window
 	WINDOWPLACEMENT m_wpPrev;
 #endif
 	GLFWwindow* _window;
+#if FRAMEWORK_IOS
+	void* _nativeView = nullptr; // UIView whose layer is a CAMetalLayer
+#endif
 
 	const char* m_szWindowClassName;
 	std::string m_szWindowTitle;
+
+	// Frame capture for verification runs (AUTO_SCREENSHOT_FRAME / AUTO_SCREENSHOT_PATH).
+	long _renderedFrames = 0;
+	long _autoScreenshotFrame = -1;
+	std::string _autoScreenshotPath;
+
+	KeyEventHandler m_keyEventHandler;
 
 public:
 	enum class ClientAPI
@@ -70,6 +91,11 @@ public:
 	LPSTR getCmdLineArgs(void) const { return m_lpCmdLine; }
 #endif
 	GLFWwindow * getUnderlyingWindow(void) { return _window; }
+#if FRAMEWORK_IOS
+	// The game view; set before initialize(). Sizes are in points.
+	void* getNativeView(void) const { return _nativeView; }
+	void setNativeView(void* view) { _nativeView = view; }
+#endif
 
 	bool hasQuit(void) const { return m_bHasQuit; }
 	int getWidth(void) const { return m_nWidth; }
@@ -84,6 +110,9 @@ public:
 	void setWidth(int nWidth);
 	void setHeight(int nHeight);
 	void setWindowTitle(const char* szWindowTitle);
+
+	// Receives every GLFW key event as it is delivered by glfwPollEvents()
+	void setKeyEventHandler(KeyEventHandler handler) { m_keyEventHandler = std::move(handler); }
 #ifdef _WIN32
 	void initialize(HINSTANCE hInstance, LPSTR lpCmdLine);
 #endif
@@ -93,5 +122,15 @@ public:
 
 	void resize(void);
 	void toggleFullscreen(void);
+
+	// Saves the current OpenGL back buffer as a PNG. Call after a frame is drawn and before
+	// it is presented. Returns false without an OpenGL context or if writing fails.
+	bool saveScreenshot(const std::string& path);
+
+	// Called by the renderer once a frame is drawn, before presenting it. viewMin/viewMax is
+	// the world rectangle the frame shows. With AUTO_SCREENSHOT_FRAME=N and
+	// AUTO_SCREENSHOT_PATH set, frame N is saved there, with the view in "<path>.view".
+	// Renderers without an OpenGL back buffer pass their own capture.
+	void onFrameRendered(const vector2& viewMin, const vector2& viewMax, const FrameCapture& capture = FrameCapture());
 };
 // Author: Stanley Taveras

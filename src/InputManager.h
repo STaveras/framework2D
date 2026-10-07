@@ -4,7 +4,7 @@
 
 #include "IInput.h"
 #include "Factory.h"
-#include "Controller.h"
+#include "InputMap.h"
 #include <vector>
 
 class EventSystem;
@@ -20,7 +20,7 @@ protected:
 	InputInterface* _input;
 
 private:
-	Factory<Controller> _controllers;
+	Factory<InputMap> _inputMaps;
 
 public:
 	InputManager(void);
@@ -28,12 +28,13 @@ public:
 
 	void initialize(EventSystem* eventSystem, IInput* inputInterface);
 
-	Controller* createController(void);
-	Controller* getController(unsigned int uiIndex) { return _controllers.at(uiIndex); }
-	void destroyController(Controller* controller);
+	InputMap* createInputMap(void);
+	InputMap* getInputMap(unsigned int uiIndex) { return _inputMaps.at(uiIndex); }
+	void destroyInputMap(InputMap* controller);
 
-	Keyboard* getKeyboard(void) { return _input->getKeyboard(); }
-	Mouse*	 getMouse(void)	 { return _input->getMouse(); }
+	Keyboard* getKeyboard(void) { return _input ? _input->getKeyboard() : NULL; }
+	Mouse*	 getMouse(void)	 { return _input ? _input->getMouse() : NULL; }
+	Gamepad* getGamepad(void) { return _input ? _input->getGamepad() : NULL; }
 	
 	void update(float fTime);
 	void shutdown(void);

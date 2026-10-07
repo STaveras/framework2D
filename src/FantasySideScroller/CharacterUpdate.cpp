@@ -317,8 +317,11 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 	}
 }
 
-void Character::update(float time)
+void Character::onUpdate(float time)
 {
+	_damageFlash.update(*this, time);
+	const bool knockedBack = _knockbackRemaining > 0.0f;
+	_knockbackRemaining = std::max(0.0f, _knockbackRemaining - time);
 	AutoTestRuntime& autoRuntime = CharacterPrivate::AutoRuntime();
 	initializeAutoTestRuntime(autoRuntime);
 	autoRuntime.elapsedSeconds += std::max(0.0, (double)time);
@@ -544,7 +547,7 @@ void Character::update(float time)
 			
 		const bool groundedForMovement = hasGroundSupport || (_kinematic2DState().timeWithoutGroundContact < kGroundLossGraceSeconds);
 
-		const int horizontalInput = canInputMove ? _getHorizontalInput() : 0;
+		const int horizontalInput = (canInputMove && !knockedBack) ? _getHorizontalInput() : 0;
 		const bool hasDirectionalIntent = horizontalInput != 0;
 		const bool runRequested = canInputMove && groundedForMovement && _isRunRequested();
 		_runBoostActive = runRequested && hasDirectionalIntent && _stamina > 0.0f;
@@ -560,17 +563,15 @@ void Character::update(float time)
 			_runBoostActive = false;
 		}
 
-		Player* player = Engine2D::getGame()->getPlayerWith(this);
-		bool downHeld = false;
-		if (player && player->getController()) {
-			if (Action* downAction = player->getController()->getAction("DOWN")) {
-				downHeld = downAction->isActive();
-			}
-		}
+		const bool possessed = isPossessed();
+		const bool downHeld = getIntent().isHeld(ACTION_DOWN);
 
 		float horizontalVelocity = this->getVelocity().x;
 		const float startingAbsHorizontalSpeed = std::fabs(horizontalVelocity);
-		if (canResidualMove) {
+		if (knockedBack) {
+			// Keep the knockback's horizontal velocity; steering resumes once it ends.
+		}
+		else if (canResidualMove) {
 			const float groundedMaxSpeed = _runBoostActive ? kRunMaxHorizontalSpeed : kWalkMaxHorizontalSpeed;
 			const float targetVelocityX = hasDirectionalIntent ?
 				((float)horizontalInput * (groundedForMovement ? groundedMaxSpeed : kAirMaxHorizontalSpeed)) :
@@ -702,7 +703,7 @@ void Character::update(float time)
 			}
 		}
 
-		if (player) {
+		if (possessed) {
 //#if _DEBUG
 			if (KEYBOARD) {
 				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {

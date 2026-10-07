@@ -17,6 +17,13 @@ class GameObject;
 class ObjectManager;
 class TileSet;
 
+struct LevelEnemyDescriptor
+{
+	int objectId = -1;
+	std::string typeName;
+	vector2 position;
+};
+
 class LevelManager
 {
 	Camera* _camera = NULL;
@@ -25,6 +32,7 @@ class LevelManager
 	TileSet* _tileSet = NULL;
 
 	std::vector<TileMap*> _tileMaps;
+	std::vector<Tile*> _registeredTiles;
 	std::vector<IRenderer::RenderList*> _mapLayerRenderLists;
 	bool _hasSpawnPoint = false;
 	vector2 _spawnPoint;
@@ -33,6 +41,7 @@ class LevelManager
 	vector2 _levelBoundsMax;
 	int _runtimeLayerIndex = -1;
 	std::vector<LevelTriggerDescriptor> _triggerDescriptors;
+	std::vector<LevelEnemyDescriptor> _enemyDescriptors;
 	AttachObjectsOperator _cameraPlayerAttach;
 	bool _cameraAttachOperatorRegistered = false;
 
@@ -61,5 +70,7 @@ public:
 	bool hasSpawnPoint() const { return _hasSpawnPoint; }
 	vector2 getSpawnPoint() const { return _spawnPoint; }
 	const std::vector<LevelTriggerDescriptor>& getTriggerDescriptors() const { return _triggerDescriptors; }
+	const std::vector<LevelEnemyDescriptor>& getEnemyDescriptors() const { return _enemyDescriptors; }
 	int getRuntimeLayerIndex() const { return _runtimeLayerIndex; }
+	const std::vector<TileMap*>& getTileMaps() const { return _tileMaps; }
 };

@@ -35,11 +35,11 @@ else
 endif
 
 COMMON_SRCS := \
-  src/main.cpp src/Engine2D.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
+  src/main.cpp src/Engine2D.cpp src/RenderInterpolation.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
   src/ObjectManager.cpp src/CollisionSystem.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
-  src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Controller.cpp src/Timer.cpp \
+  src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/InputMap.cpp src/Timer.cpp \
   src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
-  src/InputTapeRecorder.cpp src/PlatformMouse.cpp src/Font.cpp src/Cursor.cpp \
+  src/InputTapeRecorder.cpp src/PlatformMouse.cpp src/PlatformGamepad.cpp src/Font.cpp src/Cursor.cpp \
   src/Physical.cpp src/Kinematics2D.cpp src/Telemetry2D.cpp src/StrUtils.cpp \
   src/TextureVK.cpp src/TextureGL.cpp src/InputEvent.cpp src/IInput.cpp src/Trigger.cpp \
   src/UpdateBackgroundOperator.cpp src/SDSParser.cpp src/PlatformInput.cpp src/PlatformKeyboard.cpp src/System.cpp \
@@ -48,7 +48,8 @@ COMMON_SRCS := \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
   src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
-  src/FantasySideScroller/TraversalMechanics.cpp
+  src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp src/BlinkFlash.cpp \
+  src/Actor.cpp src/PlayerController.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
@@ -67,9 +68,31 @@ CPPFLAGS := $(INCLUDES)
 CXXFLAGS := $(STD) $(WARN) $(DIAG) $(DEBUG_FLAGS) $(PLATFORM_COMPILE_FLAGS)
 LDFLAGS := $(LIBS) $(PLATFORM_LINK_FLAGS) $(PLATFORM_RPATH)
 
-.PHONY: all clean
+.PHONY: all clean shaders
 
-all: $(TARGET)
+all: $(TARGET) shaders
+
+# Vulkan shaders, compiled to where RendererVK loads them (as utl/compile-shaders.sh does;
+# the CMake and Visual Studio builds run that script after linking).
+GLSLC ?= glslc
+SHADER_SRC_DIR := bin/fantasySideScroller/Shaders
+SHADER_OUT_DIR := bin/cache/shader
+SHADERS := $(SHADER_OUT_DIR)/tri.v.spv $(SHADER_OUT_DIR)/tri.f.spv
+
+ifeq ($(shell command -v $(GLSLC) 2>/dev/null),)
+shaders:
+	@echo "warning: $(GLSLC) not found; Vulkan shaders in $(SHADER_OUT_DIR) were not rebuilt"
+else
+shaders: $(SHADERS)
+endif
+
+$(SHADER_OUT_DIR)/tri.v.spv: $(SHADER_SRC_DIR)/triangle.vert
+	@mkdir -p $(dir $@)
+	$(GLSLC) $< -o $@
+
+$(SHADER_OUT_DIR)/tri.f.spv: $(SHADER_SRC_DIR)/triangle.frag
+	@mkdir -p $(dir $@)
+	$(GLSLC) $< -o $@
 
 $(TARGET): $(OBJS)
 	@mkdir -p $(dir $@)
@@ -85,7 +108,12 @@ $(OBJDIR)/%.o: %.mm
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
+# The Metal backend uses ARC; everything else is manually reference counted.
+$(OBJDIR)/src/RendererMTL.o $(OBJDIR)/src/TextureMTL.o: CXXFLAGS += -fobjc-arc
+
 -include $(OBJS:.o=.d)
+# Test objects under tools/ need their header dependencies too, or they go stale.
+-include $(wildcard $(OBJDIR)/tools/*.d)
 
 clean:
 	rm -rf build/obj build/obj_release build/obj_d bin/$(TARGET_BASE) bin/$(TARGET_BASE)_d
@@ -96,3 +124,39 @@ $(OBJDIR)/tools/boar_smoke_test.o: CXXFLAGS += -UNDEBUG
 test-boar: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/boar_smoke_test.o
 	$(CXX) $^ -o $(OBJDIR)/boar_smoke_test $(LDFLAGS)
 	./$(OBJDIR)/boar_smoke_test
+
+.PHONY: test-tile-flip
+$(OBJDIR)/tools/tile_flip_test.o: CXXFLAGS += -UNDEBUG
+test-tile-flip: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/tile_flip_test.o
+	$(CXX) $^ -o $(OBJDIR)/tile_flip_test $(LDFLAGS)
+	./$(OBJDIR)/tile_flip_test
+
+.PHONY: test-level-props
+$(OBJDIR)/tools/level_props_test.o: CXXFLAGS += -UNDEBUG
+test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/level_props_test.o
+	$(CXX) $^ -o $(OBJDIR)/level_props_test $(LDFLAGS)
+	./$(OBJDIR)/level_props_test
+
+# iOS: an Xcode project generated from platform/ios (Metal renderer, touch
+# controls). `make ios` builds it for the simulator; `make ios-run` also boots
+# IOS_SIMULATOR, installs the app and launches it.
+IOS_BUILD := build/ios
+IOS_CONFIG ?= Debug
+IOS_SIMULATOR ?= iPhone 17 Pro
+IOS_APP = $(IOS_BUILD)/$(IOS_CONFIG)-iphonesimulator/framework2D.app
+
+.PHONY: ios-project ios ios-run
+ios-project:
+	cmake -S platform/ios -B $(IOS_BUILD) -G Xcode
+
+ios: ios-project
+	xcodebuild -project $(IOS_BUILD)/framework2D.xcodeproj -scheme framework2D \
+	  -configuration $(IOS_CONFIG) -sdk iphonesimulator \
+	  -destination 'platform=iOS Simulator,name=$(IOS_SIMULATOR)' build
+
+ios-run: ios
+	xcrun simctl boot '$(IOS_SIMULATOR)' 2>/dev/null || true
+	open -a Simulator
+	xcrun simctl install '$(IOS_SIMULATOR)' '$(IOS_APP)'
+	xcrun simctl launch --terminate-running-process '$(IOS_SIMULATOR)' \
+	  "$$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' '$(IOS_APP)/Info.plist')"

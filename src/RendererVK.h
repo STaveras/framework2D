@@ -10,6 +10,9 @@
 #include <optional>
 #include <vector>
 
+class Font;
+class TextureVK;
+
 class RendererVK : public IRenderer/*, public Window::EventListener*/
 {
 	VkInstance _instance = VK_NULL_HANDLE;
@@ -41,8 +44,9 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 	VkExtent2D _swapChainExtent;
 	VkFormat _swapChainImageFormat;
 
-	VkDescriptorPool _descriptorPool;
-	VkDescriptorSetLayout _uniformDescriptorSetLayout;
+	// Every texture owns one descriptor set. Pools are added as textures need
+	// them, so the number a level can load is not capped by one pool's size.
+	std::vector<VkDescriptorPool> _descriptorPools;
 	VkDescriptorSetLayout _samplerDescriptorSetLayout;
 
 	std::vector<VkImage> _swapChainImages;
@@ -68,11 +72,43 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 		std::vector<VkPresentModeKHR> presentModes;
 	};
 
-	void _textureDescriptorSet(VkDescriptorSet& descriptorSet);
+	// Sprites and glyphs are queued as quads in world or screen pixels while the
+	// render lists are walked, then uploaded and drawn in batches: consecutive
+	// quads sharing a texture and a render list go out in one vkCmdDraw.
+	struct SpriteVertex { float x, y, u, v; unsigned char r, g, b, a; };
+	struct SpriteBatch
+	{
+		VkDescriptorSet descriptorSet;
+		glm::mat4 transform; // Pixels to clip space for the batch's render list
+		uint32_t firstVertex;
+		uint32_t vertexCount;
+	};
+	std::vector<SpriteVertex> _spriteVertices;
+	std::vector<SpriteBatch> _spriteBatches;
+	glm::mat4 _listTransform = glm::mat4(1.0f);
+	bool _listStarted = false; // The next quad opens a new batch
+	vector2 _viewMin, _viewMax; // World-space bounds of the current list, for culling
 
-	//void _updateBillboards(const std::vector<Renderable*>& renderList);
-	//void _drawImage(Sprite* sprite, Color tint = 0xFFFFFFFF, vector2 offset = {0,0}, float zValue = 0.0f);
-	void _drawImage(Sprite* sprite, VkCommandBuffer commandBuffer);
+	// Host-visible vertex buffer for each frame in flight, grown as needed.
+	struct VertexBuffer
+	{
+		VkBuffer buffer = VK_NULL_HANDLE;
+		VkDeviceMemory memory = VK_NULL_HANDLE;
+		void* mapped = nullptr;
+		VkDeviceSize capacity = 0;
+	};
+	std::vector<VertexBuffer> _vertexBuffers;
+
+	// Font glyphs are untextured; they sample this 1x1 white texture.
+	TextureVK* _whiteTexture = nullptr;
+
+	void _queueQuad(VkDescriptorSet descriptorSet, const SpriteVertex (&quad)[4]);
+	void _drawImage(Sprite* sprite, Color tint, vector2 offset, bool screenSpace);
+	void _drawFont(Font* font, Color tint, vector2 offset);
+	void _drawSpriteBatches(VkCommandBuffer commandBuffer);
+	void _uploadSpriteVertices(VertexBuffer& vertexBuffer);
+	void _destroyVertexBuffer(VertexBuffer& vertexBuffer);
+	glm::mat4 _cameraTransform(const vector2& cameraPosition) const;
 
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
@@ -93,7 +129,7 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 	void createRenderPass(VkDevice device);
 
 	void createGraphicsPipeline(VkDevice device);
-	void createDescriptorPool(void);
+	VkDescriptorPool createDescriptorPool(void);
 
 	void createFramebuffers(VkDevice device);
 
@@ -107,12 +143,19 @@ class RendererVK : public IRenderer/*, public Window::EventListener*/
 
 	uint32_t currentFrame = 0;
 
+protected:
+	void _beginRenderList(const RenderList& renderList) override;
+	void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) override;
+	void _renderFont(Font* font, Color tint, const vector2& offset, const RenderList& renderList) override;
+
 public:
 	RendererVK(void);
 
 	void initialize(void);
 	void shutdown(void);
 	void render(void);
+
+	void setVerticalSync(bool vsyncEnabled) override;
 
 	VkDevice getDevice(void) const { return _device; }
 
@@ -126,4 +169,7 @@ public:
 	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkSampler createSampler(void);
+	// Descriptor set binding a texture's view and sampler; pool receives the pool to free it to.
+	VkDescriptorSet allocateTextureDescriptorSet(VkImageView imageView, VkSampler sampler, VkDescriptorPool& pool);
+	void freeTextureDescriptorSet(VkDescriptorPool pool, VkDescriptorSet descriptorSet);
 };

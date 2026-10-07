@@ -18,7 +18,7 @@
 #define EVT_STATE_END "EVT_STATE_END"
 
 // TODO: Change this to a template class, so that it can be used with any type of State, then specialize a default State type StateMachine template
-class StateMachine : public Factory<State>, Cyclable
+class StateMachine : public Factory<State>, public virtual Cyclable
 {
 	State* _state;
 

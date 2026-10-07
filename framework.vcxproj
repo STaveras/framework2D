@@ -270,17 +270,24 @@
     <ClInclude Include="src\AnimationUtils.h" />
     <ClInclude Include="src\ApplyVelocityOperator.h" />
     <ClInclude Include="src\Background.h" />
+    <ClInclude Include="src\Actor.h" />
+    <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\Intent.h" />
+    <ClInclude Include="src\PlayerController.h" />
+    <ClInclude Include="src\BlinkFlash.h" />
+    <ClInclude Include="src\ButtonState.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Circle.h" />
     <ClInclude Include="src\Collidable.h" />
     <ClInclude Include="src\CollidableGroup.h" />
     <ClInclude Include="src\CollisionEvent.h" />
+    <ClInclude Include="src\CollisionDebugDraw.h" />
     <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
     <ClInclude Include="src\Command.h" />
     <ClInclude Include="src\CommandEvent.h" />
-    <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\InputMap.h" />
     <ClInclude Include="src\CullObjectOperator.h" />
     <ClInclude Include="src\Cursor.h" />
     <ClInclude Include="src\Cyclable.h" />
@@ -291,9 +298,11 @@
     <ClInclude Include="src\FantasySideScroller\Constants.h" />
     <ClInclude Include="src\FantasySideScroller\FantasySideScroller.h" />
     <ClInclude Include="src\FantasySideScroller\LevelManager.h" />
+    <ClInclude Include="src\FantasySideScroller\PauseState.h" />
     <ClInclude Include="src\FantasySideScroller\PlayState.h" />
     <ClInclude Include="src\FantasySideScroller\Resources.h" />
     <ClInclude Include="src\FantasySideScroller\TraversalMechanics.h" />
+    <ClInclude Include="src\FantasySideScroller\LevelProps.h" />
     <ClInclude Include="src\InputTapeRecorder.h" />
     <ClInclude Include="src\KeyboardDI.h" />
     <ClInclude Include="src\DIMouse.h" />
@@ -301,6 +310,8 @@
     <ClInclude Include="src\Effect.h" />
     <ClInclude Include="src\EffectManager.h" />
     <ClInclude Include="src\Engine2D.h" />
+    <ClInclude Include="src\FramePacer.h" />
+    <ClInclude Include="src\RenderInterpolation.h" />
     <ClInclude Include="src\Event.h" />
     <ClInclude Include="src\EventSystem.h" />
     <ClInclude Include="src\EventSystem.hpp" />
@@ -316,6 +327,7 @@
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\GameState.h" />
+    <ClInclude Include="src\Gamepad.h" />
     <ClInclude Include="src\Graphic.h" />
     <ClInclude Include="src\Hardware.h" />
     <ClInclude Include="src\IAudioSystem.h" />
@@ -350,6 +362,7 @@
     <ClInclude Include="src\Kinematics2D.h" />
     <ClInclude Include="src\Plane.h" />
     <ClInclude Include="src\PlatformInput.h" />
+    <ClInclude Include="src\PlatformGamepad.h" />
     <ClInclude Include="src\PlatformKeyboard.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Polygon.h" />
@@ -403,6 +416,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Action.cpp" />
+    <ClCompile Include="src\Actor.cpp" />
+    <ClCompile Include="src\PlayerController.cpp" />
+    <ClCompile Include="src\BlinkFlash.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\AnimationManager.cpp" />
     <ClCompile Include="src\AnimationUtils.cpp" />
@@ -411,7 +427,7 @@
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\Command.cpp" />
-    <ClCompile Include="src\Controller.cpp" />
+    <ClCompile Include="src\InputMap.cpp" />
     <ClCompile Include="src\CullObjectOperator.cpp" />
     <ClCompile Include="src\Cursor.cpp" />
     <ClCompile Include="src\Debug.cpp" />
@@ -422,13 +438,16 @@
     <ClCompile Include="src\FantasySideScroller\CharacterUpdate.cpp" />
     <ClCompile Include="src\FantasySideScroller\FantasySideScroller.cpp" />
     <ClCompile Include="src\FantasySideScroller\LevelManager.cpp" />
+    <ClCompile Include="src\FantasySideScroller\PauseState.cpp" />
     <ClCompile Include="src\FantasySideScroller\PlayState.cpp" />
     <ClCompile Include="src\FantasySideScroller\TraversalMechanics.cpp" />
+    <ClCompile Include="src\FantasySideScroller\LevelProps.cpp" />
     <ClCompile Include="src\InputTapeRecorder.cpp" />
     <ClCompile Include="src\KeyboardDI.cpp" />
     <ClCompile Include="src\DIMouse.cpp" />
     <ClCompile Include="src\DirectInput.cpp" />
     <ClCompile Include="src\Engine2D.cpp" />
+    <ClCompile Include="src\RenderInterpolation.cpp" />
     <ClCompile Include="src\EventSystem.cpp" />
     <ClCompile Include="src\Font.cpp" />
     <ClCompile Include="src\Frame.cpp" />
@@ -442,6 +461,7 @@
     <ClCompile Include="src\IRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\PlatformMouse.cpp" />
+    <ClCompile Include="src\PlatformGamepad.cpp" />
     <ClCompile Include="src\StrUtils.cpp" />
     <ClCompile Include="src\Telemetry2D.cpp" />
     <ClCompile Include="src\ObjectManager.cpp" />

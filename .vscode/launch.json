@@ -22,7 +22,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_d",
-            "args": ["--debug", "--opengl", "--fps", "--dbg-collision", "--static-bg"],
+            "args": ["--debug", "--opengl", "--fps", "--static-bg"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [{ "name": "config", "value": "Debug" }],

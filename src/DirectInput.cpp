@@ -5,8 +5,7 @@
 
 #include "KeyboardDI.h"
 #include "DIMouse.h"
-
-// TODO: Add support for gamepads
+#include "PlatformGamepad.h"
 
 DirectInput::DirectInput(HINSTANCE hInstance, HWND hWnd) :
    m_hWnd(hWnd),
@@ -14,6 +13,7 @@ DirectInput::DirectInput(HINSTANCE hInstance, HWND hWnd) :
 
    _keyboard = new KeyboardDI();
    _mouse = new DIMouse();
+   _gamepad = new PlatformGamepad();
 
    if (FAILED(DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_lpDirectInput, NULL)))
       throw std::runtime_error("Failed to create DirectInput COM interface");
@@ -23,6 +23,7 @@ DirectInput::~DirectInput(void) {
    
    SAFE_DELETE(_keyboard);
    SAFE_DELETE(_mouse);
+   SAFE_DELETE(_gamepad);
    
    // if (m_lpDirectInput) {
    //    if (_mouse) {
@@ -60,6 +61,9 @@ void DirectInput::update(void)
 
    if (_mouse)
       ((DIMouse*)_mouse)->update();
+
+   if (_gamepad)
+      _gamepad->update();
 }
 
 void DirectInput::shutdown(void)
