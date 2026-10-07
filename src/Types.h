@@ -65,6 +65,15 @@ using byte = uint8_t;
 
 #if __APPLE__
 
+#include <TargetConditionals.h>
+
+// iOS builds have no GLFW, OpenGL or Vulkan: UIKit owns the window and the
+// run loop, Metal renders and the GameController framework provides input
+// (see src/iOS/).
+#if TARGET_OS_IOS
+#define FRAMEWORK_IOS 1
+#endif
+
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
 #define MTL_PRIVATE_IMPLEMENTATION
@@ -79,8 +88,10 @@ using byte = uint8_t;
 
 // #include <Metal/Metal.hpp>
 
+#if !FRAMEWORK_IOS
 #include <MoltenVK/mvk_vulkan.h>
 #include <MoltenVK/vk_mvk_moltenvk.h>
+#endif
 
 #else
 #define GLFW_INCLUDE_VULKAN
@@ -109,7 +120,9 @@ typedef struct rect {
 
 #endif
 
-#if defined(__APPLE__)
+#if FRAMEWORK_IOS
+// No OpenGL on iOS
+#elif defined(__APPLE__)
 #include <OpenGL/gl.h>
 #else
 #include <GL/glew.h>
@@ -124,10 +137,17 @@ typedef struct rect {
 #include "Maths.h"
 #include "Color.h"
 
+#if FRAMEWORK_IOS
+// Window keeps a GLFWwindow pointer member; it is always null on iOS.
+typedef struct GLFWwindow GLFWwindow;
+#else
 #include <GLFW/glfw3.h>
+#endif
 
 #include <simdjson.h>
+#if !FRAMEWORK_IOS
 #include <tinyxml2.h>
+#endif
 
 //union rekt {
 //   struct {
@@ -147,11 +167,14 @@ typedef struct rect {
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3.lib")
 #endif
-#else
+#elif !FRAMEWORK_IOS
 #include <GLFW/glfw3native.h>
 #endif
 
+#if !FRAMEWORK_IOS
+// GLFW key codes; iOS keyboards use the IKeyboard::KEYS table instead
 #include "KEYBOARD_KEYS.h"
+#endif
 #include "MOUSE_BUTTONS.h"
 
 #include "FileSystem.h"

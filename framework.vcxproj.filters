@@ -456,6 +456,9 @@
     <ClInclude Include="src\RendererGL.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\CollisionDebugDraw.h">
+      <Filter>Physics\Collision</Filter>
+    </ClInclude>
     <ClInclude Include="src\CollisionSystem.h">
       <Filter>Physics\Collision</Filter>
     </ClInclude>

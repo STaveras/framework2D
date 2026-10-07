@@ -108,6 +108,9 @@ $(OBJDIR)/%.o: %.mm
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
+# The Metal backend uses ARC; everything else is manually reference counted.
+$(OBJDIR)/src/RendererMTL.o $(OBJDIR)/src/TextureMTL.o: CXXFLAGS += -fobjc-arc
+
 -include $(OBJS:.o=.d)
 # Test objects under tools/ need their header dependencies too, or they go stale.
 -include $(wildcard $(OBJDIR)/tools/*.d)
@@ -133,3 +136,27 @@ $(OBJDIR)/tools/level_props_test.o: CXXFLAGS += -UNDEBUG
 test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/level_props_test.o
 	$(CXX) $^ -o $(OBJDIR)/level_props_test $(LDFLAGS)
 	./$(OBJDIR)/level_props_test
+
+# iOS: an Xcode project generated from platform/ios (Metal renderer, touch
+# controls). `make ios` builds it for the simulator; `make ios-run` also boots
+# IOS_SIMULATOR, installs the app and launches it.
+IOS_BUILD := build/ios
+IOS_CONFIG ?= Debug
+IOS_SIMULATOR ?= iPhone 17 Pro
+IOS_APP = $(IOS_BUILD)/$(IOS_CONFIG)-iphonesimulator/framework2D.app
+
+.PHONY: ios-project ios ios-run
+ios-project:
+	cmake -S platform/ios -B $(IOS_BUILD) -G Xcode
+
+ios: ios-project
+	xcodebuild -project $(IOS_BUILD)/framework2D.xcodeproj -scheme framework2D \
+	  -configuration $(IOS_CONFIG) -sdk iphonesimulator \
+	  -destination 'platform=iOS Simulator,name=$(IOS_SIMULATOR)' build
+
+ios-run: ios
+	xcrun simctl boot '$(IOS_SIMULATOR)' 2>/dev/null || true
+	open -a Simulator
+	xcrun simctl install '$(IOS_SIMULATOR)' '$(IOS_APP)'
+	xcrun simctl launch --terminate-running-process '$(IOS_SIMULATOR)' \
+	  "$$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' '$(IOS_APP)/Info.plist')"

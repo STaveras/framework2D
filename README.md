@@ -56,9 +56,70 @@ via the .sln and .vcxproj files.
 
 On macOS, you can build just by running 'make'.
 
+### Metal
+
+`RendererMTL` draws through Metal on macOS and iOS. On macOS, pass `--metal`
+(OpenGL stays the default; `--opengl` and `--vulkan` select the others). It
+batches sprites like the OpenGL renderer, scales the game's resolution to fit
+the window (letterboxed if the shapes differ), draws the `--debug` collision
+overlay, and supports `AUTO_SCREENSHOT_FRAME`/`AUTO_SCREENSHOT_PATH`.
+
+### iOS
+
+`platform/ios` generates an Xcode project for iPhone and iPad (iOS 16 or
+later) that runs FantasySideScroller with the Metal renderer. It needs Xcode,
+CMake 3.24+ and glm's headers (`brew install glm`). simdjson's single-file
+source is downloaded and checked against a pinned SHA-256 when the project is
+generated, because Homebrew only ships it for macOS.
+
+```bash
+make ios-run
+```
+
+builds for the simulator (`IOS_SIMULATOR`, default "iPhone 17 Pro"), installs
+the app and launches it. `make ios` only builds; `make ios-project` only
+generates `build/ios/framework2D.xcodeproj`. To run on a device, generate the
+project with your team ID and a bundle ID you can sign, then open it in Xcode:
+
+```bash
+cmake -S platform/ios -B build/ios -G Xcode -DFRAMEWORK_IOS_TEAM=<team id> -DFRAMEWORK_IOS_BUNDLE_ID=<bundle id>
+```
+
+Xcode runs the Debug configuration by default, which is unoptimized and holds
+only about 30 fps on an iPhone 15 Pro; the Release configuration holds 60.
+
+On iPhone the game runs in landscape, keeping its 192-pixel height and widening
+the view to fit the screen (inside the safe area). iPads allow any orientation
+and window size, with the game letterboxed to fit. The engine sources for iOS are in
+`src/iOS`: the UIKit app and its CADisplayLink game loop, `Window` for a
+UIView, and input through the GameController framework: game controllers,
+hardware keyboards (the desktop key bindings apply) and on-screen touch
+controls. Desktop flags such as `--debug`, `--dbg-collision`,
+`--deterministic` and `--static-bg` can be passed as launch arguments
+(`xcrun simctl launch booted <bundle id> --debug`), and the `AUTO_*`
+environment variables work with a `SIMCTL_CHILD_` prefix.
+
+#### Touch controls
+
+When no game controller is connected, touch controls appear over the game:
+
+- **Left:** a stick to move. Touch anywhere on the left half; it re-centres
+  under your thumb. Pushing it up or down holds the D-pad (interact, drop).
+- **Right:** JUMP (A), ATTACK (X), USE (interact) and RUN. RUN is a toggle
+  that switches off when you let go of the stick. Fingers can slide between
+  buttons.
+- **Top right:** pause (Start).
+
+Connecting a controller hides them, and disconnecting the last one brings them
+back. With a controller connected, touching the screen shows them again until
+the controller is next used; both work together as the first player's pad.
+The iOS simulator always reports a virtual game controller, so tap the screen
+there to bring the touch controls up.
+
 ## Gamepad input
 
-GLFW-mapped gamepads are available through `Engine2D::getInput()->getGamepad()`.
+GLFW-mapped gamepads (GameController extended gamepads on iOS) are available
+through `Engine2D::getInput()->getGamepad()`.
 Button names use the standard layout (`A`, `B`, `X`, `Y`, bumpers, and D-pad),
 and the API also exposes the left and right sticks and triggers. Stick values
 range from -1 to 1; trigger values range from 0 to 1. `Action` can bind keyboard

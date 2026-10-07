@@ -170,6 +170,7 @@ public:
 static const std::unordered_map<RenderingInterface::TYPE, std::string> apiTypeToString{
 	 { RenderingInterface::TYPE::RENDERER_TYPE_DX, "DirectX9" },
 	 { RenderingInterface::TYPE::RENDERER_TYPE_GL, "OpenGL" },
+	 { RenderingInterface::TYPE::RENDERER_TYPE_MTL, "Metal" },
 	 { RenderingInterface::TYPE::RENDERER_TYPE_VK, "Vulkan" }
 };
 
@@ -177,6 +178,7 @@ static const std::unordered_map<RenderingInterface::TYPE, std::string> apiTypeTo
 static const std::unordered_map<std::string, RenderingInterface::TYPE> stringToAPIType{
 	 { "DirectX9",  RenderingInterface::TYPE::RENDERER_TYPE_DX},
 	 { "OpenGL", RenderingInterface::TYPE::RENDERER_TYPE_GL },
+	 { "Metal",  RenderingInterface::TYPE::RENDERER_TYPE_MTL },
 	 { "Vulkan",  RenderingInterface::TYPE::RENDERER_TYPE_VK }
 };
 

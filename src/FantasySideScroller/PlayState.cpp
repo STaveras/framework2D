@@ -119,7 +119,9 @@ void PlayState::_initHUD()
 		_hudRenderList->push_back(_keyIcon);
 	}
 
-	if (!_cursor) {
+	// No cursor without a pointer (touch-only iOS has no mouse).
+	IInput* input = Engine2D::getInput();
+	if (!_cursor && (!input || input->getMouse())) {
 		_cursor = new Cursor();
 		if (_cursor->load(BasePath("cursors.png").c_str())) {
 			_cursor->getImage()->setVisibility(true);

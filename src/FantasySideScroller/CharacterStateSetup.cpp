@@ -369,9 +369,10 @@ void Character::_initTransitions() {
 	std::string transitionsFilePath = BasePath("Character/Transitions.json");
 	if (FileSystem::FileExists(transitionsFilePath))
 	{
-		FileStream fileStream = FileSystem::File::Open(transitionsFilePath);
+		// Read-only: File::Open also asks for write access, which fails on
+		// read-only storage such as an iOS app bundle and leaves no transitions.
+		std::ifstream fileStream(transitionsFilePath);
 		this->fromJSON(fileStream);
-		fileStream.close();
 	}
 	else
 	{

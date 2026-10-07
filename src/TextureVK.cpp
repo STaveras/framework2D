@@ -3,7 +3,6 @@
 #include "TextureVK.h"
 #include "RendererVK.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
 TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE), _descriptorSet(VK_NULL_HANDLE), _descriptorPool(VK_NULL_HANDLE)

@@ -9,8 +9,6 @@
 
 #include <string>
 
-using namespace tinyxml2;
-
 namespace Animations {
 
    RECT rectFromString(const char *rectDescription)

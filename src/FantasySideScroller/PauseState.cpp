@@ -80,7 +80,12 @@ void PauseState::onEnter(State* prev)
         _hintText = new Font();
         const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
         if (_hintText->loadFromJSON(fontPath)) {
+#if FRAMEWORK_IOS
+            // The touch controls' pause button, or a controller's menu button
+            _hintText->setText("|| / MENU to Resume");
+#else
             _hintText->setText("ESC / OPTIONS to Resume");
+#endif
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
@@ -102,7 +107,9 @@ void PauseState::onEnter(State* prev)
     // Create the mouse cursor so it stays visible while the game is paused.
     // It lives in this screen-space render list (created after the game's HUD
     // list) so it draws on top of the menu text.
-    if (!_cursor) {
+    // No cursor without a pointer (touch-only iOS has no mouse).
+    IInput* input = Engine2D::getInput();
+    if (!_cursor && (!input || input->getMouse())) {
         _cursor = new Cursor();
         if (_cursor->load(BasePath("cursors.png").c_str())) {
             _menuRenderList->push_back(_cursor->getImage());

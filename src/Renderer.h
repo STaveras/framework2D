@@ -11,9 +11,11 @@
 #include "IRenderer.h"
 #include "Renderable.h"
 #include "RendererDX.h"
+#if !FRAMEWORK_IOS
 #include "RendererGL.h"
-#include "RendererMTL.h"
 #include "RendererVK.h"
+#endif
+#include "RendererMTL.h"
 #include "Window.h"
 
 namespace Renderer
@@ -26,14 +28,17 @@ namespace Renderer
 	// This function will be replaced with generic functions and will allow you to select a renderer module, to allow better encapsulation and extensibility
 	IRenderer* createDXRenderer(HWND hWnd, int nWidth, int nHeight, bool bFullscreen, bool bVsync);
 	#elif __APPLE__
+	// Metal renderer drawing into the window's CAMetalLayer (macOS and iOS)
 	IRenderer* createMTLRenderer(Window* window);
 	#endif
 
+	#if !FRAMEWORK_IOS
 	// Create a Vulkan renderer
 	IRenderer* createVKRenderer(Window* window);
 
 	// TODO: Create an OpenGL renderer
 	IRenderer* createGLRenderer(Window* window);
+	#endif
 	
 	void destroyRenderer(IRenderer* pRenderer);
   //void render(Renderable* r); // TODO: You can use it to draw stuff in real-time (kinda slow, but uses less overall memory)

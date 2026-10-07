@@ -4,21 +4,12 @@
 
 void Game::begin(void)
 {
-	namespace fs = std::filesystem;
-	fs::path current = fs::current_path();
-
-	for (auto& p : fs::recursive_directory_iterator(current)) {
-		if (p.is_regular_file() && p.path().filename() == "title") {
-			std::string subString = p.path().parent_path().string();
-
-			// Read title contents
-			std::ifstream titleFile(p.path());
-			std::string titleStr;
-			std::getline(titleFile, titleStr);
-
-			// Set window title
-			Renderer::mainWindow->setWindowTitle(titleStr.c_str());  // Ensure SetTitle is accessible here
-		}
+	// The data folder's "title" file names the game (it is also how
+	// System::GlobalDataPath finds that folder).
+	std::ifstream titleFile(std::filesystem::path(System::GlobalDataPath()) / "title");
+	std::string titleStr;
+	if (std::getline(titleFile, titleStr) && Renderer::mainWindow) {
+		Renderer::mainWindow->setWindowTitle(titleStr.c_str());
 	}
 }
 
