@@ -8,11 +8,13 @@
 #include "../IMouse.h"
 #include "Constants.h"
 #include "Resources.h"
+#include "ScreenSpaceCursor.h"
 
 PauseState::PauseState()
     : _menuRenderList(NULL)
     , _pauseText(NULL)
     , _hintText(NULL)
+    , _menu(NULL)
     , _cursor(NULL)
 {
 }
@@ -25,6 +27,7 @@ PauseState::~PauseState()
     if (_hintText) {
         SAFE_DELETE(_hintText);
     }
+    SAFE_DELETE(_menu);
     SAFE_DELETE(_cursor);
     if (_menuRenderList) {
         IRenderer* renderer = Engine2D::getRenderer();
@@ -49,19 +52,19 @@ void PauseState::onEnter(State* prev)
         _menuRenderList = renderer->createRenderList(true);  // true = screenSpace
     }
 
-    // Create "PAUSE" text - centered at top
+    const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
+    const float centerX = renderer->getWidth() / 2.0f;
+
+    // Create "PAUSE" text - centered near the top
     if (!_pauseText) {
         _pauseText = new Font();
-        const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
         if (_pauseText->loadFromJSON(fontPath)) {
             _pauseText->setText("PAUSE");
             _pauseText->setTint(0xFFFFFFFF);
             _pauseText->setScale(1.5f, 1.5f);  // Larger for pause text
 
             const float textWidth = _pauseText->getTextWidth() * _pauseText->getScale().x;
-            const float centerX = renderer->getWidth() / 2.0f;
-
-            const float centerY = 100.0f;
+            const float centerY = 40.0f;
             const float textHeight = _pauseText->getHeight() * _pauseText->getScale().y;
             const vector2 pausePos(centerX - textWidth / 2.0f, centerY - textHeight / 2.0f);
             _pauseText->setPosition(pausePos);
@@ -73,18 +76,19 @@ void PauseState::onEnter(State* prev)
         }
     }
 
-    // Create "Press ESC to Resume" hint text - centered below PAUSE
+    // Create the RESUME / QUIT menu (its own screen-space render list, so it
+    // draws in front of the PAUSE title and hint)
+    _createMenu(renderer);
+
+    // Create hint text - centered below the menu options
     if (!_hintText) {
         _hintText = new Font();
-        const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
         if (_hintText->loadFromJSON(fontPath)) {
-            _hintText->setText("Press ESC to Resume");
+            _hintText->setText("ARROWS: SELECT  ENTER: CONFIRM");
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
             const float textWidth = _hintText->getTextWidth() * _hintText->getScale().x;
-            const float centerX = renderer->getWidth() / 2.0f;
-
             const float centerY = 160.0f;
             const float textHeight = _hintText->getHeight() * _hintText->getScale().y;
             const vector2 hintTextPos(centerX - textWidth / 2.0f, centerY - textHeight / 2.0f);
@@ -126,16 +130,81 @@ bool PauseState::onExecute(float time)
         return false;
     }
 
+    // Arrow keys to move between the menu options
+    if (_menu) {
+        if (keyboard->keyPressed(keyboard->getKeys().KBK_UP)) {
+            _menu->selectPrevious();
+        } else if (keyboard->keyPressed(keyboard->getKeys().KBK_DOWN)) {
+            _menu->selectNext();
+        }
+    }
+
+    // Enter or Space executes the selected option
+    if (keyboard->keyPressed(keyboard->getKeys().KBK_RETURN) ||
+        keyboard->keyPressed(keyboard->getKeys().KBK_SPACE)) {
+        _executeSelectedOption();
+        return false;
+    }
+
     // Keep the menu cursor tracking the mouse while paused.
-    if (_cursor) {
+    if (_cursor && _menu) {
         Mouse* mouse = Engine2D::getInput()->getMouse();
         if (mouse) {
-            _cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
+            // Hovering an option with the mouse selects it; clicking executes it.
+            const vector2 renderPos = ClientToRenderCursorPosition(mouse->getPosition());
+            const int hoverIndex = _menu->hitTest(renderPos);
+            if (hoverIndex >= 0) {
+                _menu->setSelection(hoverIndex);
+                if (mouse->buttonPressed(MOUSE_LEFT)) {
+                    _executeSelectedOption();
+                    return false;
+                }
+            }
+
+            _cursor->setPosition(renderPos);
             _cursor->updateFromMouse(mouse);
         }
     }
 
+    // Highlight the currently selected option
+    if (_menu) {
+        _menu->applyTint(0xFFFFFFFF, 0xFF888888);
+    }
+
     return true;  // Keep running (state stays on top)
+}
+
+void PauseState::_createMenu(IRenderer* renderer)
+{
+    if (_menu) {
+        return;
+    }
+
+    // The menu container stacks its items (RESUME, then QUIT directly below
+    // it) starting just under the PAUSE title.
+    const vector2 menuTop(renderer->getWidth() / 2.0f, 72.0f);
+    _menu = Widgets::createMenu(
+        renderer, BasePath("Font/monogram/bitmap/monogram-bitmap.json"), menuTop);
+    if (_menu) {
+        _menu->addItem("RESUME");
+        _menu->addItem("QUIT");
+    }
+}
+
+void PauseState::_executeSelectedOption(void)
+{
+    if (!_menu) {
+        return;
+    }
+    switch (_menu->getSelection()) {
+        case OPTION_QUIT:
+            Engine2D::quit();
+            break;
+        default: // OPTION_RESUME and anything else
+            // Resume play by popping this state
+            Engine2D::getGame()->pop();
+            break;
+    }
 }
 
 void PauseState::onExit(State* next)
@@ -151,6 +220,7 @@ void PauseState::onExit(State* next)
         SAFE_DELETE(_hintText);
         _hintText = NULL;
     }
+    SAFE_DELETE(_menu);
     if (_cursor && _cursor->getImage()) {
         _menuRenderList->remove(_cursor->getImage());
     }
