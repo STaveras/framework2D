@@ -21,6 +21,7 @@ struct TileLayerConfig
 	float offsetY = 0.0f;
 	float parallaxX = 1.0f;
 	float parallaxY = 1.0f;
+	bool visible = true;
 	TileCollisionMode collisionMode = TileCollisionMode::Solid;
 	int drawOrder = 0;
 	// Tiled's layer tint (ARGB, multiplied into each tile) and opacity.

@@ -30,6 +30,7 @@ class PlayState : public GameState
 	TraversalMechanics _traversalMechanics;
 	bool _traversalOperatorRegistered = false;
 	LevelProps _levelProps;
+	std::string _mapFileName = "mosswood_hollow.tmj";
 	bool _interactWasActive = false;
 	bool _reloadWasDown = false;
 

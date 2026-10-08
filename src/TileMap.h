@@ -121,6 +121,7 @@ class TileMap : public Tile
 		if (!tile) {
 			tile = _tiles.create();
 			tile->setLayerCollisionMode(_layerConfig.collisionMode);
+			tile->setLayerVisible(_layerConfig.visible);
 			tile->setLayerName(_layerConfig.name);
 			if (_tileSet) {
 				tile->setTileSet(_tileSet);
@@ -392,6 +393,30 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 			return fallback;
 		};
 
+		auto readTintColor = [](auto element, uint32_t fallback = 0xFFFFFFFFu) -> uint32_t {
+			if (!element.is_string()) {
+				return fallback;
+			}
+
+			const std::string tint((std::string_view)element.get_string());
+			if (tint.size() != 7 && tint.size() != 9) {
+				return fallback;
+			}
+
+			const uint32_t value = (uint32_t)std::strtoul(tint.c_str() + 1, nullptr, 16);
+			return tint.size() == 7 ? (0xFF000000u | value) : value;
+		};
+
+		auto multiplyTintColors = [](uint32_t lhs, uint32_t rhs) -> uint32_t {
+			uint32_t result = 0;
+			for (unsigned int shift = 0; shift < 32; shift += 8) {
+				const uint32_t left = (lhs >> shift) & 0xFFu;
+				const uint32_t right = (rhs >> shift) & 0xFFu;
+				result |= (((left * right + 127u) / 255u) & 0xFFu) << shift;
+			}
+			return result;
+		};
+
 		auto normalizeModeString = [](const std::string& value) -> std::string {
 			std::string normalized = value;
 			std::transform(normalized.begin(), normalized.end(), normalized.begin(), [](unsigned char c) {
@@ -563,16 +588,53 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 		};
 
 		if (!json["layers"].is_null() && json["layers"].is_array()) {
+			struct LayerGroupState {
+				bool visible = true;
+				float offsetX = 0.0f;
+				float offsetY = 0.0f;
+				float parallaxX = 1.0f;
+				float parallaxY = 1.0f;
+				float opacity = 1.0f;
+				uint32_t tintColor = 0xFFFFFFFFu;
+			};
+
 			int traversalIndex = 0;
-			for (auto layer : json["layers"]) {
+			auto processLayer = [&](auto&& self, auto layer, const LayerGroupState& parent) -> void {
 				MapLayerDescriptor layerDescriptor;
 				layerDescriptor.id = readInt(layer["id"], -1);
 				layerDescriptor.name = layer["name"].is_string() ? std::string((std::string_view)layer["name"].get_string()) : "";
-				layerDescriptor.visible = readBool(layer["visible"], true);
+				layerDescriptor.visible = parent.visible && readBool(layer["visible"], true);
 				layerDescriptor.traversalIndex = traversalIndex++;
 
 				const std::string layerType = layer["type"].is_string() ? std::string((std::string_view)layer["type"].get_string()) : "";
 				layerDescriptor.type = layerType;
+				const float layerOffsetX = parent.offsetX + readFloat(layer["offsetx"], 0.0f);
+				const float layerOffsetY = parent.offsetY + readFloat(layer["offsety"], 0.0f);
+				const float layerParallaxX = parent.parallaxX * readFloat(layer["parallaxx"], 1.0f);
+				const float layerParallaxY = parent.parallaxY * readFloat(layer["parallaxy"], 1.0f);
+				const float layerOpacity = parent.opacity * readFloat(layer["opacity"], 1.0f);
+				const uint32_t layerTintColor = multiplyTintColors(parent.tintColor, readTintColor(layer["tintcolor"]));
+
+				if (layerType == "group") {
+					result.layers.push_back(std::move(layerDescriptor));
+
+					LayerGroupState childState;
+					childState.visible = parent.visible && readBool(layer["visible"], true);
+					childState.offsetX = layerOffsetX;
+					childState.offsetY = layerOffsetY;
+					childState.parallaxX = layerParallaxX;
+					childState.parallaxY = layerParallaxY;
+					childState.opacity = layerOpacity;
+					childState.tintColor = layerTintColor;
+
+					auto children = layer["layers"];
+					if (children.is_array()) {
+						for (auto child : children) {
+							self(self, child, childState);
+						}
+					}
+					return;
+				}
 
 				if (layerType == "tilelayer") {
 					const int mapWidth = readInt(layer["width"], result.mapWidth);
@@ -584,19 +646,13 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.startX = readInt(layer["startx"], 0);
 						layerConfig.startY = readInt(layer["starty"], 0);
 						// Tiled stores pixel offsets separately from the layer's tile position.
-						layerConfig.offsetX = readFloat(layer["offsetx"], 0.0f);
-						layerConfig.offsetY = readFloat(layer["offsety"], 0.0f);
-						layerConfig.parallaxX = readFloat(layer["parallaxx"], 1.0f);
-						layerConfig.parallaxY = readFloat(layer["parallaxy"], 1.0f);
-						layerConfig.opacity = readFloat(layer["opacity"], 1.0f);
-						if (layer["tintcolor"].is_string()) {
-							// Tiled writes "#RRGGBB" or "#AARRGGBB".
-							const std::string tint((std::string_view)layer["tintcolor"].get_string());
-							if (tint.size() == 7 || tint.size() == 9) {
-								uint32_t value = (uint32_t)std::strtoul(tint.c_str() + 1, nullptr, 16);
-								layerConfig.tintColor = (tint.size() == 7) ? (0xFF000000u | value) : value;
-							}
-						}
+						layerConfig.offsetX = layerOffsetX;
+						layerConfig.offsetY = layerOffsetY;
+						layerConfig.parallaxX = layerParallaxX;
+						layerConfig.parallaxY = layerParallaxY;
+						layerConfig.opacity = layerOpacity;
+						layerConfig.visible = layerDescriptor.visible;
+						layerConfig.tintColor = layerTintColor;
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
 
 						// User-selected default for missing property is non-colliding.
@@ -774,8 +830,8 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 					objectLayer.visible = layerDescriptor.visible;
 					objectLayer.traversalIndex = layerDescriptor.traversalIndex;
 
-					const float layerOffsetX = readFloat(layer["x"], 0.0f) + readFloat(layer["offsetx"], 0.0f);
-					const float layerOffsetY = readFloat(layer["y"], 0.0f) + readFloat(layer["offsety"], 0.0f);
+					const float objectLayerOffsetX = layerOffsetX + readFloat(layer["x"], 0.0f);
+					const float objectLayerOffsetY = layerOffsetY + readFloat(layer["y"], 0.0f);
 					if (!layer["objects"].is_null() && layer["objects"].is_array()) {
 						for (auto object : layer["objects"]) {
 							TileObjectDescriptor descriptor;
@@ -784,12 +840,12 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 							descriptor.id = readInt(object["id"], -1);
 							descriptor.name = object["name"].is_string() ? std::string((std::string_view)object["name"].get_string()) : "";
 							descriptor.gid = normalizeGid(readInt64(object["gid"], 0));
-							descriptor.x = layerOffsetX + readFloat(object["x"], 0.0f);
-							descriptor.y = layerOffsetY + readFloat(object["y"], 0.0f);
+							descriptor.x = objectLayerOffsetX + readFloat(object["x"], 0.0f);
+							descriptor.y = objectLayerOffsetY + readFloat(object["y"], 0.0f);
 							descriptor.width = readFloat(object["width"], 0.0f);
 							descriptor.height = readFloat(object["height"], 0.0f);
 							descriptor.rotation = readFloat(object["rotation"], 0.0f);
-							descriptor.visible = readBool(object["visible"], true);
+							descriptor.visible = layerDescriptor.visible && readBool(object["visible"], true);
 							descriptor.isPoint = readBool(object["point"], false);
 							descriptor.isEllipse = readBool(object["ellipse"], false);
 							descriptor.typeName = resolveClassOrType(object["class"], object["type"]);
@@ -843,6 +899,11 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 				}
 
 				result.layers.push_back(std::move(layerDescriptor));
+			};
+
+			LayerGroupState rootLayerState;
+			for (auto layer : json["layers"]) {
+				processLayer(processLayer, layer, rootLayerState);
 			}
 		}
 

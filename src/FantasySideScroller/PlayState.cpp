@@ -277,7 +277,7 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	_levelManager.initialize("old_mine_trail.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize(_mapFileName.c_str(), vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
 	vector2 spawnPoint = START_POSITION;
@@ -516,6 +516,24 @@ bool PlayState::onExecute(float time)
 
 	_traversalMechanics.setFrameDeltaSeconds(time);
 	const bool keepRunning = GameState::onExecute(time);
+
+	// A destination's next_map reloads the stage with the next map through the normal
+	// lifecycle, the same way the F5 in-place reload does.
+	{
+		std::string nextMap;
+		if (_traversalMechanics.consumeMapChangeRequest(nextMap) && !nextMap.empty()) {
+			Engine2D::getEventSystem()->processEvents();
+			onExit(nullptr);
+			_interactWasActive = false;
+			_paused = false;
+			_mapFileName = nextMap;
+			onEnter(nullptr);
+			Engine2D::getEventSystem()->processEvents();
+			// onExit() destroys the old InputMap; onEnter() creates a new one.
+			// The controller captured before GameState::onExecute() is now stale.
+			controller = _player ? _player->getInputMap() : NULL;
+		}
+	}
 
 	// Killzones (e.g. deep water) send the player back to the last checkpoint. Run
 	// timeouts still do not respawn, as before.
