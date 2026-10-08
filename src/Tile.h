@@ -8,8 +8,15 @@
 #include "CollidableGroup.h"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <vector>
+
+enum class TileUVScrollDirection
+{
+	Up,
+	Down
+};
 
 // Just to get something on the screen...
 class Tile : public GameObject
@@ -21,6 +28,11 @@ class Tile : public GameObject
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
    bool _layerVisible = true;
    std::string _layerName;
+	TileUVScrollDirection _uvScrollDirection = TileUVScrollDirection::Down;
+	float _uvScrollSpeed = 0.0f;
+	float _uvScrollOffset = 0.0f;
+	int _uvScrollRegionTop = 0;
+	int _uvScrollRegionHeight = 0;
 
    // TODO: Move this to TileSet
    Factory<Image> _tileImages;
@@ -138,6 +150,39 @@ public:
       return _flipFlags;
    }
 
+	// Scroll this tile's source UVs through a vertical atlas region. Speed is
+	// measured in source pixels per second; Down moves the image toward later
+	// atlas rows and wraps at the region's bottom.
+	void setVerticalUVScroll(
+		TileUVScrollDirection direction,
+		float speedPixelsPerSecond,
+		int regionTop,
+		int regionHeight)
+	{
+		_uvScrollDirection = direction;
+		_uvScrollSpeed = std::max(0.0f, speedPixelsPerSecond);
+		_uvScrollRegionTop = regionTop;
+		_uvScrollRegionHeight = std::max(0, regionHeight);
+		_uvScrollOffset = 0.0f;
+
+		GameObjectState* state = this->getState();
+		applyUVScrollToImage(state ? (Image*)state->getRenderable() : nullptr);
+	}
+
+	void advanceVerticalUVScroll(float deltaSeconds)
+	{
+		if (_uvScrollSpeed <= 0.0f || _uvScrollRegionHeight <= 0 || deltaSeconds <= 0.0f) {
+			return;
+		}
+
+		const float direction = (_uvScrollDirection == TileUVScrollDirection::Down) ? -1.0f : 1.0f;
+		_uvScrollOffset += direction * _uvScrollSpeed * deltaSeconds;
+		_uvScrollOffset = std::fmod(_uvScrollOffset, static_cast<float>(_uvScrollRegionHeight));
+
+		GameObjectState* state = this->getState();
+		applyUVScrollToImage(state ? (Image*)state->getRenderable() : nullptr);
+	}
+
 private:
    // Reproduces the flip flags with the renderer's sprite transform. The renderer draws
    // position + R(rotation) * S(scale) * (corner - center); the flips are an affine map
@@ -171,6 +216,13 @@ private:
       }
       image->setCenter(vector2(-(ax.x * t.x + ax.y * t.y), -(ay.x * t.x + ay.y * t.y)));
    }
+
+	void applyUVScrollToImage(Image* image) const
+	{
+		if (image) {
+			image->setVerticalUVScroll(_uvScrollRegionTop, _uvScrollRegionHeight, _uvScrollOffset);
+		}
+	}
 
    SurfaceTraits2D buildSurfaceTraitsForLayer(void) const
    {
@@ -276,6 +328,7 @@ public:
                tileImage->setVisibility(_layerVisible);
 
                applyFlipToImage(tileImage);
+               applyUVScrollToImage(tileImage);
                state->setRenderable(tileImage);
 
                TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);

@@ -234,6 +234,7 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
+	_levelManager.setWaterUVScroll(TileUVScrollDirection::Down, 75.0f);
 	_levelManager.initialize(_mapFileName.c_str(), vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
@@ -524,7 +525,7 @@ bool PlayState::onExecute(float time)
 	for (Boar* boar : _boars) {
 		if (boar) boar->updateCombat(time);
 	}
-	_levelManager.update();
+	_levelManager.update(time);
 	_updateHUD(time);
 
 	// Update cursor position and state to match mouse.

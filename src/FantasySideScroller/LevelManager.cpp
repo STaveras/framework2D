@@ -16,6 +16,11 @@
 #include <utility>
 
 namespace {
+constexpr int kWaterAtlasColumns = 25;
+constexpr int kWaterTileSize = 16;
+constexpr int kWaterRegionFirstRow = 17;
+constexpr int kWaterRegionRowCount = 4;
+
 bool isSpawnType(const std::string& typeName)
 {
 	return StrUtils::IEquals(typeName, "spawn");
@@ -29,6 +34,26 @@ bool isEnemyType(const std::string& typeName)
 bool isValidLayerIndex(int index, size_t size)
 {
 	return index >= 0 && (size_t)index < size;
+}
+
+bool isWaterTileIndex(const Tile* tile)
+{
+	if (!tile || tile->getTileIndex() < 0 || !tile->getTileSet()) {
+		return false;
+	}
+
+	const vector2 tileCounts = tile->getTileSet()->getTileCounts();
+	if ((int)tile->getTileSet()->getTileSize() != kWaterTileSize ||
+		(int)tileCounts.x != kWaterAtlasColumns || (int)tileCounts.y != kWaterAtlasColumns) {
+		return false;
+	}
+
+	// fantasyTiles indices 428-430, 453-455, 478-480, and 503-505 form this block.
+	const int tileIndex = tile->getTileIndex();
+	const int column = tileIndex % kWaterAtlasColumns;
+	const int row = tileIndex / kWaterAtlasColumns;
+	return column >= 3 && column <= 5 &&
+		row >= kWaterRegionFirstRow && row < kWaterRegionFirstRow + kWaterRegionRowCount;
 }
 
 float clampValue(float value, float minValue, float maxValue)
@@ -230,6 +255,15 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 				continue;
 			}
 
+			if (isWaterTileIndex(tile)) {
+				tile->setVerticalUVScroll(
+					_waterUVScrollDirection,
+					_waterUVScrollSpeed,
+					kWaterRegionFirstRow * kWaterTileSize,
+					kWaterRegionRowCount * kWaterTileSize);
+				_animatedWaterTiles.push_back(tile);
+			}
+
 			gameState.routeObjectToRenderList(tile, layerRenderList);
 			if (Renderable* renderable = tile->getState() ? tile->getState()->getRenderable() : NULL) {
 				// Tiled's layer tint and opacity multiply into every tile of the layer.
@@ -407,8 +441,29 @@ void LevelManager::attachCameraTo(GameObject* target, ObjectManager& objectManag
 	}
 }
 
-void LevelManager::update(void)
+void LevelManager::setWaterUVScroll(TileUVScrollDirection direction, float speedPixelsPerSecond)
 {
+	_waterUVScrollDirection = direction;
+	_waterUVScrollSpeed = std::max(0.0f, speedPixelsPerSecond);
+	for (Tile* tile : _animatedWaterTiles) {
+		if (tile) {
+			tile->setVerticalUVScroll(
+				_waterUVScrollDirection,
+				_waterUVScrollSpeed,
+				kWaterRegionFirstRow * kWaterTileSize,
+				kWaterRegionRowCount * kWaterTileSize);
+		}
+	}
+}
+
+void LevelManager::update(float deltaSeconds)
+{
+	for (Tile* tile : _animatedWaterTiles) {
+		if (tile) {
+			tile->advanceVerticalUVScroll(deltaSeconds);
+		}
+	}
+
 	clampCameraToLevelBounds();
 
 	if (_background && _camera) {
@@ -438,6 +493,7 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 	// at runtime (collected keys are cleared to -1), so it can't decide this.
 	objectManager.removeObjects(_registeredTiles);
 	_registeredTiles.clear();
+	_animatedWaterTiles.clear();
 
 	for (TileMap* tileMap : _tileMaps)
 	{
