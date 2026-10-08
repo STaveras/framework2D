@@ -85,7 +85,12 @@ void PauseState::onEnter(State* prev)
     if (!_hintText) {
         _hintText = new Font();
         if (_hintText->loadFromJSON(fontPath)) {
-            _hintText->setText("ARROWS: SELECT  ENTER: CONFIRM");
+#if FRAMEWORK_IOS
+            // The touch controls' pause button, or a controller's menu button
+            _hintText->setText("|| / MENU to Resume");
+#else
+            _hintText->setText("ESC / OPTIONS to Resume");
+#endif
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
 
@@ -132,25 +137,30 @@ bool PauseState::onExecute(float time)
     }
 
     // Q to quit
-    if (keyboard->keyPressed(keyboard->getKeys().KBK_Q)) {
+    Action* quitAction = _inputMap ? _inputMap->getAction("MENU_QUIT") : NULL;
+    if (quitAction && _inputMap->buttonPressed(quitAction)) {
         Engine2D::quit();
         return false;
     }
 
-    // Arrow keys to move between the menu options
-    if (_menu) {
-        if (keyboard->keyPressed(keyboard->getKeys().KBK_UP)) {
+    // Move between the menu options
+    if (_menu && _inputMap) {
+        Action* upAction = _inputMap->getAction("MENU_UP");
+        Action* downAction = _inputMap->getAction("MENU_DOWN");
+        if (upAction && _inputMap->buttonPressed(upAction)) {
             _menu->selectPrevious();
-        } else if (keyboard->keyPressed(keyboard->getKeys().KBK_DOWN)) {
+        } else if (downAction && _inputMap->buttonPressed(downAction)) {
             _menu->selectNext();
         }
     }
 
-    // Enter or Space executes the selected option
-    if (keyboard->keyPressed(keyboard->getKeys().KBK_RETURN) ||
-        keyboard->keyPressed(keyboard->getKeys().KBK_SPACE)) {
-        _executeSelectedOption();
-        return false;
+    // Execute the selected option
+    if (_inputMap) {
+        Action* confirmAction = _inputMap->getAction("MENU_CONFIRM");
+        if (confirmAction && _inputMap->buttonPressed(confirmAction)) {
+            _executeSelectedOption();
+            return false;
+        }
     }
 
     // Keep the menu cursor tracking the mouse while paused.

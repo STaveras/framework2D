@@ -354,6 +354,18 @@ void PlayState::onEnter(State* prev)
 	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
 	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
+	// Pause-menu controls, polled only by PauseState (see its onExecute).
+	// They share physical keys with gameplay actions (UP=INTERACT, DOWN=DOWN,
+	// SPACE=JUMP), but that's harmless: each state polls only its own actions,
+	// so the shared binds never collide at runtime.
+	controller->addAction(Action("MENU_UP", keyboard->getKeys().KBK_UP));
+	controller->addAction(Action("MENU_UP", Gamepad::Button::DpadUp));
+	controller->addAction(Action("MENU_DOWN", keyboard->getKeys().KBK_DOWN));
+	controller->addAction(Action("MENU_DOWN", Gamepad::Button::DpadDown));
+	controller->addAction(Action("MENU_CONFIRM", keyboard->getKeys().KBK_RETURN));
+	controller->addAction(Action("MENU_CONFIRM", keyboard->getKeys().KBK_SPACE));
+	controller->addAction(Action("MENU_CONFIRM", Gamepad::Button::A));
+	controller->addAction(Action("MENU_QUIT", keyboard->getKeys().KBK_Q));
 	_player->setGameObject(_playableCharacter);
 	_playerController.setInputMap(controller);
 	Character::bindPlayerActions(_playerController);
