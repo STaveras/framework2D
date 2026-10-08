@@ -11,12 +11,14 @@ class Character;
 class Boar;
 class Font;
 class PauseState;
+class GameOverState;
 
 class PlayState : public GameState
 {
 	void _initHUD();
 	void _updateHUD(float dt);
 	void _shutdownHUD();
+	void _respawnPlayer(void);
 
 	Player* _player = NULL;
 	LevelManager _levelManager;
@@ -27,6 +29,7 @@ class PlayState : public GameState
 	Boar* _boar = nullptr;
 	bool _paused = false;
 	PauseState* _pauseState = NULL;
+	GameOverState* _gameOverState = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _healthBarBackground = NULL;
 	Image* _healthBarFill = NULL;

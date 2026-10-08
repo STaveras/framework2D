@@ -9,8 +9,10 @@
 #include "../Debug.h"
 #include "../Font.h"
 #include "../Sprite.h"
+#include "../Animation.h"
 #include "../Cursor.h"
 #include "PauseState.h"
+#include "GameOverState.h"
 #include "ScreenSpaceCursor.h"
 
 #include "Constants.h"
@@ -41,9 +43,10 @@ PlayState::~PlayState() {
 	if (_player || _playableCharacter || _hudRenderList) {
 		onExit(nullptr);
 	}
-	// We own the pause overlay we push on top of ourselves; ProgramStack
-	// never deletes states, so release it here.
+	// We own the pause and game-over overlays we push on top of ourselves;
+	// ProgramStack never deletes states, so release them here.
 	SAFE_DELETE(_pauseState);
+	SAFE_DELETE(_gameOverState);
 }
 
 void PlayState::_initHUD()
@@ -207,6 +210,43 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_cursor);
 }
 
+// Restore the playable character to a fresh spawn: reset the collision world,
+// the boar, and the character (full health, back in a Falling state at the
+// spawn point). Shared by the debug R key and the game-over RETRY prompt.
+void PlayState::_respawnPlayer(void)
+{
+	if (!_playableCharacter) {
+		return;
+	}
+
+	_collisionSystem.reset();
+	if (_boar) _boar->reset();
+
+	_playableCharacter->clearEvents();
+	_playableCharacter->resetForRespawn();
+	_playableCharacter->setState(_playableCharacter->getState("Falling"));
+
+	if (_levelManager.hasSpawnPoint()) {
+		_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+	}
+	else {
+		_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
+	}
+
+#if _DEBUG
+	if (DEBUGGING && Debug::dbgCollision) {
+		const vector2 pos = _playableCharacter->getPosition();
+		char buffer[192];
+		sprintf_s(buffer, sizeof(buffer),
+			"Respawn: pos={%.2f,%.2f} state=%s\n",
+			pos.x,
+			pos.y,
+			_playableCharacter->getState() ? _playableCharacter->getState()->getName() : "(null)");
+		DEBUG_MSG(buffer);
+	}
+#endif
+}
+
 void PlayState::onEnter(State* prev)
 {
 	GameState::onEnter(prev);
@@ -305,29 +345,20 @@ bool PlayState::onExecute(float time)
 		}
 	}
 
+	// First frame after the game-over prompt is popped: this state is top again.
+	// If the player chose to retry, respawn into a fresh start and re-show the
+	// HUD cursor (it was hidden when the game-over overlay was pushed).
+	if (_gameOverState && _gameOverState->wasRetryRequested()) {
+		_gameOverState->consumeRetryRequest();
+		_respawnPlayer();
+		if (_cursor && _cursor->getImage()) {
+			_cursor->getImage()->setVisibility(true);
+		}
+	}
+
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
-		_collisionSystem.reset();
-		if (_boar) _boar->reset();
-		_playableCharacter->clearEvents();
-		_playableCharacter->resetForRespawn();
-		_playableCharacter->setState(_playableCharacter->getState("Falling"));
-
-		if (_levelManager.hasSpawnPoint()) {
-			_playableCharacter->setPosition(_levelManager.getSpawnPoint());
-		}
-		else {
-			_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
-		}
-#if _DEBUG
-		if (DEBUGGING && Debug::dbgCollision) {
-			const vector2 pos = _playableCharacter->getPosition();
-			char buffer[192];
-			sprintf_s(buffer, sizeof(buffer), "Respawn: pos={%.2f,%.2f} state=%s\n", pos.x, pos.y,
-				_playableCharacter->getState() ? _playableCharacter->getState()->getName() : "(null)");
-			DEBUG_MSG(buffer);
-		}
-#endif
+		_respawnPlayer();
 	}
 
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE)) {
@@ -402,6 +433,30 @@ bool PlayState::onExecute(float time)
 	if (_boar) _boar->updateCombat(time);
 	_levelManager.update();
 	_updateHUD(time);
+
+	// Detect death: the character is in its "Dead" state (via boar combat or a
+	// DEATH command).  Let the death animation play in full before freezing the
+	// world and showing the GAME OVER prompt on top; the dead character stays
+	// visible behind it.  The "Dead" animation is one-shot (eOnce), so it stops
+	// (isPlaying() -> false) the frame after its last frame has shown; that is
+	// when we bring up the game-over screen.  (PlayState is only executed while
+	// it is the top state, so this fires once per death and never again until a
+	// retry respawns the character out of "Dead".)
+	if (_playableCharacter &&
+		_playableCharacter->getState() &&
+		!strcmp(_playableCharacter->getState()->getName(), "Dead")) {
+		Animation* deadAnimation = static_cast<Animation*>(_playableCharacter->getRenderable());
+		if (!deadAnimation || !deadAnimation->isPlaying()) {
+			if (_cursor && _cursor->getImage()) {
+				_cursor->getImage()->setVisibility(false);
+			}
+			if (!_gameOverState) {
+				_gameOverState = new GameOverState();
+			}
+			Engine2D::getGame()->push(_gameOverState);
+			return keepRunning;
+		}
+	}
 
 	// Update cursor position and state to match mouse.
 	// The cursor sprite is pushed into _hudRenderList (a screen-space render
