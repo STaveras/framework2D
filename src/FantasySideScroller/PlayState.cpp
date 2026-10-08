@@ -346,26 +346,20 @@ void PlayState::onEnter(State* prev)
 	controller->addAction(Action("ATTACK", Gamepad::Button::X));
 	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
 	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
-	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_UP));
-	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_W));
+	// "UP" is the semantic up-direction action, shared with the pause menu.
+	// "INTERACT" is gameplay-only (E key) for interacting with objects.
+	controller->addAction(Action("UP", keyboard->getKeys().KBK_UP));
+	controller->addAction(Action("UP", keyboard->getKeys().KBK_W));
+	controller->addAction(Action("UP", Gamepad::Button::DpadUp));
+	Action upStick("UP");
+	upStick.assignAxis(Gamepad::Axis::LeftY, -0.5f);
+	controller->addAction(upStick);
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
-	controller->addAction(Action("INTERACT", Gamepad::Button::DpadUp));
-	controller->addAction(Action("INTERACT", Gamepad::Button::LeftThumb));
-	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
+	// "CONFIRM" is the menu confirm action: A + Enter.
+	controller->addAction(Action("CONFIRM", Gamepad::Button::A));
+	controller->addAction(Action("CONFIRM", keyboard->getKeys().KBK_RETURN));
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
 	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
-	// Pause-menu controls, polled only by PauseState (see its onExecute).
-	// They share physical keys with gameplay actions (UP=INTERACT, DOWN=DOWN,
-	// SPACE=JUMP), but that's harmless: each state polls only its own actions,
-	// so the shared binds never collide at runtime.
-	controller->addAction(Action("MENU_UP", keyboard->getKeys().KBK_UP));
-	controller->addAction(Action("MENU_UP", Gamepad::Button::DpadUp));
-	controller->addAction(Action("MENU_DOWN", keyboard->getKeys().KBK_DOWN));
-	controller->addAction(Action("MENU_DOWN", Gamepad::Button::DpadDown));
-	controller->addAction(Action("MENU_CONFIRM", keyboard->getKeys().KBK_RETURN));
-	controller->addAction(Action("MENU_CONFIRM", keyboard->getKeys().KBK_SPACE));
-	controller->addAction(Action("MENU_CONFIRM", Gamepad::Button::A));
-	controller->addAction(Action("MENU_QUIT", keyboard->getKeys().KBK_Q));
 	_player->setGameObject(_playableCharacter);
 	_playerController.setInputMap(controller);
 	Character::bindPlayerActions(_playerController);
@@ -539,10 +533,15 @@ bool PlayState::onExecute(float time)
 
 	if (_playableCharacter) {
 		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
+		// "UP" and "INTERACT" both trigger the interact logic: UP for directional up
+		// (shared with the pause menu), INTERACT for the E key (gameplay-only).
+		Action* upAction = controller ? controller->getAction("UP") : NULL;
 		Action* interactAction = controller ? controller->getAction("INTERACT") : NULL;
+		const bool upActive = upAction && upAction->isActive();
 		const bool interactActive = interactAction && interactAction->isActive();
-		const bool interactPressed = interactActive && !_interactWasActive;
-		_interactWasActive = interactActive;
+		const bool interactCombined = upActive || interactActive;
+		const bool interactPressed = interactCombined && !_interactWasActive;
+		_interactWasActive = interactCombined;
 		_levelProps.update(_playableCharacter, interactPressed, time);
 	}
 

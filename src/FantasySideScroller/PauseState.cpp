@@ -136,17 +136,12 @@ bool PauseState::onExecute(float time)
         return false;  // Stop executing this state
     }
 
-    // Q to quit
-    Action* quitAction = _inputMap ? _inputMap->getAction("MENU_QUIT") : NULL;
-    if (quitAction && _inputMap->buttonPressed(quitAction)) {
-        Engine2D::quit();
-        return false;
-    }
-
-    // Move between the menu options
+    // Move between the menu options using the semantic direction actions:
+    // UP moves up (previous), DOWN moves down (next). These are the same
+    // actions used for gameplay movement, so no redundant binds.
     if (_menu && _inputMap) {
-        Action* upAction = _inputMap->getAction("MENU_UP");
-        Action* downAction = _inputMap->getAction("MENU_DOWN");
+        Action* upAction = _inputMap->getAction("UP");
+        Action* downAction = _inputMap->getAction("DOWN");
         if (upAction && _inputMap->buttonPressed(upAction)) {
             _menu->selectPrevious();
         } else if (downAction && _inputMap->buttonPressed(downAction)) {
@@ -154,9 +149,9 @@ bool PauseState::onExecute(float time)
         }
     }
 
-    // Execute the selected option
+    // Execute the selected option with the CONFIRM action (Space / A / Enter).
     if (_inputMap) {
-        Action* confirmAction = _inputMap->getAction("MENU_CONFIRM");
+        Action* confirmAction = _inputMap->getAction("CONFIRM");
         if (confirmAction && _inputMap->buttonPressed(confirmAction)) {
             _executeSelectedOption();
             return false;
