@@ -66,9 +66,10 @@ overlay, and supports `AUTO_SCREENSHOT_FRAME`/`AUTO_SCREENSHOT_PATH`.
 
 ### iOS
 
-`platform/ios` generates an Xcode project for iPhone and iPad (iOS 16 or
-later) that runs FantasySideScroller with the Metal renderer. It needs Xcode,
-CMake 3.24+ and glm's headers (`brew install glm`). simdjson's single-file
+Configuring the root `CMakeLists.txt` with `-DFRAMEWORK_IOS=ON` generates an
+Xcode project for iPhone and iPad (iOS 16 or later) that runs
+FantasySideScroller with the Metal renderer. It needs Xcode, CMake 3.24+ and
+glm's headers (`brew install glm`). simdjson's single-file
 source is downloaded and checked against a pinned SHA-256 when the project is
 generated, because Homebrew only ships it for macOS.
 
@@ -82,7 +83,7 @@ generates `build/ios/framework2D.xcodeproj`. To run on a device, generate the
 project with your team ID and a bundle ID you can sign, then open it in Xcode:
 
 ```bash
-cmake -S platform/ios -B build/ios -G Xcode -DFRAMEWORK_IOS_TEAM=<team id> -DFRAMEWORK_IOS_BUNDLE_ID=<bundle id>
+cmake -S . -B build/ios -G Xcode -DFRAMEWORK_IOS=ON -DFRAMEWORK_IOS_TEAM=<team id> -DFRAMEWORK_IOS_BUNDLE_ID=<bundle id>
 ```
 
 Xcode runs the Debug configuration by default, which is unoptimized and holds

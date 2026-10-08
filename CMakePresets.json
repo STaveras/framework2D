@@ -38,6 +38,41 @@
       }
     },
     {
+      "name": "macos-ios-base",
+      "hidden": true,
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/ios",
+      "cacheVariables": {
+        "FRAMEWORK_IOS": "ON"
+      }
+    },
+    {
+      "name": "macos-ios-debug",
+      "displayName": "iOS Debug",
+      "inherits": "macos-ios-base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "macos-ios-release",
+      "displayName": "iOS Release",
+      "inherits": "macos-ios-base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "windows-debug",
       "displayName": "Windows Debug",
       "inherits": "base",
@@ -93,6 +128,16 @@
     {
       "name": "macos-release",
       "configurePreset": "macos-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "macos-ios-debug",
+      "configurePreset": "macos-ios-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "macos-ios-release",
+      "configurePreset": "macos-ios-release",
       "configuration": "Release"
     },
     {

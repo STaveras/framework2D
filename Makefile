@@ -137,8 +137,8 @@ test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/lev
 	$(CXX) $^ -o $(OBJDIR)/level_props_test $(LDFLAGS)
 	./$(OBJDIR)/level_props_test
 
-# iOS: an Xcode project generated from platform/ios (Metal renderer, touch
-# controls). `make ios` builds it for the simulator; `make ios-run` also boots
+# iOS: an Xcode project generated from the root CMakeLists (Metal renderer,
+# touch controls). `make ios` builds it for the simulator; `make ios-run` also boots
 # IOS_SIMULATOR, installs the app and launches it.
 IOS_BUILD := build/ios
 IOS_CONFIG ?= Debug
@@ -147,7 +147,7 @@ IOS_APP = $(IOS_BUILD)/$(IOS_CONFIG)-iphonesimulator/framework2D.app
 
 .PHONY: ios-project ios ios-run
 ios-project:
-	cmake -S platform/ios -B $(IOS_BUILD) -G Xcode
+	cmake -S . -B $(IOS_BUILD) -G Xcode -DFRAMEWORK_IOS=ON
 
 ios: ios-project
 	xcodebuild -project $(IOS_BUILD)/framework2D.xcodeproj -scheme framework2D \

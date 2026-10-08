@@ -4,6 +4,14 @@ if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
 
+# The iOS app build (see FRAMEWORK_IOS below) needs to be iOS before project():
+#   cmake -S . -B build/ios -G Xcode -DFRAMEWORK_IOS=ON
+if(FRAMEWORK_IOS)
+  set(CMAKE_SYSTEM_NAME iOS)
+  # Must precede project(), which initializes the languages.
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "16.0" CACHE STRING "Minimum iOS version")
+endif()
+
 if(MSVC AND NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "MSVC runtime library" FORCE)
 endif()
@@ -27,6 +35,145 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
+
+if(FRAMEWORK_IOS)
+  # ------------------------------------------------------------------
+  # iOS app build (Metal renderer, touch controls), configured with:
+  #   cmake -S . -B build/ios -G Xcode -DFRAMEWORK_IOS=ON
+  # The engine sources below are the same globs as the desktop build,
+  # minus the desktop-only files, so there is no separate list to keep
+  # in sync with the Makefile.
+  # ------------------------------------------------------------------
+  if(NOT CMAKE_GENERATOR STREQUAL "Xcode")
+    message(FATAL_ERROR "Generate the iOS project with -G Xcode")
+  endif()
+
+  enable_language(OBJCXX)
+  set(CMAKE_XCODE_EFFECTIVE_PLATFORMS "-iphoneos;-iphonesimulator")
+  set(CMAKE_XCODE_GENERATE_SCHEME ON)
+
+  set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+  set(GAME_DATA_DIR "${CMAKE_SOURCE_DIR}/bin/fantasySideScroller")
+
+  set(FRAMEWORK_IOS_BUNDLE_ID "com.stantaveras.framework2D" CACHE STRING "App bundle identifier")
+  set(FRAMEWORK_IOS_TEAM "" CACHE STRING "Development team ID for signing device builds")
+
+  file(STRINGS "${SRC_DIR}/Types.h" _version_line REGEX "#define FRAMEWORK_VERSION ")
+  string(REGEX REPLACE ".*\"([^\"]+)\".*" "\\1" FRAMEWORK_VERSION "${_version_line}")
+
+  # simdjson: the pinned single-file amalgamation.
+  set(SIMDJSON_VERSION 4.6.11)
+  set(SIMDJSON_DIR "${CMAKE_BINARY_DIR}/_deps/simdjson-${SIMDJSON_VERSION}")
+  set(_simdjson_files
+    "simdjson.h=a5c467c33c7871262eb4c82775490430758939c1c516fbdaeb662f8255860a60"
+    "simdjson.cpp=66c818d1a6b3841febef7a8336ff297f0a52e250a436b598bcdecf010d626243")
+  foreach(_entry IN LISTS _simdjson_files)
+    string(REPLACE "=" ";" _entry "${_entry}")
+    list(GET _entry 0 _file)
+    list(GET _entry 1 _sha256)
+    # Skipped when the file is already there with this hash.
+    file(DOWNLOAD
+      "https://github.com/simdjson/simdjson/releases/download/v${SIMDJSON_VERSION}/${_file}"
+      "${SIMDJSON_DIR}/${_file}"
+      EXPECTED_HASH SHA256=${_sha256}
+      TLS_VERIFY ON
+      STATUS _status)
+    list(GET _status 0 _code)
+    if(NOT _code EQUAL 0)
+      list(GET _status 1 _message)
+      message(FATAL_ERROR "Downloading simdjson ${SIMDJSON_VERSION} ${_file} failed: ${_message}")
+    endif()
+  endforeach()
+
+  # glm is header-only, so the host's copy works for iOS too.
+  find_path(GLM_INCLUDE_DIR glm/glm.hpp
+    HINTS /opt/homebrew/opt/glm/include /usr/local/opt/glm/include
+    NO_CMAKE_FIND_ROOT_PATH)
+  if(NOT GLM_INCLUDE_DIR)
+    message(FATAL_ERROR "glm not found. Install it (brew install glm) or set GLM_INCLUDE_DIR.")
+  endif()
+
+  # Everything under src/ except the desktop entry point and the GLFW/
+  # OpenGL/Vulkan/Windows platform backends, which src/iOS replaces.
+  file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${SRC_DIR}/*.cpp")
+  list(FILTER SOURCES EXCLUDE REGEX
+    "/(main|RendererGL|RendererVK|TextureGL|TextureVK|Platform[A-Z][^/]*)\\.cpp$")
+  file(GLOB_RECURSE APPLE_OBJCXX_SOURCES CONFIGURE_DEPENDS "${SRC_DIR}/*.mm")
+  list(APPEND SOURCES ${APPLE_OBJCXX_SOURCES})
+  file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS
+    "${SRC_DIR}/*.h"
+    "${SRC_DIR}/*.hpp")
+  file(GLOB IOS_HEADERS "${SRC_DIR}/iOS/*.h")
+
+  # App icon (the repository's logo.png) and the launch screen colour.
+  set(ASSET_CATALOG "${CMAKE_BINARY_DIR}/Assets.xcassets")
+  configure_file("${CMAKE_SOURCE_DIR}/logo.png" "${ASSET_CATALOG}/AppIcon.appiconset/logo.png" COPYONLY)
+  file(WRITE "${ASSET_CATALOG}/Contents.json"
+    "{ \"info\" : { \"author\" : \"xcode\", \"version\" : 1 } }\n")
+  file(WRITE "${ASSET_CATALOG}/AppIcon.appiconset/Contents.json"
+    "{ \"images\" : [ { \"filename\" : \"logo.png\", \"idiom\" : \"universal\", \"platform\" : \"ios\", \"size\" : \"1024x1024\" } ],\n"
+    "  \"info\" : { \"author\" : \"xcode\", \"version\" : 1 } }\n")
+  file(WRITE "${ASSET_CATALOG}/LaunchBackground.colorset/Contents.json"
+    "{ \"colors\" : [ { \"color\" : { \"color-space\" : \"srgb\", \"components\" : { \"alpha\" : \"1.000\", \"blue\" : \"0.000\", \"green\" : \"0.000\", \"red\" : \"0.000\" } }, \"idiom\" : \"universal\" } ],\n"
+    "  \"info\" : { \"author\" : \"xcode\", \"version\" : 1 } }\n")
+
+  add_executable(${ROOT_DIR_NAME} MACOSX_BUNDLE
+    ${SOURCES}
+    ${HEADERS}
+    "${SIMDJSON_DIR}/simdjson.cpp"
+    "${ASSET_CATALOG}")
+
+  # The engine's headers pull in Metal, so its C++ is compiled as Objective-C++,
+  # as the macOS builds do.
+  set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE OBJCXX)
+
+  target_include_directories(${ROOT_DIR_NAME} PRIVATE
+    "${CMAKE_SOURCE_DIR}/ext"
+    "${CMAKE_SOURCE_DIR}/ext/inc"
+    "${SIMDJSON_DIR}"
+    "${GLM_INCLUDE_DIR}")
+
+  target_compile_definitions(${ROOT_DIR_NAME} PRIVATE
+    $<$<CONFIG:Debug>:_DEBUG>
+    $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
+
+  target_compile_options(${ROOT_DIR_NAME} PRIVATE
+    -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function)
+
+  target_link_libraries(${ROOT_DIR_NAME} PRIVATE
+    "-framework CoreGraphics"
+    "-framework Foundation"
+    "-framework GameController"
+    "-framework Metal"
+    "-framework QuartzCore"
+    "-framework UIKit")
+
+  set_target_properties(${ROOT_DIR_NAME} PROPERTIES
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_LIST_DIR}/platform/ios/Info.plist"
+    RESOURCE "${ASSET_CATALOG}"
+    XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${FRAMEWORK_IOS_BUNDLE_ID}"
+    XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${FRAMEWORK_IOS_TEAM}"
+    XCODE_ATTRIBUTE_CODE_SIGN_STYLE Automatic
+    XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+    XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "${CMAKE_OSX_DEPLOYMENT_TARGET}"
+    XCODE_ATTRIBUTE_SUPPORTED_PLATFORMS "iphoneos iphonesimulator"
+    XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST NO
+    XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
+    XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
+    # The data copy below reads from the repository.
+    XCODE_ATTRIBUTE_ENABLE_USER_SCRIPT_SANDBOXING NO)
+
+  # The game's data, copied into the bundle on every build.
+  add_custom_command(TARGET ${ROOT_DIR_NAME} POST_BUILD
+    COMMAND "${CMAKE_CURRENT_LIST_DIR}/platform/ios/copy-game-data.sh" "${GAME_DATA_DIR}"
+    COMMENT "Copying game data into the app bundle"
+    VERBATIM)
+
+  source_group("simdjson" FILES "${SIMDJSON_DIR}/simdjson.cpp")
+  source_group("Platform" FILES ${IOS_HEADERS})
+  return()
+endif()
+
 find_package(Threads REQUIRED)
 
 if(APPLE)
