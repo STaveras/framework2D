@@ -3,23 +3,29 @@
 #include "Types.h"
 
 #include <cstdint>
-#include <map>
-#include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 class GameObject;
 class Collidable;
 
 // A small, owner-independent broad phase for static geometry. The index owns
-// no GameObjects and is rebuilt from an ObjectManager's map when its caller's
-// static revision changes. Dynamic objects deliberately stay out of this grid:
-// their bounds are queried live because they move frequently.
+// no GameObjects; its caller files each static object with its rank in the
+// caller's iteration order, and re-files objects whose geometry changed.
+// Dynamic objects deliberately stay out of this grid: their bounds are
+// queried live because they move frequently.
 class SpatialIndex2D
 {
 public:
     static constexpr float kCellSize = 128.0f;
+
+    // A filed object and its caller-assigned rank, so results can be ordered
+    // without a lookup per comparison.
+    struct Entry
+    {
+        size_t order = 0;
+        GameObject* object = nullptr;
+    };
 
     // Returns a complete finite AABB only when every non-null member of a
     // compound collider is understood. Unsupported or malformed geometry
@@ -29,12 +35,18 @@ public:
         vector2& outMin,
         vector2& outMax);
 
-    void rebuild(const std::map<std::string, GameObject*>& objects);
+    void clear(void);
 
+    // Files object under its current collider bounds, replacing any earlier
+    // filing. Objects that are not static or have no collider are dropped.
+    void update(GameObject* object, size_t order);
+
+    // Appends every static object that may overlap [min, max]; an object
+    // spanning several cells is appended once per cell.
     void collectStaticCandidates(
         const vector2& min,
         const vector2& max,
-        std::unordered_set<GameObject*>& out) const;
+        std::vector<Entry>& out) const;
 
 private:
     struct Cell
@@ -55,7 +67,18 @@ private:
         }
     };
 
-    std::unordered_map<Cell, std::vector<GameObject*>, CellHash> _staticCells;
-    std::vector<GameObject*> _allStatic;
-    std::vector<GameObject*> _unboundedStatic;
+    // Where an object is filed: a cell range, or the unbounded list.
+    struct Filing
+    {
+        size_t order = 0;
+        bool unbounded = false;
+        Cell minCell;
+        Cell maxCell;
+    };
+
+    void remove(GameObject* object);
+
+    std::unordered_map<Cell, std::vector<Entry>, CellHash> _staticCells;
+    std::unordered_map<GameObject*, Filing> _filings;
+    std::vector<Entry> _unboundedStatic;
 };

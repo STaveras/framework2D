@@ -65,7 +65,7 @@ public:
       _layerCollisionMode = mode;
       applyLayerSurfaceTraitsToCurrentState();
       this->updateComponents();
-      GameObject::invalidateSpatialIndex();
+      GameObject::invalidateSpatialIndex(this);
    }
 
    TileCollisionMode getLayerCollisionMode(void) const {
@@ -297,7 +297,7 @@ public:
       }
 
       this->updateComponents();
-      GameObject::invalidateSpatialIndex();
+      GameObject::invalidateSpatialIndex(this);
    }
 
    void setTileSet(TileSet* tileSet) {
@@ -308,7 +308,7 @@ public:
          this->setTileIndex(_tileIndex);
       }
       else {
-         GameObject::invalidateSpatialIndex();
+         GameObject::invalidateSpatialIndex(this);
       }
    }
 

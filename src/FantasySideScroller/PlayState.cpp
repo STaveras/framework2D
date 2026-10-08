@@ -20,6 +20,7 @@
 #include "Character.h"
 #include "Boar.h"
 #include "../StrUtils.h"
+#include "../System.h"
 
 namespace {
 constexpr float kHUDPaddingX = 12.0f;
@@ -39,7 +40,15 @@ constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
 PlayState::PlayState()
     : _player(nullptr)
     , _playableCharacter(nullptr)
-    , _cursor(nullptr) {}
+    , _cursor(nullptr)
+{
+	// AUTO_START_MAP=<file>.tmj starts on another map (benchmarks, replays).
+	std::string owned;
+	const char* startMap = System::getenv_platform("AUTO_START_MAP", owned);
+	if (startMap && startMap[0] != '\0') {
+		_mapFileName = startMap;
+	}
+}
 
 PlayState::~PlayState() {
 	if (_player || _playableCharacter || _hudRenderList) {

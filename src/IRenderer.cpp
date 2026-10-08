@@ -127,6 +127,42 @@ void IRenderer::render(void) {
 	_backgroundColorShift();
 }
 
+namespace {
+// Whether the quad every backend draws for sprite (its source rect around its
+// center, scaled, rotated, at position + offset) overlaps the view. This is the
+// same bounds test the backends cull with, done before they build the quad, so it
+// skips exactly the sprites they would skip: the many off-screen tiles of a large map.
+bool spriteMayBeVisible(const Sprite* sprite, const vector2& offset, const vector2& viewMin, const vector2& viewMax)
+{
+	const RECT& srcRect = sprite->getSrcRect();
+	const vector2 position = sprite->getPosition() + offset;
+	const vector2 center = sprite->getCenter();
+	const vector2 scale = sprite->getScale();
+	const float rotationRadians = sprite->getRotation();
+	const float x0 = -center.x * scale.x;
+	const float x1 = (static_cast<float>(srcRect.right - srcRect.left) - center.x) * scale.x;
+	const float y0 = -center.y * scale.y;
+	const float y1 = (static_cast<float>(srcRect.bottom - srcRect.top) - center.y) * scale.y;
+
+	vector2 lo(position.x + std::min(x0, x1), position.y + std::min(y0, y1));
+	vector2 hi(position.x + std::max(x0, x1), position.y + std::max(y0, y1));
+	if (rotationRadians != 0.0f) {
+		const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
+		const float xs[4] = { x0, x1, x1, x0 };
+		const float ys[4] = { y0, y0, y1, y1 };
+		lo = vector2(INFINITY, INFINITY);
+		hi = vector2(-INFINITY, -INFINITY);
+		for (int i = 0; i < 4; ++i) {
+			const float x = position.x + c * xs[i] - sn * ys[i];
+			const float y = position.y + sn * xs[i] + c * ys[i];
+			lo.x = std::min(lo.x, x); lo.y = std::min(lo.y, y);
+			hi.x = std::max(hi.x, x); hi.y = std::max(hi.y, y);
+		}
+	}
+	return !(hi.x < viewMin.x || lo.x > viewMax.x || hi.y < viewMin.y || lo.y > viewMax.y);
+}
+}
+
 void IRenderer::_drawRenderLists(bool screenSpace)
 {
 	for (RenderList* renderList : _RenderLists) {
@@ -135,6 +171,12 @@ void IRenderer::_drawRenderLists(bool screenSpace)
 		}
 
 		_beginRenderList(*renderList);
+
+		const bool cull = !renderList->screenSpace && m_pCamera;
+		vector2 viewMin(0.0f, 0.0f), viewMax(0.0f, 0.0f);
+		if (cull) {
+			_viewBounds(_parallaxCameraPosition(*renderList), viewMin, viewMax);
+		}
 
 		for (Renderable* renderable : *renderList) {
 			if (!renderable || !renderable->isVisible()) {
@@ -145,7 +187,9 @@ void IRenderer::_drawRenderLists(bool screenSpace)
 			case RENDERABLE_TYPE_SPRITE:
 			{
 				Sprite* sprite = (Sprite*)renderable;
-				_renderSprite(sprite, sprite->getTintColor(), sprite->getOffset(), *renderList);
+				if (!cull || spriteMayBeVisible(sprite, sprite->getOffset(), viewMin, viewMax)) {
+					_renderSprite(sprite, sprite->getTintColor(), sprite->getOffset(), *renderList);
+				}
 			}
 			break;
 			case RENDERABLE_TYPE_ANIMATION:
@@ -153,7 +197,7 @@ void IRenderer::_drawRenderLists(bool screenSpace)
 				Animation* animation = (Animation*)renderable;
 				Frame* frame = animation->getFrameCount() ? animation->getCurrentFrame() : NULL;
 				Sprite* sprite = frame ? frame->getSprite() : NULL;
-				if (sprite) {
+				if (sprite && (!cull || spriteMayBeVisible(sprite, animation->getOffset(), viewMin, viewMax))) {
 					_renderSprite(sprite, sprite->getTintColor(), animation->getOffset(), *renderList);
 				}
 			}

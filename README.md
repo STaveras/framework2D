@@ -239,7 +239,9 @@ times, and frames exceeding the 16.67 ms budget for 60 FPS. Set
 `AUTO_BENCHMARK_SECONDS` to change the measurement duration. Add `--vsync` to
 measure presentation pacing; leave it off to measure rendering throughput.
 Existing input replays can be used through `AUTO_INPUT_REPLAY_PATH` for a
-repeatable moving-camera workload. Keep window size, replay, and debug-overlay
+repeatable moving-camera workload. `AUTO_START_MAP=old_mine_trail.tmj` starts
+on another map instead of `mosswood_hollow.tmj`; the old mine trail, with about
+17,000 tiles, is the heavier benchmark scene. Keep window size, replay, and debug-overlay
 settings identical when comparing runs.
 
 On Windows, normal Debug builds exclude Visual Leak Detector, even when it is

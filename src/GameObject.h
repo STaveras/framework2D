@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <cstdint>
+#include <vector>
 
 // TODO: GameObjects should maybe have an overload for operator() ?
 //       they could take in other objects, and perform collision checks between it and the other object?
@@ -130,9 +131,16 @@ public:
    GAME_OBJ_TYPE getType(void) const { return _objType; }
 
    // Shared revision used by ObjectManager instances to notice static
-   // geometry edits without retaining owner pointers in GameObject.
+   // geometry edits without retaining owner pointers in GameObject. Pass the
+   // object whose geometry changed so indexes can re-file just that object;
+   // nullptr means any static geometry may have changed.
    static uint64_t getSpatialIndexRevision(void);
-   static void invalidateSpatialIndex(void);
+   static void invalidateSpatialIndex(GameObject* changed = nullptr);
+   // Appends the objects changed in revisions (sinceRevision, current] to out.
+   // Returns false when an index must be rebuilt instead: a change named no
+   // object, or sinceRevision is older than the change log reaches. Pointers
+   // may be stale; compare them against known members before dereferencing.
+   static bool getSpatialIndexChanges(uint64_t sinceRevision, std::vector<GameObject*>& out);
 
    // Rebuild the world-space collider cache after editing a state collider
    // directly. Normal position/state/Tile lifecycle methods do this for you.
