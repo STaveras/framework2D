@@ -5,6 +5,7 @@
 #include "RuntimeProfile.h"
 
 #include "GameObject.h"
+#include "Tile.h"
 
 #include <algorithm>
 #include <vector>
@@ -213,7 +214,11 @@ void GameState::_OnObjectAdded(const Event & e)
 			placeRenderable(renderable, targetRenderList);
 		}
 		if (renderable) {
-			renderable->setVisibility(state == currentState);
+			bool visible = state == currentState;
+			if (visible && object->getType() == GameObject::GAME_OBJ_TILE) {
+				visible = static_cast<Tile*>(object)->isLayerVisible();
+			}
+			renderable->setVisibility(visible);
 		}
 	}
 }

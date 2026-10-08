@@ -19,6 +19,7 @@ class Tile : public GameObject
 
    TileSet* _tileSet = NULL;
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
+   bool _layerVisible = true;
    std::string _layerName;
 
    // TODO: Move this to TileSet
@@ -69,6 +70,19 @@ public:
 
    TileCollisionMode getLayerCollisionMode(void) const {
       return _layerCollisionMode;
+   }
+
+   void setLayerVisible(bool visible) {
+      _layerVisible = visible;
+      if (GameObjectState* state = this->getState()) {
+         if (Renderable* renderable = state->getRenderable()) {
+            renderable->setVisibility(visible);
+         }
+      }
+   }
+
+   bool isLayerVisible(void) const {
+      return _layerVisible;
    }
 
    void setLayerName(const std::string& layerName) {
@@ -259,7 +273,7 @@ public:
                }
                tileImage->setSrcRect(tileRect);
                tileImage->setTexture(_tileSet->getTileSheet());
-               tileImage->setVisibility(true);
+               tileImage->setVisibility(_layerVisible);
 
                applyFlipToImage(tileImage);
                state->setRenderable(tileImage);
