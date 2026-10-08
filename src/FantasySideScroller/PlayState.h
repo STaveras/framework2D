@@ -15,12 +15,14 @@ class Character;
 class Boar;
 class Font;
 class PauseState;
+class GameOverState;
 
 class PlayState : public GameState
 {
 	void _initHUD();
 	void _updateHUD(float dt);
 	void _shutdownHUD();
+	void _respawnPlayer(void);
 
 	Player* _player = NULL;
 	PlayerController _playerController;
@@ -35,6 +37,7 @@ class PlayState : public GameState
 	std::vector<Boar*> _boars;
 	bool _paused = false;
 	PauseState* _pauseState = NULL;
+	GameOverState* _gameOverState = NULL;
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _healthBarBackground = NULL;
 	Image* _healthBarFill = NULL;

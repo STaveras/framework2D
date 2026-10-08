@@ -46,10 +46,10 @@ COMMON_SRCS := \
   src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
   src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
-  src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
+  src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/GameOverState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
   src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp src/BlinkFlash.cpp \
-  src/Actor.cpp src/PlayerController.cpp
+  src/Actor.cpp src/PlayerController.cpp src/Widgets.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
