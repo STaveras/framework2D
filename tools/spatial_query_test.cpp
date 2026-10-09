@@ -216,6 +216,54 @@ void testLocalCandidateCount()
 	require(firstCandidates <= 1, "local query visited far static objects");
 }
 
+void testIncrementalStaticMoves()
+{
+	ObjectManager manager;
+	ObjectManager other;
+	Fixture floater("floater", vector2(0.0f, 0.0f), true);
+	Fixture anchor("anchor", vector2(0.0f, 0.0f), true);
+	Fixture elsewhere("elsewhere", vector2(0.0f, 0.0f), true);
+	manager.addObject("floater", &floater);
+	manager.addObject("anchor", &anchor);
+	other.addObject("elsewhere", &elsewhere);
+
+	std::vector<GameObject*> result;
+	manager.queryBounds(vector2(-2.0f, -2.0f), vector2(12.0f, 12.0f), result, true);
+	other.queryBounds(vector2(-2.0f, -2.0f), vector2(12.0f, 12.0f), result, true);
+
+	RuntimeProfile::active = true;
+	RuntimeProfile::counters.fill(0);
+	const auto rebuilds = []() {
+		return RuntimeProfile::counters[static_cast<size_t>(RuntimeProfile::Counter::SpatialRebuilds)];
+	};
+
+	// A static prop that moves every tick (a floating pickup) is re-filed, not rebuilt.
+	for (int step = 1; step <= 40; ++step) {
+		const vector2 position(step * 50.0f, 0.0f);
+		floater.setPosition(position);
+		manager.queryBounds(position - vector2(2.0f, 2.0f), position + vector2(12.0f, 12.0f), result, true);
+		require(names(result, manager) == std::vector<std::string>({"floater"}),
+			"moved static object was not re-filed under its new cells");
+		manager.queryBounds(vector2(-2.0f, -2.0f), vector2(12.0f, 12.0f), result, true);
+		require(names(result, manager) == std::vector<std::string>({"anchor"}),
+			"moved static object was left in its old cells");
+		other.queryBounds(vector2(-2.0f, -2.0f), vector2(12.0f, 12.0f), result, true);
+		require(names(result, other) == std::vector<std::string>({"elsewhere"}),
+			"another manager's static move changed this manager's results");
+	}
+	require(rebuilds() == 0, "static moves rebuilt the whole grid instead of re-filing the moved object");
+
+	// More changes than the change log holds still end up correct, via a full rebuild.
+	for (int step = 0; step < 1000; ++step) {
+		anchor.setPosition(vector2(static_cast<float>(step), 500.0f));
+	}
+	manager.queryBounds(vector2(990.0f, 490.0f), vector2(1010.0f, 520.0f), result, true);
+	RuntimeProfile::active = false;
+	require(names(result, manager) == std::vector<std::string>({"anchor"}),
+		"overflowing the change log lost a static move");
+	require(rebuilds() == 1, "overflowing the change log did not fall back to one rebuild");
+}
+
 void testPolygonSamplingHalo()
 {
 	ObjectManager manager;
@@ -244,7 +292,8 @@ int main()
 	testConservativeAndHugeQueries();
 	testUpdateSnapshotMutation();
 	testLocalCandidateCount();
+	testIncrementalStaticMoves();
 	testPolygonSamplingHalo();
-	std::cout << "PASS: spatial bounds, lifecycle invalidation, conservative fallback, and local candidate visits\n";
+	std::cout << "PASS: spatial bounds, lifecycle invalidation, incremental static moves, conservative fallback, and local candidate visits\n";
 	return 0;
 }

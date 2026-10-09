@@ -22,12 +22,17 @@ object registry. Boar support probes, character foot and uphill probes, and
   selection, exact intersection tests, and collision response remain in their
   existing gameplay and physics code.
 
-Object registration/removal and normal static geometry changes invalidate the
-index. A shared static-geometry revision keeps managers independent of object
-lifetime callbacks; editing static geometry in one world may consequently cause
-another world's index to rebuild on its next query. Dynamic movement does not
-increment this revision. This is intended for mostly static levels; a world with
-many independently moving colliders would benefit from a dynamic spatial tree.
+Object registration/removal and staticness changes rebuild the index. Normal
+static geometry changes (a static object moved, retiled, or given a new collider)
+only re-file the changed object: a shared static-geometry revision, with a short
+log of which object each revision changed, keeps managers independent of object
+lifetime callbacks. On its next query each manager re-files the logged objects it
+owns and ignores the rest, so a pickup that floats every tick costs one re-file per
+tick rather than a whole-level rebuild. A bulk `invalidateSpatialIndex()`, or more
+changes between two queries than the log holds, falls back to a full rebuild.
+Dynamic movement does not increment this revision. This is intended for mostly
+static levels; a world with many independently moving colliders would benefit
+from a dynamic spatial tree.
 Dynamic updates use a snapshot: newly registered objects run on the next tick,
 while objects removed or made static before their turn are skipped.
 

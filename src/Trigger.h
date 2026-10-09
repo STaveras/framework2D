@@ -75,6 +75,7 @@ enum class TraversalTriggerType
 {
 	Unknown,
 	Goal,
+	Destination,
 	Checkpoint,
 	Killzone,
 	TimeBonus,
@@ -100,5 +101,7 @@ struct TraversalTrigger
 	// When set, the horizontal push points away from the hazard, toward whichever side the
 	// character touched it from (e.g. a hanging thorny vine).
 	bool pushAway = false;
+	// Destinations carry the relative path of the map to load once reached.
+	std::string nextMap;
 };
 // Author: Stanley Taveras

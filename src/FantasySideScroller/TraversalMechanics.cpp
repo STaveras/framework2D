@@ -54,6 +54,9 @@ TraversalTriggerType TraversalMechanics::parseTriggerType(const std::string& typ
 	if (StrUtils::IEquals(typeName, "goal")) {
 		return TraversalTriggerType::Goal;
 	}
+	if (StrUtils::IEquals(typeName, "destination")) {
+		return TraversalTriggerType::Destination;
+	}
 	if (StrUtils::IEquals(typeName, "checkpoint")) {
 		return TraversalTriggerType::Checkpoint;
 	}
@@ -129,6 +132,15 @@ void TraversalMechanics::requestRespawn(const vector2& position, const char* rea
 	_runState.lastEvent = reason ? reason : "respawn";
 }
 
+void TraversalMechanics::requestMapChange(const std::string& nextMapFileName)
+{
+	_mapChangePending = true;
+	_nextMapFileName = nextMapFileName;
+	_runState.completed = true;
+	_runState.active = false;
+	_runState.lastEvent = "destination_reached";
+}
+
 void TraversalMechanics::initialize(
 	const std::vector<LevelTriggerDescriptor>& descriptors,
 	const vector2& spawnPoint,
@@ -160,6 +172,11 @@ void TraversalMechanics::initialize(
 		case TraversalTriggerType::StaminaPickup:
 			trigger.value = readNumericProperty(descriptor, "amount", readNumericProperty(descriptor, "value", 20.0f));
 			trigger.oneShot = readBoolProperty(descriptor, "one_shot", true);
+			break;
+		case TraversalTriggerType::Destination:
+			// next_map names the relative path of the map to load when reached.
+			trigger.nextMap = readStringProperty(descriptor, "next_map");
+			trigger.oneShot = true;
 			break;
 		case TraversalTriggerType::Checkpoint:
 		case TraversalTriggerType::Killzone:
@@ -224,6 +241,8 @@ void TraversalMechanics::resetRun(const vector2& spawnPoint, float timeLimitSeco
 	_runState.lastEvent = "run_started";
 	_respawnPending = false;
 	_respawnPoint = spawnPoint;
+	_mapChangePending = false;
+	_nextMapFileName.clear();
 
 	for (TraversalTrigger& trigger : _triggers) {
 		trigger.consumed = false;
@@ -269,6 +288,18 @@ void TraversalMechanics::update(Character* character, float dt)
 			_runState.completed = true;
 			_runState.active = false;
 			_runState.lastEvent = "goal_reached";
+			break;
+		case TraversalTriggerType::Destination:
+			if (!trigger.nextMap.empty()) {
+				// A destination with a next_map loads that map instead of ending the run.
+				requestMapChange(trigger.nextMap);
+			}
+			else {
+				// No next_map: treat it as a run goal so a terminal destination still finishes.
+				_runState.completed = true;
+				_runState.active = false;
+				_runState.lastEvent = "goal_reached";
+			}
 			break;
 		case TraversalTriggerType::Checkpoint:
 			_runState.hasCheckpoint = true;
@@ -343,5 +374,16 @@ bool TraversalMechanics::consumeRespawnRequest(vector2& outRespawnPoint, std::st
 	if (outReason) {
 		*outReason = _respawnReason;
 	}
+	return true;
+}
+
+bool TraversalMechanics::consumeMapChangeRequest(std::string& outNextMapFileName)
+{
+	if (!_mapChangePending) {
+		return false;
+	}
+
+	_mapChangePending = false;
+	outNextMapFileName = _nextMapFileName;
 	return true;
 }

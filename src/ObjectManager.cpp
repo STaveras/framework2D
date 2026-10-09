@@ -118,110 +118,26 @@ bool intersects(vector2 lhsMin, vector2 lhsMax, vector2 rhsMin, vector2 rhsMax)
 	return lhsMin.x <= rhsMax.x && lhsMax.x >= rhsMin.x &&
 		lhsMin.y <= rhsMax.y && lhsMax.y >= rhsMin.y;
 }
-}
 
-void SpatialIndex2D::rebuild(const std::map<std::string, GameObject*>& objects)
+// Cells covered by [min, max], or false when there are too many to visit.
+bool tryGetCellRange(vector2 min, vector2 max, int& minCellX, int& minCellY, int& maxCellX, int& maxCellY)
 {
-#if FRAMEWORK_HAS_RUNTIME_PROFILE
-	RuntimeProfile::Scope profileScope(RuntimeProfile::Region::SpatialRebuild);
-	RuntimeProfile::count(RuntimeProfile::Counter::SpatialRebuilds);
-#endif
-	_staticCells.clear();
-	_allStatic.clear();
-	_unboundedStatic.clear();
-
-	for (const auto& entry : objects) {
-		GameObject* object = entry.second;
-		if (!object || !object->isStatic()) {
-			continue;
-		}
-
-		vector2 min(0.0f, 0.0f);
-		vector2 max(0.0f, 0.0f);
-		Collidable* collidable = object->getCollidable();
-		if (!collidable) {
-			continue;
-		}
-		_allStatic.push_back(object);
-		const bool hasConservativeBounds = SpatialIndex2D::tryGetConservativeBounds(collidable, min, max);
-		if (!hasConservativeBounds) {
-			// Unknown/unbounded geometry must remain a candidate to preserve
-			// correctness. The collision rules still belong to CollisionSystem.
-			_unboundedStatic.push_back(object);
-			continue;
-		}
-
-		const int minCellX = cellCoordinate(min.x);
-		const int maxCellX = cellCoordinate(max.x);
-		const int minCellY = cellCoordinate(min.y);
-		const int maxCellY = cellCoordinate(max.y);
-		const uint64_t spanX = static_cast<uint64_t>(static_cast<int64_t>(maxCellX) - static_cast<int64_t>(minCellX) + 1);
-		const uint64_t spanY = static_cast<uint64_t>(static_cast<int64_t>(maxCellY) - static_cast<int64_t>(minCellY) + 1);
-		if (spanX == 0 || spanY == 0 || spanX > kMaxIndexedCellsPerObject || spanY > kMaxIndexedCellsPerObject ||
-			spanX > (kMaxIndexedCellsPerObject / spanY)) {
-			_unboundedStatic.push_back(object);
-			continue;
-		}
-
-		for (int y = minCellY; y <= maxCellY; ++y) {
-			for (int x = minCellX; x <= maxCellX; ++x) {
-				_staticCells[Cell{ x, y }].push_back(object);
-				if (x == std::numeric_limits<int>::max()) {
-					break;
-				}
-			}
-			if (y == std::numeric_limits<int>::max()) {
-				break;
-			}
-		}
-	}
-}
-
-void SpatialIndex2D::collectStaticCandidates(
-	const vector2& min,
-	const vector2& max,
-	std::unordered_set<GameObject*>& out) const
-{
-	for (GameObject* object : _unboundedStatic) {
-		if (object) {
-			out.insert(object);
-		}
-	}
-
-	if (!finiteBounds(min, max)) {
-		for (GameObject* object : _allStatic) {
-			if (object) {
-				out.insert(object);
-			}
-		}
-		return;
-	}
-
-	const int minCellX = cellCoordinate(min.x);
-	const int maxCellX = cellCoordinate(max.x);
-	const int minCellY = cellCoordinate(min.y);
-	const int maxCellY = cellCoordinate(max.y);
+	minCellX = cellCoordinate(min.x);
+	maxCellX = cellCoordinate(max.x);
+	minCellY = cellCoordinate(min.y);
+	maxCellY = cellCoordinate(max.y);
 	const uint64_t spanX = static_cast<uint64_t>(static_cast<int64_t>(maxCellX) - static_cast<int64_t>(minCellX) + 1);
 	const uint64_t spanY = static_cast<uint64_t>(static_cast<int64_t>(maxCellY) - static_cast<int64_t>(minCellY) + 1);
-	if (spanX == 0 || spanY == 0 || spanX > kMaxIndexedCellsPerObject || spanY > kMaxIndexedCellsPerObject ||
-		spanX > (kMaxIndexedCellsPerObject / spanY)) {
-		for (GameObject* object : _allStatic) {
-			if (object) {
-				out.insert(object);
-			}
-		}
-		return;
-	}
+	return !(spanX == 0 || spanY == 0 || spanX > kMaxIndexedCellsPerObject || spanY > kMaxIndexedCellsPerObject ||
+		spanX > (kMaxIndexedCellsPerObject / spanY));
+}
+
+template <typename Visit>
+void forEachCell(int minCellX, int minCellY, int maxCellX, int maxCellY, Visit&& visit)
+{
 	for (int y = minCellY; y <= maxCellY; ++y) {
 		for (int x = minCellX; x <= maxCellX; ++x) {
-			auto itr = _staticCells.find(Cell{ x, y });
-			if (itr != _staticCells.end()) {
-				for (GameObject* object : itr->second) {
-					if (object) {
-						out.insert(object);
-					}
-				}
-			}
+			visit(x, y);
 			if (x == std::numeric_limits<int>::max()) {
 				break;
 			}
@@ -230,6 +146,103 @@ void SpatialIndex2D::collectStaticCandidates(
 			break;
 		}
 	}
+}
+
+void eraseEntry(std::vector<SpatialIndex2D::Entry>& entries, GameObject* object)
+{
+	for (size_t i = 0; i < entries.size(); ++i) {
+		if (entries[i].object == object) {
+			entries[i] = entries.back();
+			entries.pop_back();
+			return;
+		}
+	}
+}
+} // namespace
+
+void SpatialIndex2D::clear(void)
+{
+	_staticCells.clear();
+	_filings.clear();
+	_unboundedStatic.clear();
+}
+
+void SpatialIndex2D::remove(GameObject* object)
+{
+	auto filing = _filings.find(object);
+	if (filing == _filings.end()) {
+		return;
+	}
+
+	const Filing& previous = filing->second;
+	if (previous.unbounded) {
+		eraseEntry(_unboundedStatic, object);
+	}
+	else {
+		forEachCell(previous.minCell.x, previous.minCell.y, previous.maxCell.x, previous.maxCell.y, [&](int x, int y) {
+			auto cell = _staticCells.find(Cell{ x, y });
+			if (cell != _staticCells.end()) {
+				eraseEntry(cell->second, object);
+			}
+		});
+	}
+	_filings.erase(filing);
+}
+
+void SpatialIndex2D::update(GameObject* object, size_t order)
+{
+	remove(object);
+	if (!object || !object->isStatic()) {
+		return;
+	}
+
+	Collidable* collidable = object->getCollidable();
+	if (!collidable) {
+		return;
+	}
+
+	Filing filing;
+	filing.order = order;
+	vector2 min(0.0f, 0.0f);
+	vector2 max(0.0f, 0.0f);
+	// Unknown/unbounded geometry must remain a candidate to preserve
+	// correctness. The collision rules still belong to CollisionSystem.
+	filing.unbounded = !SpatialIndex2D::tryGetConservativeBounds(collidable, min, max) ||
+		!tryGetCellRange(min, max, filing.minCell.x, filing.minCell.y, filing.maxCell.x, filing.maxCell.y);
+	if (filing.unbounded) {
+		_unboundedStatic.push_back(Entry{ order, object });
+	}
+	else {
+		forEachCell(filing.minCell.x, filing.minCell.y, filing.maxCell.x, filing.maxCell.y, [&](int x, int y) {
+			_staticCells[Cell{ x, y }].push_back(Entry{ order, object });
+		});
+	}
+	_filings.emplace(object, filing);
+}
+
+void SpatialIndex2D::collectStaticCandidates(
+	const vector2& min,
+	const vector2& max,
+	std::vector<Entry>& out) const
+{
+	out.insert(out.end(), _unboundedStatic.begin(), _unboundedStatic.end());
+
+	int minCellX = 0, minCellY = 0, maxCellX = 0, maxCellY = 0;
+	if (!finiteBounds(min, max) || !tryGetCellRange(min, max, minCellX, minCellY, maxCellX, maxCellY)) {
+		for (const auto& filing : _filings) {
+			if (!filing.second.unbounded) {
+				out.push_back(Entry{ filing.second.order, filing.first });
+			}
+		}
+		return;
+	}
+
+	forEachCell(minCellX, minCellY, maxCellX, maxCellY, [&](int x, int y) {
+		auto cell = _staticCells.find(Cell{ x, y });
+		if (cell != _staticCells.end()) {
+			out.insert(out.end(), cell->second.begin(), cell->second.end());
+		}
+	});
 }
 
 ObjectManager::ObjectManager(void)
@@ -250,22 +263,52 @@ void ObjectManager::rebuildSpatialIndexIfNeeded(void) const
 		return;
 	}
 
-	m_dynamicObjects.clear();
-	m_dynamicObjects.reserve(m_mObjects.size());
-	m_objectOrder.clear();
-	m_objectOrder.reserve(m_mObjects.size());
-	size_t objectOrder = 0;
-	for (const auto& entry : m_mObjects) {
-		GameObject* object = entry.second;
-		if (object && m_objectOrder.find(object) == m_objectOrder.end()) {
-			m_objectOrder.emplace(object, objectOrder++);
-		}
-		if (object && !object->isStatic()) {
-			m_dynamicObjects.push_back(object);
+	// Usually just a few static objects moved (a floating pickup, a sinking
+	// platform), so re-file only those. The change log may name objects this
+	// manager never had or has since dropped; only members are dereferenced.
+	if (!m_spatialMembershipDirty) {
+		m_changedObjects.clear();
+		if (GameObject::getSpatialIndexChanges(m_spatialRevision, m_changedObjects)) {
+			for (GameObject* object : m_changedObjects) {
+				auto member = m_objectOrder.find(object);
+				if (member != m_objectOrder.end()) {
+					m_spatialIndex->update(object, member->second);
+				}
+			}
+			m_spatialRevision = currentRevision;
+			return;
 		}
 	}
 
-	m_spatialIndex->rebuild(m_mObjects);
+#if FRAMEWORK_HAS_RUNTIME_PROFILE
+	RuntimeProfile::Scope profileScope(RuntimeProfile::Region::SpatialRebuild);
+	RuntimeProfile::count(RuntimeProfile::Counter::SpatialRebuilds);
+#endif
+	m_dynamicObjects.clear();
+	m_dynamicOrder.clear();
+	m_objectOrder.clear();
+	m_objectOrder.reserve(m_mObjects.size());
+	m_spatialIndex->clear();
+	size_t objectOrder = 0;
+	for (const auto& entry : m_mObjects) {
+		GameObject* object = entry.second;
+		if (!object) {
+			continue;
+		}
+		const auto member = m_objectOrder.emplace(object, objectOrder);
+		const size_t order = member.first->second;
+		if (member.second) {
+			++objectOrder;
+			if (object->isStatic()) {
+				m_spatialIndex->update(object, order);
+			}
+		}
+		if (!object->isStatic()) {
+			m_dynamicObjects.push_back(object);
+			m_dynamicOrder.push_back(order);
+		}
+	}
+
 	m_spatialRevision = currentRevision;
 	m_spatialMembershipDirty = false;
 }
@@ -347,6 +390,35 @@ void ObjectManager::removeObject(const char* name)
 				break;
 			}
 		}
+	}
+}
+
+void ObjectManager::removeObjects(const std::vector<GameObject*>& objects)
+{
+	std::unordered_set<GameObject*> pending(objects.begin(), objects.end());
+	pending.erase(nullptr);
+
+	// Like removeObject(GameObject*), only each object's first entry goes. Finish and
+	// unlink them all before notifying, so handlers can't invalidate the walk.
+	std::vector<GameObject*> removed;
+	removed.reserve(pending.size());
+	for (auto itr = m_mObjects.begin(); itr != m_mObjects.end() && !pending.empty();) {
+		GameObject* object = itr->second;
+		if (pending.erase(object) == 0) {
+			++itr;
+			continue;
+		}
+		object->finish();
+		itr = m_mObjects.erase(itr);
+		removed.push_back(object);
+	}
+
+	if (removed.empty()) {
+		return;
+	}
+	m_spatialMembershipDirty = true;
+	for (GameObject* object : removed) {
+		Engine2D::getEventSystem()->sendEvent(EVT_OBJECT_REMOVED, object, Event::event_priority_immediate);
 	}
 }
 
@@ -433,11 +505,12 @@ void ObjectManager::queryBounds(
 	}
 	const bool conservativeQuery = !finiteBounds(queryMin, queryMax);
 
-	std::unordered_set<GameObject*> candidates;
-	candidates.reserve(32);
+	std::vector<SpatialIndex2D::Entry> candidates;
+	candidates.reserve(64);
 	m_spatialIndex->collectStaticCandidates(queryMin, queryMax, candidates);
 	if (!staticOnly) {
-		for (GameObject* object : m_dynamicObjects) {
+		for (size_t i = 0; i < m_dynamicObjects.size(); ++i) {
+			GameObject* object = m_dynamicObjects[i];
 			if (!object) {
 				continue;
 			}
@@ -454,27 +527,23 @@ void ObjectManager::queryBounds(
 			const bool hasConservativeBounds = SpatialIndex2D::tryGetConservativeBounds(collidable, objectMin, objectMax);
 			if (conservativeQuery || !hasConservativeBounds ||
 				intersects(objectMin, objectMax, queryMin, queryMax)) {
-				candidates.insert(object);
+				candidates.push_back(SpatialIndex2D::Entry{ m_dynamicOrder[i], object });
 			}
 		}
 	}
 
-	std::vector<GameObject*> orderedCandidates;
-	orderedCandidates.reserve(candidates.size());
-	for (GameObject* object : candidates) {
-		if (object) {
-			orderedCandidates.push_back(object);
-		}
-	}
-	std::sort(orderedCandidates.begin(), orderedCandidates.end(), [this](GameObject* lhs, GameObject* rhs) {
-		auto lhsItr = m_objectOrder.find(lhs);
-		auto rhsItr = m_objectOrder.find(rhs);
-		const size_t lhsOrder = lhsItr == m_objectOrder.end() ? std::numeric_limits<size_t>::max() : lhsItr->second;
-		const size_t rhsOrder = rhsItr == m_objectOrder.end() ? std::numeric_limits<size_t>::max() : rhsItr->second;
-		return lhsOrder < rhsOrder;
+	// Every member has its own rank, so sorting by rank also brings an object's
+	// repeated cell hits together for unique() to drop.
+	std::sort(candidates.begin(), candidates.end(), [](const SpatialIndex2D::Entry& lhs, const SpatialIndex2D::Entry& rhs) {
+		return lhs.order < rhs.order;
 	});
+	candidates.erase(std::unique(candidates.begin(), candidates.end(),
+		[](const SpatialIndex2D::Entry& lhs, const SpatialIndex2D::Entry& rhs) {
+			return lhs.object == rhs.object;
+		}), candidates.end());
 
-	for (GameObject* object : orderedCandidates) {
+	for (const SpatialIndex2D::Entry& candidate : candidates) {
+		GameObject* object = candidate.object;
 		if (staticOnly && !object->isStatic()) {
 			continue;
 		}

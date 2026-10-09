@@ -28,7 +28,9 @@ class ObjectManager
 	 std::list<ObjectOperator*> m_lsObjOperators;
 	SpatialIndex2D* m_spatialIndex = nullptr;
 	mutable std::vector<GameObject*> m_dynamicObjects;
+	mutable std::vector<size_t> m_dynamicOrder; // m_objectOrder rank of each m_dynamicObjects entry
 	mutable std::unordered_map<GameObject*, size_t> m_objectOrder;
+	mutable std::vector<GameObject*> m_changedObjects; // scratch for incremental index updates
 	mutable bool m_spatialMembershipDirty = true;
 	mutable uint64_t m_spatialRevision = 0;
 
@@ -58,6 +60,9 @@ public:
 	void addObject(const char* name, GameObject* object);
 	void removeObject(GameObject* object);
 	void removeObject(const char* name);
+	// Same as removeObject(object) for each, in one pass over the objects; use it for
+	// bulk teardown (a level's tiles), where per-object removal would be quadratic.
+	void removeObjects(const std::vector<GameObject*>& objects);
 
 	void pushOperator(ObjectOperator* objOperation);
 	void popOperator(void);

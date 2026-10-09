@@ -66,9 +66,10 @@ overlay, and supports `AUTO_SCREENSHOT_FRAME`/`AUTO_SCREENSHOT_PATH`.
 
 ### iOS
 
-`platform/ios` generates an Xcode project for iPhone and iPad (iOS 16 or
-later) that runs FantasySideScroller with the Metal renderer. It needs Xcode,
-CMake 3.24+ and glm's headers (`brew install glm`). simdjson's single-file
+Configuring the root `CMakeLists.txt` with `-DFRAMEWORK_IOS=ON` generates an
+Xcode project for iPhone and iPad (iOS 16 or later) that runs
+FantasySideScroller with the Metal renderer. It needs Xcode, CMake 3.24+ and
+glm's headers (`brew install glm`). simdjson's single-file
 source is downloaded and checked against a pinned SHA-256 when the project is
 generated, because Homebrew only ships it for macOS.
 
@@ -82,7 +83,7 @@ generates `build/ios/framework2D.xcodeproj`. To run on a device, generate the
 project with your team ID and a bundle ID you can sign, then open it in Xcode:
 
 ```bash
-cmake -S platform/ios -B build/ios -G Xcode -DFRAMEWORK_IOS_TEAM=<team id> -DFRAMEWORK_IOS_BUNDLE_ID=<bundle id>
+cmake -S . -B build/ios -G Xcode -DFRAMEWORK_IOS=ON -DFRAMEWORK_IOS_TEAM=<team id> -DFRAMEWORK_IOS_BUNDLE_ID=<bundle id>
 ```
 
 Xcode runs the Debug configuration by default, which is unoptimized and holds
@@ -185,8 +186,30 @@ times. These are local variable-step idle measurements, not a cycle-identical
 replay or a frame-rate guarantee for every scene.
 
 Set `AUTO_PROFILE=1` to print inclusive region times and candidate counts on exit.
+`render_lists` is the CPU side of drawing (walking render lists and building
+quads); `render` also includes the swap and any wait for the GPU or display.
 With pacing active it also prints a `PACING` line: input-sample-to-vblank latency
 (mean/p95/p99), the average pre-input wait, and missed vblanks.
+
+### Render culling
+
+Every backend draws world-space render lists through `IRenderer`, which splits
+each list into runs of consecutive sprites (at most 64 sprites spanning at most
+256 units) and keeps each run's bounds. Off-screen runs are skipped without
+visiting their sprites; the rest are still culled sprite by sprite with the
+exact quad bounds the backends use, so draw order and output are unchanged.
+On the old mine trail (about 17,000 tiles) this cut the per-frame CPU cost of
+drawing from 2.34 ms to 1.28 ms in a debug build, and from 0.40 ms to 0.25 ms in
+a release build.
+
+Sprites tell their run when they move: `Renderable`'s position, offset, center,
+scale, rotation and mirror setters and `Sprite::setSrcRect` mark it to be
+measured again. `RenderList` counts its own `push_back`/`remove`/`insert`/
+`erase`/`clear` (and similar) calls and is regrouped after any of them. Edit
+lists through those calls, not through a `std::list` reference or by assigning
+through an iterator. Animations change frames without notice, so they, and a
+sprite that sits in more than one list, are checked every frame. `make
+test-render-culling` compares the culled draws against per-sprite culling.
 
 ### Late input sampling and render interpolation
 
@@ -238,7 +261,9 @@ times, and frames exceeding the 16.67 ms budget for 60 FPS. Set
 `AUTO_BENCHMARK_SECONDS` to change the measurement duration. Add `--vsync` to
 measure presentation pacing; leave it off to measure rendering throughput.
 Existing input replays can be used through `AUTO_INPUT_REPLAY_PATH` for a
-repeatable moving-camera workload. Keep window size, replay, and debug-overlay
+repeatable moving-camera workload. `AUTO_START_MAP=old_mine_trail.tmj` starts
+on another map instead of `mosswood_hollow.tmj`; the old mine trail, with about
+17,000 tiles, is the heavier benchmark scene. Keep window size, replay, and debug-overlay
 settings identical when comparing runs.
 
 On Windows, normal Debug builds exclude Visual Leak Detector, even when it is

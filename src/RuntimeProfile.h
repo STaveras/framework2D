@@ -9,7 +9,7 @@
 // Timings are inclusive; nested regions must not be added together.
 namespace RuntimeProfile {
 enum class Region { GameTick, Input, ObjectUpdate, Collision, BoarUpdate, BoarSupport,
-    CharacterSupport, Render, SpatialQuery, SpatialRebuild, Count };
+    CharacterSupport, Render, RenderLists, SpatialQuery, SpatialRebuild, Count };
 enum class Counter { BoarCandidates, CharacterCandidates, CollisionCandidates,
     SpatialCandidates, SpatialRebuilds, Count };
 struct Sample { std::uint64_t calls = 0; double milliseconds = 0; };
@@ -40,7 +40,7 @@ inline void count(Counter counter, std::uint64_t amount = 1) {
 }
 inline void report(std::ostream& out) {
     constexpr const char* regions[] = {"game_tick", "input", "object_update", "collision",
-        "boar_update", "boar_support", "character_support", "render", "spatial_query", "spatial_rebuild"};
+        "boar_update", "boar_support", "character_support", "render", "render_lists", "spatial_query", "spatial_rebuild"};
     constexpr const char* names[] = {"boar_candidates", "character_candidates", "collision_candidates",
         "spatial_candidates", "spatial_rebuilds"};
     const auto ticks = samples[static_cast<size_t>(Region::GameTick)].calls;

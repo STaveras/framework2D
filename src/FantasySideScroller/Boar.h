@@ -35,10 +35,17 @@ class Boar : public GameObject
     bool _aggro = false;
     bool _canAttack = false;
     bool _defeated = false;
-    // Reused by supportAt so the per-tick spatial query does not allocate.
+    // Reused by gatherTerrain so the per-tick spatial query does not allocate.
     mutable std::vector<GameObject*> _supportCandidates;
+    struct TerrainTile { const Collidable* collidable; vector2 min, max; };
+    mutable std::vector<TerrainTile> _terrain;
 
+    void gatherTerrain(vector2 min, vector2 max) const;
+    bool surfaceAt(float x, float minY, float maxY, bool solidOnly, float& surface) const;
     bool supportAt(float x, float footY, float above, float below, float& support) const;
+    bool isFloor(const Collidable* terrain) const;
+    bool followGround(float fromX, float toX, float& surface) const;
+    bool groundContinues(float x, float footY, int direction, float distance) const;
     void animate(const char* name);
     void clearAggro();
 

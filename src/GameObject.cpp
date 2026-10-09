@@ -11,10 +11,15 @@
 #include <functional>
 #include <utility>
 #include <atomic>
+#include <array>
 
 namespace
 {
 std::atomic<uint64_t> g_spatialIndexRevision(1);
+// The object changed by each recent revision (nullptr: everything), indexed by
+// revision. Moving props change a few objects per tick, well within this.
+constexpr uint64_t kSpatialChangeLogSize = 256;
+std::array<GameObject*, kSpatialChangeLogSize> g_spatialChangeLog{};
 }
 
 uint64_t GameObject::getSpatialIndexRevision(void)
@@ -22,9 +27,26 @@ uint64_t GameObject::getSpatialIndexRevision(void)
 	return g_spatialIndexRevision.load(std::memory_order_relaxed);
 }
 
-void GameObject::invalidateSpatialIndex(void)
+void GameObject::invalidateSpatialIndex(GameObject* changed)
 {
-	g_spatialIndexRevision.fetch_add(1, std::memory_order_relaxed);
+	const uint64_t revision = g_spatialIndexRevision.fetch_add(1, std::memory_order_relaxed) + 1;
+	g_spatialChangeLog[revision % kSpatialChangeLogSize] = changed;
+}
+
+bool GameObject::getSpatialIndexChanges(uint64_t sinceRevision, std::vector<GameObject*>& out)
+{
+	const uint64_t current = getSpatialIndexRevision();
+	if (sinceRevision > current || current - sinceRevision > kSpatialChangeLogSize) {
+		return false;
+	}
+	for (uint64_t revision = sinceRevision + 1; revision <= current; ++revision) {
+		GameObject* changed = g_spatialChangeLog[revision % kSpatialChangeLogSize];
+		if (!changed) {
+			return false;
+		}
+		out.push_back(changed);
+	}
+	return true;
 }
 
 void GameObject::onStateWillExit(State* current, State* next)
@@ -86,7 +108,7 @@ void GameObject::setCollisionAnchorUsesRenderableOffset(bool enabled)
 	_useRenderableOffsetForCollisionAnchor = enabled;
 	_collisionObjects.clear();
 	if (isStatic()) {
-		GameObject::invalidateSpatialIndex();
+		GameObject::invalidateSpatialIndex(this);
 	}
 }
 
@@ -159,7 +181,7 @@ void GameObject::updateComponents()
 	}
 
 	if (this->isStatic()) {
-		GameObject::invalidateSpatialIndex();
+		GameObject::invalidateSpatialIndex(this);
 	}
 }
 
@@ -169,7 +191,7 @@ void GameObject::GameObjectState::setRenderable(Renderable* renderable)
 	if (_owner) {
 		_owner->_collisionObjects.clear();
 		if (_owner->isStatic()) {
-			GameObject::invalidateSpatialIndex();
+			GameObject::invalidateSpatialIndex(_owner);
 		}
 	}
 }
@@ -183,7 +205,7 @@ void GameObject::GameObjectState::setCollidable(Collidable* collidable)
 		// without requiring a position change first.
 		_owner->_collisionObjects.clear();
 		if (_owner->isStatic()) {
-			GameObject::invalidateSpatialIndex();
+			GameObject::invalidateSpatialIndex(_owner);
 		}
 	}
 }

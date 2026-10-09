@@ -5,21 +5,37 @@
 #include "RuntimeProfile.h"
 
 #include "GameObject.h"
+#include "Tile.h"
 
 #include <algorithm>
 #include <vector>
 
-namespace {
-bool containsRenderable(IRenderer::RenderList* list, Renderable* renderable)
+Engine2D* engine = Engine2D::getInstance();
+
+void GameState::placeRenderable(Renderable* renderable, IRenderer::RenderList* list)
 {
-	if (!list || !renderable) {
-		return false;
+	IRenderer::RenderList*& placedList = _renderableLists[renderable];
+	if (placedList == list) {
+		return;
 	}
-	return std::find(list->begin(), list->end(), renderable) != list->end();
-}
+	if (placedList && _knownRenderLists.count(placedList) != 0) {
+		placedList->remove(renderable);
+	}
+	list->push_back(renderable);
+	placedList = list;
 }
 
-Engine2D* engine = Engine2D::getInstance();
+void GameState::unplaceRenderable(Renderable* renderable)
+{
+	auto placed = _renderableLists.find(renderable);
+	if (placed == _renderableLists.end()) {
+		return;
+	}
+	if (_knownRenderLists.count(placed->second) != 0) {
+		placed->second->remove(renderable);
+	}
+	_renderableLists.erase(placed);
+}
 
 bool GameState::addObject(GameObject * object)
 {
@@ -95,6 +111,16 @@ void GameState::clearRenderRoutes()
 	if (_defaultRenderList) {
 		_knownRenderLists.insert(_defaultRenderList);
 	}
+
+	// Lists dropped here are destroyed by their owners; forget what was placed in them.
+	for (auto itr = _renderableLists.begin(); itr != _renderableLists.end();) {
+		if (_knownRenderLists.count(itr->second) == 0) {
+			itr = _renderableLists.erase(itr);
+		}
+		else {
+			++itr;
+		}
+	}
 }
 
 void GameState::onEnter(State* prevState)
@@ -144,6 +170,7 @@ void GameState::onExit(State* nextState)
 	}
 	_defaultRenderList = NULL;
 	_renderList = NULL;
+	_renderableLists.clear();
 }
 
 ///
@@ -184,19 +211,14 @@ void GameState::_OnObjectAdded(const Event & e)
 		}
 		Renderable* renderable = state->getRenderable();
 		if (renderable && targetRenderList) {
-			for (IRenderer::RenderList* knownList : _knownRenderLists) {
-				if (!knownList || knownList == targetRenderList) {
-					continue;
-				}
-				knownList->remove(renderable);
-			}
-
-			if (!containsRenderable(targetRenderList, renderable)) {
-				targetRenderList->push_back(renderable);
-			}
+			placeRenderable(renderable, targetRenderList);
 		}
 		if (renderable) {
-			renderable->setVisibility(state == currentState);
+			bool visible = state == currentState;
+			if (visible && object->getType() == GameObject::GAME_OBJ_TILE) {
+				visible = static_cast<Tile*>(object)->isLayerVisible();
+			}
+			renderable->setVisibility(visible);
 		}
 	}
 }
@@ -208,36 +230,10 @@ void GameState::_OnObjectRemoved(const Event & e)
 		return;
 	}
 
-	std::vector<IRenderer::RenderList*> listsToPrune;
-	listsToPrune.reserve(_knownRenderLists.size() + 2);
-	if (_renderList) {
-		listsToPrune.push_back(_renderList);
-	}
-	if (_defaultRenderList && _defaultRenderList != _renderList) {
-		listsToPrune.push_back(_defaultRenderList);
-	}
-	for (IRenderer::RenderList* knownList : _knownRenderLists) {
-		if (!knownList) {
-			continue;
-		}
-		if (std::find(listsToPrune.begin(), listsToPrune.end(), knownList) == listsToPrune.end()) {
-			listsToPrune.push_back(knownList);
-		}
-	}
-
 	for (auto it = object->begin(); it != object->end(); ++it) {
 		GameObject::GameObjectState* state = (GameObject::GameObjectState*)(*it);
-		if (!state) {
-			continue;
-		}
-		Renderable* renderable = state->getRenderable();
-		if (!renderable) {
-			continue;
-		}
-		for (IRenderer::RenderList* renderList : listsToPrune) {
-			if (renderList) {
-				renderList->remove(renderable);
-			}
+		if (state && state->getRenderable()) {
+			unplaceRenderable(state->getRenderable());
 		}
 	}
 

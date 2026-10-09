@@ -1,8 +1,10 @@
-// File: PauseState.cpp
-// A pause state that sits on top of PlayState so the game freezes while the
-// world stays visible. Pushed when PAUSE is pressed; pressing it again resumes.
+// File: GameOverState.cpp
+// A game-over state that sits on top of PlayState so the world freezes (with
+// the dead character visible) while the GAME OVER prompt is shown.  Pushed
+// when the playable character dies; popping it resumes play.
 
-#include "PauseState.h"
+#include "GameOverState.h"
+
 #include "../Cursor.h"
 #include "../Engine2D.h"
 #include "../IMouse.h"
@@ -10,20 +12,20 @@
 #include "Resources.h"
 #include "ScreenSpaceCursor.h"
 
-PauseState::PauseState()
+GameOverState::GameOverState()
     : _menuRenderList(NULL)
-    , _pauseText(NULL)
+    , _titleText(NULL)
     , _hintText(NULL)
     , _menu(NULL)
     , _cursor(NULL)
-    , _inputMap(NULL)
+    , _retryRequested(false)
 {
 }
 
-PauseState::~PauseState()
+GameOverState::~GameOverState()
 {
-    if (_pauseText) {
-        SAFE_DELETE(_pauseText);
+    if (_titleText) {
+        SAFE_DELETE(_titleText);
     }
     if (_hintText) {
         SAFE_DELETE(_hintText);
@@ -39,10 +41,10 @@ PauseState::~PauseState()
     }
 }
 
-void PauseState::onEnter(State* prev)
+void GameOverState::onEnter(State* prev)
 {
-    // We don't call GameState::onEnter because we don't need its object/collision/input managers
-    // We only need a screen-space render list for the pause menu
+    // We don't call GameState::onEnter because we don't need its object/collision/input
+    // managers; we only need a screen-space render list for the game-over prompt.
 
     IRenderer* renderer = Engine2D::getRenderer();
     if (!renderer) {
@@ -56,43 +58,38 @@ void PauseState::onEnter(State* prev)
     const std::string fontPath = BasePath("Font/monogram/bitmap/monogram-bitmap.json");
     const float centerX = renderer->getWidth() / 2.0f;
 
-    // Create "PAUSE" text - centered near the top
-    if (!_pauseText) {
-        _pauseText = new Font();
-        if (_pauseText->loadFromJSON(fontPath)) {
-            _pauseText->setText("PAUSE");
-            _pauseText->setTint(0xFFFFFFFF);
-            _pauseText->setScale(1.5f, 1.5f);  // Larger for pause text
+    // Create "GAME OVER" text - centered near the top
+    if (!_titleText) {
+        _titleText = new Font();
+        if (_titleText->loadFromJSON(fontPath)) {
+            _titleText->setText("GAME OVER");
+            _titleText->setTint(0xFFFF5555);  // red for game over
+            _titleText->setScale(1.5f, 1.5f);
 
-            const float textWidth = _pauseText->getTextWidth() * _pauseText->getScale().x;
+            const float textWidth = _titleText->getTextWidth() * _titleText->getScale().x;
             const float centerY = 40.0f;
-            const float textHeight = _pauseText->getHeight() * _pauseText->getScale().y;
-            const vector2 pausePos(centerX - textWidth / 2.0f, centerY - textHeight / 2.0f);
-            _pauseText->setPosition(pausePos);
-            _pauseText->setVisibility(true);
-            _menuRenderList->push_back(_pauseText);
+            const float textHeight = _titleText->getHeight() * _titleText->getScale().y;
+            const vector2 titlePos(centerX - textWidth / 2.0f, centerY - textHeight / 2.0f);
+            _titleText->setPosition(titlePos);
+            _titleText->setVisibility(true);
+            _menuRenderList->push_back(_titleText);
         } else {
             DEBUG_MSG(("Failed to load bitmap font from: " + fontPath + "\n").c_str());
-            SAFE_DELETE(_pauseText);
+            SAFE_DELETE(_titleText);
         }
     }
 
-    // Create the RESUME / QUIT menu (its own screen-space render list, so it
-    // draws in front of the PAUSE title and hint)
+    // Create the RETRY / QUIT menu (its own screen-space render list, so it
+    // draws in front of the GAME OVER title and hint)
     _createMenu(renderer);
 
     // Create hint text - centered below the menu options
     if (!_hintText) {
         _hintText = new Font();
         if (_hintText->loadFromJSON(fontPath)) {
-#if FRAMEWORK_IOS
-            // The touch controls' pause button, or a controller's menu button
-            _hintText->setText("|| / MENU to Resume");
-#else
-            _hintText->setText("ESC / OPTIONS to Resume");
-#endif
+            _hintText->setText("Y: RETRY   N: QUIT");
             _hintText->setTint(0xFFAAAAAA);
-            _hintText->setScale(0.8f, 0.8f);  // Smaller for hint text
+            _hintText->setScale(0.8f, 0.8f);
 
             const float textWidth = _hintText->getTextWidth() * _hintText->getScale().x;
             const float centerY = 160.0f;
@@ -107,12 +104,8 @@ void PauseState::onEnter(State* prev)
         }
     }
 
-    // Create the mouse cursor so it stays visible while the game is paused.
-    // It lives in this screen-space render list (created after the game's HUD
-    // list) so it draws on top of the menu text.
-    // No cursor without a pointer (touch-only iOS has no mouse).
-    IInput* input = Engine2D::getInput();
-    if (!_cursor && (!input || input->getMouse())) {
+    // Create the mouse cursor so it stays visible while the game is over.
+    if (!_cursor) {
         _cursor = new Cursor();
         if (_cursor->load(BasePath("cursors.png").c_str())) {
             _menuRenderList->push_back(_cursor->getImage());
@@ -122,43 +115,41 @@ void PauseState::onEnter(State* prev)
     }
 }
 
-bool PauseState::onExecute(float time)
+bool GameOverState::onExecute(float time)
 {
+    (void)time;
     Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
-    // Use the same action as gameplay for either Escape or controller Options.
-    Action* pauseAction = _inputMap ? _inputMap->getAction("PAUSE") : NULL;
-    const bool pausePressed = pauseAction
-        ? _inputMap->buttonPressed(pauseAction)
-        : keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE);
-    if (pausePressed) {
+    // Y to retry: flag the request and pop; PlayState respawns on the way back up.
+    if (keyboard->keyPressed(keyboard->getKeys().KBK_Y)) {
+        _retryRequested = true;
         Engine2D::getGame()->pop();
         return false;  // Stop executing this state
     }
 
-    // Move between the menu options using the semantic direction actions:
-    // UP moves up (previous), DOWN moves down (next). These are the same
-    // actions used for gameplay movement, so no redundant binds.
-    if (_menu && _inputMap) {
-        Action* upAction = _inputMap->getAction("UP");
-        Action* downAction = _inputMap->getAction("DOWN");
-        if (upAction && _inputMap->buttonPressed(upAction)) {
+    // N to quit
+    if (keyboard->keyPressed(keyboard->getKeys().KBK_N)) {
+        Engine2D::quit();
+        return false;
+    }
+
+    // Arrow keys to move between the menu options
+    if (_menu) {
+        if (keyboard->keyPressed(keyboard->getKeys().KBK_UP)) {
             _menu->selectPrevious();
-        } else if (downAction && _inputMap->buttonPressed(downAction)) {
+        } else if (keyboard->keyPressed(keyboard->getKeys().KBK_DOWN)) {
             _menu->selectNext();
         }
     }
 
-    // Execute the selected option with the CONFIRM action (Space / A / Enter).
-    if (_inputMap) {
-        Action* confirmAction = _inputMap->getAction("CONFIRM");
-        if (confirmAction && _inputMap->buttonPressed(confirmAction)) {
-            _executeSelectedOption();
-            return false;
-        }
+    // Enter or Space executes the selected option
+    if (keyboard->keyPressed(keyboard->getKeys().KBK_RETURN) ||
+        keyboard->keyPressed(keyboard->getKeys().KBK_SPACE)) {
+        _executeSelectedOption();
+        return false;
     }
 
-    // Keep the menu cursor tracking the mouse while paused.
+    // Keep the menu cursor tracking the mouse while the game is over.
     if (_cursor && _menu) {
         Mouse* mouse = Engine2D::getInput()->getMouse();
         if (mouse) {
@@ -186,24 +177,24 @@ bool PauseState::onExecute(float time)
     return true;  // Keep running (state stays on top)
 }
 
-void PauseState::_createMenu(IRenderer* renderer)
+void GameOverState::_createMenu(IRenderer* renderer)
 {
     if (_menu) {
         return;
     }
 
-    // The menu container stacks its items (RESUME, then QUIT directly below
-    // it) starting just under the PAUSE title.
+    // The menu container stacks its items (RETRY, then QUIT directly below it)
+    // starting just under the GAME OVER title.
     const vector2 menuTop(renderer->getWidth() / 2.0f, 72.0f);
     _menu = Widgets::createMenu(
         renderer, BasePath("Font/monogram/bitmap/monogram-bitmap.json"), menuTop);
     if (_menu) {
-        _menu->addItem("RESUME");
+        _menu->addItem("RETRY");
         _menu->addItem("QUIT");
     }
 }
 
-void PauseState::_executeSelectedOption(void)
+void GameOverState::_executeSelectedOption(void)
 {
     if (!_menu) {
         return;
@@ -212,20 +203,22 @@ void PauseState::_executeSelectedOption(void)
         case OPTION_QUIT:
             Engine2D::quit();
             break;
-        default: // OPTION_RESUME and anything else
-            // Resume play by popping this state
+        default: // OPTION_RETRY and anything else
+            // Retry: flag the request and pop; PlayState respawns on the way back up.
+            _retryRequested = true;
             Engine2D::getGame()->pop();
             break;
     }
 }
 
-void PauseState::onExit(State* next)
+void GameOverState::onExit(State* next)
 {
+    (void)next;
     // Remove text from render list before destroying it
-    if (_pauseText) {
-        _menuRenderList->remove(_pauseText);
-        SAFE_DELETE(_pauseText);
-        _pauseText = NULL;
+    if (_titleText) {
+        _menuRenderList->remove(_titleText);
+        SAFE_DELETE(_titleText);
+        _titleText = NULL;
     }
     if (_hintText) {
         _menuRenderList->remove(_hintText);

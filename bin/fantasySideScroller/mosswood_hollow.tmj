@@ -579,12 +579,18 @@
                  "name":"Canopy overlook",
                  "opacity":1,
                  "point":true,
+                 "properties":[
+                        {
+                         "name":"next_map",
+                         "type":"string",
+                         "value":"old_mine_trail.tmj"
+                        }],
                  "rotation":0,
                  "type":"destination",
                  "visible":true,
                  "width":0,
-                 "x":904,
-                 "y":96
+                 "x":944,
+                 "y":180
                 }, 
                 {
                  "height":0,
@@ -635,8 +641,27 @@
                  "type":"boar",
                  "visible":true,
                  "width":0,
-                 "x":848,
-                 "y":192
+                 "x":824,
+                 "y":186
+                }, 
+                {
+                 "height":0,
+                 "id":7,
+                 "name":"Canopy overlook",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"next_map",
+                         "type":"string",
+                         "value":"old_mine_trail.tmj"
+                        }],
+                 "rotation":0,
+                 "type":"destination",
+                 "visible":true,
+                 "width":0,
+                 "x":937,
+                 "y":361
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -738,7 +763,7 @@
          "y":0
         }],
  "nextlayerid":18,
- "nextobjectid":7,
+ "nextobjectid":8,
  "orientation":"orthogonal",
  "properties":[
         {

@@ -90,6 +90,9 @@
     <ClInclude Include="src\IRenderer.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="src\RenderCulling.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
     <ClInclude Include="src\RendererDX.h">
       <Filter>Rendering</Filter>
     </ClInclude>

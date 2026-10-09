@@ -8,9 +8,12 @@
 
 #include "Factory.h"
 #include "ITexture.h"
+#include "RenderCulling.h"
+#include <cstdint>
 #include <iterator>
 #include <list>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 class Camera;
@@ -22,19 +25,54 @@ typedef class IRenderer
 public:
 typedef struct RenderList : public std::list<class Renderable *>
 {
+    typedef std::list<class Renderable *> Base;
+
     bool screenSpace;
     float parallaxX;
     float parallaxY;
     float parallaxOriginX;
     float parallaxOriginY;
 
+    // Counts changes to the list's contents or order, so the renderer knows to
+    // regroup it for culling. The mutators below hide std::list's in order to
+    // count them; assigning through an iterator, or editing the list through a
+    // std::list reference, goes uncounted.
+    std::uint64_t revision;
+    RenderCulling::ListCache culling; // The renderer's grouping of this list
+
     RenderList()
         : screenSpace(false),
           parallaxX(1.0f),
           parallaxY(1.0f),
           parallaxOriginX(0.0f),
-          parallaxOriginY(0.0f)
+          parallaxOriginY(0.0f),
+          revision(0)
     {}
+
+#define RENDER_LIST_COUNTED(name) \
+    template <typename... Args> decltype(auto) name(Args&&... args) { ++revision; return Base::name(std::forward<Args>(args)...); }
+    RENDER_LIST_COUNTED(push_back)
+    RENDER_LIST_COUNTED(push_front)
+    RENDER_LIST_COUNTED(pop_back)
+    RENDER_LIST_COUNTED(pop_front)
+    RENDER_LIST_COUNTED(emplace_back)
+    RENDER_LIST_COUNTED(emplace_front)
+    RENDER_LIST_COUNTED(emplace)
+    RENDER_LIST_COUNTED(insert)
+    RENDER_LIST_COUNTED(erase)
+    RENDER_LIST_COUNTED(remove)
+    RENDER_LIST_COUNTED(remove_if)
+    RENDER_LIST_COUNTED(unique)
+    RENDER_LIST_COUNTED(clear)
+    RENDER_LIST_COUNTED(resize)
+    RENDER_LIST_COUNTED(assign)
+    RENDER_LIST_COUNTED(sort)
+    RENDER_LIST_COUNTED(reverse)
+#undef RENDER_LIST_COUNTED
+    // These also change the other list, whose revision they cannot count.
+    template <typename... Args> void splice(Args&&...) = delete;
+    template <typename... Args> void merge(Args&&...) = delete;
+    template <typename... Args> void swap(Args&&...) = delete;
 } RenderList;
 
 	// Renderer API types
@@ -74,6 +112,9 @@ protected:
 	// below: sprites and the current frame of an animation go to _renderSprite,
 	// fonts to _renderFont. Backends only implement the hooks they support.
 	void _drawRenderLists(bool screenSpace);
+	void _drawRenderable(Renderable* renderable, const RenderList& renderList, bool cull, const vector2& viewMin, const vector2& viewMax);
+	// Splits renderList into culling chunks (RenderCulling.h).
+	void _groupForCulling(RenderList& renderList);
 	virtual void _beginRenderList(const RenderList& renderList) {}
 	virtual void _endRenderList(const RenderList& renderList) {}
 	virtual void _renderSprite(Sprite* sprite, Color tint, const vector2& offset, const RenderList& renderList) {}

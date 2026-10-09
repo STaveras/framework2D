@@ -26,6 +26,12 @@ protected:
 	IRenderer::RenderList* _defaultRenderList = NULL;
 	std::unordered_map<GameObject*, IRenderer::RenderList*> _objectRenderRoutes;
 	std::unordered_set<IRenderer::RenderList*> _knownRenderLists;
+	// The list each object renderable was placed in, so moving or removing it touches
+	// that one list instead of searching every known list (levels add many thousands).
+	std::unordered_map<Renderable*, IRenderer::RenderList*> _renderableLists;
+
+	void placeRenderable(Renderable* renderable, IRenderer::RenderList* list);
+	void unplaceRenderable(Renderable* renderable);
 
 	InputManager     _inputManager;
 	ObjectManager    _objectManager;

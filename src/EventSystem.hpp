@@ -90,7 +90,7 @@ void EventSystem::sendEvent(const T& e, void* pSender, Event::event_priority_lev
 	if(m_EventQueue.size() >= m_uiFloodLimit)
 		return;
 
-	Event* pEvent = _events.createDerived<T>(e);
+	Event* pEvent = new T(e);
 	if (pSender) {
 		pEvent->_sender = pSender;
 	}
@@ -99,7 +99,7 @@ void EventSystem::sendEvent(const T& e, void* pSender, Event::event_priority_lev
 	if(pEvent->_priorityLevel == Event::event_priority_immediate)
 	{
 		_querySubscribers((*pEvent));
-		_events.destroy(pEvent);
+		delete pEvent;
 	}
 	else
 		m_EventQueue.push(pEvent);

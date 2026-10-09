@@ -10,14 +10,17 @@
 #include "../Font.h"
 #include "../Gamepad.h"
 #include "../Sprite.h"
+#include "../Animation.h"
 #include "../Cursor.h"
 #include "PauseState.h"
+#include "GameOverState.h"
 #include "ScreenSpaceCursor.h"
 
 #include "Constants.h"
 #include "Character.h"
 #include "Boar.h"
 #include "../StrUtils.h"
+#include "../System.h"
 
 namespace {
 constexpr float kHUDPaddingX = 12.0f;
@@ -37,15 +40,24 @@ constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
 PlayState::PlayState()
     : _player(nullptr)
     , _playableCharacter(nullptr)
-    , _cursor(nullptr) {}
+    , _cursor(nullptr)
+{
+	// AUTO_START_MAP=<file>.tmj starts on another map (benchmarks, replays).
+	std::string owned;
+	const char* startMap = System::getenv_platform("AUTO_START_MAP", owned);
+	if (startMap && startMap[0] != '\0') {
+		_mapFileName = startMap;
+	}
+}
 
 PlayState::~PlayState() {
 	if (_player || _playableCharacter || _hudRenderList) {
 		onExit(nullptr);
 	}
-	// We own the pause overlay we push on top of ourselves; ProgramStack
-	// never deletes states, so release it here.
+	// We own the pause and game-over overlays we push on top of ourselves;
+	// ProgramStack never deletes states, so release them here.
 	SAFE_DELETE(_pauseState);
+	SAFE_DELETE(_gameOverState);
 }
 
 void PlayState::_initHUD()
@@ -227,6 +239,46 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_cursor);
 }
 
+// Restore the playable character to a fresh spawn: reset the collision world,
+// the boar, and the character (full health, back in a Falling state at the
+// spawn point). Shared by the debug R key and the game-over RETRY prompt.
+void PlayState::_respawnPlayer(void)
+{
+	if (!_playableCharacter) {
+		return;
+	}
+
+	_collisionSystem.reset();
+	for (Boar* boar : _boars) {
+		if (boar) boar->reset();
+	}
+	_levelProps.resetPlatforms();
+
+	_playableCharacter->clearEvents();
+	_playableCharacter->resetForRespawn();
+	_playableCharacter->setState(_playableCharacter->getState("Falling"));
+
+	if (_levelManager.hasSpawnPoint()) {
+		_playableCharacter->setPosition(_levelManager.getSpawnPoint());
+	}
+	else {
+		_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
+	}
+
+#if _DEBUG
+	if (DEBUGGING && Debug::dbgCollision) {
+		const vector2 pos = _playableCharacter->getPosition();
+		char buffer[192];
+		sprintf_s(buffer, sizeof(buffer),
+			"Respawn: pos={%.2f,%.2f} state=%s\n",
+			pos.x,
+			pos.y,
+			_playableCharacter->getState() ? _playableCharacter->getState()->getName() : "(null)");
+		DEBUG_MSG(buffer);
+	}
+#endif
+}
+
 void PlayState::onEnter(State* prev)
 {
 	GameState::onEnter(prev);
@@ -234,7 +286,7 @@ void PlayState::onEnter(State* prev)
 	_player = Engine2D::getGame()->getPlayers()->create();
 
 	// Preferred: map-declared tilesets from the .tmj file.
-	_levelManager.initialize("old_mine_trail.tmj", vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
+	_levelManager.initialize(_mapFileName.c_str(), vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
 	_playableCharacter = new Character;
 	vector2 spawnPoint = START_POSITION;
@@ -303,12 +355,18 @@ void PlayState::onEnter(State* prev)
 	controller->addAction(Action("ATTACK", Gamepad::Button::X));
 	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
 	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
-	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_UP));
-	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_W));
+	// "UP" is the semantic up-direction action, shared with the pause menu.
+	// "INTERACT" is gameplay-only (E key) for interacting with objects.
+	controller->addAction(Action("UP", keyboard->getKeys().KBK_UP));
+	controller->addAction(Action("UP", keyboard->getKeys().KBK_W));
+	controller->addAction(Action("UP", Gamepad::Button::DpadUp));
+	Action upStick("UP");
+	upStick.assignAxis(Gamepad::Axis::LeftY, -0.5f);
+	controller->addAction(upStick);
 	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
-	controller->addAction(Action("INTERACT", Gamepad::Button::DpadUp));
-	controller->addAction(Action("INTERACT", Gamepad::Button::LeftThumb));
-	// controller->addAction(Action("INTERACT", Gamepad::Button::Y));
+	// "CONFIRM" is the menu confirm action: A + Enter.
+	controller->addAction(Action("CONFIRM", Gamepad::Button::A));
+	controller->addAction(Action("CONFIRM", keyboard->getKeys().KBK_RETURN));
 	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
 	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
 	_player->setGameObject(_playableCharacter);
@@ -390,32 +448,20 @@ bool PlayState::onExecute(float time)
 		}
 	}
 
+	// First frame after the game-over prompt is popped: this state is top again.
+	// If the player chose to retry, respawn into a fresh start and re-show the
+	// HUD cursor (it was hidden when the game-over overlay was pushed).
+	if (_gameOverState && _gameOverState->wasRetryRequested()) {
+		_gameOverState->consumeRetryRequest();
+		_respawnPlayer();
+		if (_cursor && _cursor->getImage()) {
+			_cursor->getImage()->setVisibility(true);
+		}
+	}
+
 	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
 	{
-		_collisionSystem.reset();
-		for (Boar* boar : _boars) {
-			if (boar) boar->reset();
-		}
-		_levelProps.resetPlatforms();
-		_playableCharacter->clearEvents();
-		_playableCharacter->resetForRespawn();
-		_playableCharacter->setState(_playableCharacter->getState("Falling"));
-
-		if (_levelManager.hasSpawnPoint()) {
-			_playableCharacter->setPosition(_levelManager.getSpawnPoint());
-		}
-		else {
-			_playableCharacter->setPosition(_playableCharacter->getPosition().x, -120.0f);
-		}
-#if _DEBUG
-		if (DEBUGGING && Debug::dbgCollision) {
-			const vector2 pos = _playableCharacter->getPosition();
-			char buffer[192];
-			sprintf_s(buffer, sizeof(buffer), "Respawn: pos={%.2f,%.2f} state=%s\n", pos.x, pos.y,
-				_playableCharacter->getState() ? _playableCharacter->getState()->getName() : "(null)");
-			DEBUG_MSG(buffer);
-		}
-#endif
+		_respawnPlayer();
 	}
 
 	Action* pauseAction = controller ? controller->getAction("PAUSE") : NULL;
@@ -480,6 +526,24 @@ bool PlayState::onExecute(float time)
 	_traversalMechanics.setFrameDeltaSeconds(time);
 	const bool keepRunning = GameState::onExecute(time);
 
+	// A destination's next_map reloads the stage with the next map through the normal
+	// lifecycle, the same way the F5 in-place reload does.
+	{
+		std::string nextMap;
+		if (_traversalMechanics.consumeMapChangeRequest(nextMap) && !nextMap.empty()) {
+			Engine2D::getEventSystem()->processEvents();
+			onExit(nullptr);
+			_interactWasActive = false;
+			_paused = false;
+			_mapFileName = nextMap;
+			onEnter(nullptr);
+			Engine2D::getEventSystem()->processEvents();
+			// onExit() destroys the old InputMap; onEnter() creates a new one.
+			// The controller captured before GameState::onExecute() is now stale.
+			controller = _player ? _player->getInputMap() : NULL;
+		}
+	}
+
 	// Killzones (e.g. deep water) send the player back to the last checkpoint. Run
 	// timeouts still do not respawn, as before.
 	vector2 traversalRespawn(0.0f, 0.0f);
@@ -496,10 +560,15 @@ bool PlayState::onExecute(float time)
 
 	if (_playableCharacter) {
 		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
+		// "UP" and "INTERACT" both trigger the interact logic: UP for directional up
+		// (shared with the pause menu), INTERACT for the E key (gameplay-only).
+		Action* upAction = controller ? controller->getAction("UP") : NULL;
 		Action* interactAction = controller ? controller->getAction("INTERACT") : NULL;
+		const bool upActive = upAction && upAction->isActive();
 		const bool interactActive = interactAction && interactAction->isActive();
-		const bool interactPressed = interactActive && !_interactWasActive;
-		_interactWasActive = interactActive;
+		const bool interactCombined = upActive || interactActive;
+		const bool interactPressed = interactCombined && !_interactWasActive;
+		_interactWasActive = interactCombined;
 		_levelProps.update(_playableCharacter, interactPressed, time);
 	}
 
@@ -508,6 +577,30 @@ bool PlayState::onExecute(float time)
 	}
 	_levelManager.update();
 	_updateHUD(time);
+
+	// Detect death: the character is in its "Dead" state (via boar combat or a
+	// DEATH command).  Let the death animation play in full before freezing the
+	// world and showing the GAME OVER prompt on top; the dead character stays
+	// visible behind it.  The "Dead" animation is one-shot (eOnce), so it stops
+	// (isPlaying() -> false) the frame after its last frame has shown; that is
+	// when we bring up the game-over screen.  (PlayState is only executed while
+	// it is the top state, so this fires once per death and never again until a
+	// retry respawns the character out of "Dead".)
+	if (_playableCharacter &&
+		_playableCharacter->getState() &&
+		!strcmp(_playableCharacter->getState()->getName(), "Dead")) {
+		Animation* deadAnimation = static_cast<Animation*>(_playableCharacter->getRenderable());
+		if (!deadAnimation || !deadAnimation->isPlaying()) {
+			if (_cursor && _cursor->getImage()) {
+				_cursor->getImage()->setVisibility(false);
+			}
+			if (!_gameOverState) {
+				_gameOverState = new GameOverState();
+			}
+			Engine2D::getGame()->push(_gameOverState);
+			return keepRunning;
+		}
+	}
 
 	// Update cursor position and state to match mouse.
 	// The cursor sprite is pushed into _hudRenderList (a screen-space render

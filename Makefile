@@ -46,10 +46,10 @@ COMMON_SRCS := \
   src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
   src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
-  src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
+  src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/GameOverState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
   src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp src/BlinkFlash.cpp \
-  src/Actor.cpp src/PlayerController.cpp
+  src/Actor.cpp src/PlayerController.cpp src/Widgets.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
@@ -137,8 +137,14 @@ test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/lev
 	$(CXX) $^ -o $(OBJDIR)/level_props_test $(LDFLAGS)
 	./$(OBJDIR)/level_props_test
 
-# iOS: an Xcode project generated from platform/ios (Metal renderer, touch
-# controls). `make ios` builds it for the simulator; `make ios-run` also boots
+.PHONY: test-render-culling
+$(OBJDIR)/tools/render_culling_test.o: CXXFLAGS += -UNDEBUG
+test-render-culling: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/render_culling_test.o
+	$(CXX) $^ -o $(OBJDIR)/render_culling_test $(LDFLAGS)
+	./$(OBJDIR)/render_culling_test
+
+# iOS: an Xcode project generated from the root CMakeLists (Metal renderer,
+# touch controls). `make ios` builds it for the simulator; `make ios-run` also boots
 # IOS_SIMULATOR, installs the app and launches it.
 IOS_BUILD := build/ios
 IOS_CONFIG ?= Debug
@@ -147,7 +153,7 @@ IOS_APP = $(IOS_BUILD)/$(IOS_CONFIG)-iphonesimulator/framework2D.app
 
 .PHONY: ios-project ios ios-run
 ios-project:
-	cmake -S platform/ios -B $(IOS_BUILD) -G Xcode
+	cmake -S . -B $(IOS_BUILD) -G Xcode -DFRAMEWORK_IOS=ON
 
 ios: ios-project
 	xcodebuild -project $(IOS_BUILD)/framework2D.xcodeproj -scheme framework2D \
