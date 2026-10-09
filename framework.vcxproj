@@ -338,6 +338,7 @@
     <ClInclude Include="src\InputEvent.h" />
     <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\IRenderer.h" />
+    <ClInclude Include="src\RenderCulling.h" />
     <ClInclude Include="src\ISingleton.h" />
     <ClInclude Include="src\ITexture.h" />
     <ClInclude Include="src\Keyboard.h" />

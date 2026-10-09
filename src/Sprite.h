@@ -29,7 +29,7 @@ public:
 	 float getHeight(void) const;
 
 	 void setTexture(ITexture* pTexture) { _texture = pTexture; }
-	 void setSrcRect(const RECT& srcRect) { _sourceRect = srcRect; }
+	 void setSrcRect(const RECT& srcRect) { _sourceRect = srcRect; _transformChanged(); }
 
 	 void center(void);
 

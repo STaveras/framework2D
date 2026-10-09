@@ -186,8 +186,30 @@ times. These are local variable-step idle measurements, not a cycle-identical
 replay or a frame-rate guarantee for every scene.
 
 Set `AUTO_PROFILE=1` to print inclusive region times and candidate counts on exit.
+`render_lists` is the CPU side of drawing (walking render lists and building
+quads); `render` also includes the swap and any wait for the GPU or display.
 With pacing active it also prints a `PACING` line: input-sample-to-vblank latency
 (mean/p95/p99), the average pre-input wait, and missed vblanks.
+
+### Render culling
+
+Every backend draws world-space render lists through `IRenderer`, which splits
+each list into runs of consecutive sprites (at most 64 sprites spanning at most
+256 units) and keeps each run's bounds. Off-screen runs are skipped without
+visiting their sprites; the rest are still culled sprite by sprite with the
+exact quad bounds the backends use, so draw order and output are unchanged.
+On the old mine trail (about 17,000 tiles) this cut the per-frame CPU cost of
+drawing from 2.34 ms to 1.28 ms in a debug build, and from 0.40 ms to 0.25 ms in
+a release build.
+
+Sprites tell their run when they move: `Renderable`'s position, offset, center,
+scale, rotation and mirror setters and `Sprite::setSrcRect` mark it to be
+measured again. `RenderList` counts its own `push_back`/`remove`/`insert`/
+`erase`/`clear` (and similar) calls and is regrouped after any of them. Edit
+lists through those calls, not through a `std::list` reference or by assigning
+through an iterator. Animations change frames without notice, so they, and a
+sprite that sits in more than one list, are checked every frame. `make
+test-render-culling` compares the culled draws against per-sprite culling.
 
 ### Late input sampling and render interpolation
 

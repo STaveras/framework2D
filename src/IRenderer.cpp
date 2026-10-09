@@ -12,6 +12,7 @@
 #include "Timer.h"
 
 #include "Engine2D.h"
+#include "RuntimeProfile.h"
 #include <algorithm>
 #include <cmath>
 
@@ -128,11 +129,10 @@ void IRenderer::render(void) {
 }
 
 namespace {
-// Whether the quad every backend draws for sprite (its source rect around its
-// center, scaled, rotated, at position + offset) overlaps the view. This is the
-// same bounds test the backends cull with, done before they build the quad, so it
-// skips exactly the sprites they would skip: the many off-screen tiles of a large map.
-bool spriteMayBeVisible(const Sprite* sprite, const vector2& offset, const vector2& viewMin, const vector2& viewMax)
+// Axis-aligned bounds of the quad every backend draws for sprite: its source rect
+// around its center, scaled, rotated, at position + offset. The backends cull with
+// these same bounds, so testing them first skips exactly the sprites they would.
+void spriteQuadBounds(const Sprite* sprite, const vector2& offset, vector2& lo, vector2& hi)
 {
 	const RECT& srcRect = sprite->getSrcRect();
 	const vector2 position = sprite->getPosition() + offset;
@@ -144,8 +144,8 @@ bool spriteMayBeVisible(const Sprite* sprite, const vector2& offset, const vecto
 	const float y0 = -center.y * scale.y;
 	const float y1 = (static_cast<float>(srcRect.bottom - srcRect.top) - center.y) * scale.y;
 
-	vector2 lo(position.x + std::min(x0, x1), position.y + std::min(y0, y1));
-	vector2 hi(position.x + std::max(x0, x1), position.y + std::max(y0, y1));
+	lo = vector2(position.x + std::min(x0, x1), position.y + std::min(y0, y1));
+	hi = vector2(position.x + std::max(x0, x1), position.y + std::max(y0, y1));
 	if (rotationRadians != 0.0f) {
 		const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
 		const float xs[4] = { x0, x1, x1, x0 };
@@ -159,12 +159,144 @@ bool spriteMayBeVisible(const Sprite* sprite, const vector2& offset, const vecto
 			hi.x = std::max(hi.x, x); hi.y = std::max(hi.y, y);
 		}
 	}
+}
+
+bool overlapsView(const vector2& lo, const vector2& hi, const vector2& viewMin, const vector2& viewMax)
+{
 	return !(hi.x < viewMin.x || lo.x > viewMax.x || hi.y < viewMin.y || lo.y > viewMax.y);
 }
+
+// Grows [min, max] to cover [lo, hi]. A NaN bound sticks, so a chunk holding a NaN
+// quad is never culled, just as the quad itself never is.
+void growBounds(vector2& min, vector2& max, const vector2& lo, const vector2& hi)
+{
+	if (min.x == min.x && !(lo.x >= min.x)) min.x = lo.x;
+	if (min.y == min.y && !(lo.y >= min.y)) min.y = lo.y;
+	if (max.x == max.x && !(hi.x <= max.x)) max.x = hi.x;
+	if (max.y == max.y && !(hi.y <= max.y)) max.y = hi.y;
+}
+
+void measureChunk(RenderCulling::Segment& segment, const std::vector<Renderable*>& items)
+{
+	segment.min = vector2(INFINITY, INFINITY);
+	segment.max = vector2(-INFINITY, -INFINITY);
+	for (std::uint32_t i = segment.begin; i < segment.end; ++i) {
+		const Sprite* sprite = static_cast<const Sprite*>(items[i]);
+		vector2 lo, hi;
+		spriteQuadBounds(sprite, sprite->getOffset(), lo, hi);
+		growBounds(segment.min, segment.max, lo, hi);
+	}
+}
+
+// A chunk stops growing at this many sprites or this much of the world, so one
+// straddling the view's edge costs few wasted visits.
+constexpr std::uint32_t kMaxChunkSprites = 64;
+constexpr float kMaxChunkExtent = 256.0f;
+}
+
+void IRenderer::_groupForCulling(RenderList& renderList)
+{
+	RenderCulling::ListCache& culling = renderList.culling;
+	culling.release();
+	culling.items.assign(renderList.begin(), renderList.end());
+	culling.revision = renderList.revision;
+	culling.built = true;
+
+	constexpr std::uint32_t kNone = ~0u;
+	std::uint32_t open = kNone; // the chunk segment still taking sprites
+	for (std::uint32_t i = 0; i < culling.items.size(); ++i) {
+		Renderable* renderable = culling.items[i];
+		// Animations change frames without telling anyone, and a sprite reports to
+		// only one chunk (it may also sit in another list, or twice in this one).
+		// Visit those every frame.
+		if (!renderable || renderable->getRenderableType() != RENDERABLE_TYPE_SPRITE ||
+			RenderCulling::reportsToChunk(renderable, renderable->_cullChunk.id)) {
+			culling.segments.push_back(RenderCulling::Segment{ i, i + 1, 0 });
+			open = kNone;
+			continue;
+		}
+
+		vector2 lo, hi;
+		spriteQuadBounds(static_cast<const Sprite*>(renderable), renderable->getOffset(), lo, hi);
+		if (open != kNone) {
+			RenderCulling::Segment& segment = culling.segments[open];
+			vector2 min = segment.min, max = segment.max;
+			growBounds(min, max, lo, hi);
+			if (segment.end - segment.begin < kMaxChunkSprites &&
+				max.x - min.x <= kMaxChunkExtent && max.y - min.y <= kMaxChunkExtent) {
+				segment.end = i + 1;
+				segment.min = min;
+				segment.max = max;
+				renderable->_cullChunk.id = segment.chunk;
+				continue;
+			}
+		}
+
+		open = static_cast<std::uint32_t>(culling.segments.size());
+		culling.segments.push_back(RenderCulling::Segment{ i, i + 1, culling.allocateChunk(open), lo, hi });
+		renderable->_cullChunk.id = culling.segments.back().chunk;
+	}
+}
+
+void IRenderer::_drawRenderable(Renderable* renderable, const RenderList& renderList, bool cull, const vector2& viewMin, const vector2& viewMax)
+{
+	if (!renderable || !renderable->isVisible()) {
+		return;
+	}
+
+	switch (renderable->getRenderableType()) {
+	case RENDERABLE_TYPE_SPRITE:
+	{
+		Sprite* sprite = (Sprite*)renderable;
+		vector2 lo, hi;
+		if (cull) {
+			spriteQuadBounds(sprite, sprite->getOffset(), lo, hi);
+		}
+		if (!cull || overlapsView(lo, hi, viewMin, viewMax)) {
+			_renderSprite(sprite, sprite->getTintColor(), sprite->getOffset(), renderList);
+		}
+	}
+	break;
+	case RENDERABLE_TYPE_ANIMATION:
+	{
+		Animation* animation = (Animation*)renderable;
+		Frame* frame = animation->getFrameCount() ? animation->getCurrentFrame() : NULL;
+		Sprite* sprite = frame ? frame->getSprite() : NULL;
+		vector2 lo, hi;
+		if (sprite && cull) {
+			spriteQuadBounds(sprite, animation->getOffset(), lo, hi);
+		}
+		if (sprite && (!cull || overlapsView(lo, hi, viewMin, viewMax))) {
+			_renderSprite(sprite, sprite->getTintColor(), animation->getOffset(), renderList);
+		}
+	}
+	break;
+	case RENDERABLE_TYPE_FONT:
+	{
+		Font* font = (Font*)renderable;
+		_renderFont(font, font->getTintColor(), font->getOffset(), renderList);
+	}
+	break;
+	default:
+		break;
+	}
 }
 
 void IRenderer::_drawRenderLists(bool screenSpace)
 {
+	RuntimeProfile::Scope profile(RuntimeProfile::Region::RenderLists);
+	const bool cull = !screenSpace && m_pCamera;
+	if (cull) {
+		// Ungroup every changed list before regrouping any, so a sprite moved from
+		// one list to another is not taken for one that sits in both.
+		for (RenderList* renderList : _RenderLists) {
+			if (renderList && !renderList->screenSpace && renderList->culling.built &&
+				renderList->culling.revision != renderList->revision) {
+				renderList->culling.release();
+			}
+		}
+	}
+
 	for (RenderList* renderList : _RenderLists) {
 		if (!renderList || renderList->screenSpace != screenSpace) {
 			continue;
@@ -172,44 +304,33 @@ void IRenderer::_drawRenderLists(bool screenSpace)
 
 		_beginRenderList(*renderList);
 
-		const bool cull = !renderList->screenSpace && m_pCamera;
-		vector2 viewMin(0.0f, 0.0f), viewMax(0.0f, 0.0f);
-		if (cull) {
-			_viewBounds(_parallaxCameraPosition(*renderList), viewMin, viewMax);
+		if (!cull) {
+			for (Renderable* renderable : *renderList) {
+				_drawRenderable(renderable, *renderList, false, vector2(0.0f, 0.0f), vector2(0.0f, 0.0f));
+			}
 		}
+		else {
+			vector2 viewMin(0.0f, 0.0f), viewMax(0.0f, 0.0f);
+			_viewBounds(_parallaxCameraPosition(*renderList), viewMin, viewMax);
 
-		for (Renderable* renderable : *renderList) {
-			if (!renderable || !renderable->isVisible()) {
-				continue;
+			RenderCulling::ListCache& culling = renderList->culling;
+			if (!culling.built || culling.revision != renderList->revision) {
+				_groupForCulling(*renderList);
 			}
-
-			switch (renderable->getRenderableType()) {
-			case RENDERABLE_TYPE_SPRITE:
-			{
-				Sprite* sprite = (Sprite*)renderable;
-				if (!cull || spriteMayBeVisible(sprite, sprite->getOffset(), viewMin, viewMax)) {
-					_renderSprite(sprite, sprite->getTintColor(), sprite->getOffset(), *renderList);
+			for (RenderCulling::Segment& segment : culling.segments) {
+				if (segment.chunk) {
+					RenderCulling::Chunk& chunk = RenderCulling::chunkTable()[segment.chunk];
+					if (chunk.dirty) {
+						measureChunk(segment, culling.items);
+						chunk.dirty = false;
+					}
+					if (!overlapsView(segment.min, segment.max, viewMin, viewMax)) {
+						continue;
+					}
 				}
-			}
-			break;
-			case RENDERABLE_TYPE_ANIMATION:
-			{
-				Animation* animation = (Animation*)renderable;
-				Frame* frame = animation->getFrameCount() ? animation->getCurrentFrame() : NULL;
-				Sprite* sprite = frame ? frame->getSprite() : NULL;
-				if (sprite && (!cull || spriteMayBeVisible(sprite, animation->getOffset(), viewMin, viewMax))) {
-					_renderSprite(sprite, sprite->getTintColor(), animation->getOffset(), *renderList);
+				for (std::uint32_t i = segment.begin; i < segment.end; ++i) {
+					_drawRenderable(culling.items[i], *renderList, true, viewMin, viewMax);
 				}
-			}
-			break;
-			case RENDERABLE_TYPE_FONT:
-			{
-				Font* font = (Font*)renderable;
-				_renderFont(font, font->getTintColor(), font->getOffset(), *renderList);
-			}
-			break;
-			default:
-				break;
 			}
 		}
 

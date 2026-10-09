@@ -137,6 +137,12 @@ test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/lev
 	$(CXX) $^ -o $(OBJDIR)/level_props_test $(LDFLAGS)
 	./$(OBJDIR)/level_props_test
 
+.PHONY: test-render-culling
+$(OBJDIR)/tools/render_culling_test.o: CXXFLAGS += -UNDEBUG
+test-render-culling: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/render_culling_test.o
+	$(CXX) $^ -o $(OBJDIR)/render_culling_test $(LDFLAGS)
+	./$(OBJDIR)/render_culling_test
+
 # iOS: an Xcode project generated from the root CMakeLists (Metal renderer,
 # touch controls). `make ios` builds it for the simulator; `make ios-run` also boots
 # IOS_SIMULATOR, installs the app and launches it.

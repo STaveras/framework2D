@@ -11,7 +11,9 @@
 #define _IRENDERABLE_H
 
 #include "Positionable.h"
+#include "RenderCulling.h"
 
+#include <cstdint>
 #include <list>
 #include <math.h>
 
@@ -45,7 +47,21 @@ public:
 		bool _flipHorizontalAxis;
 	}_appearance{};
 
+	// Id of the renderer's culling chunk holding this renderable (RenderCulling.h),
+	// maintained by the renderer. A copy starts in no chunk; assigning over a
+	// renderable keeps its chunk and marks it.
+	struct CullChunk
+	{
+		std::uint32_t id = 0;
+		CullChunk(void) = default;
+		CullChunk(const CullChunk&) {}
+		CullChunk& operator=(const CullChunk&) { RenderCulling::markDirty(id); return *this; }
+	} _cullChunk;
+
 protected:
+	// Every change to what the renderer would draw where must call this.
+	void _transformChanged(void) { RenderCulling::markDirty(_cullChunk.id); }
+
     Renderable(void):
 		_offset(0.0f, 0.0f),
 		_center(0.0f, 0.0f),
@@ -71,11 +87,14 @@ public:
 	virtual vector2 getScale(void) const { return _scale; }
 	virtual float getRotation(void) const { return _rotation; }
 
-	virtual void setRotation(float fRotation) { _rotation = fRotation; }
-	virtual void setOffset(vector2 offset) { _offset = offset; }
-	virtual void setCenter(vector2 center) { _center = center; }
+	void setPosition(float x, float y) override { Positionable::setPosition(x, y); _transformChanged(); }
+	void setPosition(vector2 position) override { Positionable::setPosition(position); _transformChanged(); }
+
+	virtual void setRotation(float fRotation) { _rotation = fRotation; _transformChanged(); }
+	virtual void setOffset(vector2 offset) { _offset = offset; _transformChanged(); }
+	virtual void setCenter(vector2 center) { _center = center; _transformChanged(); }
 	virtual void setScale(float x, float y) { this->setScale(vector2(x, y)); }
-	virtual void setScale(vector2 scale) { _scale = scale; }
+	virtual void setScale(vector2 scale) { _scale = scale; _transformChanged(); }
 
 	// Appearance properties
 	/////////////////////////
@@ -121,9 +140,10 @@ public:
 
 			_scale.y = -_scale.y;
 		}
+		_transformChanged();
 	}
 
-	virtual void center(void) { _offset = _position; }
+	virtual void center(void) { _offset = _position; _transformChanged(); }
 
 	// Flashing and other effects should probably be done in a shader; 
 	// but color and other basic properties might be okay here
