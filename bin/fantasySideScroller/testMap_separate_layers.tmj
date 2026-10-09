@@ -4,9 +4,14 @@
  "layers":[
         {
          "id":5,
-         "image":"",
+         "image":"Background\/Background.png",
+         "imageheight":272,
+         "imagewidth":480,
          "name":"Image Layer 1",
          "opacity":1,
+         "parallaxx":0.01,
+         "parallaxy":0.01,
+         "repeatx":true,
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -36,7 +41,7 @@
                  "x":0,
                  "y":-16
                 }],
-         "height":32,
+         "height":16,
          "id":2,
          "name":"item",
          "opacity":1,
@@ -48,6 +53,20 @@
                 }],
          "startx":0,
          "starty":-16,
+         "type":"tilelayer",
+         "visible":true,
+         "width":16,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "chunks":[],
+         "height":16,
+         "id":7,
+         "name":"decorative",
+         "opacity":1,
+         "startx":0,
+         "starty":0,
          "type":"tilelayer",
          "visible":true,
          "width":16,
@@ -182,11 +201,11 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":7,
+ "nextlayerid":8,
  "nextobjectid":4,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.2",
+ "tiledversion":"1.12.2",
  "tileheight":16,
  "tilesets":[
         {
