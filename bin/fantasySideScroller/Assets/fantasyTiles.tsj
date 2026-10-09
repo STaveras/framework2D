@@ -2893,18 +2893,64 @@
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
              "objects":[
                     {
-                     "height":16,
-                     "id":1,
+                     "height":0,
+                     "id":2,
                      "name":"",
                      "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":0,
+                             "y":2
+                            }, 
+                            {
+                             "x":1,
+                             "y":2
+                            }, 
+                            {
+                             "x":1,
+                             "y":8
+                            }, 
+                            {
+                             "x":-1,
+                             "y":10
+                            }, 
+                            {
+                             "x":-1,
+                             "y":11
+                            }, 
+                            {
+                             "x":2,
+                             "y":11
+                            }, 
+                            {
+                             "x":6,
+                             "y":14
+                            }, 
+                            {
+                             "x":6,
+                             "y":16
+                            }, 
+                            {
+                             "x":-10,
+                             "y":16
+                            }, 
+                            {
+                             "x":-10,
+                             "y":0
+                            }],
                      "rotation":0,
-                     "type":"square",
+                     "type":"polygon",
                      "visible":true,
-                     "width":16,
-                     "x":0,
+                     "width":0,
+                     "x":10,
                      "y":0
                     }],
              "opacity":1,

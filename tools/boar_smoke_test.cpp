@@ -5,6 +5,7 @@
 #include "../src/Debug.h"
 #include "../src/Kinematics2D.h"
 #include "../src/ObjectManager.h"
+#include "../src/Polygon.h"
 #include "../src/Square.h"
 #include "../src/Tile.h"
 #include "../src/Kinematics2D.h"
@@ -15,6 +16,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <deque>
 #include <iostream>
 #include <limits>
 
@@ -508,6 +510,95 @@ int main() {
     Debug::Mode.disable();
     world.removeObject(&boar);
     world.removeObject(&wall);
+
+    {
+        // old_mine_trail's pond ramp, moved to ground level y=200: a 4px step,
+        // a 0.48 climb onto a plateau 16px up, and a 0.67 descent. The
+        // polygons stop a few hundredths short of their cells like the
+        // authored tile colliders do.
+        SurfaceTraits2D solid;
+        solid.flags = SurfaceFlags::Solid | SurfaceFlags::Walkable | SurfaceFlags::StepCandidate;
+        std::deque<Square> squares;
+        std::deque<PolygonCollider> polygons;
+        std::deque<Tile> tiles;
+        ObjectManager rampWorld;
+        CollisionSystem rampCollision;
+        auto addTile = [&](Collidable& shape) {
+            shape.setSurfaceTraits(solid);
+            tiles.emplace_back();
+            tiles.back().getState()->setCollidable(&shape);
+            rampWorld.addObject(("ramp_" + std::to_string(tiles.size())).c_str(), &tiles.back());
+        };
+        auto addSquare = [&](float x, float y, float width, float height) {
+            squares.emplace_back(vector2(x, y), width, height);
+            addTile(squares.back());
+        };
+        auto addPolygon = [&](const std::vector<vector2>& vertices) {
+            polygons.emplace_back();
+            polygons.back().setLocalVertices(vertices);
+            addTile(polygons.back());
+        };
+        for (float x = 0.0f; x < 64.0f; x += 16.0f) addSquare(x, 200, 16, 16);
+        addSquare(71, 196, 9, 4); // The step.
+        addPolygon({{79.94f, 195.38f}, {95.99f, 187.64f}, {95.91f, 199.91f}, {79.91f, 199.91f}});
+        addPolygon({{95.97f, 187.0f}, {104.5f, 184.0f}, {111.96f, 184.03f}, {111.96f, 199.93f}, {96.03f, 199.96f}});
+        for (float x = 112.0f; x < 176.0f; x += 16.0f) addSquare(x, 184, 16, 16);
+        addPolygon({{184.86f, 184.0f}, {192.02f, 187.5f}, {192.02f, 200.02f}, {176.0f, 199.99f}, {175.97f, 184.0f}});
+        addPolygon({{192.0f, 188.0f}, {196.0f, 188.0f}, {208.0f, 196.0f}, {208.0f, 199.91f}, {192.09f, 199.82f}});
+        addSquare(208, 194, 14, 6);
+        for (float x = 64.0f; x < 224.0f; x += 16.0f) addSquare(x, 200, 16, 16); // Ground row below.
+        for (float x = 224.0f; x < 288.0f; x += 16.0f) addSquare(x, 200, 16, 16);
+
+        hero.setPosition(-500, 76);
+        Boar rampBoar(rampWorld, hero, vector2(40, 186));
+        rampWorld.addObject("RampBoar", &rampBoar);
+        auto tickRamp = [&]() {
+            rampBoar.update(dt);
+            rampCollision.update(rampWorld, dt);
+        };
+
+        // Patrol both ways over the step and the ramps. The boar must keep
+        // its feet on the surface instead of being lifted onto the uphill
+        // side and left hanging, and reach both ledges. Feet trail the
+        // surface by a frame's movement, so tile seams can read up to a pixel.
+        bool reachedLeft = false, reachedRight = false, crossedPlateau = false;
+        int airborneFrames = 0, longestAirborne = 0;
+        for (int i = 0; i < 2400; ++i) {
+            tickRamp();
+            const vector2 p = rampBoar.getPosition();
+            const float feet = p.y + 14.0f;
+            airborneFrames = rampBoar.getVelocity().y != 0.0f ? airborneFrames + 1 : 0;
+            longestAirborne = std::max(longestAirborne, airborneFrames);
+            float surface = 0.0f;
+            if (airborneFrames == 0 && sampleSupportFullScan(rampWorld, p.x, feet, 2.0f, 2.0f, surface))
+                assert(std::fabs(feet - surface) < 1.0f);
+            reachedLeft |= p.x < 25.0f;
+            reachedRight |= p.x > 260.0f;
+            crossedPlateau |= p.x > 120.0f && p.x < 170.0f && std::fabs(feet - 184.0f) < 0.01f;
+        }
+        if (!(reachedLeft && reachedRight && crossedPlateau && longestAirborne <= 12)) {
+            std::cerr << "Ramp patrol: left=" << reachedLeft << " right=" << reachedRight
+                      << " plateau=" << crossedPlateau << " airborne=" << longestAirborne
+                      << " at x=" << rampBoar.getPosition().x << std::endl;
+        }
+        assert(reachedLeft && reachedRight && crossedPlateau);
+        assert(longestAirborne <= 12);
+
+        // Stopping with the leading edge just short of a floor seam reports a
+        // side normal from the next floor tile. That is not a wall.
+        rampBoar.reset();
+        for (int i = 0; i < 126; ++i) tickRamp();
+        assert(!std::strcmp(rampBoar.getState()->getName(), "Walk"));
+        rampBoar.setPosition(16.0f + 14.0f + 0.005f, 186.0f);
+        rampCollision.update(rampWorld, dt);
+        rampBoar.update(dt);
+        assert(!std::strcmp(rampBoar.getState()->getName(), "Walk"));
+        assert(rampBoar.getVelocity().x == -28.0f);
+
+        rampCollision.reset();
+        rampWorld.removeObject(&rampBoar);
+        for (Tile& tile : tiles) rampWorld.removeObject(&tile);
+    }
 
     {
         ObjectManager mapWorld;
