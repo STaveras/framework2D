@@ -246,9 +246,6 @@
     <ClInclude Include="src\InputManager.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\Command.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="src\EventSystem.h">
       <Filter>Events</Filter>
     </ClInclude>
@@ -347,9 +344,6 @@
     </ClInclude>
     <ClInclude Include="src\ISingleton.h">
       <Filter>Math / Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CommandEvent.h">
-      <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\InputMap.h">
       <Filter>Input</Filter>
@@ -625,9 +619,6 @@
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\InputManager.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Command.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\EventSystem.cpp">
