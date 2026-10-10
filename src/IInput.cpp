@@ -1,5 +1,14 @@
 #include "IInput.h"
 
-IInput::~IInput(void) {
-    // This shouldn't be a thing (GCC/Clang nonsense)
+void IInput::update(void)
+{
+	if (_keyboard) {
+		_keyboard->update();
+	}
+	if (_mouse) {
+		_mouse->update();
+	}
+	if (_gamepad) {
+		_gamepad->update();
+	}
 }

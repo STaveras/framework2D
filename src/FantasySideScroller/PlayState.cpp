@@ -379,14 +379,14 @@ bool PlayState::onExecute(float time)
 #endif
 
 	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
-	const bool reloadDown = keyboard->keyDown(keyboard->getKeys().KBK_F5);
+	const bool reloadDown = keyboard->down(Key::F5);
 	const bool reloadPressed = reloadDown && !_reloadWasDown;
 	_reloadWasDown = reloadDown;
 	if (Debug::Mode.isEnabled() && reloadPressed) {
 		// Shift+F5 respawns at the map-authored spawn point; plain F5 keeps the
 		// hero where it stands so map edits can be checked in place.
-		const bool respawn = keyboard->keyDown(keyboard->getKeys().KBK_LSHIFT) ||
-			keyboard->keyDown(keyboard->getKeys().KBK_RSHIFT);
+		const bool respawn = keyboard->down(Key::LeftShift) ||
+			keyboard->down(Key::RightShift);
 		const bool keepPosition = !respawn && _playableCharacter;
 		const vector2 heroPosition = keepPosition ? _playableCharacter->getPosition() : vector2();
 
@@ -427,7 +427,7 @@ bool PlayState::onExecute(float time)
 		}
 	}
 
-	if (keyboard->keyPressed(keyboard->getKeys().KBK_R))
+	if (keyboard->pressed(Key::R))
 	{
 		_respawnPlayer();
 	}
@@ -456,19 +456,19 @@ bool PlayState::onExecute(float time)
 	{
 		Camera* camera = _levelManager.getCamera();
 		if (camera) {
-			if (keyboard->keyPressed(keyboard->getKeys().KBK_ADD)) {
+			if (keyboard->pressed(Key::KeypadAdd)) {
 				camera->setZoom(camera->getZoom() + 0.1f);
 			}
 
-			if (keyboard->keyPressed(keyboard->getKeys().KBK_EQUALS)) {
+			if (keyboard->pressed(Key::Equals)) {
 				camera->setZoom(1.0f);
 			}
 
-			if (keyboard->keyPressed(keyboard->getKeys().KBK_SUBTRACT)) {
+			if (keyboard->pressed(Key::KeypadSubtract)) {
 				camera->setZoom(camera->getZoom() - 0.1f);
 			}
 
-			if (keyboard->keyPressed(keyboard->getKeys().KBK_F2)) {
+			if (keyboard->pressed(Key::F2)) {
 				const Camera::ZoomAnchorMode nextMode =
 					(camera->getZoomAnchorMode() == Camera::ZoomAnchorMode::TargetCenter) ?
 					Camera::ZoomAnchorMode::OriginLegacy :
@@ -481,7 +481,7 @@ bool PlayState::onExecute(float time)
 				DEBUG_MSG(buffer);
 			}
 		}
-		if (keyboard->keyPressed(keyboard->getKeys().KBK_F3)) {
+		if (keyboard->pressed(Key::F3)) {
 			Debug::dbgCollision = !Debug::dbgCollision;
 
 			char buffer[128]{ 0 };

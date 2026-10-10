@@ -54,6 +54,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Key.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mouse.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\TreeNode.h">
       <Filter>Misc</Filter>
     </ClInclude>
@@ -384,23 +390,11 @@
     <ClInclude Include="src\COL_OBJ_TYPE.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="src\KEYBOARD_KEYS.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\KEYBOARD_KEYS_DI.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="src\Keyboard.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IMouse.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Hardware.h">
       <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MOUSE_BUTTONS.h">
-      <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\ImageLoaders.h">
       <Filter>Assets / Resources</Filter>
@@ -497,6 +491,9 @@
   <ItemGroup>
     <ClCompile Include="src\Engine2D.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gamepad.cpp">
+      <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\RenderInterpolation.cpp">
       <Filter>Core</Filter>

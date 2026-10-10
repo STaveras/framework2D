@@ -106,10 +106,10 @@ void Cursor::updateFromMouse(Mouse* mouse)
 	//sprintf_s(buffer, sizeof(buffer), "Pos: %f, %f", mouse->_x, mouse->_y);
 	//DEBUG_MSG(buffer);
 
-	if (mouse->buttonPressed(MOUSE_LEFT)) {
+	if (mouse->pressed(MouseButton::Left)) {
 		setClicking(true);
 	}
-	else if (mouse->buttonDown(MOUSE_LEFT)) {
+	else if (mouse->down(MouseButton::Left)) {
 		setDragging(true);
 	}
 	else {

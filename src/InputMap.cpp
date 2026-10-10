@@ -13,10 +13,10 @@ void InputMap::addAction(Action action)
 		return;
 	}
 
-	std::list<Keyboard::KEY>& existingAssignments = existingAction->getAssignments();
-	for (Keyboard::KEY assignment : action.getAssignments()) {
+	std::list<Key>& existingAssignments = existingAction->getAssignments();
+	for (Key assignment : action.getAssignments()) {
 		bool alreadyAssigned = false;
-		for (Keyboard::KEY existingAssignment : existingAssignments) {
+		for (Key existingAssignment : existingAssignments) {
 			if (existingAssignment == assignment) {
 				alreadyAssigned = true;
 				break;
@@ -74,8 +74,8 @@ bool InputMap::buttonPressed(Action* action)
 	}
 
 	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Keyboard::KEY key : action->getAssignments()) {
-			if (keyboard->keyPressed(key)) {
+		for (Key key : action->getAssignments()) {
+			if (keyboard->pressed(key)) {
 				return true;
 			}
 		}
@@ -83,7 +83,7 @@ bool InputMap::buttonPressed(Action* action)
 
 	if (Gamepad* gamepad = _input->getGamepad()) {
 		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
-			if (gamepad->buttonPressed(button, _padNumber)) {
+			if (gamepad->pressed(button, _padNumber)) {
 				return true;
 			}
 		}
@@ -104,8 +104,8 @@ bool InputMap::buttonReleased(Action* action)
 	}
 
 	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Keyboard::KEY key : action->getAssignments()) {
-			if (keyboard->keyReleased(key)) {
+		for (Key key : action->getAssignments()) {
+			if (keyboard->released(key)) {
 				return true;
 			}
 		}
@@ -113,7 +113,7 @@ bool InputMap::buttonReleased(Action* action)
 
 	if (Gamepad* gamepad = _input->getGamepad()) {
 		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
-			if (gamepad->buttonReleased(button, _padNumber)) {
+			if (gamepad->released(button, _padNumber)) {
 				return true;
 			}
 		}
@@ -134,8 +134,8 @@ bool InputMap::buttonDown(Action* action)
 	}
 
 	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Keyboard::KEY key : action->getAssignments()) {
-			if (keyboard->keyDown(key)) {
+		for (Key key : action->getAssignments()) {
+			if (keyboard->down(key)) {
 				return true;
 			}
 		}
@@ -143,7 +143,7 @@ bool InputMap::buttonDown(Action* action)
 
 	if (Gamepad* gamepad = _input->getGamepad()) {
 		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
-			if (gamepad->buttonDown(button, _padNumber)) {
+			if (gamepad->down(button, _padNumber)) {
 				return true;
 			}
 		}

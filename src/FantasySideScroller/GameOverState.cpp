@@ -7,7 +7,7 @@
 
 #include "../Cursor.h"
 #include "../Engine2D.h"
-#include "../IMouse.h"
+#include "../Mouse.h"
 #include "Constants.h"
 #include "Resources.h"
 #include "ScreenSpaceCursor.h"
@@ -129,14 +129,14 @@ bool GameOverState::onExecute(float time)
     Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
 
     // Y to retry: flag the request and pop; PlayState respawns on the way back up.
-    if (keyboard->keyPressed(keyboard->getKeys().KBK_Y)) {
+    if (keyboard->pressed(Key::Y)) {
         _retryRequested = true;
         Engine2D::getGame()->pop();
         return false;  // Stop executing this state
     }
 
     // N to quit
-    if (keyboard->keyPressed(keyboard->getKeys().KBK_N)) {
+    if (keyboard->pressed(Key::N)) {
         Engine2D::quit();
         return false;
     }
@@ -157,7 +157,7 @@ bool GameOverState::onExecute(float time)
     // JUMP on the iOS touch controls) or Space.
     Action* confirmAction = _inputMap ? _inputMap->getAction("CONFIRM") : NULL;
     if ((confirmAction && _inputMap->buttonPressed(confirmAction)) ||
-        keyboard->keyPressed(keyboard->getKeys().KBK_SPACE)) {
+        keyboard->pressed(Key::Space)) {
         _executeSelectedOption();
         return false;
     }
@@ -171,7 +171,7 @@ bool GameOverState::onExecute(float time)
             const int hoverIndex = _menu->hitTest(renderPos);
             if (hoverIndex >= 0) {
                 _menu->setSelection(hoverIndex);
-                if (mouse->buttonPressed(MOUSE_LEFT)) {
+                if (mouse->pressed(MouseButton::Left)) {
                     _executeSelectedOption();
                     return false;
                 }

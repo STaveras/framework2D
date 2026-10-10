@@ -1,27 +1,23 @@
 // File: Input.h
+// Creates the desktop platform's input devices. The caller owns the result.
 #pragma once
 #include "IInput.h"
 #include "DirectInput.h"
 #include "PlatformInput.h"
 #include "Window.h"
+
+#include <memory>
+
 namespace Input
 {
 #ifdef _WIN32
-	static IInput* createDirectInputInterface(HWND hWnd, HINSTANCE hInstance)
+	inline std::unique_ptr<IInput> createDirectInputInterface(HWND hWnd, HINSTANCE hInstance)
 	{
-		return (IInput*)(new DirectInput(hInstance, hWnd));
+		return std::make_unique<DirectInput>(hInstance, hWnd);
 	}
 #endif
-	static IInput* createInputInterface(Window* window)
+	inline std::unique_ptr<IInput> createInputInterface(Window* window)
 	{
-		return (IInput*)(new PlatformInput(window));
+		return std::make_unique<PlatformInput>(window);
 	}
-
-	// This shouldn't be a thing
-	static void destroyInputInterface(IInput* pInput) 
-	{
-      if (pInput) {
-         delete pInput;
-      }
-   }
 }

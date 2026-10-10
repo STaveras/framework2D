@@ -28,6 +28,7 @@
 
 #include <cmath>
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -61,7 +62,7 @@
 	CADisplayLink* _displayLink;
 	TouchGamepadState _touchState;
 	Window* _window;
-	IOSInput* _input;
+	std::unique_ptr<IOSInput> _input;
 	IRenderer* _renderer;
 	BOOL _started;
 	BOOL _touchPreferred; // touched the screen since last using a controller
@@ -152,7 +153,7 @@
 		_window->initialize();
 		Renderer::mainWindow = _window;
 
-		_input = new IOSInput(&_touchState);
+		_input = std::make_unique<IOSInput>(&_touchState);
 		_renderer = Renderer::createMTLRenderer(_window);
 		_renderer->setBackgroundStatic(System::checkArgumentsForStaticBackground(argc, argv.data()));
 
@@ -160,7 +161,7 @@
 		engine->setDeterministicMode(System::checkArgumentsForDeterministic(argc, argv.data()));
 		engine->setFixedDeltaSeconds(fixedDtMs / 1000.0);
 		engine->setRenderInterpolation(true);
-		engine->setInputInterface(_input);
+		engine->setInputInterface(_input.get());
 		engine->setRenderer(_renderer);
 		engine->setGame(&game);
 		engine->initialize();

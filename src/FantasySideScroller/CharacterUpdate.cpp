@@ -703,8 +703,8 @@ void Character::onUpdate(float time)
 
 		if (possessed) {
 //#if _DEBUG
-			if (KEYBOARD) {
-				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {
+			if (Keyboard* keyboard = Engine2D::getInput()->getKeyboard()) {
+				if (keyboard->pressed(Key::F)) {
 					this->sendInput("DEATH");
 				}
 			}

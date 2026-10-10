@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "IMouse.h"
+#include "Mouse.h"
 #include "Sprite.h"
 
 enum class CursorState

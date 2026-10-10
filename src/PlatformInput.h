@@ -1,24 +1,16 @@
-// PlatformInput
-// A platform-independent input class
+// PlatformInput.h
+// Input from a GLFW window: keyboard, mouse and GLFW-mapped gamepads.
+
 #pragma once
 
-#if !defined(PLATFORM_INPUT_H)
-#define PLATFORM_INPUT_H
-
 #include "IInput.h"
-#include "Window.h"
+
+class Window;
 
 class PlatformInput : public IInput
 {
-    Window *_window;
-
 public:
-    PlatformInput(Window *window);
-    ~PlatformInput(void);
+	explicit PlatformInput(Window* window);
 
-    void initialize(void);
-    void update(void);
-    void shutdown(void);
+	void initialize(void) override;
 };
-
-#endif

@@ -1,8 +1,6 @@
 // PlatformMouse.cpp
-// GLFW-backed mouse for GLFW-backed windows (all platforms).
-//
 // GLFW is the windowing/input layer for the OpenGL, Vulkan, and Metal
-// renderers on every platform, so this implementation is shared. The
+// renderers on every desktop platform, so this implementation is shared. The
 // legacy Win32/DirectX path uses DIMouse instead (see DirectInput.cpp).
 
 #include "PlatformMouse.h"
@@ -10,23 +8,17 @@
 #include "Window.h"
 #include "Maths.h"   // vector2
 
-// Map a framework mouse button to a GLFW button so we can read its state via
-// glfwGetCursorPos-independent glfwGetMouseButton (window, button).
-static int glfwButtonFor(MOUSE_BUTTONS eBtn)
-{
-   switch (eBtn)
-   {
-   case MOUSE_LEFT:   return GLFW_MOUSE_BUTTON_LEFT;
-   case MOUSE_RIGHT:  return GLFW_MOUSE_BUTTON_RIGHT;
-   case MOUSE_MIDDLE: return GLFW_MOUSE_BUTTON_MIDDLE;
-   case MOUSE_3:      return GLFW_MOUSE_BUTTON_4;
-   case MOUSE_4:      return GLFW_MOUSE_BUTTON_5;
-   case MOUSE_5:      return GLFW_MOUSE_BUTTON_6;
-   case MOUSE_6:      return GLFW_MOUSE_BUTTON_7;
-   case MOUSE_7:      return GLFW_MOUSE_BUTTON_8;
-   default:           return -1;
-   }
-}
+// The GLFW button for each MouseButton, in MouseButton order.
+static const int kGLFWButtons[(int)MouseButton::Count] = {
+   GLFW_MOUSE_BUTTON_LEFT,
+   GLFW_MOUSE_BUTTON_RIGHT,
+   GLFW_MOUSE_BUTTON_MIDDLE,
+   GLFW_MOUSE_BUTTON_4,
+   GLFW_MOUSE_BUTTON_5,
+   GLFW_MOUSE_BUTTON_6,
+   GLFW_MOUSE_BUTTON_7,
+   GLFW_MOUSE_BUTTON_8,
+};
 
 PlatformMouse::PlatformMouse(Window *window) :
    _window(nullptr),
@@ -48,26 +40,6 @@ PlatformMouse::~PlatformMouse(void)
    }
 }
 
-bool PlatformMouse::buttonPressed(MOUSE_BUTTONS eBtn)
-{
-   return _buttons.pressed((int)eBtn);
-}
-
-bool PlatformMouse::buttonReleased(MOUSE_BUTTONS eBtn)
-{
-   return _buttons.released((int)eBtn);
-}
-
-bool PlatformMouse::buttonDown(MOUSE_BUTTONS eBtn)
-{
-   return _buttons.down((int)eBtn);
-}
-
-bool PlatformMouse::buttonUp(MOUSE_BUTTONS eBtn)
-{
-   return _buttons.up((int)eBtn);
-}
-
 void PlatformMouse::update(void)
 {
    if (!_window)
@@ -77,10 +49,9 @@ void PlatformMouse::update(void)
 
    // Button state.
    _buttons.beginFrame();
-   for (int e = 0; e < 8; ++e)
+   for (int button = 0; button < (int)MouseButton::Count; ++button)
    {
-      const int glfwBtn = glfwButtonFor((MOUSE_BUTTONS)e);
-      _buttons.set(e, glfwBtn >= 0 && glfwGetMouseButton(_window, glfwBtn) == GLFW_PRESS);
+      _buttons.set(button, glfwGetMouseButton(_window, kGLFWButtons[button]) == GLFW_PRESS);
    }
 
    // Cursor position in window/client pixels (origin top-left), matching how

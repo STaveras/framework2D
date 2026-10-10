@@ -1,34 +1,37 @@
 // File: IInput.h
-// Author: Stanley Taveras
-// Created: 3/8/2010
-// Modified: 3/8/2010
+// The input devices of one platform: a keyboard, a mouse and gamepads, any of
+// which may be missing (iOS has no mouse). A platform subclass creates them
+// into these owning pointers; this base polls them once per frame in update().
 
 #pragma once
 
 #include "Types.h"
 
-#include "InputEvent.h"
-
-#include "Keyboard.h"
-#include "IMouse.h"
 #include "Gamepad.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
-typedef class IInput
+#include <memory>
+
+class IInput
 {
 protected:
-	Keyboard* _keyboard;
-	Mouse* _mouse;
-	Gamepad* _gamepad;
+	std::unique_ptr<Keyboard> _keyboard;
+	std::unique_ptr<Mouse> _mouse;
+	std::unique_ptr<Gamepad> _gamepad;
 
 public:
-	IInput(void) : _keyboard(NULL), _mouse(NULL), _gamepad(NULL) {}
-	virtual ~IInput(void) = 0;
+	IInput(void) = default;
+	IInput(const IInput&) = delete;
+	IInput& operator=(const IInput&) = delete;
+	virtual ~IInput(void) = default;
 
-	virtual Keyboard* getKeyboard(void) { return _keyboard; }
-	virtual Mouse* getMouse(void) { return _mouse; }
-	virtual Gamepad* getGamepad(void) { return _gamepad; }
+	Keyboard* getKeyboard(void) const { return _keyboard.get(); }
+	Mouse* getMouse(void) const { return _mouse.get(); }
+	Gamepad* getGamepad(void) const { return _gamepad.get(); }
 
-	virtual void initialize(void) = 0;
-	virtual void update(void) = 0;
-	virtual void shutdown(void) = 0;
-}InputInterface;
+	virtual void initialize(void) {}
+	// Poll every device for this frame's state.
+	virtual void update(void);
+	virtual void shutdown(void) {}
+};

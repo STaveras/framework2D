@@ -57,11 +57,9 @@ class DirectInput : public IInput
 
 public:
    DirectInput(HINSTANCE hInstance, HWND hWnd);
-   ~DirectInput(void);
 
-	void initialize(void);
-	void update(void);
-	void shutdown(void);
+	void initialize(void) override;
+	void shutdown(void) override;
 };
 
 #endif

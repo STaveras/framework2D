@@ -121,7 +121,7 @@ int main(int argc, const char *argv[])
    Renderer::mainWindow = &window;
 
    RenderingInterface* pRenderer = nullptr;
-   InputInterface* pInput = nullptr;
+   std::unique_ptr<IInput> input;
 
    const bool useVulkan = System::checkArgumentsForVulkan(argc, argv);
    const bool useOpenGL = System::checkArgumentsForOpenGL(argc, argv);
@@ -129,36 +129,36 @@ int main(int argc, const char *argv[])
 
    if (useOpenGL) {
       window.initialize(Window::ClientAPI::OpenGL);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
    else if (useVulkan) {
       window.initialize(Window::ClientAPI::None, true);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
 #if _WIN32
    else {
       window.initialize(hInstance, lpCmdLine);
-      pInput = (DirectInput*)Input::createDirectInputInterface(window.getHWND(), hInstance); 
+      input = Input::createDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
 #elif defined(__linux__)
    else {
       window.initialize(Window::ClientAPI::OpenGL);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #elif __APPLE__
    else if (System::checkArgumentsForMetal(argc, argv)) {
       // Metal draws into a CAMetalLayer, so the window gets no OpenGL context
       window.initialize(Window::ClientAPI::None);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
    else {
       window.initialize(Window::ClientAPI::OpenGL);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #endif
@@ -200,7 +200,7 @@ int main(int argc, const char *argv[])
    engine->setFixedDeltaSeconds(fixedDtMs / 1000.0);
    engine->setRenderInterpolation(System::checkEnvironmentDouble("AUTO_RENDER_INTERPOLATION", 1.0) > 0.0);
    engine->setRenderInterpolationSnapDistance((float)System::checkEnvironmentDouble("AUTO_RENDER_INTERPOLATION_SNAP", 128.0));
-   engine->setInputInterface(pInput);
+   engine->setInputInterface(input.get());
    engine->setRenderer(pRenderer);
    engine->setGame(&game);
    engine->initialize();
@@ -310,7 +310,7 @@ int main(int argc, const char *argv[])
    }
    engine->shutdown();
    
-   Input::destroyInputInterface(pInput);
+   input.reset();
    Renderer::destroyRenderer(pRenderer);
 
    window.shutdown();

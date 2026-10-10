@@ -2,6 +2,7 @@
 #pragma once
 
 #include "IInput.h"
+#include "InputEvent.h"
 #include "Action.h"
 #include "Cyclable.h"
 #include "Event.h"
@@ -53,7 +54,7 @@ private:
 	bool _connected;
 	int _padNumber;
 	float _elapsedTime;
-	InputInterface* _input;
+	IInput* _input;
 	EventSystem* _eventSystem;
 
 	std::list<Action> _actions;

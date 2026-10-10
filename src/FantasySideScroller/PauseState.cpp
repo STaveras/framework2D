@@ -5,7 +5,7 @@
 #include "PauseState.h"
 #include "../Cursor.h"
 #include "../Engine2D.h"
-#include "../IMouse.h"
+#include "../Mouse.h"
 #include "Constants.h"
 #include "Resources.h"
 #include "ScreenSpaceCursor.h"
@@ -130,7 +130,7 @@ bool PauseState::onExecute(float time)
     Action* pauseAction = _inputMap ? _inputMap->getAction("PAUSE") : NULL;
     const bool pausePressed = pauseAction
         ? _inputMap->buttonPressed(pauseAction)
-        : keyboard->keyPressed(keyboard->getKeys().KBK_ESCAPE);
+        : keyboard->pressed(Key::Escape);
     if (pausePressed) {
         Engine2D::getGame()->pop();
         return false;  // Stop executing this state
@@ -167,7 +167,7 @@ bool PauseState::onExecute(float time)
             const int hoverIndex = _menu->hitTest(renderPos);
             if (hoverIndex >= 0) {
                 _menu->setSelection(hoverIndex);
-                if (mouse->buttonPressed(MOUSE_LEFT)) {
+                if (mouse->pressed(MouseButton::Left)) {
                     _executeSelectedOption();
                     return false;
                 }

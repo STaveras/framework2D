@@ -17,7 +17,7 @@ class InputManager
 {
 protected:
 	EventSystem* _eventSystem;
-	InputInterface* _input;
+	IInput* _input;
 
 private:
 	Factory<InputMap> _inputMaps;

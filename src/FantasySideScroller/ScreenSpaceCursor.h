@@ -6,7 +6,7 @@
 #pragma once
 
 #include "../Engine2D.h"
-#include "../IMouse.h"
+#include "../Mouse.h"
 #include "../Renderer.h"
 #include "../Window.h"
 #include "../maths/Vector2.h"

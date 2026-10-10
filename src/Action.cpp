@@ -25,9 +25,9 @@ bool Action::simultaneous(const Action& rhs)
 		return false; 
 }
 
-void Action::unassign(Keyboard::KEY eKey)
+void Action::unassign(Key eKey)
 {
-	std::list<Keyboard::KEY>::iterator itr = _inputAssignments.begin();
+	std::list<Key>::iterator itr = _inputAssignments.begin();
 	for(;itr != _inputAssignments.end(); itr++)
 	{
 		if(eKey == (*itr))
