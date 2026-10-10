@@ -150,24 +150,27 @@ bool GameOverState::onExecute(float time)
     }
 
     // Keep the menu cursor tracking the mouse while the game is over.
-    if (_cursor && _menu) {
+    if (_cursor && _menu && Engine2D::getInput()->getMouse()) {
         Mouse* mouse = Engine2D::getInput()->getMouse();
-        if (mouse) {
-            // Hovering an option with the mouse selects it; clicking executes it.
-            const vector2 renderPos = ClientToRenderCursorPosition(mouse->getPosition());
-            const int hoverIndex = _menu->hitTest(renderPos);
-            if (hoverIndex >= 0) {
-                _menu->setSelection(hoverIndex);
-                if (mouse->buttonPressed(MOUSE_LEFT)) {
-                    _executeSelectedOption();
-                    return false;
-                }
+        // Hovering an option with the mouse selects it; clicking executes it.
+        const vector2 renderPos = ClientToRenderCursorPosition(mouse->getPosition());
+        const int hoverIndex = _menu->hitTest(renderPos);
+        if (hoverIndex >= 0) {
+            _menu->setSelection(hoverIndex);
+            if (mouse->buttonPressed(MOUSE_LEFT)) {
+                _executeSelectedOption();
+                return false;
             }
-
-            _cursor->setPosition(renderPos);
-            _cursor->updateFromMouse(mouse);
         }
+
+        _cursor->setPosition(renderPos);
+        _cursor->updateFromMouse(mouse);
+    } else if (_menu) {
+        // Fallback for platforms without mouse (like iOS touch)
+        // Note: This still needs a way to get touch coordinates to update the cursor/selection.
+        // For now, we ensure it doesn't crash and remains visible.
     }
+
 
     // Highlight the currently selected option
     if (_menu) {
