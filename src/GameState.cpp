@@ -132,17 +132,10 @@ void GameState::onEnter(State* prevState)
 
 	engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);
 	engine->getEventSystem()->registerCallback<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
-
-	_inputManager.initialize(engine->getEventSystem(),
-		engine->getInput());
 }
 
 bool GameState::onExecute(float time)
 {
-	{
-		RuntimeProfile::Scope profile(RuntimeProfile::Region::Input);
-		_inputManager.update(time);
-	}
 	{
 		RuntimeProfile::Scope profile(RuntimeProfile::Region::ObjectUpdate);
 		_objectManager.update(time);
@@ -158,8 +151,6 @@ bool GameState::onExecute(float time)
 void GameState::onExit(State* nextState)
 {
 	_collisionSystem.reset();
-
-	_inputManager.shutdown();
 
 	engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_REMOVED, this, &GameState::_OnObjectRemoved);
 	engine->getEventSystem()->unregister<GameState>(EVT_OBJECT_ADDED, this, &GameState::_OnObjectAdded);

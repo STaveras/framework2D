@@ -4,32 +4,21 @@
 #pragma once
 
 #include "ProgramStack.h"
-#include "Player.h"
-#include "Factory.h"
+#include "InputManager.h"
 #include "Engine2D.h"
-
-#include <vector>
 
 class Game : public ProgramStack
 {
 	friend class Engine2D;
 
 protected:
-	Factory<Player> _players;
+	// The game's input maps, sampled once per tick before the top state runs.
+	InputManager _inputManager;
 
 public:
-	
-	static Factory<Player>* getPlayers(void) { return &(Engine2D::getGame()->_players); }
+	InputManager& getInputManager(void) { return _inputManager; }
 
-	static Player* getPlayerWith(GameObject* object) {
-		for (unsigned int i = 0; i < Game::getPlayers()->size(); i++) {
-			if (Game::getPlayers()->at(i)->getGameObject() == object) {
-				return Game::getPlayers()->at(i);
-			}
-		}
-		return NULL;
-	}
-
+	// Subclasses call these from their own begin() and end().
 	virtual void begin(void) = 0;
 	virtual void update(class Timer* timer);
 	virtual void end(void) = 0;

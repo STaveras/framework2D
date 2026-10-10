@@ -2,6 +2,7 @@
 
 #include "InputMap.h"
 #include "StrUtils.h"
+#include "System.h"
 
 #include <algorithm>
 #include <cctype>

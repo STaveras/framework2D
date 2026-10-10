@@ -12,9 +12,17 @@ FantasySideScroller game;
 #include <algorithm>
 #include <cmath>
 
+FantasySideScroller::FantasySideScroller(void) = default;
+FantasySideScroller::~FantasySideScroller(void) = default;
+
 void FantasySideScroller::begin()
 {
     Game::begin();
+
+    if (!_inputMap) {
+        _inputMap = &_inputManager.createInputMap();
+        _bindInputs(*_inputMap);
+    }
 
     // configure window & renderer
     int width = GAME_RES_X;
@@ -40,69 +48,39 @@ void FantasySideScroller::begin()
 
     // push our play state once
     if (!_playState) {
-        _playState = new PlayState();
+        _playState = std::make_unique<PlayState>();
 
         // Do some preloading here
 
-        this->push(_playState);
+        this->push(_playState.get());
     }
 }
 
 void FantasySideScroller::end()
 {
     Game::end();
-
-    if (_playState) {
-        delete _playState;
-        _playState = nullptr;
-    }
+    _inputMap = nullptr; // Game::end() released the maps
+    _playState.reset();
 }
 
-void FantasySideScroller::bindInputs(InputMap* inputMap) const
+void FantasySideScroller::_bindInputs(InputMap& input)
 {
-    if (!inputMap) {
-        return;
-    }
-
-    Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+    using Axis = Gamepad::Axis;
+    using Button = Gamepad::Button;
 
     // TODO: Save the keymappings to a file and load them here
-    inputMap->addAction(Action("JUMP", Key::Space));
-    inputMap->addAction(Action("JUMP", Gamepad::Button::A));
-    inputMap->addAction(Action("LEFT", Key::Left));
-    inputMap->addAction(Action("LEFT", Key::A));
-    inputMap->addAction(Action("LEFT", Gamepad::Button::DpadLeft));
-    Action leftStick("LEFT");
-    leftStick.assignAxis(Gamepad::Axis::LeftX, -0.25f);
-    inputMap->addAction(leftStick);
-    inputMap->addAction(Action("RIGHT", Key::Right));
-    inputMap->addAction(Action("RIGHT", Key::D));
-    inputMap->addAction(Action("RIGHT", Gamepad::Button::DpadRight));
-    Action rightStick("RIGHT");
-    rightStick.assignAxis(Gamepad::Axis::LeftX, 0.25f);
-    inputMap->addAction(rightStick);
-    inputMap->addAction(Action("DOWN", Key::Down));
-    inputMap->addAction(Action("DOWN", Key::S));
-    inputMap->addAction(Action("DOWN", Gamepad::Button::DpadDown));
-    inputMap->addAction(Action("ATTACK", Key::LeftControl));
-    inputMap->addAction(Action("ATTACK", Key::Z));
-    inputMap->addAction(Action("ATTACK", Gamepad::Button::X));
-    inputMap->addAction(Action("RUN", Key::LeftShift));
-    inputMap->addAction(Action("RUN", Gamepad::Button::LeftBumper));
+    input.bind("JUMP").key(Key::Space).button(Button::A);
+    input.bind("LEFT").key(Key::Left).key(Key::A).button(Button::DpadLeft).axis(Axis::LeftX, -0.25f);
+    input.bind("RIGHT").key(Key::Right).key(Key::D).button(Button::DpadRight).axis(Axis::LeftX, 0.25f);
+    input.bind("DOWN").key(Key::Down).key(Key::S).button(Button::DpadDown);
+    input.bind("ATTACK").key(Key::LeftControl).key(Key::Z).button(Button::X);
+    input.bind("RUN").key(Key::LeftShift).button(Button::LeftBumper);
     // "UP" is the semantic up-direction action, shared with the pause menu.
+    input.bind("UP").key(Key::Up).key(Key::W).button(Button::DpadUp).axis(Axis::LeftY, -0.5f);
     // "INTERACT" is gameplay-only (E key, or the left stick button, which is
     // the iOS touch controls' USE) for interacting with objects.
-    inputMap->addAction(Action("UP", Key::Up));
-    inputMap->addAction(Action("UP", Key::W));
-    inputMap->addAction(Action("UP", Gamepad::Button::DpadUp));
-    Action upStick("UP");
-    upStick.assignAxis(Gamepad::Axis::LeftY, -0.5f);
-    inputMap->addAction(upStick);
-    inputMap->addAction(Action("INTERACT", Key::E));
-    inputMap->addAction(Action("INTERACT", Gamepad::Button::LeftThumb));
+    input.bind("INTERACT").key(Key::E).button(Button::LeftThumb);
     // "CONFIRM" is the menu confirm action: A + Enter.
-    inputMap->addAction(Action("CONFIRM", Gamepad::Button::A));
-    inputMap->addAction(Action("CONFIRM", Key::Enter));
-    inputMap->addAction(Action("PAUSE", Key::Escape));
-    inputMap->addAction(Action("PAUSE", Gamepad::Button::Start));
+    input.bind("CONFIRM").button(Button::A).key(Key::Enter);
+    input.bind("PAUSE").key(Key::Escape).button(Button::Start);
 }

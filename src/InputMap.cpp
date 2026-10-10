@@ -1,154 +1,82 @@
-
 #include "InputMap.h"
+
+#include "Engine2D.h"
+#include "IInput.h"
 #include "InputTapeRecorder.h"
-#include "ButtonState.h"
 
-#include <algorithm>
-
-void InputMap::addAction(Action action)
+Action* InputMap::_find(const std::string& name)
 {
-	Action* existingAction = this->getAction(action.getActionName());
-	if (!existingAction) {
-		_actions.push_back(action);
-		return;
-	}
-
-	std::list<Key>& existingAssignments = existingAction->getAssignments();
-	for (Key assignment : action.getAssignments()) {
-		bool alreadyAssigned = false;
-		for (Key existingAssignment : existingAssignments) {
-			if (existingAssignment == assignment) {
-				alreadyAssigned = true;
-				break;
-			}
-		}
-
-		if (!alreadyAssigned) {
-			existingAction->assign(assignment);
+	for (Action& action : _actions) {
+		if (action.getName() == name) {
+			return &action;
 		}
 	}
-
-	for (Gamepad::Button button : action.getGamepadButtonAssignments()) {
-		const auto& assignments = existingAction->getGamepadButtonAssignments();
-		if (std::find(assignments.begin(), assignments.end(), button) == assignments.end()) {
-			existingAction->assign(button);
-		}
-	}
-
-	for (const Action::AxisAssignment& assignment : action.getGamepadAxisAssignments()) {
-		const auto& assignments = existingAction->getGamepadAxisAssignments();
-		if (std::find(assignments.begin(), assignments.end(), assignment) == assignments.end()) {
-			existingAction->assignAxis(assignment.axis, assignment.threshold);
-		}
-	}
+	return nullptr;
 }
 
-Action* InputMap::getAction(std::string actionName)
+const Action* InputMap::find(const std::string& name) const
 {
-	std::list<Action>::iterator itr = _actions.begin();
-	for (; itr != _actions.end(); itr++) {
-		if (itr->getActionName() == actionName) {
-			return &(*itr);
+	for (const Action& action : _actions) {
+		if (action.getName() == name) {
+			return &action;
 		}
 	}
-
-	return NULL;
+	return nullptr;
 }
 
-void InputMap::removeAction(Action action)
+Action& InputMap::bind(const std::string& name)
 {
-	std::list<Action>::iterator itr = _actions.begin();
-	for (; itr != _actions.end(); itr++)
-	{
-		if (action == (*itr)) {
-			_actions.erase(itr);
-			break;
-		}
+	if (Action* action = _find(name)) {
+		return *action;
 	}
+	return _actions.emplace_back(name);
 }
 
-bool InputMap::buttonPressed(Action* action)
+bool InputMap::down(const std::string& name) const
 {
-	if (!_input || !action) {
+	const Action* action = find(name);
+	return action && action->down();
+}
+
+bool InputMap::pressed(const std::string& name) const
+{
+	const Action* action = find(name);
+	return action && action->pressed();
+}
+
+bool InputMap::released(const std::string& name) const
+{
+	const Action* action = find(name);
+	return action && action->released();
+}
+
+void InputMap::drive(const std::string& name, bool down)
+{
+	bind(name)._driven = down;
+}
+
+bool InputMap::_readDevices(const Action& action) const
+{
+	if (!_input) {
 		return false;
 	}
 
-	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Key key : action->getAssignments()) {
-			if (keyboard->pressed(key)) {
-				return true;
-			}
-		}
-	}
-
-	if (Gamepad* gamepad = _input->getGamepad()) {
-		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
-			if (gamepad->pressed(button, _padNumber)) {
-				return true;
-			}
-		}
-		for (const Action::AxisAssignment& assignment : action->getGamepadAxisAssignments()) {
-			if (gamepad->axisPressed(assignment.axis, assignment.threshold, _padNumber)) {
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-bool InputMap::buttonReleased(Action* action)
-{
-	if (!_input || !action) {
-		return false;
-	}
-
-	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Key key : action->getAssignments()) {
-			if (keyboard->released(key)) {
-				return true;
-			}
-		}
-	}
-
-	if (Gamepad* gamepad = _input->getGamepad()) {
-		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
-			if (gamepad->released(button, _padNumber)) {
-				return true;
-			}
-		}
-		for (const Action::AxisAssignment& assignment : action->getGamepadAxisAssignments()) {
-			if (gamepad->axisReleased(assignment.axis, assignment.threshold, _padNumber)) {
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-bool InputMap::buttonDown(Action* action)
-{
-	if (!_input || !action) {
-		return false;
-	}
-
-	if (Keyboard* keyboard = _input->getKeyboard()) {
-		for (Key key : action->getAssignments()) {
+	if (const Keyboard* keyboard = _input->getKeyboard()) {
+		for (Key key : action.getKeys()) {
 			if (keyboard->down(key)) {
 				return true;
 			}
 		}
 	}
 
-	if (Gamepad* gamepad = _input->getGamepad()) {
-		for (Gamepad::Button button : action->getGamepadButtonAssignments()) {
-			if (gamepad->down(button, _padNumber)) {
+	if (const Gamepad* gamepad = _input->getGamepad()) {
+		for (Gamepad::Button button : action.getButtons()) {
+			if (gamepad->down(button, _pad)) {
 				return true;
 			}
 		}
-		for (const Action::AxisAssignment& assignment : action->getGamepadAxisAssignments()) {
-			if (gamepad->axisDown(assignment.axis, assignment.threshold, _padNumber)) {
+		for (const Action::AxisBinding& binding : action.getAxes()) {
+			if (gamepad->axisDown(binding.axis, binding.threshold, _pad)) {
 				return true;
 			}
 		}
@@ -157,80 +85,26 @@ bool InputMap::buttonDown(Action* action)
 	return false;
 }
 
-bool InputMap::buttonUp(Action* action)
-{
-	return action && !buttonDown(action);
-}
-
 void InputMap::update(float time)
 {
-	if (_input && _input->getGamepad()) {
-		_connected = _input->getGamepad()->isConnected(_padNumber);
-	}
 	_elapsedTime += time;
-	const uint64_t simulationTick = Engine2D::getSimulationTick();
-	InputTapeRecorder::onControllerTickStart(this, simulationTick, _elapsedTime);
+	const uint64_t tick = Engine2D::getSimulationTick();
+	InputTapeRecorder::onControllerTickStart(this, tick, _elapsedTime);
 
-	for (Action& action : this->getActions()) {
-		const std::string actionName = action.getActionName();
-		const bool replayControlled = InputTapeRecorder::isReplayControlledAction(actionName);
-		const bool previousActive = action.isActive();
+	for (Action& action : _actions) {
+		const std::string& name = action.getName();
+		action._wasDown = action._down;
+		action._down = InputTapeRecorder::isReplayControlledAction(name)
+			? InputTapeRecorder::getReplayActionState(name, action._wasDown)
+			: (action._driven || _readDevices(action));
 
-		bool isDown = false;
-		bool isUp = false;
-		bool isPressed = false;
-		bool isReleased = false;
-
-		if (replayControlled) {
-			const bool replayState = InputTapeRecorder::getReplayActionState(actionName, previousActive);
-			isDown = replayState;
-			isUp = !replayState;
-			isPressed = ButtonEdge::pressed(replayState, previousActive);
-			isReleased = ButtonEdge::released(replayState, previousActive);
+		InputTapeRecorder::onControllerActionEvent(tick, _elapsedTime, name,
+			action._down ? "EVT_KEYDOWN" : "EVT_KEYUP", action._down);
+		if (action.pressed()) {
+			InputTapeRecorder::onControllerActionEvent(tick, _elapsedTime, name, "EVT_KEYPRESSED", true);
 		}
-		else {
-			isDown = this->buttonDown(&action);
-			isUp = !isDown;
-			isPressed = ButtonEdge::pressed(isDown, previousActive);
-			isReleased = ButtonEdge::released(isDown, previousActive);
+		else if (action.released()) {
+			InputTapeRecorder::onControllerActionEvent(tick, _elapsedTime, name, "EVT_KEYRELEASED", false);
 		}
-
-		if (isDown) {
-			action.setActive(true);
-			_eventSystem->sendEvent<InputEvent>(
-				InputEvent(EVT_KEYDOWN, this, _elapsedTime, actionName),
-				nullptr,
-				Event::event_priority_immediate);
-			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYDOWN, true);
-		}
-		else if (isUp) {
-			action.setActive(false);
-			_eventSystem->sendEvent<InputEvent>(
-				InputEvent(EVT_KEYUP, this, _elapsedTime, actionName),
-				nullptr,
-				Event::event_priority_immediate);
-			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYUP, false);
-		}
-
-		if (isPressed)
-		{
-			action.setActive(true);
-			_eventSystem->sendEvent<InputEvent>(
-				InputEvent(EVT_KEYPRESSED, this, _elapsedTime, actionName),
-				nullptr,
-				Event::event_priority_immediate);
-			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYPRESSED, true);
-		}
-		else if (isReleased)
-		{
-			action.setActive(false);
-			_eventSystem->sendEvent<InputEvent>(
-				InputEvent(EVT_KEYRELEASED, this, _elapsedTime, actionName),
-				nullptr,
-				Event::event_priority_immediate);
-			InputTapeRecorder::onControllerActionEvent(simulationTick, _elapsedTime, actionName, EVT_KEYRELEASED, false);
-		}
-
-		InputTapeRecorder::recordActionSnapshot(simulationTick, actionName, action.isActive());
 	}
 }

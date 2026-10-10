@@ -7,8 +7,11 @@
 
 #include "../Cursor.h"
 #include "../Engine2D.h"
+#include "../IInput.h"
 #include "../Mouse.h"
+#include "../InputMap.h"
 #include "Constants.h"
+#include "FantasySideScroller.h"
 #include "Resources.h"
 #include "ScreenSpaceCursor.h"
 
@@ -18,7 +21,6 @@ GameOverState::GameOverState()
     , _hintText(NULL)
     , _menu(NULL)
     , _cursor(NULL)
-    , _inputMap(NULL)
     , _retryRequested(false)
 {
 }
@@ -143,21 +145,18 @@ bool GameOverState::onExecute(float time)
 
     // Move between the menu options with the same UP / DOWN actions as the
     // pause menu (arrows, W/S, D-pad, stick, or the iOS touch stick).
-    if (_menu && _inputMap) {
-        Action* upAction = _inputMap->getAction("UP");
-        Action* downAction = _inputMap->getAction("DOWN");
-        if (upAction && _inputMap->buttonPressed(upAction)) {
+    const InputMap& input = game.getInputMap();
+    if (_menu) {
+        if (input.pressed("UP")) {
             _menu->selectPrevious();
-        } else if (downAction && _inputMap->buttonPressed(downAction)) {
+        } else if (input.pressed("DOWN")) {
             _menu->selectNext();
         }
     }
 
     // Execute the selected option with the CONFIRM action (Enter / A, which is
     // JUMP on the iOS touch controls) or Space.
-    Action* confirmAction = _inputMap ? _inputMap->getAction("CONFIRM") : NULL;
-    if ((confirmAction && _inputMap->buttonPressed(confirmAction)) ||
-        keyboard->pressed(Key::Space)) {
+    if (input.pressed("CONFIRM") || keyboard->pressed(Key::Space)) {
         _executeSelectedOption();
         return false;
     }

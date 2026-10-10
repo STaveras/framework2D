@@ -1,7 +1,8 @@
 // Exercise Character support, state transitions, and the real collision solver headlessly.
 #include "../src/FantasySideScroller/Character.h"
 #include "../src/GameState.h"
-#include "../src/InputEvent.h"
+#include "../src/IInput.h"
+#include "../src/InputMap.h"
 #include "../src/Kinematics2D.h"
 #include "../src/PlayerController.h"
 #include "../src/Square.h"
@@ -35,17 +36,11 @@ public:
     void render() override {}
 };
 
-class TestInput : public IInput {
-public:
-    void initialize() override {}
-    void update() override {}
-    void shutdown() override {}
-};
+class TestInput : public IInput {};
 class TestGame : public Game {
 public:
     void begin() override {}
     void end() override {}
-    Player* addPlayer() { return _players.create(); }
 };
 class TestState : public GameState {
 public:
@@ -76,19 +71,15 @@ int main() {
     Engine2D::setGame(&game);
     TestState scene;
     game.push(&scene);
+    // No devices: the test holds actions with drive(). Conditions reach the
+    // hero in this order each tick, before object updates, as in PlayState.
     InputMap controller;
-    controller.addAction(Action("JUMP"));
-    controller.addAction(Action("DOWN"));
-    controller.addAction(Action("LEFT"));
-    controller.addAction(Action("RIGHT"));
+    for (const char* name : {"DOWN", "JUMP", "LEFT", "RIGHT"})
+        controller.bind(name);
     Character hero;
-    Player* player = game.addPlayer();
-    player->setInputMap(&controller);
-    player->setGameObject(&hero);
     PlayerController heroController(&controller);
     Character::bindPlayerActions(heroController);
     hero.possess(&heroController);
-    player->start();
     TestTileSet tiles(renderer.createTexture("bin/fantasySideScroller/Character/Idle/Idle-Sheet.png"));
     Tile platform(0, &tiles), floor(0, &tiles), lower(0, &tiles), adjacent(0, &tiles);
     Square platformShape(vector2(0, 0), 128, 8);
@@ -117,20 +108,17 @@ int main() {
         assert(Kinematics2D::tryGetActiveBounds(hero.getCollidable(), lo, hi));
         return hi.y;
     };
+    auto send = [&]() {
+        controller.update(0.0f);
+        heroController.sendActionConditions(hero);
+    };
+    // Change an action now; the hero sees the press or release immediately.
     auto input = [&](const char* action, bool down) {
-        auto* a = controller.getAction(action);
-        const bool changed = a->isActive() != down;
-        a->setActive(down);
-        auto* events = Engine2D::getEventSystem();
-        events->sendEvent<InputEvent>(InputEvent(down ? EVT_KEYDOWN : EVT_KEYUP,
-            &controller, 0, action), nullptr, Event::event_priority_immediate);
-        if (changed) events->sendEvent<InputEvent>(InputEvent(down ? EVT_KEYPRESSED : EVT_KEYRELEASED,
-            &controller, 0, action), nullptr, Event::event_priority_immediate);
+        controller.drive(action, down);
+        send();
     };
     auto tick = [&]() {
-        // Held/up events arrive before object updates, as in GameState::onExecute.
-        for (const char* name : {"DOWN", "JUMP", "LEFT", "RIGHT"})
-            input(name, controller.getAction(name)->isActive());
+        send();
         scene.step(dt);
     };
     auto run = [&](float seconds) {
@@ -273,7 +261,6 @@ int main() {
         platform.refreshCollisionGeometry();
     }
 
-    player->finish();
     game.pop();
     Engine2D::setGame(nullptr);
     std::cout << "Character one-way behavior: " << failures << " failures" << std::endl;

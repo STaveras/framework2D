@@ -15,7 +15,6 @@
 #include "../Widgets.h"
 
 class Cursor;
-class InputMap;
 
 class GameOverState : public GameState
 {
@@ -24,7 +23,6 @@ class GameOverState : public GameState
     Font* _hintText = NULL;
     Menu* _menu = NULL;
     Cursor* _cursor = NULL;
-    InputMap* _inputMap = NULL;
     bool _retryRequested = false;
 
     enum Option { OPTION_RETRY = 0, OPTION_QUIT = 1 };
@@ -35,8 +33,6 @@ class GameOverState : public GameState
 public:
     GameOverState(void);
     virtual ~GameOverState(void);
-
-    void setInputMap(InputMap* controller) { _inputMap = controller; }
 
     void onEnter(State* prev) override;
     bool onExecute(float time) override;

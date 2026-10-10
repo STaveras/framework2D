@@ -9,7 +9,6 @@
 #include "../Widgets.h"
 
 class Cursor;
-class InputMap;
 
 class PauseState : public GameState
 {
@@ -18,7 +17,6 @@ class PauseState : public GameState
     Font* _hintText = NULL;
     Menu* _menu = NULL;
     Cursor* _cursor = NULL;
-    InputMap* _inputMap = NULL;
 
     enum Option { OPTION_RESUME = 0, OPTION_QUIT = 1 };
 
@@ -28,8 +26,6 @@ class PauseState : public GameState
 public:
     PauseState(void);
     virtual ~PauseState(void);
-
-    void setInputMap(InputMap* controller) { _inputMap = controller; }
 
     void onEnter(State* prev) override;
     bool onExecute(float time) override;

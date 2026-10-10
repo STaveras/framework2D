@@ -1,93 +1,58 @@
 // File: InputMap.h
+// A set of named Actions and the inputs bound to them. update() samples every
+// action once per tick (from the input devices, or from the input tape during
+// a replay), and game code reads actions by name:
+//
+//   map.bind("JUMP").key(Key::Space).button(Gamepad::Button::A);
+//   if (map.pressed("JUMP")) ...
+//
+// Names nothing is bound to read as released.
+
 #pragma once
 
-#include "IInput.h"
-#include "InputEvent.h"
 #include "Action.h"
-#include "Cyclable.h"
-#include "Event.h"
-#include "Engine2D.h"
 
-#include <list>
+#include <deque>
+#include <string>
 
-// Named actions bound to keyboard keys, gamepad buttons and axes, updated
-// once per tick from an input interface. (Formerly Controller; a Controller
-// is now whatever drives an Actor, see Controller.h.)
+class IInput;
+
 class InputMap
 {
+	IInput* _input = nullptr;
+	int _pad = 0;
+	float _elapsedTime = 0.0f;
+	// A deque keeps the references bind() returns valid as actions are added.
+	std::deque<Action> _actions;
+
+	Action* _find(const std::string& name);
+	bool _readDevices(const Action& action) const;
+
 public:
-	InputMap(void) :
-		_connected(false),
-		_padNumber(-1),
-		_elapsedTime(0.0f),
-		_input(NULL),
-		_eventSystem(NULL) {
-	}
-	~InputMap(void) {}
+	explicit InputMap(IInput* input = nullptr) : _input(input) {}
 
-	bool isConnected(void) const { return _connected; }
-	int getPadNumber(void) const { return _padNumber; }
+	IInput* getInput(void) const { return _input; }
+	void setInput(IInput* input) { _input = input; }
 
-	IInput* getInputInterface(void) { return _input; }
-	void setInputInterface(IInput* pInput) { _input = pInput; }
+	// The gamepad this map reads (0 is the first connected pad).
+	int getPadIndex(void) const { return _pad; }
+	void setPadIndex(int pad) { _pad = pad; }
 
-	EventSystem* getEventSystem(void) { return _eventSystem; }
-	void setEventSystem(EventSystem* eventSystem) { _eventSystem = eventSystem; }
+	// The named action, created on first use, to bind inputs to.
+	Action& bind(const std::string& name);
 
-	void setIsConnected(bool connected) { _connected = connected; }
-	void setPadNumber(int padNumber) { _padNumber = padNumber; }
+	bool down(const std::string& name) const;
+	bool pressed(const std::string& name) const;
+	bool released(const std::string& name) const;
 
-	void addAction(Action action);
-	void removeAction(Action action);
+	const Action* find(const std::string& name) const;
+	// In the order they were first bound.
+	const std::deque<Action>& getActions(void) const { return _actions; }
 
-	bool buttonPressed(Action* action);
-	bool buttonReleased(Action* action);
-	bool buttonDown(Action* action);
-	bool buttonUp(Action* action);
+	// Hold or release an action from code rather than a device (tests,
+	// scripted input). Takes effect at the next update().
+	void drive(const std::string& name, bool down);
 
+	// Sample every action for this tick.
 	void update(float time);
-
-	Action* getAction(std::string actionName);
-	std::list<Action>& getActions(void) { return _actions; }
-
-private:
-	bool _connected;
-	int _padNumber;
-	float _elapsedTime;
-	IInput* _input;
-	EventSystem* _eventSystem;
-
-	std::list<Action> _actions;
-
-public:
-	class EventListener : public virtual Cyclable
-	{
-	public:
-		virtual void onButtonDown(const Event& evt) = 0;
-		virtual void onButtonUp(const Event& evt) = 0;
-		virtual void onButtonPressed(const Event& evt) = 0;
-		virtual void onButtonReleased(const Event& evt) = 0;
-		virtual ~EventListener() {}
-
-		virtual void start(void) {
-			Engine2D::getInstance()->getEventSystem()->registerCallback<EventListener>(EVT_KEYPRESSED, this, &EventListener::onButtonPressed);
-			Engine2D::getInstance()->getEventSystem()->registerCallback<EventListener>(EVT_KEYRELEASED, this, &EventListener::onButtonReleased);
-			Engine2D::getInstance()->getEventSystem()->registerCallback<EventListener>(EVT_KEYDOWN, this, &EventListener::onButtonDown);
-			Engine2D::getInstance()->getEventSystem()->registerCallback<EventListener>(EVT_KEYUP, this, &EventListener::onButtonUp);
-		}
-
-		virtual void update(float time) {
-
-			throw std::runtime_error("EventListener::update() not implemented.");
-		}
-
-		virtual void finish(void) {
-			Engine2D::getInstance()->getEventSystem()->unregister<EventListener>(EVT_KEYUP, this, &EventListener::onButtonUp);
-			Engine2D::getInstance()->getEventSystem()->unregister<EventListener>(EVT_KEYDOWN, this, &EventListener::onButtonDown);
-			Engine2D::getInstance()->getEventSystem()->unregister<EventListener>(EVT_KEYRELEASED, this, &EventListener::onButtonReleased);
-			Engine2D::getInstance()->getEventSystem()->unregister<EventListener>(EVT_KEYPRESSED, this, &EventListener::onButtonPressed);
-		}
-	};
 };
-
-// Author: Stanley Taveras

@@ -37,11 +37,11 @@ endif
 COMMON_SRCS := \
   src/main.cpp src/Engine2D.cpp src/RenderInterpolation.cpp src/EventSystem.cpp src/ProgramStack.cpp src/InputManager.cpp src/StateMachine.cpp \
   src/ObjectManager.cpp src/CollisionSystem.cpp src/Game.cpp src/GameObject.cpp src/GameState.cpp src/Frame.cpp src/Animation.cpp \
-  src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/InputMap.cpp src/Timer.cpp \
-  src/Window.cpp src/Player.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
+  src/AnimationManager.cpp src/AnimationUtils.cpp src/Camera.cpp src/Action.cpp src/InputMap.cpp src/Timer.cpp \
+  src/Window.cpp src/IRenderer.cpp src/Renderer.cpp src/RendererVK.cpp src/RendererGL.cpp \
   src/InputTapeRecorder.cpp src/PlatformMouse.cpp src/Gamepad.cpp src/PlatformGamepad.cpp src/Font.cpp src/Cursor.cpp \
   src/Physical.cpp src/Kinematics2D.cpp src/Telemetry2D.cpp src/StrUtils.cpp \
-  src/TextureVK.cpp src/TextureGL.cpp src/InputEvent.cpp src/IInput.cpp src/Trigger.cpp \
+  src/TextureVK.cpp src/TextureGL.cpp src/IInput.cpp src/Trigger.cpp \
   src/UpdateBackgroundOperator.cpp src/SDSParser.cpp src/PlatformInput.cpp src/PlatformKeyboard.cpp src/System.cpp \
   src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
   src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
@@ -148,6 +148,12 @@ $(OBJDIR)/tools/section_transition_test.o: CXXFLAGS += -UNDEBUG
 test-section-transition: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/section_transition_test.o
 	$(CXX) $^ -o $(OBJDIR)/section_transition_test $(LDFLAGS)
 	./$(OBJDIR)/section_transition_test
+
+.PHONY: test-character-one-way
+$(OBJDIR)/tools/character_one_way_test.o: CXXFLAGS += -UNDEBUG
+test-character-one-way: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/character_one_way_test.o
+	$(CXX) $^ -o $(OBJDIR)/character_one_way_test $(LDFLAGS)
+	./$(OBJDIR)/character_one_way_test
 
 # iOS: an Xcode project generated from the root CMakeLists (Metal renderer,
 # touch controls). `make ios` builds it for the simulator; `make ios-run` also boots

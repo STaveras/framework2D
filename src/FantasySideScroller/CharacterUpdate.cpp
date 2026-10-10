@@ -6,6 +6,7 @@
 #include "../Animation.h"
 #include "../CollidableGroup.h"
 #include "../GameState.h"
+#include "../IInput.h"
 #include "../Telemetry2D.h"
 #include "../Kinematics2D.h"
 #include "../Polygon.h"

@@ -3,7 +3,6 @@
 #include "Camera.h"
 #include "FileSystem.h"
 #include "Input.h"
-#include "InputEvent.h"
 #include "Game.h"
 #include "GameState.h"
 #include "GameObject.h"

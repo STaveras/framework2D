@@ -1,56 +1,29 @@
-
 #include "InputManager.h"
-#include "EventSystem.h"
-#include "InputEvent.h"
-#include "Types.h"
-#include "InputMap.h"
 
-InputManager::InputManager(void):
-	_eventSystem(NULL),
-	_input(NULL)
-{}
-
-InputManager::~InputManager(void) {
-	shutdown(); // Just to be nice
+void InputManager::initialize(IInput* input)
+{
+	_input = input;
+	for (InputMap& map : _inputMaps) {
+		map.setInput(input);
+	}
 }
 
-void InputManager::initialize(EventSystem* eventSystem, IInput* inputInterface)
+InputMap& InputManager::createInputMap(int padIndex)
 {
-	_eventSystem = eventSystem; 
-	_input		 = inputInterface;
+	InputMap& map = _inputMaps.emplace_back(_input);
+	map.setPadIndex(padIndex);
+	return map;
 }
 
-InputMap* InputManager::createInputMap(void)
+void InputManager::update(float time)
 {
-	InputMap* controller = _inputMaps.create();
-	controller->setPadNumber((int)(_inputMaps.size() - 1));
-	controller->setInputInterface(_input);
-	controller->setEventSystem(_eventSystem);
-	return controller;
-}
-
-void InputManager::destroyInputMap(InputMap* controller)
-{
-	_inputMaps.destroy(controller);
-}
-
-void InputManager::update(float fTime)
-{
-	if (!_input)
-		return;
-
-	for (auto& controller : _inputMaps) {
-		controller->update(fTime);
+	for (InputMap& map : _inputMaps) {
+		map.update(time);
 	}
 }
 
 void InputManager::shutdown(void)
 {
 	_inputMaps.clear();
-
-	if (_eventSystem)
-		_eventSystem = NULL;
-
-	if (_input)
-		_input = NULL;
+	_input = nullptr;
 }

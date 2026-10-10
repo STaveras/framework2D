@@ -24,7 +24,6 @@ class PlayState : public GameState
 	void _shutdownHUD();
 	void _respawnPlayer(void);
 
-	Player* _player = NULL;
 	PlayerController _playerController;
 	LevelManager _levelManager;
 	TraversalMechanics _traversalMechanics;

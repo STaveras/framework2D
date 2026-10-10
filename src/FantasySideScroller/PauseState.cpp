@@ -5,8 +5,11 @@
 #include "PauseState.h"
 #include "../Cursor.h"
 #include "../Engine2D.h"
+#include "../IInput.h"
 #include "../Mouse.h"
+#include "../InputMap.h"
 #include "Constants.h"
+#include "FantasySideScroller.h"
 #include "Resources.h"
 #include "ScreenSpaceCursor.h"
 
@@ -16,7 +19,6 @@ PauseState::PauseState()
     , _hintText(NULL)
     , _menu(NULL)
     , _cursor(NULL)
-    , _inputMap(NULL)
 {
 }
 
@@ -124,14 +126,10 @@ void PauseState::onEnter(State* prev)
 
 bool PauseState::onExecute(float time)
 {
-    Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
+    const InputMap& input = game.getInputMap();
 
     // Use the same action as gameplay for either Escape or controller Options.
-    Action* pauseAction = _inputMap ? _inputMap->getAction("PAUSE") : NULL;
-    const bool pausePressed = pauseAction
-        ? _inputMap->buttonPressed(pauseAction)
-        : keyboard->pressed(Key::Escape);
-    if (pausePressed) {
+    if (input.pressed("PAUSE")) {
         Engine2D::getGame()->pop();
         return false;  // Stop executing this state
     }
@@ -139,23 +137,18 @@ bool PauseState::onExecute(float time)
     // Move between the menu options using the semantic direction actions:
     // UP moves up (previous), DOWN moves down (next). These are the same
     // actions used for gameplay movement, so no redundant binds.
-    if (_menu && _inputMap) {
-        Action* upAction = _inputMap->getAction("UP");
-        Action* downAction = _inputMap->getAction("DOWN");
-        if (upAction && _inputMap->buttonPressed(upAction)) {
+    if (_menu) {
+        if (input.pressed("UP")) {
             _menu->selectPrevious();
-        } else if (downAction && _inputMap->buttonPressed(downAction)) {
+        } else if (input.pressed("DOWN")) {
             _menu->selectNext();
         }
     }
 
     // Execute the selected option with the CONFIRM action (Space / A / Enter).
-    if (_inputMap) {
-        Action* confirmAction = _inputMap->getAction("CONFIRM");
-        if (confirmAction && _inputMap->buttonPressed(confirmAction)) {
-            _executeSelectedOption();
-            return false;
-        }
+    if (input.pressed("CONFIRM")) {
+        _executeSelectedOption();
+        return false;
     }
 
     // Keep the menu cursor tracking the mouse while paused.

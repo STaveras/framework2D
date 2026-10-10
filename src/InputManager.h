@@ -1,43 +1,27 @@
 // File: InputManager.h
-#if !defined(_INPUTMANAGER_H_)
-#define _INPUTMANAGER_H_
+// Owns a game's InputMaps (one per player) and samples them once per tick.
+// The Game holds one; see Game::update().
 
-#include "IInput.h"
-#include "Factory.h"
+#pragma once
+
 #include "InputMap.h"
-#include <vector>
 
-class EventSystem;
+#include <deque>
 
-// This is confusing at the moment because originally "VirtualGamePad" was just that... A virtual representation of a game pad or console controller...
-// But what a controller is now is an action-input mapper and the inputmanager updates both controllers and input devices
-// This allows controllers to eventually take input from other sources, such as non-human agents (machine/AI)
+class IInput;
 
 class InputManager
 {
-protected:
-	EventSystem* _eventSystem;
-	IInput* _input;
-
-private:
-	Factory<InputMap> _inputMaps;
+	IInput* _input = nullptr;
+	// A deque keeps the references createInputMap() returns valid.
+	std::deque<InputMap> _inputMaps;
 
 public:
-	InputManager(void);
-	~InputManager(void);
+	void initialize(IInput* input);
 
-	void initialize(EventSystem* eventSystem, IInput* inputInterface);
+	// A new map reading the given gamepad (0 is the first connected pad).
+	InputMap& createInputMap(int padIndex = 0);
 
-	InputMap* createInputMap(void);
-	InputMap* getInputMap(unsigned int uiIndex) { return _inputMaps.at(uiIndex); }
-	void destroyInputMap(InputMap* controller);
-
-	Keyboard* getKeyboard(void) { return _input ? _input->getKeyboard() : NULL; }
-	Mouse*	 getMouse(void)	 { return _input ? _input->getMouse() : NULL; }
-	Gamepad* getGamepad(void) { return _input ? _input->getGamepad() : NULL; }
-	
-	void update(float fTime);
+	void update(float time);
 	void shutdown(void);
 };
-#endif
-// Author: Stanley Taveras

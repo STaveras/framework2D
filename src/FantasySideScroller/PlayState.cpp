@@ -9,10 +9,12 @@
 #include "../Debug.h"
 #include "../Font.h"
 #include "../Gamepad.h"
+#include "../IInput.h"
 #include "../Sprite.h"
 #include "../Animation.h"
 #include "../Cursor.h"
 #include "FantasySideScroller.h"
+#include "../InputMap.h"
 #include "PauseState.h"
 #include "GameOverState.h"
 #include "ScreenSpaceCursor.h"
@@ -39,8 +41,7 @@ constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
 }
 
 PlayState::PlayState()
-    : _player(nullptr)
-    , _playableCharacter(nullptr)
+    : _playableCharacter(nullptr)
     , _cursor(nullptr)
 {
 	// AUTO_START_MAP=<file>.tmj starts on another map (benchmarks, replays).
@@ -52,7 +53,7 @@ PlayState::PlayState()
 }
 
 PlayState::~PlayState() {
-	if (_player || _playableCharacter || _hudRenderList) {
+	if (_playableCharacter || _hudRenderList) {
 		onExit(nullptr);
 	}
 	// We own the pause and game-over overlays we push on top of ourselves;
@@ -284,8 +285,6 @@ void PlayState::onEnter(State* prev)
 {
 	GameState::onEnter(prev);
 
-	_player = Engine2D::getGame()->getPlayers()->create();
-
 	// Preferred: map-declared tilesets from the .tmj file.
 	_levelManager.initialize(_mapFileName.c_str(), vector2(-60.0f, 0.0f), "Background/Background.png", _objectManager, *this);
 
@@ -333,12 +332,9 @@ void PlayState::onEnter(State* prev)
 		_objectManager.addObject(objectName.c_str(), boar);
 	}
 
-	_player->start();
-	_player->setInputMap(_inputManager.createInputMap());
-	InputMap* controller = _player->getInputMap();
-	game.bindInputs(controller);
-	_player->setGameObject(_playableCharacter);
-	_playerController.setInputMap(controller);
+	// setInputMap() resets the controller's action edges, so the new hero
+	// sees actions that are already held as pressed.
+	_playerController.setInputMap(&game.getInputMap());
 	Character::bindPlayerActions(_playerController);
 	_playableCharacter->possess(&_playerController);
 
@@ -405,7 +401,7 @@ bool PlayState::onExecute(float time)
 		DEBUG_MSG(keepPosition ? "Stage reloaded from disk in place.\n" :
 			"Stage reloaded from disk at spawn point.\n");
 	}
-	InputMap* controller = _player ? _player->getInputMap() : NULL;
+	const InputMap& input = game.getInputMap();
 
 	// First frame after a pause: the pause overlay was popped and this state is
 	// top again, so make the HUD cursor visible once more.
@@ -432,8 +428,7 @@ bool PlayState::onExecute(float time)
 		_respawnPlayer();
 	}
 
-	Action* pauseAction = controller ? controller->getAction("PAUSE") : NULL;
-	if (controller && controller->buttonPressed(pauseAction)) {
+	if (input.pressed("PAUSE")) {
 		// Hide the HUD cursor before pushing the pause overlay: its screen-space
 		// list stays registered (push does not call onExit), and its position is
 		// frozen because onExecute stops running, so leaving it visible would
@@ -448,7 +443,6 @@ bool PlayState::onExecute(float time)
 		if (!_pauseState) {
 			_pauseState = new PauseState();
 		}
-		_pauseState->setInputMap(controller);
 		Engine2D::getGame()->push(_pauseState);
 	}
 
@@ -492,6 +486,11 @@ bool PlayState::onExecute(float time)
 	}
 
 	_traversalMechanics.setFrameDeltaSeconds(time);
+	// This tick's actions reach the hero's state machine before the world
+	// updates: boars read the hero's state, so the order matters.
+	if (_playableCharacter) {
+		_playerController.sendActionConditions(*_playableCharacter);
+	}
 	const bool keepRunning = GameState::onExecute(time);
 
 	// A destination's next_map reloads the stage with the next map through the normal
@@ -511,9 +510,6 @@ bool PlayState::onExecute(float time)
 			_mapFileName = nextMap;
 			onEnter(nullptr);
 			Engine2D::getEventSystem()->processEvents();
-			// onExit() destroys the old InputMap; onEnter() creates a new one.
-			// The controller captured before GameState::onExecute() is now stale.
-			controller = _player ? _player->getInputMap() : NULL;
 		}
 	}
 
@@ -535,11 +531,7 @@ bool PlayState::onExecute(float time)
 		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
 		// "UP" and "INTERACT" both trigger the interact logic: UP for directional up
 		// (shared with the pause menu), INTERACT for E / USE (gameplay-only).
-		Action* upAction = controller ? controller->getAction("UP") : NULL;
-		Action* interactAction = controller ? controller->getAction("INTERACT") : NULL;
-		const bool upActive = upAction && upAction->isActive();
-		const bool interactActive = interactAction && interactAction->isActive();
-		const bool interactCombined = upActive || interactActive;
+		const bool interactCombined = input.down("UP") || input.down("INTERACT");
 		const bool interactPressed = interactCombined && !_interactWasActive;
 		_interactWasActive = interactCombined;
 		_levelProps.update(_playableCharacter, interactPressed, time);
@@ -570,7 +562,6 @@ bool PlayState::onExecute(float time)
 			if (!_gameOverState) {
 				_gameOverState = new GameOverState();
 			}
-			_gameOverState->setInputMap(controller);
 			Engine2D::getGame()->push(_gameOverState);
 			return keepRunning;
 		}
@@ -598,10 +589,6 @@ void PlayState::onExit(State* next)
 	_traversalMechanics.setTrackedCharacter(NULL);
 	_traversalMechanics.setFrameDeltaSeconds(0.0f);
 
-	if (_player) {
-		_player->finish();
-	}
-
 	if (_playableCharacter) {
 		_objectManager.removeObject(_playableCharacter);
 	}
@@ -617,11 +604,6 @@ void PlayState::onExit(State* next)
 	
 	_levelProps.clear();
  	_levelManager.shutdown(_objectManager, *this);
-
-	if (_player) {
-		Engine2D::getGame()->getPlayers()->destroy(_player);
-		_player = NULL;
-	}
 
 	GameState::onExit(next);
 }

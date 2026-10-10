@@ -234,9 +234,6 @@
     <ClInclude Include="src\Input.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\InputEvent.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="src\InputManager.h">
       <Filter>Input</Filter>
     </ClInclude>
@@ -304,9 +301,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="src\GameObject.h">
-      <Filter>Objects / Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Player.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
     <ClInclude Include="src\Popup.h">
@@ -612,9 +606,6 @@
     <ClCompile Include="src\IInput.cpp">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="src\InputEvent.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
     <ClCompile Include="src\InputManager.cpp">
       <Filter>Input</Filter>
     </ClCompile>
@@ -637,9 +628,6 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="src\GameObject.cpp">
-      <Filter>Objects / Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Player.cpp">
       <Filter>Objects / Entities</Filter>
     </ClCompile>
     <ClCompile Include="src\GameState.cpp">
