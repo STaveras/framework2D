@@ -21,6 +21,9 @@ constexpr float kDefaultSinkDepth = 24.0f;
 constexpr float kStandTolerance = 3.0f;
 // Reach around a chest within which the interact action opens it.
 constexpr float kChestReach = 6.0f;
+// Keys rise this many pixels above their painted cell and back, one cycle every two seconds.
+constexpr float kKeyBobHeight = 2.0f;
+constexpr float kKeyBobSpeed = 3.14159f;
 
 const TileSet::TileInfo* infoOf(const Tile* tile)
 {
@@ -139,7 +142,7 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 
 		for (const std::vector<Tile*>& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "key"); })) {
 			for (Tile* tile : group) {
-				_keys.push_back(Pickup{ tile, false });
+				_keys.push_back(Pickup{ tile, tile->getPosition() });
 			}
 		}
 		// Each atlas cell is a complete pot, including the large variants.
@@ -232,11 +235,12 @@ void LevelProps::update(Character* character, bool interactPressed, float dt)
 				DEBUG_MSG("LevelProps: key collected\n");
 #endif
 			}
-			// Make key float up and down slightly using accumulated time
+			// Bob up from the painted cell and never below it, so a key resting on a
+			// platform stays clear of it. Offsetting the rest position rather than the
+			// last frame's keeps the motion the same at any frame rate.
 			key.lastTime += dt;
-			const float angle = 3.14159f * key.lastTime;
-			key.floatOffset = std::sin(angle) * 0.05f;
-			key.tile->setPosition(key.tile->getPosition() + vector2(0.0f, key.floatOffset));
+			const float rise = kKeyBobHeight * 0.5f * (1.0f - std::cos(kKeyBobSpeed * key.lastTime));
+			key.tile->setPosition(key.restPosition - vector2(0.0f, rise));
 		}
 
 		if (interactPressed) {

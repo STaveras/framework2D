@@ -9,6 +9,7 @@
 #include "../src/TileMap.h"
 #include "stb/stb_image.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstring>
@@ -277,6 +278,7 @@ int main()
     pads.setPosition(vector2(0.0f, 0.0f));
     pads.arrangeTiles();
 
+    const vector2 keyRest = props.getTile(1, 1)->getPosition();
     LevelProps levelProps;
     levelProps.initialize({ &props, &pads });
     assert(levelProps.getChests().size() == 1);
@@ -300,6 +302,25 @@ int main()
     assert(levelProps.getLastEvent() == "chest_locked");
     assert(!levelProps.getChests()[0].opened);
     assert(props.getTile(10, 1)->getTileIndex() == 443);
+
+    // The key bobs up to 2px above its painted cell and never below it, so a key painted
+    // on a platform stays clear of it, at any frame rate (the game runs uncapped without
+    // --vsync). Elapsed time is 0.016s here; 2s of 1000fps frames is one full cycle.
+    Tile* key = props.getTile(1, 1);
+    float highestRise = 0.0f;
+    for (int frame = 0; frame < 2000; ++frame) {
+        levelProps.update(&hero, false, 0.001f);
+        const float rise = keyRest.y - key->getPosition().y;
+        assert(rise >= -0.01f && rise <= 2.01f);
+        assert(near(key->getPosition().x, keyRest.x));
+        highestRise = std::max(highestRise, rise);
+    }
+    assert(highestRise > 1.99f);
+    // 3s in, the key is at the top of its bob; 4s in, back on its cell.
+    levelProps.update(&hero, false, 0.984f);
+    assert(near(key->getPosition().y, keyRest.y - 2.0f));
+    levelProps.update(&hero, false, 1.0f);
+    assert(near(key->getPosition().y, keyRest.y));
 
     // Touching the key collects it and removes it from the map.
     centreBodyOn(hero, tileCentre(props.getTile(1, 1)));

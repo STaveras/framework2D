@@ -118,6 +118,35 @@
          "y":0
         }, 
         {
+         "draworder":"topdown",
+         "id":8,
+         "name":"objects",
+         "objects":[
+                {
+                 "height":101,
+                 "id":4,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"next_map",
+                         "type":"string",
+                         "value":"mosswood_hollow.tmj"
+                        }],
+                 "rotation":0,
+                 "type":"destination",
+                 "visible":true,
+                 "width":880,
+                 "x":-444,
+                 "y":256
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
          "chunks":[
                 {
                  "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -203,8 +232,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":8,
- "nextobjectid":4,
+ "nextlayerid":9,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.2",
