@@ -149,7 +149,7 @@ void DIMouse::update(void) {
          m_bDeviceLost = true;
 
       _buttons.beginFrame();
-      for (int button = 0; button < 8; ++button) {
+      for (int button = 0; button < (int)MouseButton::Count; ++button) {
          _buttons.set(button, _mouseState.rgbButtons[button] != 0);
       }
    }

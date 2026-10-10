@@ -5,7 +5,7 @@
 
 #include "stb/stb_image.h"
 
-TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE), _descriptorSet(VK_NULL_HANDLE), _descriptorPool(VK_NULL_HANDLE)
+TextureVK::TextureVK(const char* path, Color colorKey) : ITexture(path), _image(VK_NULL_HANDLE), _imageMemory(VK_NULL_HANDLE), _imageView(VK_NULL_HANDLE), _sampler(VK_NULL_HANDLE), _descriptorSet(VK_NULL_HANDLE), _descriptorPool(VK_NULL_HANDLE)
 {
    // Load image using stb_image library
    int texWidth, texHeight, texChannels;
@@ -13,6 +13,15 @@ TextureVK::TextureVK(const char* path) : ITexture(path), _image(VK_NULL_HANDLE),
 
    if (!pixels) {
       throw std::runtime_error("Failed to load texture image!");
+   }
+
+   if (colorKey._color != 0) {
+      for (size_t i = 0, count = static_cast<size_t>(texWidth) * static_cast<size_t>(texHeight); i < count; ++i) {
+         stbi_uc* pixel = pixels + i * 4;
+         if (pixel[0] == colorKey.r && pixel[1] == colorKey.g && pixel[2] == colorKey.b) {
+            pixel[3] = 0;
+         }
+      }
    }
 
    _upload(pixels, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));

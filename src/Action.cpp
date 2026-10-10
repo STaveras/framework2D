@@ -1,61 +1,30 @@
-
 #include "Action.h"
 
-bool Action::before(const Action& rhs) 
-{ 
-	if(this != &rhs)
-		return 0 > (this->_actionTime - rhs._actionTime);
-	else 
-		return false; 
-}
+#include <algorithm>
 
-bool Action::after(const Action& rhs)
-{ 
-	if(this != &rhs)
-		return 0 < (this->_actionTime - rhs._actionTime);
-	else
-		return false; 
-}
-
-bool Action::simultaneous(const Action& rhs) 
+Action& Action::key(Key key)
 {
-	if (this != &rhs)
-		return 0 == (this->_actionTime - rhs._actionTime);
-	else 
-		return false; 
-}
-
-void Action::unassign(Keyboard::KEY eKey)
-{
-	std::list<Keyboard::KEY>::iterator itr = _inputAssignments.begin();
-	for(;itr != _inputAssignments.end(); itr++)
-	{
-		if(eKey == (*itr))
-		{
-			_inputAssignments.erase(itr);
-			break;
-		}
+	if (std::find(_keys.begin(), _keys.end(), key) == _keys.end()) {
+		_keys.push_back(key);
 	}
+	return *this;
 }
 
-void Action::unassign(Gamepad::Button button)
+Action& Action::button(Gamepad::Button button)
 {
-	std::list<Gamepad::Button>::iterator itr = _gamepadButtonAssignments.begin();
-	for (; itr != _gamepadButtonAssignments.end(); ++itr) {
-		if (button == *itr) {
-			_gamepadButtonAssignments.erase(itr);
-			break;
-		}
+	if (std::find(_buttons.begin(), _buttons.end(), button) == _buttons.end()) {
+		_buttons.push_back(button);
 	}
+	return *this;
 }
 
-void Action::unassignAxis(Gamepad::Axis axis, float threshold)
+Action& Action::axis(Gamepad::Axis axis, float threshold)
 {
-	std::list<AxisAssignment>::iterator itr = _gamepadAxisAssignments.begin();
-	for (; itr != _gamepadAxisAssignments.end(); ++itr) {
-		if (itr->axis == axis && itr->threshold == threshold) {
-			_gamepadAxisAssignments.erase(itr);
-			break;
-		}
+	const bool bound = std::any_of(_axes.begin(), _axes.end(), [&](const AxisBinding& binding) {
+		return binding.axis == axis && binding.threshold == threshold;
+	});
+	if (!bound) {
+		_axes.push_back({ axis, threshold });
 	}
+	return *this;
 }

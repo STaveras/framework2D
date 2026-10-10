@@ -6,7 +6,7 @@
 
 #include <stdexcept>
 
-TextureGL::TextureGL(const char* path) : ITexture(path)
+TextureGL::TextureGL(const char* path, Color colorKey) : ITexture(path)
 {
 	int texWidth = 0;
 	int texHeight = 0;
@@ -15,6 +15,14 @@ TextureGL::TextureGL(const char* path) : ITexture(path)
 
 	if (!pixels) {
 		throw std::runtime_error("Failed to load texture image!");
+	}
+	if (colorKey._color != 0) {
+		for (size_t i = 0, count = static_cast<size_t>(texWidth) * static_cast<size_t>(texHeight); i < count; ++i) {
+			stbi_uc* pixel = pixels + i * 4;
+			if (pixel[0] == colorKey.r && pixel[1] == colorKey.g && pixel[2] == colorKey.b) {
+				pixel[3] = 0;
+			}
+		}
 	}
 
 	_width = static_cast<unsigned int>(texWidth);

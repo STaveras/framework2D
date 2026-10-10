@@ -21,7 +21,7 @@ class TextureVK : public ITexture
     void _upload(const unsigned char* rgbaPixels, uint32_t width, uint32_t height);
 
 public:
-    TextureVK(const char* path);
+    TextureVK(const char* path, Color colorKey = 0);
     TextureVK(const char* name, const unsigned char* rgbaPixels, uint32_t width, uint32_t height);
     ~TextureVK();
 

@@ -3,210 +3,127 @@
 #error "Input.mm must be compiled with -fobjc-arc"
 #endif
 
-#include "Input.h"
-
+// System frameworks first: GameController names an Objective-C generic
+// parameter Key, which would clash with the engine's Key if declared earlier.
 #import <GameController/GameController.h>
 #import <UIKit/UIKit.h>
 
-#include <algorithm>
+#include "Input.h"
+
 #include <cmath>
-
-// Same field order as IKeyboard::KEYS; 0 where a key has no HID usage.
-const IOSKeyboard::KEYS IOSKeyboard::kHIDKeys{
-	UIKeyboardHIDUsageKeyboardEscape,
-	UIKeyboardHIDUsageKeyboard1,
-	UIKeyboardHIDUsageKeyboard2,
-	UIKeyboardHIDUsageKeyboard3,
-	UIKeyboardHIDUsageKeyboard4,
-	UIKeyboardHIDUsageKeyboard5,
-	UIKeyboardHIDUsageKeyboard6,
-	UIKeyboardHIDUsageKeyboard7,
-	UIKeyboardHIDUsageKeyboard8,
-	UIKeyboardHIDUsageKeyboard9,
-	UIKeyboardHIDUsageKeyboard0,
-	UIKeyboardHIDUsageKeyboardHyphen,
-	UIKeyboardHIDUsageKeyboardEqualSign,
-	UIKeyboardHIDUsageKeyboardDeleteOrBackspace,
-	UIKeyboardHIDUsageKeyboardTab,
-	UIKeyboardHIDUsageKeyboardQ,
-	UIKeyboardHIDUsageKeyboardW,
-	UIKeyboardHIDUsageKeyboardE,
-	UIKeyboardHIDUsageKeyboardR,
-	UIKeyboardHIDUsageKeyboardT,
-	UIKeyboardHIDUsageKeyboardY,
-	UIKeyboardHIDUsageKeyboardU,
-	UIKeyboardHIDUsageKeyboardI,
-	UIKeyboardHIDUsageKeyboardO,
-	UIKeyboardHIDUsageKeyboardP,
-	UIKeyboardHIDUsageKeyboardOpenBracket,
-	UIKeyboardHIDUsageKeyboardCloseBracket,
-	UIKeyboardHIDUsageKeyboardReturnOrEnter,
-	UIKeyboardHIDUsageKeyboardLeftControl,
-	UIKeyboardHIDUsageKeyboardA,
-	UIKeyboardHIDUsageKeyboardS,
-	UIKeyboardHIDUsageKeyboardD,
-	UIKeyboardHIDUsageKeyboardF,
-	UIKeyboardHIDUsageKeyboardG,
-	UIKeyboardHIDUsageKeyboardH,
-	UIKeyboardHIDUsageKeyboardJ,
-	UIKeyboardHIDUsageKeyboardK,
-	UIKeyboardHIDUsageKeyboardL,
-	UIKeyboardHIDUsageKeyboardSemicolon,
-	UIKeyboardHIDUsageKeyboardQuote,
-	UIKeyboardHIDUsageKeyboardGraveAccentAndTilde,
-	UIKeyboardHIDUsageKeyboardLeftShift,
-	UIKeyboardHIDUsageKeyboardBackslash,
-	UIKeyboardHIDUsageKeyboardZ,
-	UIKeyboardHIDUsageKeyboardX,
-	UIKeyboardHIDUsageKeyboardC,
-	UIKeyboardHIDUsageKeyboardV,
-	UIKeyboardHIDUsageKeyboardB,
-	UIKeyboardHIDUsageKeyboardN,
-	UIKeyboardHIDUsageKeyboardM,
-	UIKeyboardHIDUsageKeyboardComma,
-	UIKeyboardHIDUsageKeyboardPeriod,
-	UIKeyboardHIDUsageKeyboardSlash,
-	UIKeyboardHIDUsageKeyboardRightShift,
-	UIKeyboardHIDUsageKeypadAsterisk,
-	UIKeyboardHIDUsageKeyboardLeftAlt,
-	UIKeyboardHIDUsageKeyboardSpacebar,
-	UIKeyboardHIDUsageKeyboardCapsLock,
-	UIKeyboardHIDUsageKeyboardF1,
-	UIKeyboardHIDUsageKeyboardF2,
-	UIKeyboardHIDUsageKeyboardF3,
-	UIKeyboardHIDUsageKeyboardF4,
-	UIKeyboardHIDUsageKeyboardF5,
-	UIKeyboardHIDUsageKeyboardF6,
-	UIKeyboardHIDUsageKeyboardF7,
-	UIKeyboardHIDUsageKeyboardF8,
-	UIKeyboardHIDUsageKeyboardF9,
-	UIKeyboardHIDUsageKeyboardF10,
-	UIKeyboardHIDUsageKeypadNumLock,
-	UIKeyboardHIDUsageKeyboardScrollLock,
-	UIKeyboardHIDUsageKeypad7,
-	UIKeyboardHIDUsageKeypad8,
-	UIKeyboardHIDUsageKeypad9,
-	UIKeyboardHIDUsageKeypadHyphen,
-	UIKeyboardHIDUsageKeypad4,
-	UIKeyboardHIDUsageKeypad5,
-	UIKeyboardHIDUsageKeypad6,
-	UIKeyboardHIDUsageKeypadPlus,
-	UIKeyboardHIDUsageKeypad1,
-	UIKeyboardHIDUsageKeypad2,
-	UIKeyboardHIDUsageKeypad3,
-	UIKeyboardHIDUsageKeypad0,
-	UIKeyboardHIDUsageKeypadPeriod,
-	UIKeyboardHIDUsageKeyboardNonUSBackslash, // OEM_102
-	UIKeyboardHIDUsageKeyboardF11,
-	UIKeyboardHIDUsageKeyboardF12,
-	UIKeyboardHIDUsageKeyboardF13,
-	UIKeyboardHIDUsageKeyboardF14,
-	UIKeyboardHIDUsageKeyboardF15,
-	UIKeyboardHIDUsageKeyboardInternational2, // KANA
-	UIKeyboardHIDUsageKeyboardInternational1, // ABNT_C1
-	UIKeyboardHIDUsageKeyboardInternational4, // CONVERT
-	UIKeyboardHIDUsageKeyboardInternational5, // NOCONVERT
-	UIKeyboardHIDUsageKeyboardInternational3, // YEN
-	0, // ABNT_C2
-	UIKeyboardHIDUsageKeypadEqualSign,
-	0, // PREVTRACK
-	0, // AT
-	0, // COLON
-	0, // UNDERLINE
-	0, // KANJI
-	UIKeyboardHIDUsageKeyboardStop,
-	0, // AX
-	0, // UNLABELED
-	0, // NEXTTRACK
-	UIKeyboardHIDUsageKeypadEnter,
-	UIKeyboardHIDUsageKeyboardRightControl,
-	UIKeyboardHIDUsageKeyboardMute,
-	0, // CALCULATOR
-	0, // PLAYPAUSE
-	0, // MEDIASTOP
-	UIKeyboardHIDUsageKeyboardVolumeDown,
-	UIKeyboardHIDUsageKeyboardVolumeUp,
-	0, // WEBHOME
-	UIKeyboardHIDUsageKeypadComma,
-	UIKeyboardHIDUsageKeypadSlash,
-	UIKeyboardHIDUsageKeyboardPrintScreen, // SYSRQ
-	UIKeyboardHIDUsageKeyboardRightAlt,
-	UIKeyboardHIDUsageKeyboardPause,
-	UIKeyboardHIDUsageKeyboardHome,
-	UIKeyboardHIDUsageKeyboardUpArrow,
-	UIKeyboardHIDUsageKeyboardPageUp,
-	UIKeyboardHIDUsageKeyboardLeftArrow,
-	UIKeyboardHIDUsageKeyboardRightArrow,
-	UIKeyboardHIDUsageKeyboardEnd,
-	UIKeyboardHIDUsageKeyboardDownArrow,
-	UIKeyboardHIDUsageKeyboardPageDown,
-	UIKeyboardHIDUsageKeyboardInsert,
-	UIKeyboardHIDUsageKeyboardDeleteForward,
-	UIKeyboardHIDUsageKeyboardLeftGUI,
-	UIKeyboardHIDUsageKeyboardRightGUI,
-	UIKeyboardHIDUsageKeyboardApplication,
-	UIKeyboardHIDUsageKeyboardPower,
-	0, // SLEEP
-	0, // WAKE
-	0, // WEBSEARCH
-	0, // WEBFAVORITES
-	0, // WEBREFRESH
-	0, // WEBSTOP
-	0, // WEBFORWARD
-	0, // WEBBACK
-	0, // MYCOMPUTER
-	0, // MAIL
-	0  // MEDIASELECT
-};
-
-IOSKeyboard::IOSKeyboard(void)
-{
-}
-
-IOSKeyboard::~IOSKeyboard(void)
-{
-	GCKeyboard* keyboard = GCKeyboard.coalescedKeyboard;
-	if (keyboard && (__bridge const void*)keyboard == _attachedKeyboard) {
-		keyboard.keyboardInput.keyChangedHandler = nil;
-	}
-}
-
-void IOSKeyboard::onKeyChanged(int key, bool pressed)
-{
-	if (key < 0 || key >= kKeyCount) {
-		return;
-	}
-	_held[(size_t)key] = pressed;
-	// Latched so a press and release between two updates still reads as down
-	if (pressed) {
-		_keys.latchPress(key);
-	}
-}
-
-void IOSKeyboard::update(void)
-{
-	// Keyboards come and go; follow whichever one is current.
-	GCKeyboard* keyboard = GCKeyboard.coalescedKeyboard;
-	if ((__bridge const void*)keyboard != _attachedKeyboard) {
-		_held.fill(false);
-		_attachedKeyboard = (__bridge const void*)keyboard;
-		IOSKeyboard* owner = this;
-		keyboard.keyboardInput.keyChangedHandler = ^(GCKeyboardInput*, GCControllerButtonInput*, GCKeyCode keyCode, BOOL pressed) {
-			owner->onKeyChanged((int)keyCode, pressed);
-		};
-	}
-
-	_keys.beginFrame();
-	for (int key = 0; key < kKeyCount; ++key) {
-		_keys.set(key, _held[(size_t)key]);
-	}
-}
+#include <vector>
 
 namespace {
-bool axisIsDown(float value, float threshold)
-{
-	return threshold < 0.0f ? value <= threshold : value >= threshold;
-}
+const KeyMapping kHIDKeys[] = {
+	{ Key::Escape, UIKeyboardHIDUsageKeyboardEscape },
+	{ Key::Num0, UIKeyboardHIDUsageKeyboard0 },
+	{ Key::Num1, UIKeyboardHIDUsageKeyboard1 },
+	{ Key::Num2, UIKeyboardHIDUsageKeyboard2 },
+	{ Key::Num3, UIKeyboardHIDUsageKeyboard3 },
+	{ Key::Num4, UIKeyboardHIDUsageKeyboard4 },
+	{ Key::Num5, UIKeyboardHIDUsageKeyboard5 },
+	{ Key::Num6, UIKeyboardHIDUsageKeyboard6 },
+	{ Key::Num7, UIKeyboardHIDUsageKeyboard7 },
+	{ Key::Num8, UIKeyboardHIDUsageKeyboard8 },
+	{ Key::Num9, UIKeyboardHIDUsageKeyboard9 },
+	{ Key::A, UIKeyboardHIDUsageKeyboardA },
+	{ Key::B, UIKeyboardHIDUsageKeyboardB },
+	{ Key::C, UIKeyboardHIDUsageKeyboardC },
+	{ Key::D, UIKeyboardHIDUsageKeyboardD },
+	{ Key::E, UIKeyboardHIDUsageKeyboardE },
+	{ Key::F, UIKeyboardHIDUsageKeyboardF },
+	{ Key::G, UIKeyboardHIDUsageKeyboardG },
+	{ Key::H, UIKeyboardHIDUsageKeyboardH },
+	{ Key::I, UIKeyboardHIDUsageKeyboardI },
+	{ Key::J, UIKeyboardHIDUsageKeyboardJ },
+	{ Key::K, UIKeyboardHIDUsageKeyboardK },
+	{ Key::L, UIKeyboardHIDUsageKeyboardL },
+	{ Key::M, UIKeyboardHIDUsageKeyboardM },
+	{ Key::N, UIKeyboardHIDUsageKeyboardN },
+	{ Key::O, UIKeyboardHIDUsageKeyboardO },
+	{ Key::P, UIKeyboardHIDUsageKeyboardP },
+	{ Key::Q, UIKeyboardHIDUsageKeyboardQ },
+	{ Key::R, UIKeyboardHIDUsageKeyboardR },
+	{ Key::S, UIKeyboardHIDUsageKeyboardS },
+	{ Key::T, UIKeyboardHIDUsageKeyboardT },
+	{ Key::U, UIKeyboardHIDUsageKeyboardU },
+	{ Key::V, UIKeyboardHIDUsageKeyboardV },
+	{ Key::W, UIKeyboardHIDUsageKeyboardW },
+	{ Key::X, UIKeyboardHIDUsageKeyboardX },
+	{ Key::Y, UIKeyboardHIDUsageKeyboardY },
+	{ Key::Z, UIKeyboardHIDUsageKeyboardZ },
+	{ Key::F1, UIKeyboardHIDUsageKeyboardF1 },
+	{ Key::F2, UIKeyboardHIDUsageKeyboardF2 },
+	{ Key::F3, UIKeyboardHIDUsageKeyboardF3 },
+	{ Key::F4, UIKeyboardHIDUsageKeyboardF4 },
+	{ Key::F5, UIKeyboardHIDUsageKeyboardF5 },
+	{ Key::F6, UIKeyboardHIDUsageKeyboardF6 },
+	{ Key::F7, UIKeyboardHIDUsageKeyboardF7 },
+	{ Key::F8, UIKeyboardHIDUsageKeyboardF8 },
+	{ Key::F9, UIKeyboardHIDUsageKeyboardF9 },
+	{ Key::F10, UIKeyboardHIDUsageKeyboardF10 },
+	{ Key::F11, UIKeyboardHIDUsageKeyboardF11 },
+	{ Key::F12, UIKeyboardHIDUsageKeyboardF12 },
+	{ Key::F13, UIKeyboardHIDUsageKeyboardF13 },
+	{ Key::F14, UIKeyboardHIDUsageKeyboardF14 },
+	{ Key::F15, UIKeyboardHIDUsageKeyboardF15 },
+	{ Key::Space, UIKeyboardHIDUsageKeyboardSpacebar },
+	{ Key::Enter, UIKeyboardHIDUsageKeyboardReturnOrEnter },
+	{ Key::Tab, UIKeyboardHIDUsageKeyboardTab },
+	{ Key::Backspace, UIKeyboardHIDUsageKeyboardDeleteOrBackspace },
+	{ Key::Insert, UIKeyboardHIDUsageKeyboardInsert },
+	{ Key::Delete, UIKeyboardHIDUsageKeyboardDeleteForward },
+	{ Key::Home, UIKeyboardHIDUsageKeyboardHome },
+	{ Key::End, UIKeyboardHIDUsageKeyboardEnd },
+	{ Key::PageUp, UIKeyboardHIDUsageKeyboardPageUp },
+	{ Key::PageDown, UIKeyboardHIDUsageKeyboardPageDown },
+	{ Key::Up, UIKeyboardHIDUsageKeyboardUpArrow },
+	{ Key::Down, UIKeyboardHIDUsageKeyboardDownArrow },
+	{ Key::Left, UIKeyboardHIDUsageKeyboardLeftArrow },
+	{ Key::Right, UIKeyboardHIDUsageKeyboardRightArrow },
+	{ Key::Minus, UIKeyboardHIDUsageKeyboardHyphen },
+	{ Key::Equals, UIKeyboardHIDUsageKeyboardEqualSign },
+	{ Key::LeftBracket, UIKeyboardHIDUsageKeyboardOpenBracket },
+	{ Key::RightBracket, UIKeyboardHIDUsageKeyboardCloseBracket },
+	{ Key::Backslash, UIKeyboardHIDUsageKeyboardBackslash },
+	{ Key::Semicolon, UIKeyboardHIDUsageKeyboardSemicolon },
+	{ Key::Apostrophe, UIKeyboardHIDUsageKeyboardQuote },
+	{ Key::Grave, UIKeyboardHIDUsageKeyboardGraveAccentAndTilde },
+	{ Key::Comma, UIKeyboardHIDUsageKeyboardComma },
+	{ Key::Period, UIKeyboardHIDUsageKeyboardPeriod },
+	{ Key::Slash, UIKeyboardHIDUsageKeyboardSlash },
+	{ Key::LeftShift, UIKeyboardHIDUsageKeyboardLeftShift },
+	{ Key::RightShift, UIKeyboardHIDUsageKeyboardRightShift },
+	{ Key::LeftControl, UIKeyboardHIDUsageKeyboardLeftControl },
+	{ Key::RightControl, UIKeyboardHIDUsageKeyboardRightControl },
+	{ Key::LeftAlt, UIKeyboardHIDUsageKeyboardLeftAlt },
+	{ Key::RightAlt, UIKeyboardHIDUsageKeyboardRightAlt },
+	{ Key::LeftSuper, UIKeyboardHIDUsageKeyboardLeftGUI },
+	{ Key::RightSuper, UIKeyboardHIDUsageKeyboardRightGUI },
+	{ Key::Menu, UIKeyboardHIDUsageKeyboardApplication },
+	{ Key::CapsLock, UIKeyboardHIDUsageKeyboardCapsLock },
+	{ Key::NumLock, UIKeyboardHIDUsageKeypadNumLock },
+	{ Key::ScrollLock, UIKeyboardHIDUsageKeyboardScrollLock },
+	{ Key::PrintScreen, UIKeyboardHIDUsageKeyboardPrintScreen },
+	{ Key::Pause, UIKeyboardHIDUsageKeyboardPause },
+	{ Key::Keypad0, UIKeyboardHIDUsageKeypad0 },
+	{ Key::Keypad1, UIKeyboardHIDUsageKeypad1 },
+	{ Key::Keypad2, UIKeyboardHIDUsageKeypad2 },
+	{ Key::Keypad3, UIKeyboardHIDUsageKeypad3 },
+	{ Key::Keypad4, UIKeyboardHIDUsageKeypad4 },
+	{ Key::Keypad5, UIKeyboardHIDUsageKeypad5 },
+	{ Key::Keypad6, UIKeyboardHIDUsageKeypad6 },
+	{ Key::Keypad7, UIKeyboardHIDUsageKeypad7 },
+	{ Key::Keypad8, UIKeyboardHIDUsageKeypad8 },
+	{ Key::Keypad9, UIKeyboardHIDUsageKeypad9 },
+	{ Key::KeypadDecimal, UIKeyboardHIDUsageKeypadPeriod },
+	{ Key::KeypadDivide, UIKeyboardHIDUsageKeypadSlash },
+	{ Key::KeypadMultiply, UIKeyboardHIDUsageKeypadAsterisk },
+	{ Key::KeypadSubtract, UIKeyboardHIDUsageKeypadHyphen },
+	{ Key::KeypadAdd, UIKeyboardHIDUsageKeypadPlus },
+	{ Key::KeypadEnter, UIKeyboardHIDUsageKeypadEnter },
+	{ Key::KeypadEquals, UIKeyboardHIDUsageKeypadEqualSign },
+};
 
 void readButtons(GCExtendedGamepad* gamepad, bool* down)
 {
@@ -229,78 +146,48 @@ void readButtons(GCExtendedGamepad* gamepad, bool* down)
 }
 }
 
-IOSGamepad::IOSGamepad(TouchGamepadState* touch)
-	: _touch(touch)
+IOSKeyboard::~IOSKeyboard(void)
 {
-}
-
-const IOSGamepad::Pad* IOSGamepad::_pad(int padIndex) const
-{
-	if (padIndex < 0 || padIndex >= _connected) {
-		return nullptr;
+	GCKeyboard* keyboard = GCKeyboard.coalescedKeyboard;
+	if (keyboard && (__bridge const void*)keyboard == _attachedKeyboard) {
+		keyboard.keyboardInput.keyChangedHandler = nil;
 	}
-	return &_pads[(size_t)padIndex];
 }
 
-std::string IOSGamepad::getName(int padIndex) const
+void IOSKeyboard::onKeyChanged(int hidUsage, bool pressed)
 {
-	const Pad* pad = _pad(padIndex);
-	return pad ? pad->name : std::string();
+	const Key key = findKey(kHIDKeys, hidUsage);
+	if (key == Key::Unknown) {
+		return;
+	}
+	_held[(size_t)key] = pressed;
+	// Latched so a press and release between two updates still reads as down
+	if (pressed) {
+		_keys.latchPress((int)key);
+	}
 }
 
-bool IOSGamepad::buttonDown(Button button, int padIndex) const
+void IOSKeyboard::update(void)
 {
-	const Pad* pad = _pad(padIndex);
-	return pad && pad->buttons.down((int)button);
-}
+	// Keyboards come and go; follow whichever one is current.
+	GCKeyboard* keyboard = GCKeyboard.coalescedKeyboard;
+	if ((__bridge const void*)keyboard != _attachedKeyboard) {
+		_held.fill(false);
+		_attachedKeyboard = (__bridge const void*)keyboard;
+		IOSKeyboard* owner = this;
+		keyboard.keyboardInput.keyChangedHandler = ^(GCKeyboardInput*, GCControllerButtonInput*, GCKeyCode keyCode, BOOL pressed) {
+			owner->onKeyChanged((int)keyCode, pressed);
+		};
+	}
 
-bool IOSGamepad::buttonPressed(Button button, int padIndex) const
-{
-	const Pad* pad = _pad(padIndex);
-	return pad && pad->buttons.pressed((int)button);
-}
-
-bool IOSGamepad::buttonReleased(Button button, int padIndex) const
-{
-	const Pad* pad = _pad(padIndex);
-	return pad && pad->buttons.released((int)button);
-}
-
-float IOSGamepad::getAxis(Axis axis, int padIndex) const
-{
-	const Pad* pad = _pad(padIndex);
-	return pad ? pad->axes[(size_t)axis] : 0.0f;
-}
-
-bool IOSGamepad::axisDown(Axis axis, float threshold, int padIndex) const
-{
-	const Pad* pad = _pad(padIndex);
-	return pad && axisIsDown(pad->axes[(size_t)axis], threshold);
-}
-
-bool IOSGamepad::axisPressed(Axis axis, float threshold, int padIndex) const
-{
-	const Pad* pad = _pad(padIndex);
-	return pad && ButtonEdge::pressed(axisIsDown(pad->axes[(size_t)axis], threshold),
-		axisIsDown(pad->previousAxes[(size_t)axis], threshold));
-}
-
-bool IOSGamepad::axisReleased(Axis axis, float threshold, int padIndex) const
-{
-	const Pad* pad = _pad(padIndex);
-	return pad && ButtonEdge::released(axisIsDown(pad->axes[(size_t)axis], threshold),
-		axisIsDown(pad->previousAxes[(size_t)axis], threshold));
+	_keys.beginFrame();
+	for (size_t key = 0; key < _held.size(); ++key) {
+		_keys.set((int)key, _held[key]);
+	}
 }
 
 void IOSGamepad::update(void)
 {
-	struct Reading
-	{
-		std::string name;
-		std::array<bool, TouchGamepadState::kButtonCount> down{};
-		std::array<bool, TouchGamepadState::kButtonCount> tapped{};
-		std::array<float, kAxisCount> axes{};
-	};
 	std::vector<Reading> readings;
 
 	for (GCController* controller in GCController.controllers) {
@@ -311,6 +198,7 @@ void IOSGamepad::update(void)
 
 		Reading& reading = readings.emplace_back();
 		reading.name = controller.vendorName ? controller.vendorName.UTF8String : "Game controller";
+		reading.guid = reading.name;
 		readButtons(gamepad, reading.down.data());
 		// GameController's y axes point up; the engine's (GLFW's) point down.
 		reading.axes[(size_t)Axis::LeftX] = gamepad.leftThumbstick.xAxis.value;
@@ -324,7 +212,8 @@ void IOSGamepad::update(void)
 	// The touch controls play as the first pad, alongside any controller there.
 	if (_touch && _touch->active) {
 		if (readings.empty()) {
-			readings.emplace_back().name = "Touch controls";
+			Reading& touch = readings.emplace_back();
+			touch.name = touch.guid = "Touch controls";
 		}
 		Reading& first = readings.front();
 		for (size_t button = 0; button < first.down.size(); ++button) {
@@ -342,61 +231,12 @@ void IOSGamepad::update(void)
 		}
 	}
 
-	// Slots past the connected pads read as released, so a pad that comes back starts clean.
-	if (_pads.size() < readings.size()) {
-		_pads.resize(readings.size());
-	}
-	for (size_t i = 0; i < _pads.size(); ++i) {
-		Pad& pad = _pads[i];
-		const Reading* reading = (i < readings.size()) ? &readings[i] : nullptr;
-		pad.connected = reading != nullptr;
-		pad.name = reading ? reading->name : std::string();
-		pad.buttons.beginFrame();
-		for (int button = 0; button < TouchGamepadState::kButtonCount; ++button) {
-			if (reading && reading->tapped[(size_t)button]) {
-				pad.buttons.latchPress(button);
-			}
-			pad.buttons.set(button, reading && reading->down[(size_t)button]);
-		}
-		pad.previousAxes = pad.axes;
-		if (reading) {
-			pad.axes = reading->axes;
-		}
-		else {
-			pad.axes.fill(0.0f);
-		}
-	}
-	_connected = (int)readings.size();
+	_setReadings(readings);
 }
 
 IOSInput::IOSInput(TouchGamepadState* touch)
 {
-	_keyboard = new IOSKeyboard();
-	_mouse = NULL; // touches go to the on-screen controls, not a pointer
-	_gamepad = new IOSGamepad(touch);
-}
-
-IOSInput::~IOSInput(void)
-{
-	SAFE_DELETE(_keyboard);
-	SAFE_DELETE(_gamepad);
-}
-
-void IOSInput::initialize(void)
-{
-	update();
-}
-
-void IOSInput::update(void)
-{
-	if (_keyboard) {
-		_keyboard->update();
-	}
-	if (_gamepad) {
-		_gamepad->update();
-	}
-}
-
-void IOSInput::shutdown(void)
-{
+	// No mouse: touches go to the on-screen controls, not a pointer.
+	_keyboard = std::make_unique<IOSKeyboard>();
+	_gamepad = std::make_unique<IOSGamepad>(touch);
 }

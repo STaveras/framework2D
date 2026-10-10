@@ -66,6 +66,23 @@ const Physical::KinematicState2D& Character::_kinematic2DState() const
 	return this->getKinematicState2D();
 }
 
+bool Character::isFacingLeft(void) const
+{
+	const Renderable* renderable = this->getRenderable();
+	return renderable && renderable->getScale().x < 0.0f;
+}
+
+void Character::setFacingLeft(bool facingLeft)
+{
+	Renderable* renderable = this->getRenderable();
+	if (!renderable) {
+		return;
+	}
+	const vector2 scale = renderable->getScale();
+	const float absScaleX = std::fabs(scale.x);
+	renderable->setScale(facingLeft ? -absScaleX : absScaleX, scale.y);
+}
+
 void Character::resetForRespawn(void)
 {
 	_tile = NULL;

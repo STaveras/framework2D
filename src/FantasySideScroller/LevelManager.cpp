@@ -8,9 +8,11 @@
 #include "../Renderer.h"
 #include "../StrUtils.h"
 
+#include "CharacterTuning.h"
 #include "Resources.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <string>
 #include <utility>
@@ -51,6 +53,7 @@ void LevelManager::clearCachedMapMetadata(void)
 {
 	_hasSpawnPoint = false;
 	_spawnPoint = vector2(0.0f, 0.0f);
+	_spawnPoints.clear();
 	_hasLevelBounds = false;
 	_levelBoundsMin = vector2(0.0f, 0.0f);
 	_levelBoundsMax = vector2(0.0f, 0.0f);
@@ -133,6 +136,46 @@ void LevelManager::refreshLevelBounds(const TileMapLoadResult& loadResult, const
 	}
 }
 
+vector2 LevelManager::getViewportHalfSize(float zoom) const
+{
+	if (zoom <= 0.0f)
+	{
+		zoom = 1.0f;
+	}
+
+	int screenWidth = 0;
+	int screenHeight = 0;
+	if (_camera)
+	{
+		screenWidth = _camera->getScreenWidth();
+		screenHeight = _camera->getScreenHeight();
+	}
+	if (screenWidth <= 0 || screenHeight <= 0)
+	{
+		IRenderer* renderer = Engine2D::getRenderer();
+		if (renderer)
+		{
+			screenWidth = renderer->getWidth();
+			screenHeight = renderer->getHeight();
+		}
+	}
+	if (screenWidth <= 0 || screenHeight <= 0)
+	{
+		return vector2(0.0f, 0.0f);
+	}
+
+	// The view is centered on the parallax camera, so half the screen (over zoom) is
+	// the reach in each direction. When the camera is rotated, the on-screen
+	// rectangle's axis-aligned reach grows, exactly as the renderer's own view
+	// bounds do, so cover the rotated corners too.
+	const float angle = _camera ? _camera->getRotation() : 0.0f;
+	const float c = std::abs(std::cos(angle));
+	const float s = std::abs(std::sin(angle));
+	return vector2(
+		(((float)screenWidth * 0.5f) * c + ((float)screenHeight * 0.5f) * s) / zoom,
+		(((float)screenWidth * 0.5f) * s + ((float)screenHeight * 0.5f) * c) / zoom);
+}
+
 void LevelManager::clampCameraToLevelBounds(void)
 {
 	if (!_camera || !_hasLevelBounds) {
@@ -164,6 +207,205 @@ void LevelManager::clampCameraToLevelBounds(void)
 	}
 
 	_camera->setPosition(cameraPosition);
+}
+
+void LevelManager::releaseImageLayerSprites(void)
+{
+	for (Image* sprite : _imageLayerSprites) {
+		delete sprite;
+	}
+	_imageLayerSprites.clear();
+	for (ImageLayerInfo& info : _imageLayerInfos) {
+		info.sprites.clear();
+	}
+}
+
+void LevelManager::destroyImageLayers(void)
+{
+	releaseImageLayerSprites();
+	_imageLayerInfos.clear();
+	_imageLayersBuilt = false;
+	_imageLayerBuiltZoom = 0.0f;
+}
+
+// Lay out the whole-image layer sprites for the current zoom. Repeat axes tile
+// enough static copies to cover the layer's parallax camera range plus half the
+// view on each side; the existing chunk culling then drops whatever is off-screen.
+void LevelManager::rebuildImageLayerCopies(void)
+{
+	const float zoom = _camera ? _camera->getZoom() : 1.0f;
+	const vector2 halfSize = getViewportHalfSize(zoom);
+
+	// Drop only this layer's own copies from the render lists before the sprites go
+	// away, so the renderer never walks a dangling entry. The render list can be shared
+	// with runtime objects (hero, boars, tiles) when it is the default list, so we must
+	// not clear it wholesale -- only remove the sprites we added.
+	for (ImageLayerInfo& info : _imageLayerInfos) {
+		if (info.renderList) {
+			for (Image* sprite : info.sprites) {
+				if (sprite) {
+					info.renderList->remove(sprite);
+				}
+			}
+		}
+	}
+	releaseImageLayerSprites();
+
+	if (_imageLayerInfos.empty()) {
+		_imageLayersBuilt = true;
+		_imageLayerBuiltZoom = zoom;
+		return;
+	}
+
+	for (ImageLayerInfo& info : _imageLayerInfos) {
+		const TileImageLayerDescriptor& descriptor = info.descriptor;
+
+		if (!FileSystem::FileExists(descriptor.imagePath)) {
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(buffer, sizeof(buffer), "Image layer '%s' image not found: '%s'\n", descriptor.name.c_str(), descriptor.imagePath.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			continue;
+		}
+
+		Color clearColor;
+		clearColor._color = descriptor.transparentColor;
+		IRenderer* renderer = Engine2D::getRenderer();
+		ITexture* texture = renderer ? renderer->createTexture(descriptor.imagePath.c_str(), clearColor) : NULL;
+		if (!texture) {
+			continue;
+		}
+
+		// Renderer textures are cached and renderer-owned. Keep layer sprites borrowed
+		// so destroying a copy cannot invalidate another sprite using the same file.
+		const RECT sourceRect = { 0, 0, (int)texture->getWidth(), (int)texture->getHeight() };
+		Image* anchor = new Image(texture, sourceRect);
+		if (!anchor || !anchor->getTexture()) {
+			SAFE_DELETE(anchor);
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(buffer, sizeof(buffer), "Image layer '%s' failed to load '%s'\n", descriptor.name.c_str(), descriptor.imagePath.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			continue;
+		}
+
+		info.imageWidth = anchor->getWidth();
+		info.imageHeight = anchor->getHeight();
+
+		Color layerTint;
+		layerTint._color = descriptor.tintColor;
+		layerTint.a = (byte)(layerTint.a * std::max(0.0f, std::min(1.0f, descriptor.opacity)) + 0.5f);
+
+		// The parallax camera sweeps this range as the map camera moves across the
+		// level; widen it by half the view so the edge copies stay on screen.
+		const vector2 camMin = vector2(
+			info.parallaxOrigin.x + (_levelBoundsMin.x - info.parallaxOrigin.x) * descriptor.parallaxX,
+			info.parallaxOrigin.y + (_levelBoundsMin.y - info.parallaxOrigin.y) * descriptor.parallaxY);
+		const vector2 camMax = vector2(
+			info.parallaxOrigin.x + (_levelBoundsMax.x - info.parallaxOrigin.x) * descriptor.parallaxX,
+			info.parallaxOrigin.y + (_levelBoundsMax.y - info.parallaxOrigin.y) * descriptor.parallaxY);
+		const float rangeMinX = camMin.x - halfSize.x;
+		const float rangeMaxX = camMax.x + halfSize.x;
+		const float rangeMinY = camMin.y - halfSize.y;
+		const float rangeMaxY = camMax.y + halfSize.y;
+
+		auto tilePositions = [](bool repeat, float base, float size, float lo, float hi) -> std::vector<float> {
+			std::vector<float> positions;
+			if (!repeat || size <= 0.0f) {
+				positions.push_back(base);
+				return positions;
+			}
+			// Copies sit at base + k*size; keep the ones that touch [lo, hi].
+			const long long kMin = (long long)std::ceil((lo - size - base) / size);
+			const long long kMax = (long long)std::floor((hi - base) / size);
+			for (long long k = kMin; k <= kMax; ++k) {
+				positions.push_back(base + (float)k * size);
+			}
+			return positions;
+		};
+
+		std::vector<float> xPositions = tilePositions(descriptor.repeatX, info.basePosition.x, info.imageWidth, rangeMinX, rangeMaxX);
+		std::vector<float> yPositions = tilePositions(descriptor.repeatY, info.basePosition.y, info.imageHeight, rangeMinY, rangeMaxY);
+		// The base copy must always exist so the layer renders even if the range came
+		// out empty (e.g. a view not yet sized).
+		if (xPositions.empty()) xPositions.push_back(info.basePosition.x);
+		if (yPositions.empty()) yPositions.push_back(info.basePosition.y);
+
+		IRenderer::RenderList* layerRenderList = info.renderList;
+		bool isFirst = true;
+		for (float x : xPositions) {
+			for (float y : yPositions) {
+				if (isFirst) {
+					// The anchor owns the texture; the copies below share it.
+					anchor->setPosition(x, y);
+					anchor->setTint(layerTint);
+					_imageLayerSprites.push_back(anchor);
+					info.sprites.push_back(anchor);
+					if (layerRenderList) {
+						layerRenderList->push_back(anchor);
+					}
+					isFirst = false;
+				} else {
+					Image* sprite = new Image(*anchor);
+					sprite->setPosition(x, y);
+					sprite->setTint(layerTint);
+					_imageLayerSprites.push_back(sprite);
+					info.sprites.push_back(sprite);
+					if (layerRenderList) {
+						layerRenderList->push_back(sprite);
+					}
+				}
+			}
+		}
+	}
+
+	_imageLayersBuilt = true;
+	_imageLayerBuiltZoom = zoom;
+}
+
+void LevelManager::buildImageLayers(const TileMapLoadResult& loadResult, const vector2& mapOffset)
+{
+	destroyImageLayers();
+
+	for (const TileImageLayerDescriptor& descriptor : loadResult.imageLayers) {
+		// Hidden layers and layers without an image cost nothing.
+		if (!descriptor.visible || descriptor.imagePath.empty()) {
+#if _DEBUG
+			char buffer[512];
+			sprintf_s(buffer, sizeof(buffer), "Skipping image layer '%s' (visible=%s image='%s')\n", descriptor.name.c_str(), descriptor.visible ? "true" : "false", descriptor.imagePath.c_str());
+			DEBUG_MSG(buffer);
+#endif
+			continue;
+		}
+
+		ImageLayerInfo info;
+		info.descriptor = descriptor;
+		info.basePosition = mapOffset + vector2(descriptor.offsetX, descriptor.offsetY);
+		info.parallaxOrigin = vector2(
+			mapOffset.x + loadResult.parallaxOriginX,
+			mapOffset.y + loadResult.parallaxOriginY);
+
+		if (isValidLayerIndex(descriptor.traversalIndex, (int)_mapLayerRenderLists.size())) {
+			info.renderList = _mapLayerRenderLists[(size_t)descriptor.traversalIndex];
+		}
+		else {
+			info.renderList = NULL;
+		}
+
+		// Combine the layer's parallax with its render list.
+		if (info.renderList) {
+			info.renderList->parallaxX = descriptor.parallaxX;
+			info.renderList->parallaxY = descriptor.parallaxY;
+			info.renderList->parallaxOriginX = info.parallaxOrigin.x;
+			info.renderList->parallaxOriginY = info.parallaxOrigin.y;
+		}
+
+		_imageLayerInfos.push_back(info);
+	}
+
+	rebuildImageLayerCopies();
 }
 
 TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFileName, ObjectManager& objectManager, GameState& gameState, const vector2& mapOffset)
@@ -248,6 +490,8 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 
 	refreshLevelBounds(loadResult, mapOffset);
 
+	buildImageLayers(loadResult, mapOffset);
+
 	for (const MapLayerDescriptor& layer : loadResult.layers) {
 		if (layer.type != "objectgroup" || !isValidLayerIndex(layer.typedIndex, loadResult.objectLayers.size())) {
 			continue;
@@ -256,13 +500,16 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 		const TileObjectLayerDescriptor& objectLayer = loadResult.objectLayers[(size_t)layer.typedIndex];
 		for (const TileObjectDescriptor& object : objectLayer.objects) {
 			const vector2 worldPosition = mapOffset + vector2(object.x, object.y);
-			if (!_hasSpawnPoint && isSpawnType(object.typeName)) {
-				_hasSpawnPoint = true;
-				_spawnPoint = worldPosition;
-				continue;
-			}
-
 			if (isSpawnType(object.typeName)) {
+				// A spawn marker shows where the character's feet stand. Its origin sits
+				// above them, so placing the origin on the marker would sink the body into
+				// the ground and let collision shove it aside.
+				const vector2 spawnPosition = worldPosition - vector2(0.0f, kLocomotionFootLocalY);
+				_spawnPoints.push_back(spawnPosition);
+				if (!_hasSpawnPoint) {
+					_hasSpawnPoint = true;
+					_spawnPoint = spawnPosition;
+				}
 				continue;
 			}
 
@@ -329,6 +576,7 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 
 					const float tileSize = tile->getTileSet() ? tile->getTileSet()->getTileSize() : (float)loadResult.tileWidth;
 					_spawnPoint = tile->getPosition() + vector2(tileSize * 0.5f, tileSize * 0.5f);
+					_spawnPoints.push_back(_spawnPoint);
 					_hasSpawnPoint = true;
 					foundSpawn = true;
 				}
@@ -341,6 +589,30 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 	}
 
 	return loadResult;
+}
+
+vector2 LevelManager::getSpawnPointNearDestination(const std::string& destinationName, float y) const
+{
+	const auto destination = std::find_if(_triggerDescriptors.begin(), _triggerDescriptors.end(),
+		[&destinationName](const LevelTriggerDescriptor& descriptor) {
+			return StrUtils::IEquals(descriptor.typeName, "destination") &&
+				StrUtils::IEquals(descriptor.name, destinationName);
+		});
+
+	if (destination == _triggerDescriptors.end() || _spawnPoints.empty()) {
+		return _spawnPoint;
+	}
+
+	// Enter beside the destination at the outgoing character's height. Comparing
+	// only Y can select a spawn at the opposite end of the map.
+	const vector2 entryPosition(destination->position.x + destination->size.x * 0.5f, y);
+	const auto closestSpawn = std::min_element(_spawnPoints.begin(), _spawnPoints.end(),
+		[entryPosition](const vector2& lhs, const vector2& rhs) {
+			const vector2 lhsOffset = lhs - entryPosition;
+			const vector2 rhsOffset = rhs - entryPosition;
+			return dot(lhsOffset, lhsOffset) < dot(rhsOffset, rhsOffset);
+		});
+	return closestSpawn != _spawnPoints.end() ? *closestSpawn : _spawnPoint;
 }
 
 void LevelManager::initialize(const char* mapFileName,
@@ -414,6 +686,11 @@ void LevelManager::update(void)
 	if (_background && _camera) {
 		_background->setPosition(_camera->getPosition());
 	}
+
+	// Repeat copies are laid out for one zoom; rebuild them if the zoom moved.
+	if (_imageLayersBuilt && _camera && _camera->getZoom() != _imageLayerBuiltZoom) {
+		rebuildImageLayerCopies();
+	}
 }
 
 void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
@@ -430,6 +707,9 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 		}
 	}
 	_mapLayerRenderLists.clear();
+
+	// Image layers own their sprites; free them now that the render lists are gone.
+	destroyImageLayers();
 
 	gameState.setDefaultRenderList(gameState.getBaseRenderList());
 	gameState.clearRenderRoutes();

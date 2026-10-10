@@ -11,7 +11,8 @@ class Tile;
 class TileMap;
 
 // Gameplay driven entirely by tile data painted in Tiled, so levels need no extra objects:
-//  - tiles of class "key" are picked up when the character touches them;
+//  - tiles of class "key" bob just above the cell they are painted in and are picked up
+//    when the character touches them;
 //  - tiles of class "pot" crack when struck, swapping to "cracked_tile";
 //  - tiles of class "chest" open when the character interacts while holding a key. Each
 //    chest tile swaps to the tile id in its "open_tile" property; a "heal" property on any
@@ -64,8 +65,9 @@ public:
 private:
 	struct Pickup {
 		Tile* tile = nullptr;
+		// Where the key was painted; it bobs relative to this.
+		vector2 restPosition = vector2(0.0f, 0.0f);
 		bool collected = false;
-		float floatOffset = 0.0f;
 		float lastTime = 0.0f;
 	};
 

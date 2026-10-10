@@ -173,11 +173,6 @@ typedef struct GLFWwindow GLFWwindow;
 #include <GLFW/glfw3native.h>
 #endif
 
-#if !FRAMEWORK_IOS
-// GLFW key codes; iOS keyboards use the IKeyboard::KEYS table instead
-#include "KEYBOARD_KEYS.h"
-#endif
-#include "MOUSE_BUTTONS.h"
 
 #include "FileSystem.h"
 

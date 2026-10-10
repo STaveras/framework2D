@@ -179,8 +179,8 @@ void Menu::_destroyItems(void)
     _selection = -1;
 }
 
-Menu* Widgets::createMenu(IRenderer* renderer, const std::string& fontPath,
-                          const vector2& top, float scale, float itemSpacing)
+std::unique_ptr<Menu> Widgets::createMenu(IRenderer* renderer, const std::string& fontPath,
+                                          const vector2& top, float scale, float itemSpacing)
 {
-    return new Menu(renderer, fontPath, top, scale, itemSpacing);
+    return std::make_unique<Menu>(renderer, fontPath, top, scale, itemSpacing);
 }

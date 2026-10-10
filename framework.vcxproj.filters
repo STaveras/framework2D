@@ -54,6 +54,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\FantasySideScroller\GameOverState.h">
+      <Filter>Assets / Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FantasySideScroller\MenuState.h">
+      <Filter>Assets / Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Key.h">
+      <Filter>Input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mouse.h">
+      <Filter>Input</Filter>
+    </ClInclude>
     <ClInclude Include="src\TreeNode.h">
       <Filter>Misc</Filter>
     </ClInclude>
@@ -83,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="src\Game.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Widgets.h">
+      <Filter>Assets / Resources</Filter>
     </ClInclude>
     <ClInclude Include="src\Window.h">
       <Filter>Core</Filter>
@@ -228,13 +243,7 @@
     <ClInclude Include="src\Input.h">
       <Filter>Input</Filter>
     </ClInclude>
-    <ClInclude Include="src\InputEvent.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="src\InputManager.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Command.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\EventSystem.h">
@@ -300,9 +309,6 @@
     <ClInclude Include="src\GameObject.h">
       <Filter>Objects / Entities</Filter>
     </ClInclude>
-    <ClInclude Include="src\Player.h">
-      <Filter>Objects / Entities</Filter>
-    </ClInclude>
     <ClInclude Include="src\Popup.h">
       <Filter>UI</Filter>
     </ClInclude>
@@ -338,9 +344,6 @@
     </ClInclude>
     <ClInclude Include="src\ISingleton.h">
       <Filter>Math / Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CommandEvent.h">
-      <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\InputMap.h">
       <Filter>Input</Filter>
@@ -384,23 +387,11 @@
     <ClInclude Include="src\COL_OBJ_TYPE.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="src\KEYBOARD_KEYS.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\KEYBOARD_KEYS_DI.h">
-      <Filter>Input</Filter>
-    </ClInclude>
     <ClInclude Include="src\Keyboard.h">
-      <Filter>Input</Filter>
-    </ClInclude>
-    <ClInclude Include="src\IMouse.h">
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\Hardware.h">
       <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MOUSE_BUTTONS.h">
-      <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="src\ImageLoaders.h">
       <Filter>Assets / Resources</Filter>
@@ -498,6 +489,15 @@
     <ClCompile Include="src\Engine2D.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\GameOverState.cpp">
+      <Filter>Assets / Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\MenuState.cpp">
+      <Filter>Assets / Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Gamepad.cpp">
+      <Filter>Input</Filter>
+    </ClCompile>
     <ClCompile Include="src\RenderInterpolation.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -509,6 +509,9 @@
     </ClCompile>
     <ClCompile Include="src\Game.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Widgets.cpp">
+      <Filter>Assets / Resources</Filter>
     </ClCompile>
     <ClCompile Include="src\Window.cpp">
       <Filter>Core</Filter>
@@ -615,13 +618,7 @@
     <ClCompile Include="src\IInput.cpp">
       <Filter>Input</Filter>
     </ClCompile>
-    <ClCompile Include="src\InputEvent.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
     <ClCompile Include="src\InputManager.cpp">
-      <Filter>Input</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Command.cpp">
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="src\EventSystem.cpp">
@@ -640,9 +637,6 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="src\GameObject.cpp">
-      <Filter>Objects / Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Player.cpp">
       <Filter>Objects / Entities</Filter>
     </ClCompile>
     <ClCompile Include="src\GameState.cpp">

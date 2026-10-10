@@ -31,7 +31,7 @@ id<MTLTexture> makeTexture(id<MTLDevice> device, unsigned int width, unsigned in
 }
 }
 
-TextureMTL::TextureMTL(const char* szFilename, id<MTLDevice> device)
+TextureMTL::TextureMTL(const char* szFilename, id<MTLDevice> device, Color colorKey)
 	: ITexture(szFilename)
 {
 	int texWidth = 0;
@@ -40,6 +40,14 @@ TextureMTL::TextureMTL(const char* szFilename, id<MTLDevice> device)
 	stbi_uc* pixels = stbi_load(szFilename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
 	if (!pixels) {
 		throw std::runtime_error(std::string("Failed to load texture image: ") + szFilename);
+	}
+	if (colorKey._color != 0) {
+		for (size_t i = 0, count = static_cast<size_t>(texWidth) * static_cast<size_t>(texHeight); i < count; ++i) {
+			stbi_uc* pixel = pixels + i * 4;
+			if (pixel[0] == colorKey.r && pixel[1] == colorKey.g && pixel[2] == colorKey.b) {
+				pixel[3] = 0;
+			}
+		}
 	}
 
 	_width = static_cast<unsigned int>(texWidth);

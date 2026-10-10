@@ -272,7 +272,11 @@
     <ClInclude Include="src\Background.h" />
     <ClInclude Include="src\Actor.h" />
     <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\FantasySideScroller\GameOverState.h" />
+    <ClInclude Include="src\FantasySideScroller\MenuState.h" />
     <ClInclude Include="src\Intent.h" />
+    <ClInclude Include="src\Key.h" />
+    <ClInclude Include="src\Mouse.h" />
     <ClInclude Include="src\PlayerController.h" />
     <ClInclude Include="src\BlinkFlash.h" />
     <ClInclude Include="src\ButtonState.h" />
@@ -285,8 +289,6 @@
     <ClInclude Include="src\CollisionSystem.h" />
     <ClInclude Include="src\Color.h" />
     <ClInclude Include="src\COL_OBJ_TYPE.h" />
-    <ClInclude Include="src\Command.h" />
-    <ClInclude Include="src\CommandEvent.h" />
     <ClInclude Include="src\InputMap.h" />
     <ClInclude Include="src\CullObjectOperator.h" />
     <ClInclude Include="src\Cursor.h" />
@@ -333,17 +335,13 @@
     <ClInclude Include="src\IAudioSystem.h" />
     <ClInclude Include="src\IInput.h" />
     <ClInclude Include="src\ImageLoaders.h" />
-    <ClInclude Include="src\IMouse.h" />
     <ClInclude Include="src\Input.h" />
-    <ClInclude Include="src\InputEvent.h" />
     <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\IRenderer.h" />
     <ClInclude Include="src\RenderCulling.h" />
     <ClInclude Include="src\ISingleton.h" />
     <ClInclude Include="src\ITexture.h" />
     <ClInclude Include="src\Keyboard.h" />
-    <ClInclude Include="src\KEYBOARD_KEYS.h" />
-    <ClInclude Include="src\KEYBOARD_KEYS_DI.h" />
     <ClInclude Include="src\Logger.h" />
     <ClInclude Include="src\Material.h" />
     <ClInclude Include="src\Maths.h" />
@@ -354,7 +352,6 @@
     <ClInclude Include="src\maths\Vector3.h" />
     <ClInclude Include="src\MaxVelocityOperator.h" />
     <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\MOUSE_BUTTONS.h" />
     <ClInclude Include="src\ObjectManager.h" />
     <ClInclude Include="src\SpatialIndex2D.h" />
     <ClInclude Include="src\RuntimeProfile.h" />
@@ -365,7 +362,6 @@
     <ClInclude Include="src\PlatformInput.h" />
     <ClInclude Include="src\PlatformGamepad.h" />
     <ClInclude Include="src\PlatformKeyboard.h" />
-    <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\Polygon.h" />
     <ClInclude Include="src\PolygonDecomposition.h" />
     <ClInclude Include="src\Popup.h" />
@@ -410,6 +406,7 @@
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />
     <ClInclude Include="src\Vertex.h" />
+    <ClInclude Include="src\Widgets.h" />
     <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\WorldOperator.h" />
     <ClInclude Include="src\XAudio.h" />
@@ -418,6 +415,9 @@
   <ItemGroup>
     <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Actor.cpp" />
+    <ClCompile Include="src\FantasySideScroller\GameOverState.cpp" />
+    <ClCompile Include="src\FantasySideScroller\MenuState.cpp" />
+    <ClCompile Include="src\Gamepad.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\BlinkFlash.cpp" />
     <ClCompile Include="src\Animation.cpp" />
@@ -427,7 +427,6 @@
     <ClCompile Include="src\Circle.cpp" />
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\CollisionSystem.cpp" />
-    <ClCompile Include="src\Command.cpp" />
     <ClCompile Include="src\InputMap.cpp" />
     <ClCompile Include="src\CullObjectOperator.cpp" />
     <ClCompile Include="src\Cursor.cpp" />
@@ -457,7 +456,6 @@
     <ClCompile Include="src\GameState.cpp" />
     <ClCompile Include="src\IInput.cpp" />
     <ClCompile Include="src\ImageLoaders.cpp" />
-    <ClCompile Include="src\InputEvent.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\IRenderer.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -471,7 +469,6 @@
     <ClCompile Include="src\Kinematics2D.cpp" />
     <ClCompile Include="src\PlatformInput.cpp" />
     <ClCompile Include="src\PlatformKeyboard.cpp" />
-    <ClCompile Include="src\Player.cpp" />
     <ClCompile Include="src\Polygon.cpp" />
     <ClCompile Include="src\PolygonDecomposition.cpp" />
     <ClCompile Include="src\ProgramStack.cpp" />
@@ -494,6 +491,7 @@
     <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\Trigger.cpp" />
     <ClCompile Include="src\UpdateBackgroundOperator.cpp" />
+    <ClCompile Include="src\Widgets.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\WorldOperator.cpp" />
     <ClCompile Include="src\XAudio.cpp" />

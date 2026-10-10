@@ -10,6 +10,7 @@
 #include "GameState.h"
 #include "maths/Vector2.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -78,7 +79,7 @@ private:
 class Widgets
 {
 public:
-    static Menu* createMenu(IRenderer* renderer, const std::string& fontPath,
+    static std::unique_ptr<Menu> createMenu(IRenderer* renderer, const std::string& fontPath,
                            const vector2& top, float scale = 1.0f,
                            float itemSpacing = 8.0f);
 };

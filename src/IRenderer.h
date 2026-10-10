@@ -106,6 +106,7 @@ protected:
 	RENDERER_API_TYPE _type;
 
 	ITexture *_textureExists(const char *szFilename);
+	ITexture *_textureExists(const char *szFilename, Color colorKey);
 
 	// Shared front end. Walks every render list whose screenSpace flag matches,
 	// in list order, and hands each visible renderable to the backend hooks

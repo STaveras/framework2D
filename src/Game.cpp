@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "GameState.h"
+#include "IInput.h"
 #include "Timer.h"
+#include "RuntimeProfile.h"
 
 void Game::begin(void)
 {
@@ -11,20 +13,20 @@ void Game::begin(void)
 	if (std::getline(titleFile, titleStr) && Renderer::mainWindow) {
 		Renderer::mainWindow->setWindowTitle(titleStr.c_str());
 	}
+
+	_inputManager.initialize(Engine2D::getInput());
 }
 
 void Game::update(Timer* timer)
 {
    if (!this->empty()) {
-
-      if (timer) {
-
-         for (Player* player : _players) {
-            player->update((float)timer->getDeltaTime());
-         }
-
-         this->top()->onExecute((float)timer->getDeltaTime());
+      {
+         RuntimeProfile::Scope profile(RuntimeProfile::Region::Input);
+         _inputManager.update();
       }
+
+      if (timer)
+         this->top()->onExecute((float)timer->getDeltaTime());
       else
          this->top()->onExecute();
    }
@@ -36,4 +38,5 @@ void Game::update(Timer* timer)
 void Game::end(void)
 {
    this->clear();
+   _inputManager.shutdown();
 }

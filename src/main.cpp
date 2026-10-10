@@ -3,7 +3,6 @@
 #include "Camera.h"
 #include "FileSystem.h"
 #include "Input.h"
-#include "InputEvent.h"
 #include "Game.h"
 #include "GameState.h"
 #include "GameObject.h"
@@ -16,6 +15,7 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <string>
 #include <vector>
 
 // TODO: Put this in a DLL and have loader functions to search for "game" library files
@@ -27,33 +27,37 @@
 
 #if defined(_WIN32) && !defined(_DEBUG)
 
+// One UTF-16 command-line argument as UTF-8, for System::checkArguments*.
+static std::string narrowArgument(const wchar_t* argument)
+{
+   // CP_UTF8 accepts no conversion flags; a size query first, then the conversion.
+   const int size = WideCharToMultiByte(CP_UTF8, 0, argument, -1, nullptr, 0, nullptr, nullptr);
+   if (size <= 1) {
+      return std::string();
+   }
+   std::string narrow((size_t)size, '\0');
+   WideCharToMultiByte(CP_UTF8, 0, argument, -1, &narrow[0], size, nullptr, nullptr);
+   narrow.pop_back(); // the terminator the conversion wrote
+   return narrow;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
+   // The strings live until WinMain returns; argv points into them.
+   std::vector<std::string> arguments;
    int argc = 0;
-   
-   LPCCH defaultChar = NULL;
-   LPBOOL usedDefaultChar = nullptr;
-   LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
-   LPSTR* argvLPSTR = new LPSTR[argc];
-
-   // Convert LPSTR* argv to const char** for System::checkArguments*
-   const char** argv = new const char* [argc];
-
-	for (size_t i = 0; i < argc; i++) {
-        argvLPSTR[i] = new CHAR[wcslen(argvW[i]) + 1]{ 0 };
-#if _DEBUG
-		OutputDebugStringW(L"\n");
-		OutputDebugStringW(argvW[i]);
-#endif
-		WideCharToMultiByte(CP_UTF8,
-			WC_NO_BEST_FIT_CHARS | WC_COMPOSITECHECK,
-			argvW[i], -1, argvLPSTR[i], (int)wcslen(argvW[(int)i]),
-         defaultChar, usedDefaultChar);
-#if _DEBUG
-		OutputDebugStringA(argv[i]);
-#endif
-        argv[i] = argvLPSTR[i];
-	}
+   if (LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc)) {
+      for (int i = 0; i < argc; i++) {
+         arguments.push_back(narrowArgument(argvW[i]));
+      }
+      LocalFree(argvW);
+   }
+   std::vector<const char*> argumentPointers;
+   for (const std::string& argument : arguments) {
+      argumentPointers.push_back(argument.c_str());
+   }
+   argc = (int)argumentPointers.size();
+   const char** argv = argumentPointers.data();
 #else
 
 #if defined(_WIN32) && defined(_DEBUG)
@@ -121,7 +125,7 @@ int main(int argc, const char *argv[])
    Renderer::mainWindow = &window;
 
    RenderingInterface* pRenderer = nullptr;
-   InputInterface* pInput = nullptr;
+   std::unique_ptr<IInput> input;
 
    const bool useVulkan = System::checkArgumentsForVulkan(argc, argv);
    const bool useOpenGL = System::checkArgumentsForOpenGL(argc, argv);
@@ -129,36 +133,36 @@ int main(int argc, const char *argv[])
 
    if (useOpenGL) {
       window.initialize(Window::ClientAPI::OpenGL);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
    else if (useVulkan) {
       window.initialize(Window::ClientAPI::None, true);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererVK*)Renderer::createVKRenderer(&window);
    }
 #if _WIN32
    else {
       window.initialize(hInstance, lpCmdLine);
-      pInput = (DirectInput*)Input::createDirectInputInterface(window.getHWND(), hInstance); 
+      input = Input::createDirectInputInterface(window.getHWND(), hInstance); 
       pRenderer = (RendererDX*)Renderer::createDXRenderer(window.getHWND(), GLOBAL_WIDTH, GLOBAL_HEIGHT, false, false);
    }
 #elif defined(__linux__)
    else {
       window.initialize(Window::ClientAPI::OpenGL);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #elif __APPLE__
    else if (System::checkArgumentsForMetal(argc, argv)) {
       // Metal draws into a CAMetalLayer, so the window gets no OpenGL context
       window.initialize(Window::ClientAPI::None);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererMTL*)Renderer::createMTLRenderer(&window);
    }
    else {
       window.initialize(Window::ClientAPI::OpenGL);
-      pInput = (IInput*)Input::createInputInterface(&window);
+      input = Input::createInputInterface(&window);
       pRenderer = (RenderingInterface*)(RendererGL*)Renderer::createGLRenderer(&window);
    }
 #endif
@@ -200,7 +204,7 @@ int main(int argc, const char *argv[])
    engine->setFixedDeltaSeconds(fixedDtMs / 1000.0);
    engine->setRenderInterpolation(System::checkEnvironmentDouble("AUTO_RENDER_INTERPOLATION", 1.0) > 0.0);
    engine->setRenderInterpolationSnapDistance((float)System::checkEnvironmentDouble("AUTO_RENDER_INTERPOLATION_SNAP", 128.0));
-   engine->setInputInterface(pInput);
+   engine->setInputInterface(input.get());
    engine->setRenderer(pRenderer);
    engine->setGame(&game);
    engine->initialize();
@@ -310,17 +314,10 @@ int main(int argc, const char *argv[])
    }
    engine->shutdown();
    
-   Input::destroyInputInterface(pInput);
+   input.reset();
    Renderer::destroyRenderer(pRenderer);
 
    window.shutdown();
-
-#if defined(_WIN32) && !defined(_DEBUG)
-   for (int i = 0; i < argc; i++) {
-      delete [] argv[i];
-   }
-   delete [] argv;
-#endif
 
    return 0;
 }

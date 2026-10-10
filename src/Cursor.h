@@ -5,9 +5,10 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
-#include "IMouse.h"
+#include "Mouse.h"
 #include "Sprite.h"
 
 enum class CursorState
@@ -35,17 +36,21 @@ public:
 	void setIdle();
 	void setClicking(bool clicking);
 	void setDragging(bool dragging);
-	void updateFromMouse(Mouse* mouse);
+	// Move to the mouse and show its left button as click/drag. The sprite is
+	// drawn in a screen-space render list, so the position is in the
+	// renderer's logical resolution, not client pixels.
+	void follow(const Mouse& mouse);
 	void setPosition(const vector2& pos);
+	vector2 getPosition() const;
 
 	CursorState getState() const { return _state; }
-	Image* getImage() { return _image; }
-	const Image* getImage() const { return _image; }
+	Image* getImage() { return _image.get(); }
+	const Image* getImage() const { return _image.get(); }
 
 private:
 	RECT _makeCursorRect(long index) const;
 	void _applyStateToImage();
 
 	CursorState _state;
-	Image* _image;
+	std::unique_ptr<Image> _image;
 };

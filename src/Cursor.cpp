@@ -6,7 +6,11 @@
 #include "Cursor.h"
 #include "Debug.h"
 
+#include "Engine2D.h"
+#include "IRenderer.h"
 #include "ITexture.h"
+#include "Renderer.h"
+#include "Window.h"
 
 #include <cstdio>
 
@@ -22,8 +26,7 @@ constexpr long kCursorIndex = 8; // one-based index in the cursor atlas
 }
 
 Cursor::Cursor()
-	: _state(CursorState::IDLE)
-	, _image(nullptr) {
+	: _state(CursorState::IDLE) {
 }
 
 Cursor::~Cursor()
@@ -40,11 +43,17 @@ bool Cursor::load(const std::string& filePath)
 	
 	unload();
 
-	_image = new Image(filePath.c_str(), 0, _makeCursorRect(kCursorIndex));
-	// The Sprite file-path constructor swallows a failed texture load: on a
-	// null createTexture it leaves a null texture rather than signaling.
-	// Detect that here so callers can distinguish a real failure and skip
-	// adding a textureless image to the render list.
+	IRenderer* renderer = Engine2D::getRenderer();
+	ITexture* texture = renderer ? renderer->createTexture(filePath.c_str()) : nullptr;
+	if (!texture) {
+		DEBUG_MSG(("Cursor::load: failed to load " + filePath + "\n").c_str());
+		return false;
+	}
+
+	// Borrow the renderer's cached texture instead of loading our own: every
+	// cursor shares cursors.png, and an Image that loads its file destroys the
+	// shared texture when deleted, under any other cursor still on screen.
+	_image = std::make_unique<Image>(texture, _makeCursorRect(kCursorIndex));
 
 	// The renderer pins the sprite's `center` (hotspot) at its position: a
 	// frame pixel (tx,ty) is drawn at position + (tx - center.x, ty - center.y).
@@ -58,9 +67,7 @@ bool Cursor::load(const std::string& filePath)
 
 void Cursor::unload()
 {
-	if (!_image || !_image->getTexture()) {
-		SAFE_DELETE(_image);
-	}
+	_image.reset();
 }
 
 void Cursor::setState(CursorState state)
@@ -94,22 +101,25 @@ void Cursor::setDragging(bool dragging)
 	}
 }
 
-void Cursor::updateFromMouse(Mouse* mouse)
+void Cursor::follow(const Mouse& mouse)
 {
-	if (!mouse) {
-		setIdle();
-		return;
+	// Screen-space lists are drawn at the renderer's logical resolution and
+	// scaled to the client area, so scale client pixels down the same way to
+	// keep the hotspot under the OS cursor.
+	vector2 position = mouse.getPosition();
+	IRenderer* renderer = Engine2D::getRenderer();
+	Window* window = Renderer::mainWindow;
+	if (renderer && window && renderer->getWidth() > 0 && renderer->getHeight() > 0 &&
+		window->getClientWidth() > 0 && window->getClientHeight() > 0) {
+		position.x *= (float)renderer->getWidth() / (float)window->getClientWidth();
+		position.y *= (float)renderer->getHeight() / (float)window->getClientHeight();
 	}
+	setPosition(position);
 
-	//// Output mouse position for debugging
-	//char buffer[64];
-	//sprintf_s(buffer, sizeof(buffer), "Pos: %f, %f", mouse->_x, mouse->_y);
-	//DEBUG_MSG(buffer);
-
-	if (mouse->buttonPressed(MOUSE_LEFT)) {
+	if (mouse.pressed(MouseButton::Left)) {
 		setClicking(true);
 	}
-	else if (mouse->buttonDown(MOUSE_LEFT)) {
+	else if (mouse.down(MouseButton::Left)) {
 		setDragging(true);
 	}
 	else {
@@ -122,6 +132,11 @@ void Cursor::setPosition(const vector2& pos)
 	if (_image) {
 		_image->setPosition(pos);
 	}
+}
+
+vector2 Cursor::getPosition() const
+{
+	return _image ? _image->getPosition() : vector2(0.0f, 0.0f);
 }
 
 RECT Cursor::_makeCursorRect(long index) const

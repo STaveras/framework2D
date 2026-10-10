@@ -10,7 +10,7 @@ class TextureGL : public ITexture
 	unsigned int _height = 0;
 
 public:
-	explicit TextureGL(const char* path);
+	explicit TextureGL(const char* path, Color colorKey = 0);
 	~TextureGL() override;
 
 	unsigned int getWidth() const override { return _width; }

@@ -15,7 +15,7 @@ class TextureMTL : public ITexture
 
 public:
 	// Throws std::runtime_error if the image cannot be loaded.
-	TextureMTL(const char* szFilename, id<MTLDevice> device);
+	TextureMTL(const char* szFilename, id<MTLDevice> device, Color colorKey = 0);
 	// A width x height texture from tightly packed RGBA8 pixels.
 	TextureMTL(const char* name, id<MTLDevice> device, unsigned int width, unsigned int height, const unsigned char* rgba);
 	~TextureMTL(void) override;

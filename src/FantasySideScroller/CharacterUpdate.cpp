@@ -6,6 +6,7 @@
 #include "../Animation.h"
 #include "../CollidableGroup.h"
 #include "../GameState.h"
+#include "../IInput.h"
 #include "../Telemetry2D.h"
 #include "../Kinematics2D.h"
 #include "../Polygon.h"
@@ -687,10 +688,8 @@ void Character::onUpdate(float time)
             this->setVelocity(v);
         }
 
-		if (canInputMove && hasDirectionalIntent && this->getRenderable()) {
-			vector2 scale = this->getRenderable()->getScale();
-			const float absScaleX = std::fabs(scale.x);
-			this->getRenderable()->setScale((horizontalInput > 0) ? absScaleX : -absScaleX, scale.y);
+		if (canInputMove && hasDirectionalIntent) {
+			this->setFacingLeft(horizontalInput < 0);
 		}
 
 		if ((!strcmp(stateName, "RunningLeft") || !strcmp(stateName, "RunningRight")) &&
@@ -705,8 +704,8 @@ void Character::onUpdate(float time)
 
 		if (possessed) {
 //#if _DEBUG
-			if (KEYBOARD) {
-				if (Engine2D::getInput()->getKeyboard()->keyPressed(KEYBOARD->getKeys().KBK_F)) {
+			if (Keyboard* keyboard = Engine2D::getInput()->getKeyboard()) {
+				if (keyboard->pressed(Key::F)) {
 					this->sendInput("DEATH");
 				}
 			}

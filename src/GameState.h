@@ -3,7 +3,6 @@
 #pragma once
 
 #include "ProgramState.h"
-#include "InputManager.h"	
 #include "ObjectManager.h"
 #include "CollisionSystem.h"
 #include "IRenderer.h"
@@ -33,7 +32,6 @@ protected:
 	void placeRenderable(Renderable* renderable, IRenderer::RenderList* list);
 	void unplaceRenderable(Renderable* renderable);
 
-	InputManager     _inputManager;
 	ObjectManager    _objectManager;
 	CollisionSystem  _collisionSystem;
 
@@ -41,7 +39,6 @@ public:
 	GameState(void) : ProgramState() { }
 	~GameState(void) { }
 	
-	InputManager * getInputManager(void) { return &_inputManager; }
 	ObjectManager* getObjectManager(void) { return &_objectManager; }
 	const CollisionSystem* getCollisionSystem(void) const { return &_collisionSystem; }
 	IRenderer::RenderList* getBaseRenderList() const;

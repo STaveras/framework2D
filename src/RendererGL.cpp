@@ -241,10 +241,10 @@ void RendererGL::_drawFont(Font* font, Color tint, vector2 offset)
 
 ITexture* RendererGL::createTexture(const char* szFilename, Color colorKey)
 {
-	ITexture* pTexture = _textureExists(szFilename);
+	ITexture* pTexture = _textureExists(szFilename, colorKey);
 
 	if (!pTexture) {
-		pTexture = (ITexture*)new TextureGL(szFilename);
+		pTexture = (ITexture*)new TextureGL(szFilename, colorKey);
 		pTexture->setKeyColor(colorKey);
 		m_Textures.store(pTexture);
 	}

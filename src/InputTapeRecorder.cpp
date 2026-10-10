@@ -1,313 +1,69 @@
 #include "InputTapeRecorder.h"
 
-#include "InputMap.h"
 #include "StrUtils.h"
+#include "System.h"
 
 #include <algorithm>
-#include <cctype>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <cstdio>
-#include <limits>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 namespace
 {
-enum class ReplayFormat
-{
-	Unknown,
-	TickV2,
-	LegacyTime
-};
-
-struct TickReplayEvent
+struct Change
 {
 	uint64_t tick = 0;
-	std::string actionName;
-	std::string eventType;
-	bool active = false;
-	size_t sequence = 0;
+	std::string action;
+	bool down = false;
 };
 
-struct LegacyReplayEvent
-{
-	double timeSeconds = 0.0;
-	std::string actionName;
-	bool active = false;
-	size_t sequence = 0;
-};
+const char* const kDefaultTapePath = "tmp/auto_input_events.csv";
 
 bool gInitialized = false;
-bool gRecordEnabled = false;
-bool gReplayEnabled = false;
-bool gLegacyReplayMode = false;
-
 std::ofstream gRecordOut;
-std::string gRecordPath;
-std::string gReplayPath;
+bool gReplaying = false;
+std::vector<Change> gTape;
+size_t gTapeCursor = 0;
+std::unordered_map<std::string, bool> gReplayState;
 
-std::vector<TickReplayEvent> gTickReplayEvents;
-std::vector<LegacyReplayEvent> gLegacyReplayEvents;
-size_t gTickReplayCursor = 0;
-size_t gLegacyReplayCursor = 0;
-
-std::unordered_set<std::string> gReplayActions;
-std::unordered_map<std::string, bool> gReplayActionState;
-
-uint64_t gLoadedReplayEvents = 0;
-uint64_t gConsumedReplayEvents = 0;
-bool gWarnedLegacyReplay = false;
-
-bool parseBoolToken(const std::string& token, bool fallback)
+std::string environmentPath(const char* name, const std::string& fallback)
 {
-	const std::string lowered = StrUtils::ToLower(StrUtils::Trim(token));
-	if (lowered.empty()) {
-		return fallback;
-	}
-
-	if (lowered == "1" ||
-		lowered == "true" ||
-		lowered == "yes" ||
-		lowered == "on" ||
-		lowered == "down" ||
-		lowered == "pressed") {
-		return true;
-	}
-
-	if (lowered == "0" ||
-		lowered == "false" ||
-		lowered == "no" ||
-		lowered == "off" ||
-		lowered == "up" ||
-		lowered == "released") {
-		return false;
-	}
-
-	return fallback;
-}
-bool ensureParentDirectory(const std::string& path)
-{
-	if (path.empty()) {
-		return false;
-	}
-
-	std::filesystem::path fsPath(path);
-	const std::filesystem::path parent = fsPath.parent_path();
-	if (parent.empty()) {
-		return true;
-	}
-
-	std::error_code ec;
-	std::filesystem::create_directories(parent, ec);
-	return !ec;
+	std::string owned;
+	const char* value = System::getenv_platform(name, owned);
+	return (value && value[0] != '\0') ? std::string(value) : fallback;
 }
 
-bool parseUnsignedToken(const std::string& token, uint64_t& outValue)
+bool parseTick(const std::string& token, uint64_t& tick)
 {
-	if (token.empty()) {
-		return false;
-	}
-
-	char* endPtr = nullptr;
-	unsigned long long parsedValue = std::strtoull(token.c_str(), &endPtr, 10);
-	if (endPtr == token.c_str()) {
-		return false;
-	}
-
-	while (endPtr && *endPtr != '\0') {
-		if (!std::isspace((unsigned char)*endPtr)) {
-			return false;
-		}
-		++endPtr;
-	}
-
-	outValue = (uint64_t)parsedValue;
-	return true;
+	char* end = nullptr;
+	tick = std::strtoull(token.c_str(), &end, 10);
+	return end != token.c_str() && *end == '\0';
 }
 
-bool parseDoubleToken(const std::string& token, double& outValue)
+void loadTape(const std::string& path)
 {
-	if (token.empty()) {
-		return false;
-	}
-
-	char* endPtr = nullptr;
-	const double parsedValue = std::strtod(token.c_str(), &endPtr);
-	if (endPtr == token.c_str()) {
-		return false;
-	}
-
-	while (endPtr && *endPtr != '\0') {
-		if (!std::isspace((unsigned char)*endPtr)) {
-			return false;
-		}
-		++endPtr;
-	}
-
-	outValue = parsedValue;
-	return true;
-}
-
-ReplayFormat inferFormatFromTokens(const std::vector<std::string>& tokens)
-{
-	if (tokens.empty()) {
-		return ReplayFormat::Unknown;
-	}
-
-	const std::string firstLower = StrUtils::ToLower(tokens[0]);
-	if (firstLower == "tick") {
-		return ReplayFormat::TickV2;
-	}
-	if (firstLower == "time") {
-		return ReplayFormat::LegacyTime;
-	}
-
-	if (tokens.size() >= 4) {
-		uint64_t tickValue = 0;
-		if (parseUnsignedToken(tokens[0], tickValue)) {
-			return ReplayFormat::TickV2;
-		}
-	}
-
-	if (tokens.size() >= 3) {
-		double timeValue = 0.0;
-		if (parseDoubleToken(tokens[0], timeValue)) {
-			return ReplayFormat::LegacyTime;
-		}
-	}
-
-	return ReplayFormat::Unknown;
-}
-
-void initializeReplayStateForAction(const std::string& actionName)
-{
-	if (actionName.empty()) {
-		return;
-	}
-
-	gReplayActions.insert(actionName);
-	if (gReplayActionState.find(actionName) == gReplayActionState.end()) {
-		gReplayActionState[actionName] = false;
-	}
-}
-
-void loadReplayFile(const std::string& path)
-{
-	std::ifstream replayIn(path);
-	if (!replayIn.is_open()) {
-		return;
-	}
-
-	ReplayFormat format = ReplayFormat::Unknown;
+	std::ifstream in(path);
 	std::string line;
-	size_t sequence = 0;
-	while (std::getline(replayIn, line)) {
-		const std::string trimmedLine = StrUtils::Trim(line);
-		if (trimmedLine.empty() || trimmedLine[0] == '#') {
+	while (std::getline(in, line)) {
+		const std::string row = StrUtils::Trim(line);
+		if (row.empty() || row[0] == '#') {
 			continue;
 		}
-
-		std::vector<std::string> tokens = StrUtils::Split(trimmedLine, ',', true);
-		if (tokens.empty()) {
-			continue;
+		const std::vector<std::string> fields = StrUtils::Split(row, ',', true);
+		uint64_t tick = 0;
+		if (fields.size() != 3 || !parseTick(fields[0], tick) || fields[1].empty()) {
+			continue; // the header, or a malformed row
 		}
-
-		if (format == ReplayFormat::Unknown) {
-			format = inferFormatFromTokens(tokens);
-			const std::string firstLower = StrUtils::ToLower(tokens[0]);
-			if (firstLower == "tick" || firstLower == "time") {
-				continue;
-			}
-		}
-
-		if (format == ReplayFormat::TickV2) {
-			if (tokens.size() < 4) {
-				continue;
-			}
-
-			uint64_t tick = 0;
-			if (!parseUnsignedToken(tokens[0], tick)) {
-				continue;
-			}
-
-			const std::string actionName = tokens[1];
-			if (actionName.empty()) {
-				continue;
-			}
-
-			std::string eventType = tokens[2];
-			if (eventType.empty()) {
-				eventType = "EVT_KEYDOWN";
-			}
-
-			const bool active = parseBoolToken(tokens[3], false);
-
-			TickReplayEvent event;
-			event.tick = tick;
-			event.actionName = actionName;
-			event.eventType = eventType;
-			event.active = active;
-			event.sequence = sequence++;
-			gTickReplayEvents.push_back(event);
-			initializeReplayStateForAction(actionName);
-			continue;
-		}
-
-		if (format == ReplayFormat::LegacyTime) {
-			if (tokens.size() < 3) {
-				continue;
-			}
-
-			double timeSeconds = 0.0;
-			if (!parseDoubleToken(tokens[0], timeSeconds)) {
-				continue;
-			}
-
-			const std::string actionName = tokens[1];
-			if (actionName.empty()) {
-				continue;
-			}
-
-			const bool active = parseBoolToken(tokens[2], false);
-			LegacyReplayEvent event;
-			event.timeSeconds = timeSeconds;
-			event.actionName = actionName;
-			event.active = active;
-			event.sequence = sequence++;
-			gLegacyReplayEvents.push_back(event);
-			initializeReplayStateForAction(actionName);
-		}
+		gTape.push_back({ tick, fields[1], fields[2] == "1" });
 	}
-
-	if (!gTickReplayEvents.empty()) {
-		std::stable_sort(gTickReplayEvents.begin(), gTickReplayEvents.end(), [](const TickReplayEvent& a, const TickReplayEvent& b) {
-			if (a.tick != b.tick) {
-				return a.tick < b.tick;
-			}
-			if (a.actionName != b.actionName) {
-				return a.actionName < b.actionName;
-			}
-			return a.sequence < b.sequence;
-		});
-	}
-
-	if (!gLegacyReplayEvents.empty()) {
-		gLegacyReplayMode = true;
-		std::stable_sort(gLegacyReplayEvents.begin(), gLegacyReplayEvents.end(), [](const LegacyReplayEvent& a, const LegacyReplayEvent& b) {
-			if (a.timeSeconds != b.timeSeconds) {
-				return a.timeSeconds < b.timeSeconds;
-			}
-			if (a.actionName != b.actionName) {
-				return a.actionName < b.actionName;
-			}
-			return a.sequence < b.sequence;
-		});
-	}
-
-	gLoadedReplayEvents = (uint64_t)(gTickReplayEvents.size() + gLegacyReplayEvents.size());
+	// Rows within a tick apply in file order.
+	std::stable_sort(gTape.begin(), gTape.end(), [](const Change& a, const Change& b) {
+		return a.tick < b.tick;
+	});
+	std::printf("[InputTapeRecorder] Replaying %zu changes from %s\n", gTape.size(), path.c_str());
 }
 }
 
@@ -321,157 +77,72 @@ void initializeFromEnvironment(void)
 	gInitialized = true;
 
 	std::string owned;
-
-	gRecordEnabled = StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned));
-	gReplayEnabled =
-		StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
-		(System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned) && System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned)[0] != '\0');
-
-	const char* recordPathValue = System::getenv_platform("AUTO_INPUT_RECORD_PATH", owned);
-	gRecordPath = (recordPathValue && recordPathValue[0] != '\0') ?
-		recordPathValue :
-		"tmp/auto_input_events.csv";
-
-	const char* replayPathValue = System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned);
-	gReplayPath = (replayPathValue && replayPathValue[0] != '\0') ?
-		replayPathValue :
-		gRecordPath;
-
-	if (gRecordEnabled && ensureParentDirectory(gRecordPath)) {
-		gRecordOut.open(gRecordPath, std::ios::out | std::ios::trunc);
+	const std::string recordPath = environmentPath("AUTO_INPUT_RECORD_PATH", kDefaultTapePath);
+	if (StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned))) {
+		std::error_code ec;
+		const std::filesystem::path parent = std::filesystem::path(recordPath).parent_path();
+		if (!parent.empty()) {
+			std::filesystem::create_directories(parent, ec);
+		}
+		gRecordOut.open(recordPath, std::ios::out | std::ios::trunc);
 		if (gRecordOut.is_open()) {
-			gRecordOut << "tick,action,event_type,active\n";
+			gRecordOut << "tick,action,down\n";
 		}
 	}
 
-	if (gReplayEnabled) {
-		loadReplayFile(gReplayPath);
+	const char* replayPath = System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned);
+	gReplaying = StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
+		(replayPath && replayPath[0] != '\0');
+	if (gReplaying) {
+		loadTape(environmentPath("AUTO_INPUT_REPLAY_PATH", recordPath));
 	}
 }
 
 void shutdown(void)
 {
 	if (gRecordOut.is_open()) {
-		gRecordOut.flush();
 		gRecordOut.close();
 	}
-
 	gInitialized = false;
-	gRecordEnabled = false;
-	gReplayEnabled = false;
-	gLegacyReplayMode = false;
-	gTickReplayEvents.clear();
-	gLegacyReplayEvents.clear();
-	gReplayActions.clear();
-	gReplayActionState.clear();
-	gTickReplayCursor = 0;
-	gLegacyReplayCursor = 0;
-	gLoadedReplayEvents = 0;
-	gConsumedReplayEvents = 0;
-	gWarnedLegacyReplay = false;
+	gReplaying = false;
+	gTape.clear();
+	gTapeCursor = 0;
+	gReplayState.clear();
 }
 
 bool isRecording(void)
 {
 	initializeFromEnvironment();
-	return gRecordEnabled && gRecordOut.is_open();
+	return gRecordOut.is_open();
 }
 
-bool isReplayEnabled(void)
+bool isReplaying(void)
 {
 	initializeFromEnvironment();
-	return gReplayEnabled;
+	return gReplaying;
 }
 
-void onControllerTickStart(InputMap* controller, uint64_t simulationTick, float controllerElapsedSeconds)
+void beginTick(uint64_t tick)
 {
-	(void)controller;
-
-	initializeFromEnvironment();
-	if (!gReplayEnabled) {
-		return;
-	}
-
-	while (gTickReplayCursor < gTickReplayEvents.size() &&
-		gTickReplayEvents[gTickReplayCursor].tick <= simulationTick) {
-		const TickReplayEvent& event = gTickReplayEvents[gTickReplayCursor];
-		gReplayActionState[event.actionName] = event.active;
-		++gTickReplayCursor;
-		++gConsumedReplayEvents;
-	}
-
-	while (gLegacyReplayCursor < gLegacyReplayEvents.size() &&
-		gLegacyReplayEvents[gLegacyReplayCursor].timeSeconds <= (double)controllerElapsedSeconds) {
-		if (!gWarnedLegacyReplay) {
-			gWarnedLegacyReplay = true;
-			std::printf("[InputTapeRecorder] Legacy time replay mode enabled for %s\n", gReplayPath.c_str());
-		}
-		const LegacyReplayEvent& event = gLegacyReplayEvents[gLegacyReplayCursor];
-		gReplayActionState[event.actionName] = event.active;
-		++gLegacyReplayCursor;
-		++gConsumedReplayEvents;
+	while (gTapeCursor < gTape.size() && gTape[gTapeCursor].tick <= tick) {
+		const Change& change = gTape[gTapeCursor++];
+		gReplayState[change.action] = change.down;
 	}
 }
 
-bool isReplayControlledAction(const std::string& actionName)
+bool replayState(const std::string& action)
 {
-	initializeFromEnvironment();
-	if (!gReplayEnabled || actionName.empty()) {
-		return false;
-	}
-	return true;
+	const auto state = gReplayState.find(action);
+	return state != gReplayState.end() && state->second;
 }
 
-bool getReplayActionState(const std::string& actionName, bool fallbackState)
+void recordChange(uint64_t tick, const std::string& action, bool down)
 {
-	initializeFromEnvironment();
-	if (!gReplayEnabled || actionName.empty()) {
-		return fallbackState;
-	}
-
-	std::unordered_map<std::string, bool>::const_iterator stateItr = gReplayActionState.find(actionName);
-	if (stateItr == gReplayActionState.end()) {
-		return fallbackState;
-	}
-	return stateItr->second;
-}
-
-void recordActionSnapshot(uint64_t simulationTick, const std::string& actionName, bool active)
-{
-	(void)simulationTick;
-	(void)actionName;
-	(void)active;
-}
-
-void onControllerActionEvent(uint64_t simulationTick, float controllerElapsedSeconds, const std::string& actionName, const char* eventType, bool active)
-{
-	(void)controllerElapsedSeconds;
-
 	if (!isRecording()) {
 		return;
 	}
-
-	if (actionName.empty()) {
-		return;
-	}
-
-	gRecordOut
-		<< simulationTick << ","
-		<< actionName << ","
-		<< (eventType ? eventType : "") << ","
-		<< (active ? 1 : 0) << "\n";
+	// Flushed per row so a tape survives the app being killed.
+	gRecordOut << tick << ',' << action << ',' << (down ? 1 : 0) << '\n';
 	gRecordOut.flush();
-}
-
-uint64_t getLoadedReplayEvents(void)
-{
-	initializeFromEnvironment();
-	return gLoadedReplayEvents;
-}
-
-uint64_t getConsumedReplayEvents(void)
-{
-	initializeFromEnvironment();
-	return gConsumedReplayEvents;
 }
 }

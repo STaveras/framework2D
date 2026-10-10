@@ -7,13 +7,22 @@ FantasySideScroller game;
 #include "Constants.h"
 #include "Character.h"
 #include "PlayState.h"
+#include "../InputMap.h"
 
 #include <algorithm>
 #include <cmath>
 
+FantasySideScroller::FantasySideScroller(void) = default;
+FantasySideScroller::~FantasySideScroller(void) = default;
+
 void FantasySideScroller::begin()
 {
     Game::begin();
+
+    if (!_inputMap) {
+        _inputMap = &_inputManager.createInputMap();
+        _bindInputs(*_inputMap);
+    }
 
     // configure window & renderer
     int width = GAME_RES_X;
@@ -39,20 +48,39 @@ void FantasySideScroller::begin()
 
     // push our play state once
     if (!_playState) {
-        _playState = new PlayState();
+        _playState = std::make_unique<PlayState>();
 
         // Do some preloading here
 
-        this->push(_playState);
+        this->push(_playState.get());
     }
 }
 
 void FantasySideScroller::end()
 {
     Game::end();
+    _inputMap = nullptr; // Game::end() released the maps
+    _playState.reset();
+}
 
-    if (_playState) {
-        delete _playState;
-        _playState = nullptr;
-    }
+void FantasySideScroller::_bindInputs(InputMap& input)
+{
+    using Axis = Gamepad::Axis;
+    using Button = Gamepad::Button;
+
+    // TODO: Save the keymappings to a file and load them here
+    input.bind("JUMP").key(Key::Space).button(Button::A);
+    input.bind("LEFT").key(Key::Left).key(Key::A).button(Button::DpadLeft).axis(Axis::LeftX, -0.25f);
+    input.bind("RIGHT").key(Key::Right).key(Key::D).button(Button::DpadRight).axis(Axis::LeftX, 0.25f);
+    input.bind("DOWN").key(Key::Down).key(Key::S).button(Button::DpadDown);
+    input.bind("ATTACK").key(Key::LeftControl).key(Key::Z).button(Button::X);
+    input.bind("RUN").key(Key::LeftShift).button(Button::LeftBumper);
+    // "UP" is the semantic up-direction action, shared with the pause menu.
+    input.bind("UP").key(Key::Up).key(Key::W).button(Button::DpadUp).axis(Axis::LeftY, -0.5f);
+    // "INTERACT" is gameplay-only (E key, or the left stick button, which is
+    // the iOS touch controls' USE) for interacting with objects.
+    input.bind("INTERACT").key(Key::E).button(Button::LeftThumb);
+    // "CONFIRM" is the menu confirm action: A + Enter.
+    input.bind("CONFIRM").button(Button::A).key(Key::Enter);
+    input.bind("PAUSE").key(Key::Escape).button(Button::Start);
 }

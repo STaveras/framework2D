@@ -1931,11 +1931,11 @@ VkSampler RendererVK::createSampler(void)
 ITexture* RendererVK::createTexture(const char* szFilename, Color colorKey)
 {
 
-	ITexture* pTexture = _textureExists(szFilename);
+	ITexture* pTexture = _textureExists(szFilename, colorKey);
 
 	if (!pTexture)
 	{
-		pTexture = (ITexture*)new TextureVK(szFilename);
+		pTexture = (ITexture*)new TextureVK(szFilename, colorKey);
 		pTexture->setKeyColor(colorKey);
 
 		// Cache it like the other backends, so sprites sharing an image share one texture.

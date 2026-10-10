@@ -63,6 +63,22 @@ struct TileObjectLayerDescriptor
 	std::vector<TileObjectDescriptor> objects;
 };
 
+struct TileImageLayerDescriptor
+{
+	int id = -1;
+	std::string name;
+	std::string className;
+	std::string imagePath; // resolved; empty if the layer has no image
+	bool visible = true;
+	int traversalIndex = -1;
+	float offsetX = 0.0f, offsetY = 0.0f; // includes group offset
+	float parallaxX = 1.0f, parallaxY = 1.0f; // includes group parallax
+	float opacity = 1.0f; // includes group opacity
+	uint32_t tintColor = 0xFFFFFFFFu; // includes group tint
+	uint32_t transparentColor = 0; // 0 = none
+	bool repeatX = false, repeatY = false;
+};
+
 struct MapLayerDescriptor
 {
 	int id = -1;
@@ -84,6 +100,7 @@ struct TileMapLoadResult
 	std::vector<MapLayerDescriptor> layers;
 	std::vector<TileMap*> tileMaps;
 	std::vector<TileObjectLayerDescriptor> objectLayers;
+	std::vector<TileImageLayerDescriptor> imageLayers;
 };
 
 class TileMap : public Tile
@@ -405,6 +422,21 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 
 			const uint32_t value = (uint32_t)std::strtoul(tint.c_str() + 1, nullptr, 16);
 			return tint.size() == 7 ? (0xFF000000u | value) : value;
+		};
+
+		auto readTransparentColor = [](auto element, uint32_t fallback = 0) -> uint32_t {
+			if (!element.is_string()) {
+				return fallback;
+			}
+
+			const std::string value((std::string_view)element.get_string());
+			if (value.size() != 7 && value.size() != 9) {
+				return fallback;
+			}
+
+			const uint32_t parsed = (uint32_t)std::strtoul(value.c_str() + 1, nullptr, 16);
+			// Keep an explicit #000000 key distinguishable from the no-key sentinel.
+			return 0xFF000000u | (parsed & 0x00FFFFFFu);
 		};
 
 		auto multiplyTintColors = [](uint32_t lhs, uint32_t rhs) -> uint32_t {
@@ -896,6 +928,38 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 
 					layerDescriptor.typedIndex = (int)result.objectLayers.size();
 					result.objectLayers.push_back(std::move(objectLayer));
+				}
+				else if (layerType == "imagelayer") {
+					// Image layers are art only. A collision_mode property is ignored on purpose:
+					// an image can't carry playable terrain, so there is no collision to resolve.
+					TileImageLayerDescriptor imageLayer;
+					imageLayer.id = layerDescriptor.id;
+					imageLayer.name = layerDescriptor.name;
+					imageLayer.className = resolveClassOrType(layer["class"], layer["type"]);
+					imageLayer.visible = layerDescriptor.visible;
+					imageLayer.traversalIndex = layerDescriptor.traversalIndex;
+					imageLayer.offsetX = layerOffsetX;
+					imageLayer.offsetY = layerOffsetY;
+					imageLayer.parallaxX = layerParallaxX;
+					imageLayer.parallaxY = layerParallaxY;
+					imageLayer.opacity = layerOpacity;
+					imageLayer.tintColor = layerTintColor;
+					imageLayer.transparentColor = readTransparentColor(layer["transparentcolor"], 0);
+					imageLayer.repeatX = readBool(layer["repeatx"], false);
+					imageLayer.repeatY = readBool(layer["repeaty"], false);
+					imageLayer.imagePath = layer["image"].is_string()
+						? std::string((std::string_view)layer["image"].get_string())
+						: "";
+
+					// Resolve relative to the map's folder, exactly like a tileset source does.
+					if (!imageLayer.imagePath.empty()) {
+						const std::string resolvedPath =
+							FileSystem::Path::ResolveFromBaseOrParent(imageLayer.imagePath, mapDirectory);
+						imageLayer.imagePath = resolvedPath;
+					}
+
+					layerDescriptor.typedIndex = (int)result.imageLayers.size();
+					result.imageLayers.push_back(std::move(imageLayer));
 				}
 
 				result.layers.push_back(std::move(layerDescriptor));

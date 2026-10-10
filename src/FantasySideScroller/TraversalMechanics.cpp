@@ -132,10 +132,12 @@ void TraversalMechanics::requestRespawn(const vector2& position, const char* rea
 	_runState.lastEvent = reason ? reason : "respawn";
 }
 
-void TraversalMechanics::requestMapChange(const std::string& nextMapFileName)
+void TraversalMechanics::requestMapChange(const std::string& nextMapFileName, const std::string& entryName, float characterY)
 {
 	_mapChangePending = true;
 	_nextMapFileName = nextMapFileName;
+	_mapChangeEntryName = entryName;
+	_mapChangeCharacterY = characterY;
 	_runState.completed = true;
 	_runState.active = false;
 	_runState.lastEvent = "destination_reached";
@@ -243,10 +245,14 @@ void TraversalMechanics::resetRun(const vector2& spawnPoint, float timeLimitSeco
 	_respawnPoint = spawnPoint;
 	_mapChangePending = false;
 	_nextMapFileName.clear();
+	_mapChangeEntryName.clear();
+	_mapChangeCharacterY = 0.0f;
+	_runStartPending = true;
 
 	for (TraversalTrigger& trigger : _triggers) {
 		trigger.consumed = false;
 		trigger.cooldownRemaining = 0.0f;
+		trigger.waitForExit = false;
 	}
 }
 
@@ -274,12 +280,22 @@ void TraversalMechanics::update(Character* character, float dt)
 		trigger.cooldownRemaining = std::max(0.0f, trigger.cooldownRemaining - clampedDt);
 	}
 
+	const bool runStart = _runStartPending;
+	_runStartPending = false;
 	for (TraversalTrigger& trigger : _triggers) {
 		if (trigger.oneShot && trigger.consumed) {
 			continue;
 		}
 
 		if (!overlapsCharacter(trigger, *character)) {
+			trigger.waitForExit = false;
+			continue;
+		}
+
+		if (runStart && trigger.type == TraversalTriggerType::Destination) {
+			trigger.waitForExit = true;
+		}
+		if (trigger.waitForExit) {
 			continue;
 		}
 
@@ -292,7 +308,10 @@ void TraversalMechanics::update(Character* character, float dt)
 		case TraversalTriggerType::Destination:
 			if (!trigger.nextMap.empty()) {
 				// A destination with a next_map loads that map instead of ending the run.
-				requestMapChange(trigger.nextMap);
+				// Leaving through one section boundary enters the next map at the other.
+				const char* entryName = StrUtils::IEquals(trigger.name, "SectionEnd") ? "SectionBegin" :
+					StrUtils::IEquals(trigger.name, "SectionBegin") ? "SectionEnd" : "";
+				requestMapChange(trigger.nextMap, entryName, character->getPosition().y);
 			}
 			else {
 				// No next_map: treat it as a run goal so a terminal destination still finishes.
@@ -377,7 +396,10 @@ bool TraversalMechanics::consumeRespawnRequest(vector2& outRespawnPoint, std::st
 	return true;
 }
 
-bool TraversalMechanics::consumeMapChangeRequest(std::string& outNextMapFileName)
+bool TraversalMechanics::consumeMapChangeRequest(
+	std::string& outNextMapFileName,
+	std::string* outEntryName,
+	float* outCharacterY)
 {
 	if (!_mapChangePending) {
 		return false;
@@ -385,5 +407,13 @@ bool TraversalMechanics::consumeMapChangeRequest(std::string& outNextMapFileName
 
 	_mapChangePending = false;
 	outNextMapFileName = _nextMapFileName;
+	if (outEntryName) {
+		*outEntryName = _mapChangeEntryName;
+	}
+	if (outCharacterY) {
+		*outCharacterY = _mapChangeCharacterY;
+	}
+	_mapChangeEntryName.clear();
+	_mapChangeCharacterY = 0.0f;
 	return true;
 }

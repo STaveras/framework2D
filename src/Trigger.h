@@ -103,5 +103,8 @@ struct TraversalTrigger
 	bool pushAway = false;
 	// Destinations carry the relative path of the map to load once reached.
 	std::string nextMap;
+	// Set on a destination the character starts a run touching, so an entry spawn beside a
+	// section boundary doesn't leave straight away; cleared once the character steps off.
+	bool waitForExit = false;
 };
 // Author: Stanley Taveras

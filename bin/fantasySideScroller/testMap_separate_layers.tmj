@@ -4,9 +4,16 @@
  "layers":[
         {
          "id":5,
-         "image":"",
+         "image":"Background\/Background.png",
+         "imageheight":272,
+         "imagewidth":480,
          "name":"Image Layer 1",
+         "offsetx":0,
+         "offsety":-96,
          "opacity":1,
+         "parallaxx":0.01,
+         "parallaxy":0.01,
+         "repeatx":true,
          "type":"imagelayer",
          "visible":true,
          "x":0,
@@ -36,7 +43,7 @@
                  "x":0,
                  "y":-16
                 }],
-         "height":32,
+         "height":16,
          "id":2,
          "name":"item",
          "opacity":1,
@@ -44,13 +51,27 @@
                 {
                  "name":"collision_mode",
                  "type":"string",
-                 "value":"one_way"
+                 "value":"none"
                 }],
          "startx":0,
          "starty":-16,
          "type":"tilelayer",
          "visible":true,
          "width":16,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "chunks":[],
+         "height":0,
+         "id":7,
+         "name":"decorative",
+         "opacity":1,
+         "startx":0,
+         "starty":0,
+         "type":"tilelayer",
+         "visible":true,
+         "width":0,
          "x":0,
          "y":0
         }, 
@@ -93,6 +114,35 @@
          "type":"tilelayer",
          "visible":true,
          "width":16,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":8,
+         "name":"objects",
+         "objects":[
+                {
+                 "height":101,
+                 "id":4,
+                 "name":"",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"next_map",
+                         "type":"string",
+                         "value":"mosswood_hollow.tmj"
+                        }],
+                 "rotation":0,
+                 "type":"destination",
+                 "visible":true,
+                 "width":880,
+                 "x":-444,
+                 "y":256
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
          "x":0,
          "y":0
         }, 
@@ -182,11 +232,11 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":7,
- "nextobjectid":4,
+ "nextlayerid":9,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.2",
+ "tiledversion":"1.12.2",
  "tileheight":16,
  "tilesets":[
         {

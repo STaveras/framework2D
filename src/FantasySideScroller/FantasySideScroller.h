@@ -6,21 +6,28 @@
 
 #include "../Game.h"
 
-class PlayState; // Forward declaration
+#include <memory>
 
-// Game should hold all the managers?
+class InputMap;
+class PlayState;
+
 class FantasySideScroller : public Game
 {
-	PlayState* _playState;
+	std::unique_ptr<PlayState> _playState;
+	InputMap* _inputMap = nullptr; // owned by _inputManager
+
+	void _bindInputs(InputMap& inputMap);
 
 public:
-	FantasySideScroller()
-		: _playState(nullptr) {
-	}
-	~FantasySideScroller() { }
+	FantasySideScroller(void);
+	~FantasySideScroller(void);
 
-	void begin(void);
-	void end(void);
+	void begin(void) override;
+	void end(void) override;
+
+	// The player's actions: the hero's, plus the UP / DOWN / CONFIRM / PAUSE
+	// actions the pause and game-over menus share. Valid after begin().
+	InputMap& getInputMap(void) const { return *_inputMap; }
 };
 
 extern FantasySideScroller game;
