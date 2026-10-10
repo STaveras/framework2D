@@ -343,9 +343,9 @@ RendererMTL::~RendererMTL(void)
 
 ITexture* RendererMTL::createTexture(const char* szFilename, Color colorKey)
 {
-	ITexture* texture = _textureExists(szFilename);
+	ITexture* texture = _textureExists(szFilename, colorKey);
 	if (!texture) {
-		texture = new TextureMTL(szFilename, _impl->device);
+		texture = new TextureMTL(szFilename, _impl->device, colorKey);
 		texture->setKeyColor(colorKey);
 		m_Textures.store(texture);
 	}

@@ -8,6 +8,8 @@
          "imageheight":272,
          "imagewidth":480,
          "name":"Image Layer 1",
+         "offsetx":0,
+         "offsety":-96,
          "opacity":1,
          "parallaxx":0.01,
          "parallaxy":0.01,
@@ -49,7 +51,7 @@
                 {
                  "name":"collision_mode",
                  "type":"string",
-                 "value":"one_way"
+                 "value":"none"
                 }],
          "startx":0,
          "starty":-16,
@@ -61,7 +63,7 @@
         }, 
         {
          "chunks":[],
-         "height":16,
+         "height":0,
          "id":7,
          "name":"decorative",
          "opacity":1,
@@ -69,7 +71,7 @@
          "starty":0,
          "type":"tilelayer",
          "visible":true,
-         "width":16,
+         "width":0,
          "x":0,
          "y":0
         }, 

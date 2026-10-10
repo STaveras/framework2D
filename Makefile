@@ -143,6 +143,12 @@ test-render-culling: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/
 	$(CXX) $^ -o $(OBJDIR)/render_culling_test $(LDFLAGS)
 	./$(OBJDIR)/render_culling_test
 
+.PHONY: test-section-transition
+$(OBJDIR)/tools/section_transition_test.o: CXXFLAGS += -UNDEBUG
+test-section-transition: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/section_transition_test.o
+	$(CXX) $^ -o $(OBJDIR)/section_transition_test $(LDFLAGS)
+	./$(OBJDIR)/section_transition_test
+
 # iOS: an Xcode project generated from the root CMakeLists (Metal renderer,
 # touch controls). `make ios` builds it for the simulator; `make ios-run` also boots
 # IOS_SIMULATOR, installs the app and launches it.

@@ -687,10 +687,8 @@ void Character::onUpdate(float time)
             this->setVelocity(v);
         }
 
-		if (canInputMove && hasDirectionalIntent && this->getRenderable()) {
-			vector2 scale = this->getRenderable()->getScale();
-			const float absScaleX = std::fabs(scale.x);
-			this->getRenderable()->setScale((horizontalInput > 0) ? absScaleX : -absScaleX, scale.y);
+		if (canInputMove && hasDirectionalIntent) {
+			this->setFacingLeft(horizontalInput < 0);
 		}
 
 		if ((!strcmp(stateName, "RunningLeft") || !strcmp(stateName, "RunningRight")) &&

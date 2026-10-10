@@ -33,6 +33,9 @@ class TraversalMechanics : public ObjectOperator
 	std::string _respawnReason;
 	bool _mapChangePending = false;
 	std::string _nextMapFileName;
+	std::string _mapChangeEntryName;
+	float _mapChangeCharacterY = 0.0f;
+	bool _runStartPending = false;
 	Character* _trackedCharacter = NULL;
 	float _frameDeltaSeconds = 0.0f;
 
@@ -43,7 +46,7 @@ class TraversalMechanics : public ObjectOperator
 	static std::string readStringProperty(const LevelTriggerDescriptor& descriptor, const char* key);
 
 	void requestRespawn(const vector2& position, const char* reason);
-	void requestMapChange(const std::string& nextMapFileName);
+	void requestMapChange(const std::string& nextMapFileName, const std::string& entryName, float characterY);
 
 public:
 	bool operator()(GameObject* object) override;
@@ -61,7 +64,9 @@ public:
 	// outReason (optional) receives why the respawn was requested, e.g. "killzone" or "timeout".
 	bool consumeRespawnRequest(vector2& outRespawnPoint, std::string* outReason = NULL);
 	// Returns true once when a destination was reached so the stage can load _nextMap.
-	bool consumeMapChangeRequest(std::string& outNextMapFileName);
+	// outEntryName (optional) receives the next map's destination to enter beside: SectionBegin
+	// after a SectionEnd exit and vice versa, or empty for any other destination.
+	bool consumeMapChangeRequest(std::string& outNextMapFileName, std::string* outEntryName = NULL, float* outCharacterY = NULL);
 
 	const TraversalRunState& getRunState(void) const { return _runState; }
 	const std::vector<TraversalTrigger>& getTriggers(void) const { return _triggers; }

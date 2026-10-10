@@ -33,6 +33,11 @@ class PlayState : public GameState
 	std::string _mapFileName = "mosswood_hollow.tmj";
 	bool _interactWasActive = false;
 	bool _reloadWasDown = false;
+	// Set by a SectionEnd/SectionBegin exit: the next map's destination to spawn beside,
+	// and the character's outgoing height and facing.
+	std::string _sectionEntryName;
+	float _sectionEntryCharacterY = 0.0f;
+	bool _sectionEntryFacingLeft = false;
 
 	Character* _playableCharacter = NULL;
 	std::vector<Boar*> _boars;

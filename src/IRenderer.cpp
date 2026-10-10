@@ -61,10 +61,21 @@ void IRenderer::_backgroundColorShift(void)
 ITexture* IRenderer::_textureExists(const char* szFilename)
 {
 	Factory<ITexture>::const_factory_iterator itr = m_Textures.begin();
+	for (; itr != m_Textures.end(); ++itr) {
+		if (!strcmp((*itr)->getFileName(), szFilename)) {
+			return (*itr);
+		}
+	}
+	return NULL;
+}
+
+ITexture* IRenderer::_textureExists(const char* szFilename, Color colorKey)
+{
+	Factory<ITexture>::const_factory_iterator itr = m_Textures.begin();
 
 	for (; itr != m_Textures.end(); itr++)
 	{
-		if(!strcmp((*itr)->getFileName(), szFilename))
+		if (!strcmp((*itr)->getFileName(), szFilename) && (*itr)->getKeyColor()._color == colorKey._color)
 			return (*itr);
 	}
 

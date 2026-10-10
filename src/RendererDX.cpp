@@ -327,7 +327,7 @@ void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zVa
 
 ITexture* RendererDX::createTexture(const char* szFilename, Color colorKey)
 {
-	ITexture* pTexture = _textureExists(szFilename);
+	ITexture* pTexture = _textureExists(szFilename, colorKey);
 
 	if (!pTexture)
 	{

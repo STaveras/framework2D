@@ -292,11 +292,16 @@ void PlayState::onEnter(State* prev)
 	vector2 spawnPoint = START_POSITION;
 	if (_levelManager.hasSpawnPoint()) {
 		spawnPoint = _levelManager.getSpawnPoint();
-		_playableCharacter->setPosition(spawnPoint);
+		if (!_sectionEntryName.empty()) {
+			spawnPoint = _levelManager.getSpawnPointNearDestination(_sectionEntryName, _sectionEntryCharacterY);
+		}
 	}
-	else {
-		_playableCharacter->setPosition(spawnPoint);
+	_playableCharacter->setPosition(spawnPoint);
+	if (!_sectionEntryName.empty()) {
+		// Enter the next section facing the way the character left the last one.
+		_playableCharacter->setFacingLeft(_sectionEntryFacingLeft);
 	}
+	_sectionEntryName.clear();
 
 #if _DEBUG
 	{
@@ -530,7 +535,12 @@ bool PlayState::onExecute(float time)
 	// lifecycle, the same way the F5 in-place reload does.
 	{
 		std::string nextMap;
-		if (_traversalMechanics.consumeMapChangeRequest(nextMap) && !nextMap.empty()) {
+		std::string entryName;
+		float characterY = 0.0f;
+		if (_traversalMechanics.consumeMapChangeRequest(nextMap, &entryName, &characterY) && !nextMap.empty()) {
+			_sectionEntryName = entryName;
+			_sectionEntryCharacterY = characterY;
+			_sectionEntryFacingLeft = _playableCharacter && _playableCharacter->isFacingLeft();
 			Engine2D::getEventSystem()->processEvents();
 			onExit(nullptr);
 			_interactWasActive = false;

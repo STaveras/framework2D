@@ -100,5 +100,9 @@ public:
 		return (vx >= 0.0f) ? vx : -vx;
 	}
 
+	// Facing is the sign of the current animation's X scale; states carry it into the next.
+	bool isFacingLeft() const;
+	void setFacingLeft(bool facingLeft);
+
 	bool shouldCollideWith(const GameObject& other) const override;
 };
