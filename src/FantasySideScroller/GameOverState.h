@@ -5,7 +5,8 @@
 //
 // The prompt is a "RETRY? Y/N" question, exposed through the same Menu widget
 // the pause screen uses: RETRY (Y) respawns and returns to play, QUIT (N) ends
-// the game.
+// the game.  The menu reads the player's InputMap (like the pause menu), so
+// the D-pad / stick, A, and the iOS touch controls work as well as the keys.
 
 #pragma once
 
@@ -14,6 +15,7 @@
 #include "../Widgets.h"
 
 class Cursor;
+class InputMap;
 
 class GameOverState : public GameState
 {
@@ -22,6 +24,7 @@ class GameOverState : public GameState
     Font* _hintText = NULL;
     Menu* _menu = NULL;
     Cursor* _cursor = NULL;
+    InputMap* _inputMap = NULL;
     bool _retryRequested = false;
 
     enum Option { OPTION_RETRY = 0, OPTION_QUIT = 1 };
@@ -32,6 +35,8 @@ class GameOverState : public GameState
 public:
     GameOverState(void);
     virtual ~GameOverState(void);
+
+    void setInputMap(InputMap* controller) { _inputMap = controller; }
 
     void onEnter(State* prev) override;
     bool onExecute(float time) override;

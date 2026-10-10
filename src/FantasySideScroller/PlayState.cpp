@@ -12,6 +12,7 @@
 #include "../Sprite.h"
 #include "../Animation.h"
 #include "../Cursor.h"
+#include "FantasySideScroller.h"
 #include "PauseState.h"
 #include "GameOverState.h"
 #include "ScreenSpaceCursor.h"
@@ -332,48 +333,10 @@ void PlayState::onEnter(State* prev)
 		_objectManager.addObject(objectName.c_str(), boar);
 	}
 
-	Keyboard* keyboard = Engine2D::getInput()->getKeyboard();
-
-	// TODO: Save the keymappings to a file and load them here
 	_player->start();
 	_player->setInputMap(_inputManager.createInputMap());
 	InputMap* controller = _player->getInputMap();
-	controller->addAction(Action("JUMP", keyboard->getKeys().KBK_SPACE));
-	controller->addAction(Action("JUMP", Gamepad::Button::A));
-	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_LEFT));
-	controller->addAction(Action("LEFT", keyboard->getKeys().KBK_A));
-	controller->addAction(Action("LEFT", Gamepad::Button::DpadLeft));
-	Action leftStick("LEFT");
-	leftStick.assignAxis(Gamepad::Axis::LeftX, -0.25f);
-	controller->addAction(leftStick);
-	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_RIGHT));
-	controller->addAction(Action("RIGHT", keyboard->getKeys().KBK_D));
-	controller->addAction(Action("RIGHT", Gamepad::Button::DpadRight));
-	Action rightStick("RIGHT");
-	rightStick.assignAxis(Gamepad::Axis::LeftX, 0.25f);
-	controller->addAction(rightStick);
-	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_DOWN));
-	controller->addAction(Action("DOWN", keyboard->getKeys().KBK_S));
-	controller->addAction(Action("DOWN", Gamepad::Button::DpadDown));
-	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_LCONTROL));
-	controller->addAction(Action("ATTACK", keyboard->getKeys().KBK_Z));
-	controller->addAction(Action("ATTACK", Gamepad::Button::X));
-	controller->addAction(Action("RUN", keyboard->getKeys().KBK_LSHIFT));
-	controller->addAction(Action("RUN", Gamepad::Button::LeftBumper));
-	// "UP" is the semantic up-direction action, shared with the pause menu.
-	// "INTERACT" is gameplay-only (E key) for interacting with objects.
-	controller->addAction(Action("UP", keyboard->getKeys().KBK_UP));
-	controller->addAction(Action("UP", keyboard->getKeys().KBK_W));
-	controller->addAction(Action("UP", Gamepad::Button::DpadUp));
-	Action upStick("UP");
-	upStick.assignAxis(Gamepad::Axis::LeftY, -0.5f);
-	controller->addAction(upStick);
-	controller->addAction(Action("INTERACT", keyboard->getKeys().KBK_E));
-	// "CONFIRM" is the menu confirm action: A + Enter.
-	controller->addAction(Action("CONFIRM", Gamepad::Button::A));
-	controller->addAction(Action("CONFIRM", keyboard->getKeys().KBK_RETURN));
-	controller->addAction(Action("PAUSE", keyboard->getKeys().KBK_ESCAPE));
-	controller->addAction(Action("PAUSE", Gamepad::Button::Start));
+	game.bindInputs(controller);
 	_player->setGameObject(_playableCharacter);
 	_playerController.setInputMap(controller);
 	Character::bindPlayerActions(_playerController);
@@ -571,7 +534,7 @@ bool PlayState::onExecute(float time)
 	if (_playableCharacter) {
 		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
 		// "UP" and "INTERACT" both trigger the interact logic: UP for directional up
-		// (shared with the pause menu), INTERACT for the E key (gameplay-only).
+		// (shared with the pause menu), INTERACT for E / USE (gameplay-only).
 		Action* upAction = controller ? controller->getAction("UP") : NULL;
 		Action* interactAction = controller ? controller->getAction("INTERACT") : NULL;
 		const bool upActive = upAction && upAction->isActive();
@@ -607,6 +570,7 @@ bool PlayState::onExecute(float time)
 			if (!_gameOverState) {
 				_gameOverState = new GameOverState();
 			}
+			_gameOverState->setInputMap(controller);
 			Engine2D::getGame()->push(_gameOverState);
 			return keepRunning;
 		}

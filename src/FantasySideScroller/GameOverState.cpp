@@ -18,6 +18,7 @@ GameOverState::GameOverState()
     , _hintText(NULL)
     , _menu(NULL)
     , _cursor(NULL)
+    , _inputMap(NULL)
     , _retryRequested(false)
 {
 }
@@ -87,7 +88,12 @@ void GameOverState::onEnter(State* prev)
     if (!_hintText) {
         _hintText = new Font();
         if (_hintText->loadFromJSON(fontPath)) {
+#if FRAMEWORK_IOS
+            // The touch controls' JUMP button, or a controller's A button
+            _hintText->setText("JUMP / A to Select");
+#else
             _hintText->setText("Y: RETRY   N: QUIT");
+#endif
             _hintText->setTint(0xFFAAAAAA);
             _hintText->setScale(0.8f, 0.8f);
 
@@ -105,7 +111,9 @@ void GameOverState::onEnter(State* prev)
     }
 
     // Create the mouse cursor so it stays visible while the game is over.
-    if (!_cursor) {
+    // No cursor without a pointer (touch-only iOS has no mouse).
+    IInput* input = Engine2D::getInput();
+    if (!_cursor && (!input || input->getMouse())) {
         _cursor = new Cursor();
         if (_cursor->load(BasePath("cursors.png").c_str())) {
             _menuRenderList->push_back(_cursor->getImage());
@@ -133,44 +141,46 @@ bool GameOverState::onExecute(float time)
         return false;
     }
 
-    // Arrow keys to move between the menu options
-    if (_menu) {
-        if (keyboard->keyPressed(keyboard->getKeys().KBK_UP)) {
+    // Move between the menu options with the same UP / DOWN actions as the
+    // pause menu (arrows, W/S, D-pad, stick, or the iOS touch stick).
+    if (_menu && _inputMap) {
+        Action* upAction = _inputMap->getAction("UP");
+        Action* downAction = _inputMap->getAction("DOWN");
+        if (upAction && _inputMap->buttonPressed(upAction)) {
             _menu->selectPrevious();
-        } else if (keyboard->keyPressed(keyboard->getKeys().KBK_DOWN)) {
+        } else if (downAction && _inputMap->buttonPressed(downAction)) {
             _menu->selectNext();
         }
     }
 
-    // Enter or Space executes the selected option
-    if (keyboard->keyPressed(keyboard->getKeys().KBK_RETURN) ||
+    // Execute the selected option with the CONFIRM action (Enter / A, which is
+    // JUMP on the iOS touch controls) or Space.
+    Action* confirmAction = _inputMap ? _inputMap->getAction("CONFIRM") : NULL;
+    if ((confirmAction && _inputMap->buttonPressed(confirmAction)) ||
         keyboard->keyPressed(keyboard->getKeys().KBK_SPACE)) {
         _executeSelectedOption();
         return false;
     }
 
     // Keep the menu cursor tracking the mouse while the game is over.
-    if (_cursor && _menu && Engine2D::getInput()->getMouse()) {
+    if (_cursor && _menu) {
         Mouse* mouse = Engine2D::getInput()->getMouse();
-        // Hovering an option with the mouse selects it; clicking executes it.
-        const vector2 renderPos = ClientToRenderCursorPosition(mouse->getPosition());
-        const int hoverIndex = _menu->hitTest(renderPos);
-        if (hoverIndex >= 0) {
-            _menu->setSelection(hoverIndex);
-            if (mouse->buttonPressed(MOUSE_LEFT)) {
-                _executeSelectedOption();
-                return false;
+        if (mouse) {
+            // Hovering an option with the mouse selects it; clicking executes it.
+            const vector2 renderPos = ClientToRenderCursorPosition(mouse->getPosition());
+            const int hoverIndex = _menu->hitTest(renderPos);
+            if (hoverIndex >= 0) {
+                _menu->setSelection(hoverIndex);
+                if (mouse->buttonPressed(MOUSE_LEFT)) {
+                    _executeSelectedOption();
+                    return false;
+                }
             }
+
+            _cursor->setPosition(renderPos);
+            _cursor->updateFromMouse(mouse);
         }
-
-        _cursor->setPosition(renderPos);
-        _cursor->updateFromMouse(mouse);
-    } else if (_menu) {
-        // Fallback for platforms without mouse (like iOS touch)
-        // Note: This still needs a way to get touch coordinates to update the cursor/selection.
-        // For now, we ensure it doesn't crash and remains visible.
     }
-
 
     // Highlight the currently selected option
     if (_menu) {
