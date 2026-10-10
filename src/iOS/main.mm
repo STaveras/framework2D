@@ -56,15 +56,25 @@
 @interface FWGameViewController : UIViewController
 @end
 
+namespace {
+// Renderers come from the Renderer:: factories and go back through destroyRenderer.
+struct RendererDeleter
+{
+	void operator()(IRenderer* renderer) const { Renderer::destroyRenderer(renderer); }
+};
+}
+
 @implementation FWGameViewController {
 	FWMetalView* _gameView;
 	FWTouchControlsView* _controls;
 	CADisplayLink* _displayLink;
 	TouchGamepadState _touchState;
-	Window* _window;
+	// Freed by -shutdownGame: the engine first, the window last.
+	std::unique_ptr<Window> _window;
 	std::unique_ptr<IOSInput> _input;
-	IRenderer* _renderer;
+	std::unique_ptr<IRenderer, RendererDeleter> _renderer;
 	BOOL _started;
+	BOOL _engineRunning; // Engine2D::initialize() succeeded
 	BOOL _touchPreferred; // touched the screen since last using a controller
 }
 
@@ -101,6 +111,7 @@
 {
 	[_displayLink invalidate];
 	[NSNotificationCenter.defaultCenter removeObserver:self];
+	[self shutdownGame];
 }
 
 - (void)viewDidLayoutSubviews
@@ -148,13 +159,13 @@
 
 	try {
 		const CGSize size = _gameView.bounds.size;
-		_window = new Window((int)size.width, (int)size.height, Engine2D::version());
+		_window = std::make_unique<Window>((int)size.width, (int)size.height, Engine2D::version());
 		_window->setNativeView((__bridge void*)_gameView);
 		_window->initialize();
-		Renderer::mainWindow = _window;
+		Renderer::mainWindow = _window.get();
 
 		_input = std::make_unique<IOSInput>(&_touchState);
-		_renderer = Renderer::createMTLRenderer(_window);
+		_renderer.reset(Renderer::createMTLRenderer(_window.get()));
 		_renderer->setBackgroundStatic(System::checkArgumentsForStaticBackground(argc, argv.data()));
 
 		Engine2D* engine = Engine2D::getInstance();
@@ -162,17 +173,41 @@
 		engine->setFixedDeltaSeconds(fixedDtMs / 1000.0);
 		engine->setRenderInterpolation(true);
 		engine->setInputInterface(_input.get());
-		engine->setRenderer(_renderer);
+		engine->setRenderer(_renderer.get());
 		engine->setGame(&game);
 		engine->initialize();
+		_engineRunning = YES;
 	}
 	catch (const std::exception& e) {
 		NSLog(@"framework2D failed to start: %s", e.what());
+		[self shutdownGame];
 		return;
 	}
 
 	_displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(step:)];
 	[_displayLink addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];
+}
+
+// The same teardown as main.cpp: the engine, then input, renderer and window.
+- (void)shutdownGame
+{
+	Engine2D* engine = Engine2D::getInstance();
+	if (_engineRunning) {
+		engine->shutdown();
+		_engineRunning = NO;
+	}
+	// The engine keeps plain pointers to these; don't leave them dangling.
+	engine->setInputInterface(nullptr);
+	engine->setRenderer(nullptr);
+	_input.reset();
+	_renderer.reset();
+	if (_window) {
+		_window->shutdown();
+		if (Renderer::mainWindow == _window.get()) {
+			Renderer::mainWindow = nullptr;
+		}
+		_window.reset();
+	}
 }
 
 - (void)step:(CADisplayLink*)displayLink

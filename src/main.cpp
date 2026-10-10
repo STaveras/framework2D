@@ -15,6 +15,7 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
+#include <string>
 #include <vector>
 
 // TODO: Put this in a DLL and have loader functions to search for "game" library files
@@ -26,33 +27,37 @@
 
 #if defined(_WIN32) && !defined(_DEBUG)
 
+// One UTF-16 command-line argument as UTF-8, for System::checkArguments*.
+static std::string narrowArgument(const wchar_t* argument)
+{
+   // CP_UTF8 accepts no conversion flags; a size query first, then the conversion.
+   const int size = WideCharToMultiByte(CP_UTF8, 0, argument, -1, nullptr, 0, nullptr, nullptr);
+   if (size <= 1) {
+      return std::string();
+   }
+   std::string narrow((size_t)size, '\0');
+   WideCharToMultiByte(CP_UTF8, 0, argument, -1, &narrow[0], size, nullptr, nullptr);
+   narrow.pop_back(); // the terminator the conversion wrote
+   return narrow;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
+   // The strings live until WinMain returns; argv points into them.
+   std::vector<std::string> arguments;
    int argc = 0;
-   
-   LPCCH defaultChar = NULL;
-   LPBOOL usedDefaultChar = nullptr;
-   LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc);
-   LPSTR* argvLPSTR = new LPSTR[argc];
-
-   // Convert LPSTR* argv to const char** for System::checkArguments*
-   const char** argv = new const char* [argc];
-
-	for (size_t i = 0; i < argc; i++) {
-        argvLPSTR[i] = new CHAR[wcslen(argvW[i]) + 1]{ 0 };
-#if _DEBUG
-		OutputDebugStringW(L"\n");
-		OutputDebugStringW(argvW[i]);
-#endif
-		WideCharToMultiByte(CP_UTF8,
-			WC_NO_BEST_FIT_CHARS | WC_COMPOSITECHECK,
-			argvW[i], -1, argvLPSTR[i], (int)wcslen(argvW[(int)i]),
-         defaultChar, usedDefaultChar);
-#if _DEBUG
-		OutputDebugStringA(argv[i]);
-#endif
-        argv[i] = argvLPSTR[i];
-	}
+   if (LPWSTR* argvW = CommandLineToArgvW(GetCommandLineW(), &argc)) {
+      for (int i = 0; i < argc; i++) {
+         arguments.push_back(narrowArgument(argvW[i]));
+      }
+      LocalFree(argvW);
+   }
+   std::vector<const char*> argumentPointers;
+   for (const std::string& argument : arguments) {
+      argumentPointers.push_back(argument.c_str());
+   }
+   argc = (int)argumentPointers.size();
+   const char** argv = argumentPointers.data();
 #else
 
 #if defined(_WIN32) && defined(_DEBUG)
@@ -313,13 +318,6 @@ int main(int argc, const char *argv[])
    Renderer::destroyRenderer(pRenderer);
 
    window.shutdown();
-
-#if defined(_WIN32) && !defined(_DEBUG)
-   for (int i = 0; i < argc; i++) {
-      delete [] argv[i];
-   }
-   delete [] argv;
-#endif
 
    return 0;
 }
