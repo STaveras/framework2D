@@ -1,9 +1,17 @@
+// InputTapeRecorder.h
+// Records and replays input as action state changes per simulation tick, so a
+// session replays deterministically:
+//   AUTO_INPUT_RECORD=1 [AUTO_INPUT_RECORD_PATH=tmp/auto_input_events.csv]
+//   AUTO_INPUT_REPLAY=1 or AUTO_INPUT_REPLAY_PATH=<tape>
+// A tape is CSV with a "tick,action,down" header and one row each time an
+// action is pressed (1) or released (0). During a replay every action follows
+// the tape (released until its first row) and the input devices are ignored.
+// InputMap::update() drives both.
+
 #pragma once
 
 #include <cstdint>
 #include <string>
-
-class InputMap;
 
 namespace InputTapeRecorder
 {
@@ -11,16 +19,13 @@ void initializeFromEnvironment(void);
 void shutdown(void);
 
 bool isRecording(void);
-bool isReplayEnabled(void);
+bool isReplaying(void);
 
-void onControllerTickStart(InputMap* controller, uint64_t simulationTick, float controllerElapsedSeconds);
-bool isReplayControlledAction(const std::string& actionName);
-bool getReplayActionState(const std::string& actionName, bool fallbackState);
+// Apply the tape's changes up to and including this tick.
+void beginTick(uint64_t tick);
+// An action's state on the tape as of the last beginTick().
+bool replayState(const std::string& action);
 
-void recordActionSnapshot(uint64_t simulationTick, const std::string& actionName, bool active);
-void onControllerActionEvent(uint64_t simulationTick, float controllerElapsedSeconds, const std::string& actionName, const char* eventType, bool active);
-
-uint64_t getLoadedReplayEvents(void);
-uint64_t getConsumedReplayEvents(void);
+// Write a change to the tape being recorded.
+void recordChange(uint64_t tick, const std::string& action, bool down);
 }
-

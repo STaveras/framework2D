@@ -22,6 +22,6 @@ public:
 	// A new map reading the given gamepad (0 is the first connected pad).
 	InputMap& createInputMap(int padIndex = 0);
 
-	void update(float time);
+	void update(void);
 	void shutdown(void);
 };

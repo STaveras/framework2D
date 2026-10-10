@@ -15,10 +15,10 @@ InputMap& InputManager::createInputMap(int padIndex)
 	return map;
 }
 
-void InputManager::update(float time)
+void InputManager::update(void)
 {
 	for (InputMap& map : _inputMaps) {
-		map.update(time);
+		map.update();
 	}
 }
 

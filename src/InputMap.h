@@ -21,7 +21,6 @@ class InputMap
 {
 	IInput* _input = nullptr;
 	int _pad = 0;
-	float _elapsedTime = 0.0f;
 	// A deque keeps the references bind() returns valid as actions are added.
 	std::deque<Action> _actions;
 
@@ -53,6 +52,7 @@ public:
 	// scripted input). Takes effect at the next update().
 	void drive(const std::string& name, bool down);
 
-	// Sample every action for this tick.
-	void update(float time);
+	// Sample every action for this tick, and record the changes to the input
+	// tape when recording.
+	void update(void);
 };

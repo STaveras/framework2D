@@ -20,14 +20,13 @@ void Game::begin(void)
 void Game::update(Timer* timer)
 {
    if (!this->empty()) {
-      const float time = timer ? (float)timer->getDeltaTime() : 0.0f;
       {
          RuntimeProfile::Scope profile(RuntimeProfile::Region::Input);
-         _inputManager.update(time);
+         _inputManager.update();
       }
 
       if (timer)
-         this->top()->onExecute(time);
+         this->top()->onExecute((float)timer->getDeltaTime());
       else
          this->top()->onExecute();
    }

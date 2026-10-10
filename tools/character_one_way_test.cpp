@@ -109,7 +109,7 @@ int main() {
         return hi.y;
     };
     auto send = [&]() {
-        controller.update(0.0f);
+        controller.update();
         heroController.sendActionConditions(hero);
     };
     // Change an action now; the hero sees the press or release immediately.

@@ -85,26 +85,21 @@ bool InputMap::_readDevices(const Action& action) const
 	return false;
 }
 
-void InputMap::update(float time)
+void InputMap::update(void)
 {
-	_elapsedTime += time;
 	const uint64_t tick = Engine2D::getSimulationTick();
-	InputTapeRecorder::onControllerTickStart(this, tick, _elapsedTime);
+	const bool replaying = InputTapeRecorder::isReplaying();
+	if (replaying) {
+		InputTapeRecorder::beginTick(tick);
+	}
 
 	for (Action& action : _actions) {
-		const std::string& name = action.getName();
 		action._wasDown = action._down;
-		action._down = InputTapeRecorder::isReplayControlledAction(name)
-			? InputTapeRecorder::getReplayActionState(name, action._wasDown)
+		action._down = replaying
+			? InputTapeRecorder::replayState(action.getName())
 			: (action._driven || _readDevices(action));
-
-		InputTapeRecorder::onControllerActionEvent(tick, _elapsedTime, name,
-			action._down ? "EVT_KEYDOWN" : "EVT_KEYUP", action._down);
-		if (action.pressed()) {
-			InputTapeRecorder::onControllerActionEvent(tick, _elapsedTime, name, "EVT_KEYPRESSED", true);
-		}
-		else if (action.released()) {
-			InputTapeRecorder::onControllerActionEvent(tick, _elapsedTime, name, "EVT_KEYRELEASED", false);
+		if (action._down != action._wasDown) {
+			InputTapeRecorder::recordChange(tick, action.getName(), action._down);
 		}
 	}
 }
