@@ -17,7 +17,6 @@
 #include "../InputMap.h"
 #include "PauseState.h"
 #include "GameOverState.h"
-#include "ScreenSpaceCursor.h"
 
 #include "Constants.h"
 #include "Character.h"
@@ -42,7 +41,6 @@ constexpr float kTraversalDefaultTimeLimitSeconds = 75.0f;
 
 PlayState::PlayState()
     : _playableCharacter(nullptr)
-    , _cursor(nullptr)
 {
 	// AUTO_START_MAP=<file>.tmj starts on another map (benchmarks, replays).
 	std::string owned;
@@ -56,10 +54,8 @@ PlayState::~PlayState() {
 	if (_playableCharacter || _hudRenderList) {
 		onExit(nullptr);
 	}
-	// We own the pause and game-over overlays we push on top of ourselves;
-	// ProgramStack never deletes states, so release them here.
-	SAFE_DELETE(_pauseState);
-	SAFE_DELETE(_gameOverState);
+	// The pause and game-over overlays are freed with this state
+	// (ProgramStack never deletes states).
 }
 
 void PlayState::_initHUD()
@@ -136,10 +132,13 @@ void PlayState::_initHUD()
 	// No cursor without a pointer (touch-only iOS has no mouse).
 	IInput* input = Engine2D::getInput();
 	if (!_cursor && (!input || input->getMouse())) {
-		_cursor = new Cursor();
-		if (_cursor->load(BasePath("cursors.png").c_str())) {
+		_cursor = std::make_unique<Cursor>();
+		if (_cursor->load(BasePath("cursors.png"))) {
 			_cursor->getImage()->setVisibility(true);
 			_hudRenderList->push_back(_cursor->getImage());
+		}
+		else {
+			_cursor.reset();
 		}
 	}
 }
@@ -238,7 +237,7 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_staminaBarFill);
 	SAFE_DELETE(_keyIcon);
 	// SAFE_DELETE(_helloWorldText);
-	SAFE_DELETE(_cursor);
+	_cursor.reset();
 }
 
 // Restore the playable character to a fresh spawn: reset the collision world,
@@ -390,7 +389,6 @@ bool PlayState::onExecute(float time)
 		// the stage through its normal lifecycle to reread map and tileset data.
 		Engine2D::getEventSystem()->processEvents();
 		onExit(nullptr);
-		_interactWasActive = false;
 		_paused = false;
 		onEnter(nullptr);
 		// Object-added events start the new objects and register their renderables.
@@ -441,9 +439,9 @@ bool PlayState::onExecute(float time)
 		// Create it once (onEnter/onExit are re-entrant and clean up after
 		// themselves), so repeated pause/resume cycles reuse the same object.
 		if (!_pauseState) {
-			_pauseState = new PauseState();
+			_pauseState = std::make_unique<PauseState>();
 		}
-		Engine2D::getGame()->push(_pauseState);
+		Engine2D::getGame()->push(_pauseState.get());
 	}
 
 	if (DEBUGGING) 
@@ -505,7 +503,6 @@ bool PlayState::onExecute(float time)
 			_sectionEntryFacingLeft = _playableCharacter && _playableCharacter->isFacingLeft();
 			Engine2D::getEventSystem()->processEvents();
 			onExit(nullptr);
-			_interactWasActive = false;
 			_paused = false;
 			_mapFileName = nextMap;
 			onEnter(nullptr);
@@ -528,12 +525,9 @@ bool PlayState::onExecute(float time)
 	}
 
 	if (_playableCharacter) {
-		// Edge-detect on the action state (not raw keys) so gamepads and input replays work too.
-		// "UP" and "INTERACT" both trigger the interact logic: UP for directional up
-		// (shared with the pause menu), INTERACT for E / USE (gameplay-only).
-		const bool interactCombined = input.down("UP") || input.down("INTERACT");
-		const bool interactPressed = interactCombined && !_interactWasActive;
-		_interactWasActive = interactCombined;
+		// UP (directional, shared with the menus) and INTERACT (E / USE,
+		// gameplay-only) both interact.
+		const bool interactPressed = input.pressed("UP") || input.pressed("INTERACT");
 		_levelProps.update(_playableCharacter, interactPressed, time);
 	}
 
@@ -560,23 +554,17 @@ bool PlayState::onExecute(float time)
 				_cursor->getImage()->setVisibility(false);
 			}
 			if (!_gameOverState) {
-				_gameOverState = new GameOverState();
+				_gameOverState = std::make_unique<GameOverState>();
 			}
-			Engine2D::getGame()->push(_gameOverState);
+			Engine2D::getGame()->push(_gameOverState.get());
 			return keepRunning;
 		}
 	}
 
-	// Update cursor position and state to match mouse.
-	// The cursor sprite is pushed into _hudRenderList (a screen-space render
-	// list). Convert the mouse's client coordinates into the renderer's logical
-	// screen coordinates; do not convert through the camera/world transform.
-	if (!_paused && _cursor) {
-		Mouse* mouse = Engine2D::getInput()->getMouse();
-		if (mouse) {
-			_cursor->setPosition(ClientToRenderCursorPosition(mouse->getPosition()));
-			_cursor->updateFromMouse(mouse);
-		}
+	// The HUD cursor tracks the mouse in screen space (not through the camera).
+	Mouse* mouse = Engine2D::getInput()->getMouse();
+	if (!_paused && _cursor && mouse) {
+		_cursor->follow(*mouse);
 	}
 
 	return keepRunning;

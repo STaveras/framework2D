@@ -9,6 +9,7 @@
 #include "LevelProps.h"
 #include "TraversalMechanics.h"
 
+#include <memory>
 #include <vector>
 
 class Character;
@@ -30,7 +31,6 @@ class PlayState : public GameState
 	bool _traversalOperatorRegistered = false;
 	LevelProps _levelProps;
 	std::string _mapFileName = "mosswood_hollow.tmj";
-	bool _interactWasActive = false;
 	bool _reloadWasDown = false;
 	// Set by a SectionEnd/SectionBegin exit: the next map's destination to spawn beside,
 	// and the character's outgoing height and facing.
@@ -41,8 +41,9 @@ class PlayState : public GameState
 	Character* _playableCharacter = NULL;
 	std::vector<Boar*> _boars;
 	bool _paused = false;
-	PauseState* _pauseState = NULL;
-	GameOverState* _gameOverState = NULL;
+	// The overlays pushed on top of this state; reused across pauses and deaths.
+	std::unique_ptr<PauseState> _pauseState;
+	std::unique_ptr<GameOverState> _gameOverState;
 	IRenderer::RenderList* _hudRenderList = NULL;
 	Image* _healthBarBackground = NULL;
 	Image* _healthBarFill = NULL;
@@ -50,7 +51,7 @@ class PlayState : public GameState
 	Image* _staminaBarFill = NULL;
 	Image* _keyIcon = NULL;
 	// Font* _helloWorldText = NULL;
-	Cursor* _cursor = NULL;
+	std::unique_ptr<Cursor> _cursor;
 
 public:
 	PlayState(void);

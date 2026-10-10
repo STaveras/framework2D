@@ -54,6 +54,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\FantasySideScroller\GameOverState.h">
+      <Filter>Assets / Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\FantasySideScroller\MenuState.h">
+      <Filter>Assets / Resources</Filter>
+    </ClInclude>
     <ClInclude Include="src\Key.h">
       <Filter>Input</Filter>
     </ClInclude>
@@ -89,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="src\Game.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Widgets.h">
+      <Filter>Assets / Resources</Filter>
     </ClInclude>
     <ClInclude Include="src\Window.h">
       <Filter>Core</Filter>
@@ -486,6 +495,12 @@
     <ClCompile Include="src\Engine2D.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\GameOverState.cpp">
+      <Filter>Assets / Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FantasySideScroller\MenuState.cpp">
+      <Filter>Assets / Resources</Filter>
+    </ClCompile>
     <ClCompile Include="src\Gamepad.cpp">
       <Filter>Input</Filter>
     </ClCompile>
@@ -500,6 +515,9 @@
     </ClCompile>
     <ClCompile Include="src\Game.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Widgets.cpp">
+      <Filter>Assets / Resources</Filter>
     </ClCompile>
     <ClCompile Include="src\Window.cpp">
       <Filter>Core</Filter>

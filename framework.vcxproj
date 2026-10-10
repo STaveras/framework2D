@@ -272,6 +272,8 @@
     <ClInclude Include="src\Background.h" />
     <ClInclude Include="src\Actor.h" />
     <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\FantasySideScroller\GameOverState.h" />
+    <ClInclude Include="src\FantasySideScroller\MenuState.h" />
     <ClInclude Include="src\Intent.h" />
     <ClInclude Include="src\Key.h" />
     <ClInclude Include="src\Mouse.h" />
@@ -406,6 +408,7 @@
     <ClInclude Include="src\UpdateBackgroundOperator.h" />
     <ClInclude Include="src\UpdateRenderableOperator.h" />
     <ClInclude Include="src\Vertex.h" />
+    <ClInclude Include="src\Widgets.h" />
     <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\WorldOperator.h" />
     <ClInclude Include="src\XAudio.h" />
@@ -414,6 +417,8 @@
   <ItemGroup>
     <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Actor.cpp" />
+    <ClCompile Include="src\FantasySideScroller\GameOverState.cpp" />
+    <ClCompile Include="src\FantasySideScroller\MenuState.cpp" />
     <ClCompile Include="src\Gamepad.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\BlinkFlash.cpp" />
@@ -489,6 +494,7 @@
     <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\Trigger.cpp" />
     <ClCompile Include="src\UpdateBackgroundOperator.cpp" />
+    <ClCompile Include="src\Widgets.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\WorldOperator.cpp" />
     <ClCompile Include="src\XAudio.cpp" />
