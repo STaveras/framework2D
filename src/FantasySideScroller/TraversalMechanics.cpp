@@ -51,25 +51,25 @@ bool TraversalMechanics::overlapsCharacter(const TraversalTrigger& trigger, cons
 
 TraversalTriggerType TraversalMechanics::parseTriggerType(const std::string& typeName)
 {
-	if (StrUtils::IEquals(typeName, "goal")) {
+	if (StrUtils::iEquals(typeName, "goal")) {
 		return TraversalTriggerType::Goal;
 	}
-	if (StrUtils::IEquals(typeName, "destination")) {
+	if (StrUtils::iEquals(typeName, "destination")) {
 		return TraversalTriggerType::Destination;
 	}
-	if (StrUtils::IEquals(typeName, "checkpoint")) {
+	if (StrUtils::iEquals(typeName, "checkpoint")) {
 		return TraversalTriggerType::Checkpoint;
 	}
-	if (StrUtils::IEquals(typeName, "killzone")) {
+	if (StrUtils::iEquals(typeName, "killzone")) {
 		return TraversalTriggerType::Killzone;
 	}
-	if (StrUtils::IEquals(typeName, "time_bonus")) {
+	if (StrUtils::iEquals(typeName, "time_bonus")) {
 		return TraversalTriggerType::TimeBonus;
 	}
-	if (StrUtils::IEquals(typeName, "stamina_pickup")) {
+	if (StrUtils::iEquals(typeName, "stamina_pickup")) {
 		return TraversalTriggerType::StaminaPickup;
 	}
-	if (StrUtils::IEquals(typeName, "hazard")) {
+	if (StrUtils::iEquals(typeName, "hazard")) {
 		return TraversalTriggerType::Hazard;
 	}
 	return TraversalTriggerType::Unknown;
@@ -82,16 +82,11 @@ float TraversalMechanics::readNumericProperty(const LevelTriggerDescriptor& desc
 	}
 
 	for (const TriggerPropertyDescriptor& property : descriptor.properties) {
-		if (!StrUtils::IEquals(property.name, key)) {
+		if (!StrUtils::iEquals(property.name, key)) {
 			continue;
 		}
 
-		char* endPtr = nullptr;
-		const float parsedValue = std::strtof(property.value.c_str(), &endPtr);
-		if (endPtr == property.value.c_str()) {
-			return fallback;
-		}
-		return parsedValue;
+		return StrUtils::floatFromString(property.value, fallback);
 	}
 
 	return fallback;
@@ -104,10 +99,10 @@ bool TraversalMechanics::readBoolProperty(const LevelTriggerDescriptor& descript
 	}
 
 	for (const TriggerPropertyDescriptor& property : descriptor.properties) {
-		if (!StrUtils::IEquals(property.name, key)) {
+		if (!StrUtils::iEquals(property.name, key)) {
 			continue;
 		}
-		return StrUtils::IsTruthy(property.value);
+		return StrUtils::isTruthy(property.value);
 	}
 
 	return fallback;
@@ -116,7 +111,7 @@ bool TraversalMechanics::readBoolProperty(const LevelTriggerDescriptor& descript
 std::string TraversalMechanics::readStringProperty(const LevelTriggerDescriptor& descriptor, const char* key)
 {
 	for (const TriggerPropertyDescriptor& property : descriptor.properties) {
-		if (StrUtils::IEquals(property.name, key)) {
+		if (StrUtils::iEquals(property.name, key)) {
 			return property.value;
 		}
 	}
@@ -193,19 +188,19 @@ void TraversalMechanics::initialize(
 				// "push" names the direction the hazard points, and so throws the character.
 				const std::string direction = readStringProperty(descriptor, "push");
 				const float speed = readNumericProperty(descriptor, "push_speed", kDefaultHazardPushSpeed);
-				if (StrUtils::IEquals(direction, "left")) {
+				if (StrUtils::iEquals(direction, "left")) {
 					trigger.push = vector2(-speed, -speed * kHazardSidePushLift);
 				}
-				else if (StrUtils::IEquals(direction, "right")) {
+				else if (StrUtils::iEquals(direction, "right")) {
 					trigger.push = vector2(speed, -speed * kHazardSidePushLift);
 				}
-				else if (StrUtils::IEquals(direction, "up")) {
+				else if (StrUtils::iEquals(direction, "up")) {
 					trigger.push = vector2(0.0f, -speed);
 				}
-				else if (StrUtils::IEquals(direction, "down")) {
+				else if (StrUtils::iEquals(direction, "down")) {
 					trigger.push = vector2(0.0f, speed);
 				}
-				else if (StrUtils::IEquals(direction, "away")) {
+				else if (StrUtils::iEquals(direction, "away")) {
 					trigger.push = vector2(speed, -speed * kHazardSidePushLift);
 					trigger.pushAway = true;
 				}
@@ -309,8 +304,8 @@ void TraversalMechanics::update(Character* character, float dt)
 			if (!trigger.nextMap.empty()) {
 				// A destination with a next_map loads that map instead of ending the run.
 				// Leaving through one section boundary enters the next map at the other.
-				const char* entryName = StrUtils::IEquals(trigger.name, "SectionEnd") ? "SectionBegin" :
-					StrUtils::IEquals(trigger.name, "SectionBegin") ? "SectionEnd" : "";
+				const char* entryName = StrUtils::iEquals(trigger.name, "SectionEnd") ? "SectionBegin" :
+					StrUtils::iEquals(trigger.name, "SectionBegin") ? "SectionEnd" : "";
 				requestMapChange(trigger.nextMap, entryName, character->getPosition().y);
 			}
 			else {

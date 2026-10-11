@@ -54,9 +54,9 @@ void initialize(Runtime& runtime, const char* defaultPath)
 
 	runtime.initialized = true;
 	runtime.enabled =
-		StrUtils::IsTruthy(System::getenv_platform("AUTO_MOVEMENT_TELEMETRY", ownedString)) ||
-		StrUtils::IsTruthy(System::getenv_platform("AUTO_SLOPE_TELEMETRY", ownedString)) ||
-		StrUtils::IsTruthy(System::getenv_platform("AUTO_SLOPE_TEST", ownedString));
+		StrUtils::isTruthy(System::getenv_platform("AUTO_MOVEMENT_TELEMETRY", ownedString)) ||
+		StrUtils::isTruthy(System::getenv_platform("AUTO_SLOPE_TELEMETRY", ownedString)) ||
+		StrUtils::isTruthy(System::getenv_platform("AUTO_SLOPE_TEST", ownedString));
 	runtime.telemetryEnabled = runtime.enabled;
 
 	std::string path = getEnvOrDefault("AUTO_MOVEMENT_LOG_PATH", "");

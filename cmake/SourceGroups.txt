@@ -243,10 +243,14 @@ src/TileMap.h
 src/Actor.cpp
 src/Actor.h
 
+[Scripting]
+src/Scripting/*
+
 [Applications\FantasySideScroller]
 src/FantasySideScroller/*
 
 [Physics\Collision]
+src/Collidable.cpp
 src/Collidable.h
 src/CollidableGroup.cpp
 src/CollidableGroup.h

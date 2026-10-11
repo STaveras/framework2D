@@ -11,6 +11,8 @@
 
 #include <cstdint>
 
+template<class Type> class Factory;
+
 enum class SurfaceFlags : uint32_t
 {
 	None = 0,
@@ -72,6 +74,14 @@ public:
 	{
 		return (((uint32_t)(_surfaceTraits.flags & flag)) != 0u);
 	}
+
+	// Builds the collider described by a Tiled "objectgroup" (how Tiled stores a tile's
+	// collision): rectangles and polygons, each moved by origin. Concave polygons are split
+	// into convex pieces, and several objects come back as one CollidableGroup. Everything
+	// is created in owner. NULL when the group has no usable object. source names the
+	// group's owner (e.g. "tile=12") in debug messages.
+	static Collidable* loadFromObjectGroup(simdjson::dom::element objectGroup, Factory<Collidable>& owner,
+		vector2 origin = vector2(0.0f, 0.0f), const char* source = "", int* decomposedConcaveCount = NULL);
 
 	virtual bool collidesWith(vector2 point) { return _position == point; } // issa joke
 	virtual bool collidesWith(const Collidable* collidable) { return this->collidesWith(collidable->getPosition()); }

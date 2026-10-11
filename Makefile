@@ -44,12 +44,12 @@ COMMON_SRCS := \
   src/TextureVK.cpp src/TextureGL.cpp src/IInput.cpp src/Trigger.cpp \
   src/UpdateBackgroundOperator.cpp src/SDSParser.cpp src/PlatformInput.cpp src/PlatformKeyboard.cpp src/System.cpp \
   src/ImageLoaders.cpp src/Sprite.cpp src/TileSet.cpp src/Debug.cpp \
-  src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
+  src/Collidable.cpp src/CollidableGroup.cpp src/Plane.cpp src/Square.cpp src/Circle.cpp src/Polygon.cpp src/PolygonDecomposition.cpp \
   src/FantasySideScroller/FantasySideScroller.cpp src/FantasySideScroller/LevelManager.cpp src/FantasySideScroller/PlayState.cpp \
   src/FantasySideScroller/MenuState.cpp src/FantasySideScroller/PauseState.cpp src/FantasySideScroller/GameOverState.cpp src/FantasySideScroller/Character.cpp src/FantasySideScroller/Boar.cpp \
   src/FantasySideScroller/CharacterMovement.cpp src/FantasySideScroller/CharacterStateSetup.cpp src/FantasySideScroller/CharacterUpdate.cpp \
   src/FantasySideScroller/TraversalMechanics.cpp src/FantasySideScroller/LevelProps.cpp src/BlinkFlash.cpp \
-  src/Actor.cpp src/PlayerController.cpp src/Widgets.cpp
+  src/Actor.cpp src/PlayerController.cpp src/Widgets.cpp src/Scripting/JSONReader.cpp
 
 SRCS := $(COMMON_SRCS) $(PLATFORM_SRCS)
 
@@ -154,6 +154,18 @@ $(OBJDIR)/tools/character_one_way_test.o: CXXFLAGS += -UNDEBUG
 test-character-one-way: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/character_one_way_test.o
 	$(CXX) $^ -o $(OBJDIR)/character_one_way_test $(LDFLAGS)
 	./$(OBJDIR)/character_one_way_test
+
+.PHONY: test-scripting
+$(OBJDIR)/tools/scripting_test.o: CXXFLAGS += -UNDEBUG
+test-scripting: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/scripting_test.o
+	$(CXX) $^ -o $(OBJDIR)/scripting_test $(LDFLAGS)
+	./$(OBJDIR)/scripting_test
+
+.PHONY: test-animation-frame-data
+$(OBJDIR)/tools/animation_frame_data_test.o: CXXFLAGS += -UNDEBUG
+test-animation-frame-data: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/animation_frame_data_test.o
+	$(CXX) $^ -o $(OBJDIR)/animation_frame_data_test $(LDFLAGS)
+	./$(OBJDIR)/animation_frame_data_test
 
 # iOS: an Xcode project generated from the root CMakeLists (Metal renderer,
 # touch controls). `make ios` builds it for the simulator; `make ios-run` also boots

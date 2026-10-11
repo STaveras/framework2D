@@ -75,7 +75,7 @@ SpawnMarkers readSpawnMarkers(const char* mapFile, vector2 mapOffset) {
 	spawns.midX = mapOffset.x + map.mapWidth * map.tileWidth * 0.5f;
 	for (const TileObjectLayerDescriptor& layer : map.objectLayers) {
 		for (const TileObjectDescriptor& object : layer.objects) {
-			if (StrUtils::IEquals(object.typeName, "spawn")) {
+			if (StrUtils::iEquals(object.typeName, "spawn")) {
 				spawns.origins.push_back(mapOffset + vector2(object.x, object.y - kLocomotionFootLocalY));
 			}
 		}
@@ -93,7 +93,7 @@ std::string exitThrough(LevelManager& level, TraversalMechanics& mechanics, Char
 	mechanics.update(&hero, 0.0f);
 	const TraversalTrigger* exit = nullptr;
 	for (const auto& trigger : mechanics.getTriggers()) {
-		if (StrUtils::IEquals(trigger.name, boundaryName)) exit = &trigger;
+		if (StrUtils::iEquals(trigger.name, boundaryName)) exit = &trigger;
 	}
 	assert(exit);
 	hero.setPosition(exit->position.x + exit->size.x * 0.5f, y);
@@ -182,7 +182,7 @@ int main() {
 		const TraversalTrigger* sectionEnd = nullptr;
 		mechanics.initialize(level.getTriggerDescriptors(), level.getSpawnPoint());
 		for (const auto& trigger : mechanics.getTriggers()) {
-			if (StrUtils::IEquals(trigger.name, "SectionEnd")) sectionEnd = &trigger;
+			if (StrUtils::iEquals(trigger.name, "SectionEnd")) sectionEnd = &trigger;
 		}
 		assert(sectionEnd);
 		const vector2 touching(sectionEnd->position.x - 10.0f, 300.0f);

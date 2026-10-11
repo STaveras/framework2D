@@ -6,8 +6,9 @@
 #include "Engine2D.h"
 #include "FileSystem.h"
 #include "Polygon.h"
-#include "PolygonDecomposition.h"
 #include "Square.h"
+#include "Scripting/JSONReader.h"
+#include "StrUtils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -47,35 +48,6 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 			imagePath.append(imageName);
 
 			tileSet = new TileSet(Engine2D::getRenderer()->createTexture(imagePath.c_str()), (unsigned int)tileWidth);
-
-			auto readFloat = [](simdjson::dom::element element, float fallback = 0.0f) -> float {
-				if (element.is_null()) {
-					return fallback;
-				}
-				if (element.is_double()) {
-					return (float)element.get_double();
-				}
-				if (element.is_int64()) {
-					return (float)element.get_int64();
-				}
-				if (element.is_uint64()) {
-					return (float)element.get_uint64();
-				}
-				return fallback;
-			};
-
-			auto readInt64 = [](simdjson::dom::element element, int64_t fallback = -1) -> int64_t {
-				if (element.is_null()) {
-					return fallback;
-				}
-				if (element.is_int64()) {
-					return (int64_t)element.get_int64();
-				}
-				if (element.is_uint64()) {
-					return (int64_t)element.get_uint64();
-				}
-				return fallback;
-			};
 
 			auto resolveClassOrType = [](simdjson::dom::element tileElement) -> std::string {
 				if (!tileElement["class"].is_null() && tileElement["class"].is_string()) {
@@ -121,136 +93,14 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 								continue;
 							}
 							const std::string name((std::string_view)property["name"].get_string());
-							simdjson::dom::element value = property["value"];
-							std::string text;
-							if (value.is_string()) {
-								text = std::string((std::string_view)value.get_string());
-							}
-							else if (value.is_bool()) {
-								text = (bool)value.get_bool() ? "true" : "false";
-							}
-							else if (value.is_int64()) {
-								text = std::to_string((int64_t)value.get_int64());
-							}
-							else if (value.is_uint64()) {
-								text = std::to_string((uint64_t)value.get_uint64());
-							}
-							else if (value.is_double()) {
-								text = std::to_string((double)value.get_double());
-							}
-							tileInfo._properties[name] = text;
+							tileInfo._properties[name] = Scripting::JSON::readText(property["value"]);
 						}
 					}
 
 					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
-						simdjson::dom::element objectgroup = tile["objectgroup"];
-						if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
-							Collidable* tileCollision = nullptr;
-							CollidableGroup* tileCollisionGroup = nullptr;
-
-							for (auto object : objectgroup["objects"]) {
-								const int64_t objectId = readInt64(object["id"], -1);
-								const bool hasPolygon = !object["polygon"].is_null() && object["polygon"].is_array();
-								const bool hasRectangle = !object["width"].is_null() && !object["height"].is_null();
-								std::string_view collisionObjectType = object["type"].is_string() ? object["type"].get_string().value_unsafe() : "";
-
-								Collidable* parsedCollision = nullptr;
-								if (hasPolygon) {
-									const float objectX = readFloat(object["x"]);
-									const float objectY = readFloat(object["y"]);
-
-									std::vector<vector2> polygonVertices;
-									for (auto point : object["polygon"]) {
-										polygonVertices.push_back(vector2(
-											readFloat(point["x"]),
-											readFloat(point["y"])));
-									}
-
-									PolygonDecomposition::Result decomposition = PolygonDecomposition::decomposeToConvex(polygonVertices);
-									if (decomposition.code != PolygonDecomposition::ResultCode::Success || decomposition.pieces.empty()) {
-#if _DEBUG
-										char buffer[384];
-										sprintf_s(
-											buffer,
-											sizeof(buffer),
-											"Skipping invalid polygon collision object (tile=%lld, object=%lld, reason=%s)\n",
-											(long long)id,
-											(long long)objectId,
-											PolygonDecomposition::resultCodeToString(decomposition.code));
-										DEBUG_MSG(buffer);
-#endif
-									}
-									else {
-										if (decomposition.wasConcave && decomposition.pieces.size() > 1) {
-											++decomposedConcaveCount;
-										}
-
-										Collidable* polygonResult = nullptr;
-										CollidableGroup* polygonGroup = nullptr;
-										for (const std::vector<vector2>& piece : decomposition.pieces) {
-											PolygonCollider* polygon = collisionObjects.createDerived<PolygonCollider>();
-											polygon->setPosition(objectX, objectY);
-											polygon->setLocalVertices(piece);
-
-											if (!polygon->isValid()) {
-#if _DEBUG
-												char buffer[320];
-												sprintf_s(
-													buffer,
-													sizeof(buffer),
-													"Skipping invalid decomposed polygon piece (tile=%lld, object=%lld)\n",
-													(long long)id,
-													(long long)objectId);
-												DEBUG_MSG(buffer);
-#endif
-												collisionObjects.destroy(polygon);
-												continue;
-											}
-
-											if (!polygonResult) {
-												polygonResult = polygon;
-												continue;
-											}
-
-											if (!polygonGroup) {
-												polygonGroup = collisionObjects.createDerived<CollidableGroup>();
-												polygonGroup->push_back(polygonResult);
-												polygonResult = polygonGroup;
-											}
-											polygonGroup->push_back(polygon);
-										}
-
-										parsedCollision = polygonResult;
-									}
-								}
-								else if (collisionObjectType == "square" || hasRectangle) {
-									Square* square = collisionObjects.createDerived<Square>();
-									square->setPosition(readFloat(object["x"]), readFloat(object["y"]));
-									square->setWidth(readFloat(object["width"]));
-									square->setHeight(readFloat(object["height"]));
-									parsedCollision = square;
-								}
-
-								if (!parsedCollision) {
-									continue;
-								}
-
-								if (!tileCollision) {
-									tileCollision = parsedCollision;
-									continue;
-								}
-
-								if (!tileCollisionGroup) {
-									tileCollisionGroup = collisionObjects.createDerived<CollidableGroup>();
-									tileCollisionGroup->push_back(tileCollision);
-									tileCollision = tileCollisionGroup;
-								}
-
-								tileCollisionGroup->push_back(parsedCollision);
-							}
-
-							tileInfo._collisionInfo = tileCollision;
-						}
+						const std::string source = "tile=" + std::to_string((long long)id);
+						tileInfo._collisionInfo = Collidable::loadFromObjectGroup(tile["objectgroup"], collisionObjects,
+							vector2(0.0f, 0.0f), source.c_str(), &decomposedConcaveCount);
 					}
 
 					if (!tileInfo._typeName.empty() || tileInfo._collisionInfo != NULL || !tileInfo._properties.empty()) {
@@ -395,21 +245,11 @@ Collidable* TileSet::getCollision(int tileIndex, unsigned int flipFlags)
 float TileSet::TileInfo::getFloatProperty(const std::string& name, float fallback) const
 {
 	auto itr = _properties.find(name);
-	if (itr == _properties.end() || itr->second.empty()) {
-		return fallback;
-	}
-	char* end = nullptr;
-	const float value = std::strtof(itr->second.c_str(), &end);
-	return (end == itr->second.c_str()) ? fallback : value;
+	return (itr == _properties.end()) ? fallback : StrUtils::floatFromString(itr->second, fallback);
 }
 
 int TileSet::TileInfo::getIntProperty(const std::string& name, int fallback) const
 {
 	auto itr = _properties.find(name);
-	if (itr == _properties.end() || itr->second.empty()) {
-		return fallback;
-	}
-	char* end = nullptr;
-	const long value = std::strtol(itr->second.c_str(), &end, 10);
-	return (end == itr->second.c_str()) ? fallback : (int)value;
+	return (itr == _properties.end()) ? fallback : StrUtils::intFromString(itr->second, fallback);
 }

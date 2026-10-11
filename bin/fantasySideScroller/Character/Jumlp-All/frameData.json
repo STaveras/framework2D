@@ -1,0 +1,212 @@
+{
+  "Frame": [
+    {
+      "DisplayRect": "192,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "256,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "320,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "384,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "448,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "512,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "576,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "DisplayRect": "640,0,64,64",
+      "Duration": 0.133333,
+      "objectgroup": {
+        "draworder": "index",
+        "name": "",
+        "objects": [
+          {
+            "height": 52,
+            "id": 1,
+            "name": "",
+            "rotation": 0,
+            "type": "",
+            "visible": true,
+            "width": 20,
+            "x": 18,
+            "y": 12
+          }
+        ],
+        "opacity": 1,
+        "type": "objectgroup",
+        "visible": true,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ]
+}

@@ -3,101 +3,28 @@
 #include "Animation.h"
 #include "AnimationManager.h"
 
+#include "CollidableGroup.h"
+#include "Debug.h"
 #include "FileSystem.h"
+#include "Polygon.h"
+#include "Square.h"
+#include "Scripting/JSONReader.h"
 #include "StrUtils.h"
 #include "System.h"
 
+#include <cstdio>
+#include <fstream>
+#include <sstream>
 #include <string>
 
+using Scripting::JSON::readFloat;
+using Scripting::JSON::readString;
+using StrUtils::rectFromString;
+using StrUtils::rectToString;
+using StrUtils::vectorFromString;
+using StrUtils::vectorToString;
+
 namespace Animations {
-
-   RECT rectFromString(const char *rectDescription)
-   {
-      RECT output{};
-
-      if (!rectDescription || rectDescription[0] == '\0') {
-         return output;
-      }
-
-      std::string input(rectDescription);
-      for (char& c : input) {
-         if (c == '{' || c == '}') {
-            c = ' ';
-         }
-      }
-
-      int width = -1;
-      int height = -1;
-      int numericValues[4]{ 0, 0, 0, 0 };
-      int numericCount = 0;
-      bool usedKeyValues = false;
-
-      size_t start = 0;
-      while (start < input.size()) {
-         size_t end = input.find(',', start);
-         if (end == std::string::npos) {
-            end = input.size();
-         }
-
-         std::string token = StrUtils::Trim(std::string_view(input).substr(start, end - start));
-         if (!token.empty()) {
-            size_t eq = token.find('=');
-            if (eq != std::string::npos) {
-               usedKeyValues = true;
-               std::string key = StrUtils::Trim(std::string_view(token).substr(0, eq));
-               std::string value = StrUtils::Trim(std::string_view(token).substr(eq + 1));
-               int parsedValue = std::atoi(value.c_str());
-
-               if (key == "X") {
-                  output.left = parsedValue;
-               }
-               else if (key == "Y") {
-                  output.top = parsedValue;
-               }
-               else if (key == "Width") {
-                  width = parsedValue;
-               }
-               else if (key == "Height") {
-                  height = parsedValue;
-               }
-            }
-            else if (numericCount < 4) {
-               numericValues[numericCount++] = std::atoi(token.c_str());
-            }
-         }
-
-         start = end + 1;
-      }
-
-      if (!usedKeyValues && numericCount >= 4) {
-         output.left = numericValues[0];
-         output.top = numericValues[1];
-         width = numericValues[2];
-         height = numericValues[3];
-      }
-
-      if (width >= 0) {
-         output.right = output.left + width;
-      }
-      if (height >= 0) {
-         output.bottom = output.top + height;
-      }
-
-      return output;
-   }
-
-   //std::string rectToString(const RECT& rect)
-   //{
-   //   return std::to_string(rect.left) + "," + std::to_string(rect.top) + "," + std::to_string(rect.right) + "," + std::to_string(rect.bottom);
-   //}
-   static std::string rectToString(const RECT& r) {
-      int w = r.right - r.left;
-      int h = r.bottom - r.top;
-      return std::to_string(r.left) + "," +
-             std::to_string(r.top) + "," +
-             std::to_string(w) + "," +
-             std::to_string(h);
-   }
 
    Animation::Mode animationModeFromString(const char *mode) {
 
@@ -131,14 +58,16 @@ namespace Animations {
    }
 
    void destroyAnimation(Animation *animation) {
-      for (unsigned int i = 0; i < animation->getFrameCount(); i++) {
-         Frame *frame = (*animation)[i];
+      // The animation owns and deletes its frames; their sprites are the caller's.
+      for (Frame* frame : animation->getFrames()) {
          delete frame->getSprite();
-         animation->removeFrame(frame);
-         delete frame;
       }
       delete animation;
    }
+
+   // An animation with neither its own "Frame" list nor a "FrameData" file reads its frames
+   // from this file, in the folder of the animation's "Filename".
+   static const char* kFrameDataFileName = "frameData.json";
 
    std::vector<Animation*> fromJSON(const char* filename, AnimationManager* animationManager)
    {
@@ -147,13 +76,45 @@ namespace Animations {
       simdjson::dom::parser parser;
       simdjson::dom::element document = parser.load(filename);
 
+      // Holds the frameData.json of the animation being read; reused for the next one.
+      simdjson::dom::parser frameDataParser;
+
       for (simdjson::dom::element animationElement : document["AnimationFile"]["Animation"]) {
 
-         std::string name;
-         auto nameElement = animationElement["Name"];
-         if (nameElement.is_string()) {
-            std::string_view nameView = nameElement.get_string().value_unsafe();
-            name = std::string(nameView);
+         std::string name = readString(animationElement["Name"]);
+
+         // The animation's image, used by every frame that doesn't name its own.
+         std::string imagePath = readString(animationElement["Filename"]);
+         std::string resolvedImagePath = imagePath.empty() ? "" : FileSystem::Path::ResolveFromBaseOrParent(imagePath, System::GlobalDataPath());
+
+         // Frames: the animation's own "Frame" list, else the file its "FrameData" names, else
+         // frameData.json beside its "Filename". A named file that can't be read is not
+         // replaced by the one beside the image.
+         simdjson::dom::array frameElements;
+         if (animationElement["Frame"].is_array()) {
+            frameElements = animationElement["Frame"].get_array().value_unsafe();
+         }
+         else {
+            const std::string frameDataName = readString(animationElement["FrameData"]);
+            std::string frameDataPath;
+            if (!frameDataName.empty()) {
+               frameDataPath = FileSystem::Path::ResolveFromBaseOrParent(frameDataName, System::GlobalDataPath());
+            }
+            else if (!resolvedImagePath.empty()) {
+               frameDataPath = FileSystem::File::GetFilePath(resolvedImagePath) + "/" + kFrameDataFileName;
+            }
+
+            simdjson::dom::element frameData;
+            if (frameDataPath.empty() || frameDataParser.load(frameDataPath).get(frameData) || !frameData["Frame"].is_array()) {
+#if _DEBUG
+               char buffer[768];
+               sprintf_s(buffer, sizeof(buffer), "Animations::fromJSON skipping animation '%s': no \"Frame\" list, and no frames read from '%s'\n",
+                  name.c_str(), frameDataPath.empty() ? "(no \"FrameData\" or \"Filename\")" : frameDataPath.c_str());
+               DEBUG_MSG(buffer);
+#endif
+               continue;
+            }
+            frameElements = frameData["Frame"].get_array().value_unsafe();
          }
 
          Animation* animation = nullptr;
@@ -180,32 +141,114 @@ namespace Animations {
             animation->setIsForward(forwardElement.get_bool().value_unsafe());
          }
 
-         auto speedElement = animationElement["Speed"];
-         if (speedElement.is_double()) {
-            animation->setSpeed((float)speedElement.get_double().value_unsafe());
-         }
+         animation->setSpeed(readFloat(animationElement["Speed"], animation->getSpeed()));
 
-         for (simdjson::dom::element frameElement : animationElement["Frame"]) {
+         const vector2 offset = vectorFromString(readString(animationElement["Offset"]));
+         animation->setOffset(offset);
 
-            std::string_view displayRectView = frameElement["DisplayRect"].get_string().value_unsafe();
-            std::string displayRectString(displayRectView);
-            RECT srcRect = rectFromString(displayRectString.c_str());
+         unsigned int frameIndex = 0;
+         for (simdjson::dom::element frameElement : frameElements) {
+            const unsigned int index = frameIndex++;
+
+            // Without a DisplayRect the frame is the whole image.
+            const RECT srcRect = rectFromString(readString(frameElement["DisplayRect"]), RECT{ -1, -1, -1, -1 });
 
             // TODO: Make key color configurable via a tool
-            // TODO: Collision information
             // TODO: Add support for triggers (sound, effects, scripts, etc.)
 
-            std::string_view frameImageView = frameElement["Filename"].get_string().value_unsafe();
-            std::string frameImagePath(frameImageView);
-            std::string resolvedFramePath = FileSystem::Path::ResolveFromBaseOrParent(frameImagePath, System::GlobalDataPath());
+            const std::string frameImagePath = readString(frameElement["Filename"]);
+            const std::string resolvedFramePath = frameImagePath.empty() ? resolvedImagePath : FileSystem::Path::ResolveFromBaseOrParent(frameImagePath, System::GlobalDataPath());
+            if (resolvedFramePath.empty()) {
+#if _DEBUG
+               char buffer[512];
+               sprintf_s(buffer, sizeof(buffer), "Animations::fromJSON skipping frame %u of '%s': neither it nor its animation has a \"Filename\"\n",
+                  index, name.c_str());
+               DEBUG_MSG(buffer);
+#endif
+               continue;
+            }
 
-            animation->addFrame(new Frame(new Sprite(resolvedFramePath.c_str(), 0xFFFF00FF, srcRect), (float)frameElement["Duration"].get_double().value_unsafe()));
+            Frame* frame = new Frame(new Sprite(resolvedFramePath.c_str(), 0xFFFF00FF, srcRect), readFloat(frameElement["Duration"]));
+            frame->getSprite()->center();
+
+            // Frame collision is stored the way Tiled stores a tile's: an "objectgroup" in the
+            // frame's pixels. The frame is drawn around its centre, shifted by the animation's
+            // offset, so that is where its colliders go too.
+            if (frameElement["objectgroup"].is_object()) {
+               const std::string source = "animation=" + name + ", frame=" + std::to_string(index);
+               frame->setCollidable(Collidable::loadFromObjectGroup(frameElement["objectgroup"].value_unsafe(), frame->getCollisionObjects(),
+                  offset - frame->getSprite()->getCenter(), source.c_str()));
+            }
+
+            animation->addFrame(frame);
          }
 
          animations.push_back(animation);
       }
 
       return animations;
+   }
+
+   // Appends Tiled "objectgroup" objects for collidable, moved by -origin into frame pixels.
+   static void collisionToObjects(const Collidable* collidable, vector2 origin, std::vector<std::string>& objects)
+   {
+      if (!collidable) {
+         return;
+      }
+
+      const std::string indent = "                  ";
+      const vector2 position = collidable->getPosition() - origin;
+      std::ostringstream object;
+
+      switch (collidable->getType()) {
+      case COL_OBJ_SQUARE: {
+         const Square* square = (const Square*)collidable;
+         object << indent << "{\n"
+                << indent << "  \"height\": " << square->getHeight() << ",\n"
+                << indent << "  \"id\": " << objects.size() + 1 << ",\n"
+                << indent << "  \"name\": \"\",\n"
+                << indent << "  \"rotation\": 0,\n"
+                << indent << "  \"type\": \"\",\n"
+                << indent << "  \"visible\": true,\n"
+                << indent << "  \"width\": " << square->getWidth() << ",\n"
+                << indent << "  \"x\": " << position.x << ",\n"
+                << indent << "  \"y\": " << position.y << "\n"
+                << indent << "}";
+         break;
+      }
+      case COL_OBJ_POLYGON: {
+         const PolygonCollider* polygon = (const PolygonCollider*)collidable;
+         object << indent << "{\n"
+                << indent << "  \"height\": 0,\n"
+                << indent << "  \"id\": " << objects.size() + 1 << ",\n"
+                << indent << "  \"name\": \"\",\n"
+                << indent << "  \"polygon\": [";
+         const std::vector<vector2>& vertices = polygon->getLocalVertices();
+         for (size_t i = 0; i < vertices.size(); ++i) {
+            object << (i ? ", " : " ") << "{ \"x\": " << vertices[i].x << ", \"y\": " << vertices[i].y << " }";
+         }
+         object << " ],\n"
+                << indent << "  \"rotation\": 0,\n"
+                << indent << "  \"type\": \"\",\n"
+                << indent << "  \"visible\": true,\n"
+                << indent << "  \"width\": 0,\n"
+                << indent << "  \"x\": " << position.x << ",\n"
+                << indent << "  \"y\": " << position.y << "\n"
+                << indent << "}";
+         break;
+      }
+      case COL_OBJ_GROUP:
+         // Members are placed relative to their group.
+         for (const Collidable* member : *(const CollidableGroup*)collidable) {
+            collisionToObjects(member, origin - collidable->getPosition(), objects);
+         }
+         return;
+      default:
+         // Circles and planes have no Tiled object the loader reads back.
+         return;
+      }
+
+      objects.push_back(object.str());
    }
 
    void toJSON(const std::vector<Animation*>& animations, const char* filename) {
@@ -216,19 +259,61 @@ namespace Animations {
 
       for (size_t i = 0; i < animations.size(); ++i) {
          Animation* animation = animations[i];
+
+         // One image for the whole animation is written once, on the animation.
+         std::string sharedImage;
+         for (size_t j = 0; j < animation->getFrameCount(); ++j) {
+            std::string image = FileSystem::Path::MakeRelativeToParent((*animation)[(unsigned int)j]->getSprite()->getTexture()->getFileName(), System::GlobalDataPath());
+            if (j == 0) {
+               sharedImage = image;
+            }
+            else if (image != sharedImage) {
+               sharedImage.clear();
+               break;
+            }
+         }
+
          file << "      {\n";
          file << "        \"Name\": \"" << animation->getName() << "\",\n";
+         if (!sharedImage.empty()) {
+            file << "        \"Filename\": \"" << sharedImage << "\",\n";
+         }
          file << "        \"Mode\": \"" << animationModeToString(animation->getMode()) << "\",\n";
          file << "        \"Forward\": " << std::boolalpha << animation->isForward() << ",\n";
          file << "        \"Speed\": " << animation->getSpeed() << ",\n";
+         if (animation->getOffset() != vector2(0.0f, 0.0f)) {
+            file << "        \"Offset\": \"" << vectorToString(animation->getOffset()) << "\",\n";
+         }
          file << "        \"Frame\": [\n";
 
          for (size_t j = 0; j < animation->getFrameCount(); ++j) {
             Frame* frame = (*animation)[(unsigned int)j];
+
+            std::vector<std::string> objects;
+            collisionToObjects(frame->getCollidable(), animation->getOffset() - frame->getSprite()->getCenter(), objects);
+
             file << "          {\n";
             file << "            \"DisplayRect\": \"" << rectToString(frame->getSprite()->getSrcRect()) << "\",\n";
-            file << "            \"Filename\": \"" << FileSystem::Path::MakeRelativeToParent(frame->getSprite()->getTexture()->getFileName(), System::GlobalDataPath()) << "\",\n";
-            file << "            \"Duration\": " << frame->getDuration() << "\n";
+            if (sharedImage.empty()) {
+               file << "            \"Filename\": \"" << FileSystem::Path::MakeRelativeToParent(frame->getSprite()->getTexture()->getFileName(), System::GlobalDataPath()) << "\",\n";
+            }
+            file << "            \"Duration\": " << frame->getDuration() << (objects.empty() ? "\n" : ",\n");
+            if (!objects.empty()) {
+               file << "            \"objectgroup\": {\n";
+               file << "              \"draworder\": \"index\",\n";
+               file << "              \"name\": \"\",\n";
+               file << "              \"objects\": [\n";
+               for (size_t k = 0; k < objects.size(); ++k) {
+                  file << objects[k] << (k + 1 != objects.size() ? ",\n" : "\n");
+               }
+               file << "              ],\n";
+               file << "              \"opacity\": 1,\n";
+               file << "              \"type\": \"objectgroup\",\n";
+               file << "              \"visible\": true,\n";
+               file << "              \"x\": 0,\n";
+               file << "              \"y\": 0\n";
+               file << "            }\n";
+            }
             file << "          }";
 
             if (j + 1 != animation->getFrameCount()) {

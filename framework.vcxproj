@@ -407,6 +407,7 @@
     <ClInclude Include="src\UpdateRenderableOperator.h" />
     <ClInclude Include="src\Vertex.h" />
     <ClInclude Include="src\Widgets.h" />
+    <ClInclude Include="src\Scripting\JSONReader.h" />
     <ClInclude Include="src\Window.h" />
     <ClInclude Include="src\WorldOperator.h" />
     <ClInclude Include="src\XAudio.h" />
@@ -425,6 +426,7 @@
     <ClCompile Include="src\AnimationUtils.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Circle.cpp" />
+    <ClCompile Include="src\Collidable.cpp" />
     <ClCompile Include="src\CollidableGroup.cpp" />
     <ClCompile Include="src\CollisionSystem.cpp" />
     <ClCompile Include="src\InputMap.cpp" />
@@ -492,6 +494,7 @@
     <ClCompile Include="src\Trigger.cpp" />
     <ClCompile Include="src\UpdateBackgroundOperator.cpp" />
     <ClCompile Include="src\Widgets.cpp" />
+    <ClCompile Include="src\Scripting\JSONReader.cpp" />
     <ClCompile Include="src\Window.cpp" />
     <ClCompile Include="src\WorldOperator.cpp" />
     <ClCompile Include="src\XAudio.cpp" />

@@ -20,12 +20,12 @@
 namespace {
 bool isSpawnType(const std::string& typeName)
 {
-	return StrUtils::IEquals(typeName, "spawn");
+	return StrUtils::iEquals(typeName, "spawn");
 }
 
 bool isEnemyType(const std::string& typeName)
 {
-	return StrUtils::IEquals(typeName, "boar");
+	return StrUtils::iEquals(typeName, "boar");
 }
 
 bool isValidLayerIndex(int index, size_t size)
@@ -462,7 +462,7 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 		layerRenderList->parallaxY = layerConfig.parallaxY;
 		layerRenderList->parallaxOriginX = mapOffset.x + loadResult.parallaxOriginX;
 		layerRenderList->parallaxOriginY = mapOffset.y + loadResult.parallaxOriginY;
-		const std::string safeLayerName = StrUtils::SanitizeIdentifier(layerConfig.name);
+		const std::string safeLayerName = StrUtils::sanitizeIdentifier(layerConfig.name);
 		const std::string layerPrefix = "layer_" + std::to_string(layerConfig.id) + "_" + safeLayerName;
 
 		unsigned int tileIndex = 0;
@@ -595,8 +595,8 @@ vector2 LevelManager::getSpawnPointNearDestination(const std::string& destinatio
 {
 	const auto destination = std::find_if(_triggerDescriptors.begin(), _triggerDescriptors.end(),
 		[&destinationName](const LevelTriggerDescriptor& descriptor) {
-			return StrUtils::IEquals(descriptor.typeName, "destination") &&
-				StrUtils::IEquals(descriptor.name, destinationName);
+			return StrUtils::iEquals(descriptor.typeName, "destination") &&
+				StrUtils::iEquals(descriptor.name, destinationName);
 		});
 
 	if (destination == _triggerDescriptors.end() || _spawnPoints.empty()) {
