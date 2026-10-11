@@ -302,60 +302,6 @@ void Character::_initStates() {
 
 	dead->setRenderable(deadAnimation);
 
-	/////////////////////////////////////////
-	// Expanded actions, retargeted from the 2D-Pixel-Art-Character-Template by
-	// tools/character_retarget.py. Their 72x72 frames put the feet on row 60, which a
-	// centered frame already lines up with kLocomotionFootLocalY (Expanded/manifest.json
-	// lists each sheet's FootY and the template's frame durations).
-
-	const vector2 expandedFrameDimensions{ 72, 72 };
-	auto addExpandedState = [&](const char* name, const char* sheetPath, float frameSeconds,
-		Animation::Mode mode, float speed, float offsetY, Square* hitBox) -> GameObjectState* {
-		GameObjectState* state = this->addState(name);
-		state->setPreserveScaling(true);
-
-		bool loaded = false;
-		Animation* animation = getAnimation(name, loaded);
-		if (!loaded) {
-			Texture* sheet = Engine2D::getRenderer()->createTexture(BasePath(sheetPath).c_str());
-			Animations::createFramesForAnimation(animation, sheet, expandedFrameDimensions, _spriteManager);
-			for (unsigned int i = 0; i < animation->getFrameCount(); i++) {
-				(*animation)[i]->setDuration(frameSeconds);
-			}
-			animation->setMode(mode);
-			animation->setSpeed(speed);
-			animation->setOffset({ 0.0, offsetY });
-		}
-
-		animation->setName(name);
-		animation->center();
-		state->setRenderable(animation);
-
-		setFallbackHitBox(animation, hitBox);
-		return state;
-	};
-
-	static Square crouchHitBox({ -10, kLocomotionFootLocalY - 34.0f }, 20, 34);
-	static Square rollHitBox({ -10, kLocomotionFootLocalY - 28.0f }, 20, 28);
-	static Square slideHitBox({ -12, kLocomotionFootLocalY - 24.0f }, 24, 24);
-
-	[[maybe_unused]] GameObjectState* crouchIdle = addExpandedState("CrouchIdle", "Character/Expanded/Crouch-Idle/Crouch-Idle-Sheet.png",
-		0.1f, Animation::Mode::eLoop, 1.0f, 0.0f, &crouchHitBox);
-	addExpandedState("CrouchWalk", "Character/Expanded/Crouch-Walk/Crouch-Walk-Sheet.png",
-		0.1f, Animation::Mode::eLoop, 1.0f, 0.0f, &crouchHitBox);
-	// An animation frame lasts ceil(duration / (tick * speed)) ticks plus one tick to
-	// advance. At 2.1x the template's 7 x 100 ms roll takes 28 ticks (~0.47 s at 60 Hz).
-	[[maybe_unused]] GameObjectState* roll = addExpandedState("Roll", "Character/Expanded/Roll/Roll-Sheet.png",
-		0.1f, Animation::Mode::eOnce, 2.1f, 0.0f, &rollHitBox);
-	// One pass of the slide (8 x 75 ms at 1.25x, 40 ticks) is the whole slide: it ends
-	// as kSlideDeceleration brings a sprint to a stop.
-	[[maybe_unused]] GameObjectState* slide = addExpandedState("Slide", "Character/Expanded/Slide/Slide-Sheet.png",
-		0.075f, Animation::Mode::eOnce, 1.25f, 0.0f, &slideHitBox);
-	// Airborne like Falling, so it keeps Falling's body. The pose follows Zero's wall slide
-	// (Mega Man Zero): hand and bent leg on the wall where that body ends, 6 px in front of centre.
-	addExpandedState("WallSlide", "Character/Expanded/Wall-Slide/Wall-Slide-Sheet.png",
-		0.1f, Animation::Mode::eLoop, 1.0f, 0.0f, &jumpHitBox);
-
 #if _DEBUG
 	if (DEBUGGING && Debug::dbgCollision) {
 		struct FootlineCheck {
