@@ -8,6 +8,8 @@
 #include "RuntimeProfile.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <ctime>
 
 Engine2D::Engine2D(void) :
 	_hasQuit(false),
@@ -69,8 +71,33 @@ void Engine2D::update(void)
 
 	// With a fixed step, frames that run no simulation step leave input
 	// untouched so a latched key press survives until a tick can see it
-	if (_input && (!runsDeterministicSteps || _frameAccumulatorSeconds + 1e-9 >= fixedDelta))
-		_input->update();
+	if (_input) {
+		if (!runsDeterministicSteps || _frameAccumulatorSeconds + 1e-9 >= fixedDelta)
+			_input->update();
+
+		// Application-wide F12: save the current framebuffer as a timestamped
+		// PNG next to the running game, in any state or screen.
+		if (Keyboard* keyboard = _input->getKeyboard()) {
+			if (keyboard->pressed(Key::F12)) {
+				char path[128]{ 0 };
+				std::tm local{};
+				const std::time_t now = std::time(nullptr);
+#ifdef _WIN32
+				localtime_s(&local, &now);
+#else
+				localtime_r(&now, &local);
+#endif
+				std::snprintf(path, sizeof(path), "screenshot_%04d%02d%02d_%02d%02d%02d.png",
+					local.tm_year + 1900, local.tm_mon + 1, local.tm_mday,
+					local.tm_hour, local.tm_min, local.tm_sec);
+				if (Renderer::mainWindow && Renderer::mainWindow->saveScreenshot(path)) {
+					char message[160]{ 0 };
+					std::snprintf(message, sizeof(message), "Screenshot saved: %s\n", path);
+					DEBUG_MSG(message);
+				}
+			}
+		}
+	}
 
 	const bool interpolate = _deterministicMode && _renderInterpolation && _renderer;
 	float interpolationAlpha = 1.0f;

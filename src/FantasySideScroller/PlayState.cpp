@@ -380,8 +380,7 @@ bool PlayState::onExecute(float time)
 	if (Debug::Mode.isEnabled() && reloadPressed) {
 		// Shift+F5 respawns at the map-authored spawn point; plain F5 keeps the
 		// hero where it stands so map edits can be checked in place.
-		const bool respawn = keyboard->down(Key::LeftShift) ||
-			keyboard->down(Key::RightShift);
+		const bool respawn = keyboard->down(Key::LeftShift) || keyboard->down(Key::RightShift);
 		const bool keepPosition = !respawn && _playableCharacter;
 		const vector2 heroPosition = keepPosition ? _playableCharacter->getPosition() : vector2();
 
@@ -421,8 +420,7 @@ bool PlayState::onExecute(float time)
 		}
 	}
 
-	if (keyboard->pressed(Key::R))
-	{
+	if (keyboard->pressed(Key::R)) {
 		_respawnPlayer();
 	}
 
