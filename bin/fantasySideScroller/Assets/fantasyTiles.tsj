@@ -177,7 +177,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":4,
              "name":"",
              "objects":[
                     {
@@ -222,7 +221,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -639,7 +637,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2930,7 +2927,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -6119,16 +6115,124 @@
          "type":"prop"
         }, 
         {
-         "id":542
+         "id":542,
+         "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":2
+                }, 
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"prop"
         }, 
         {
-         "id":543
+         "id":543,
+         "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":2
+                }, 
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"prop"
         }, 
         {
-         "id":544
+         "id":544,
+         "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":0
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":2
+                }, 
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"prop"
         }, 
         {
-         "id":545
+         "id":545,
+         "properties":[
+                {
+                 "name":"platform_column",
+                 "type":"int",
+                 "value":1
+                }, 
+                {
+                 "name":"platform_row",
+                 "type":"int",
+                 "value":2
+                }, 
+                {
+                 "name":"rise_speed",
+                 "type":"float",
+                 "value":20
+                }, 
+                {
+                 "name":"sink_depth",
+                 "type":"float",
+                 "value":24
+                }, 
+                {
+                 "name":"sink_speed",
+                 "type":"float",
+                 "value":7
+                }],
+         "type":"porp"
         }, 
         {
          "id":550,
