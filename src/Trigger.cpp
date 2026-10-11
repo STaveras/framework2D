@@ -74,11 +74,11 @@ void Trigger::LoadFromFile(const char* szFilename)
 
 			if(pData)
 			{
-				if(StrUtils::IEquals(pData->GetValue(), "Effect"))
+				if(StrUtils::iEquals(pData->GetValue(), "Effect"))
 					Type = EFFECT;
-				else if(StrUtils::IEquals(pData->GetValue(), "Event") || pData->GetValueAsInt() == 1)
+				else if(StrUtils::iEquals(pData->GetValue(), "Event") || pData->GetValueAsInt() == 1)
 					Type = EVENT;
-				else if(StrUtils::IEquals(pData->GetValue(), "Sound") || pData->GetValueAsInt() == 2)
+				else if(StrUtils::iEquals(pData->GetValue(), "Sound") || pData->GetValueAsInt() == 2)
 					Type = SOUND;
 				else
 					Type = NONE;
@@ -88,9 +88,9 @@ void Trigger::LoadFromFile(const char* szFilename)
 
 			if(pData)
 			{
-				if(StrUtils::IEquals(pData->GetValue(), "Always"))
+				if(StrUtils::iEquals(pData->GetValue(), "Always"))
 					Mode = ALWAYS;
-				else if(StrUtils::IEquals(pData->GetValue(), "Once") || pData->GetValueAsInt() == 1)
+				else if(StrUtils::iEquals(pData->GetValue(), "Once") || pData->GetValueAsInt() == 1)
 					Mode = ONCE;
 			}
 

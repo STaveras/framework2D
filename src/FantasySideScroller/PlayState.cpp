@@ -320,7 +320,7 @@ void PlayState::onEnter(State* prev)
 	_boars.reserve(enemyDescriptors.size());
 	for (size_t i = 0; i < enemyDescriptors.size(); ++i) {
 		const LevelEnemyDescriptor& descriptor = enemyDescriptors[i];
-		if (!StrUtils::IEquals(descriptor.typeName, "boar")) {
+		if (!StrUtils::iEquals(descriptor.typeName, "boar")) {
 			continue;
 		}
 

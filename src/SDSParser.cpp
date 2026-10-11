@@ -222,7 +222,7 @@ void SDSParser::close(void)
 bool SDSParser::setScope(const char *szScope)
 {
 	SDSNode *pResult = m_pRoot;
-	const std::vector<std::string> scopes = StrUtils::SplitAny(szScope ? szScope : "", ".:", true, true);
+	const std::vector<std::string> scopes = StrUtils::splitAny(szScope ? szScope : "", ".:", true, true);
 	for (const std::string& scope : scopes) {
 		pResult = _NodeExists(scope.c_str(), SDSNodeData::SDS_SCOPE, pResult);
 	}

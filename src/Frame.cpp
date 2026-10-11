@@ -8,12 +8,14 @@
 
 Frame::Frame(void):
 _frameDuration(0.0f),
-_sprite(NULL)
+_sprite(NULL),
+_collidable(NULL)
 {}
 
 Frame::Frame(Sprite* sprite, float fDuration):
 _frameDuration(fDuration),
-_sprite(sprite)
+_sprite(sprite),
+_collidable(NULL)
 {}
 
 void Frame::update(float fTime)

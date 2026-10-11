@@ -51,7 +51,7 @@ inline bool streqls(const char* szLeft, const char* szRight, bool bCaseSensitive
 	if (!szLeft || !szRight) {
 		return false;
 	}
-	return bCaseSensitive ? (std::strcmp(szLeft, szRight) == 0) : StrUtils::IEquals(szLeft, szRight);
+	return bCaseSensitive ? (std::strcmp(szLeft, szRight) == 0) : StrUtils::iEquals(szLeft, szRight);
 }
 
 inline void strsubst(char* szString, char szReplacement, const char* szDelims)
@@ -70,12 +70,12 @@ inline void strsubst(char* szString, char szReplacement, const char* szDelims)
 inline void strdiv(std::list<std::string>& output, const char* szTarget, const char* szDelims)
 {
 	output.clear();
-	for (const std::string& token : StrUtils::SplitAny(szTarget ? szTarget : "", szDelims ? szDelims : "", true, true)) {
+	for (const std::string& token : StrUtils::splitAny(szTarget ? szTarget : "", szDelims ? szDelims : "", true, true)) {
 		output.push_back(token);
 	}
 }
 
 inline std::vector<std::string> split(const std::string& s, char delimiter)
 {
-	return StrUtils::Split(s, delimiter, false);
+	return StrUtils::split(s, delimiter, false);
 }

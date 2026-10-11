@@ -48,11 +48,11 @@ void loadTape(const std::string& path)
 	std::ifstream in(path);
 	std::string line;
 	while (std::getline(in, line)) {
-		const std::string row = StrUtils::Trim(line);
+		const std::string row = StrUtils::trim(line);
 		if (row.empty() || row[0] == '#') {
 			continue;
 		}
-		const std::vector<std::string> fields = StrUtils::Split(row, ',', true);
+		const std::vector<std::string> fields = StrUtils::split(row, ',', true);
 		uint64_t tick = 0;
 		if (fields.size() != 3 || !parseTick(fields[0], tick) || fields[1].empty()) {
 			continue; // the header, or a malformed row
@@ -78,7 +78,7 @@ void initializeFromEnvironment(void)
 
 	std::string owned;
 	const std::string recordPath = environmentPath("AUTO_INPUT_RECORD_PATH", kDefaultTapePath);
-	if (StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned))) {
+	if (StrUtils::isTruthy(System::getenv_platform("AUTO_INPUT_RECORD", owned))) {
 		std::error_code ec;
 		const std::filesystem::path parent = std::filesystem::path(recordPath).parent_path();
 		if (!parent.empty()) {
@@ -91,7 +91,7 @@ void initializeFromEnvironment(void)
 	}
 
 	const char* replayPath = System::getenv_platform("AUTO_INPUT_REPLAY_PATH", owned);
-	gReplaying = StrUtils::IsTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
+	gReplaying = StrUtils::isTruthy(System::getenv_platform("AUTO_INPUT_REPLAY", owned)) ||
 		(replayPath && replayPath[0] != '\0');
 	if (gReplaying) {
 		loadTape(environmentPath("AUTO_INPUT_REPLAY_PATH", recordPath));

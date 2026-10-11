@@ -22,7 +22,7 @@ namespace System
 
     static bool isTruthyValue(const char* value)
     {
-        return StrUtils::IsTruthy(value);
+        return StrUtils::isTruthy(value);
     }
 
     // Platform-agnostic getenv wrapper.

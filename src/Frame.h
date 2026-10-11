@@ -6,6 +6,7 @@
 #if !defined(_FRAME_H)
 #define _FRAME_H
 
+#include "Factory.h"
 #include "Sprite.h"
 #include "Trigger.h"
 #include "Types.h"
@@ -18,6 +19,9 @@ class Frame
 	float _frameDuration;
 	Sprite* _sprite;
 	Collidable* _collidable;
+	// Colliders built for this frame (e.g. from frame data), deleted with it. _collidable
+	// may point into this or at a collider someone else owns.
+	Factory<Collidable> _collisionObjects;
 	std::list<Trigger> _triggers;
 
 protected:
@@ -28,12 +32,17 @@ public:
 	Frame(Sprite* pSprite, float fDuration);
 	~Frame(void){}
 
+	// Owns its colliders, so it is never copied.
+	Frame(const Frame&) = delete;
+	Frame& operator=(const Frame&) = delete;
+
 	const Sprite* getSprite(void) const { return _sprite; }
 	Sprite* getSprite(void) { return _sprite; }
 	void setSprite(Sprite* pSprite) { _sprite = pSprite; }
 
 	Collidable* getCollidable(void) const { return _collidable; }
 	void setCollidable(Collidable* collidable) { _collidable = collidable; }
+	Factory<Collidable>& getCollisionObjects(void) { return _collisionObjects; }
 
 	float getDuration(void) const { return _frameDuration; }
 	void setDuration(float fDuration) { _frameDuration = fDuration; }

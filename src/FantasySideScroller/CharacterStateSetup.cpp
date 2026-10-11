@@ -9,6 +9,7 @@
 #include "../Polygon.h"
 #include "../Square.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -58,6 +59,15 @@ void Character::_initStates() {
 		return animation;
 	};
 
+	// Frames whose frame data gave them colliders keep those; the rest use the state's hit box.
+	auto setFallbackHitBox = [](Animation* animation, Collidable* hitBox) {
+		for (Frame* frame : animation->getFrames()) {
+			if (frame && !frame->getCollidable()) {
+				frame->setCollidable(hitBox);
+			}
+		}
+	};
+
 	GameObjectState* idle = this->addState("Idle");
 
 	bool idleLoaded = false;
@@ -79,9 +89,7 @@ void Character::_initStates() {
 	idle->setRenderable(idleAnimation);
 
 	static Square idleHitBox({ -10, kLocomotionFootLocalY - 48.0f }, 20, 48);
-	for (unsigned int i = 0; i < idleAnimation->getFrameCount(); i++) {
-		(*idleAnimation)[i]->setCollidable(&idleHitBox);
-	}
+	setFallbackHitBox(idleAnimation, &idleHitBox);
 
 	/////////////////////////////////////////
 	GameObjectState* rising = this->addState("Rising");
@@ -97,18 +105,16 @@ void Character::_initStates() {
 		Texture* risingSheet = Engine2D::getRenderer()->createTexture(BasePath("Character/Jump-Start/Jump-Start-Sheet.png").c_str());
 		Animations::createFramesForAnimation(risingAnimation, risingSheet, risingDimensions, _spriteManager);
 		risingAnimation->setFrameRate(30);
+		risingAnimation->setOffset({ 0.0, -8.0 });
 	}
 
 	risingAnimation->setName(rising->getName());
-	risingAnimation->setOffset({ 0.0, -8.0 });
 	risingAnimation->center();
 
 	rising->setRenderable(risingAnimation);
 
 	static Square risingHitBox({ -14, kLocomotionFootLocalY - 52.0f }, 20, 52);
-	for (unsigned int i = 0; i < risingAnimation->getFrameCount(); i++) {
-		(*risingAnimation)[i]->setCollidable(&risingHitBox);
-	}
+	setFallbackHitBox(risingAnimation, &risingHitBox);
 
 	/////////////////////////////////////////
 
@@ -128,18 +134,16 @@ void Character::_initStates() {
 		Animations::createFramesForAnimation(jumpAnimation, jumpSheet, jumpDimensions, _spriteManager, 4, 8);
 		jumpAnimation->setMode(Animation::Mode::eOscillate);
 		jumpAnimation->setFrameRate(60);
+		jumpAnimation->setOffset({ 0.0, -8.0 });
 	}
 
 	jumpAnimation->setName(jump->getName());
-	jumpAnimation->setOffset({ 0.0, -8.0 });
 	jumpAnimation->center();
 
 	jump->setRenderable(jumpAnimation);
 
 	static Square jumpHitBox({ -14, kLocomotionFootLocalY - 52.0f }, 20, 52);
-	for (unsigned int i = 0; i < jumpAnimation->getFrameCount(); i++) {
-		(*jumpAnimation)[i]->setCollidable(&jumpHitBox);
-	}
+	setFallbackHitBox(jumpAnimation, &jumpHitBox);
 
 	//GameObjectState* jumpLeft = this->addState("JumpLeft");
 	//GameObjectState* jumpRight = this->addState("JumpRight");
@@ -165,7 +169,6 @@ void Character::_initStates() {
 	bool landingLoaded = false;
 	Animation* landingAnimation = getAnimation("Landing", landingLoaded);
 	landingAnimation->setName(landing->getName());
-	landingAnimation->setOffset({ 0.0, -8.0 });
 	landing->setRenderable(landingAnimation);
 
 	if (!landingLoaded) {
@@ -173,11 +176,10 @@ void Character::_initStates() {
 		Animations::createFramesForAnimation(landingAnimation, landingSheet, landingDimensions, _spriteManager);
 		landingAnimation->setFrameRate(30);
 		landingAnimation->setSpeed(2.7f);
+		landingAnimation->setOffset({ 0.0, -8.0 });
 	}
 
-	for (unsigned int i = 0; i < landingAnimation->getFrameCount(); i++) {
-		(*landingAnimation)[i]->setCollidable(&jumpHitBox);
-	}
+	setFallbackHitBox(landingAnimation, &jumpHitBox);
 	landingAnimation->center();
 
 	/////////////////////////////////////////
@@ -215,10 +217,8 @@ void Character::_initStates() {
 	}
 
 	static Square runHitBox({ -10, kLocomotionFootLocalY - 42.0f }, 26, 42);
-	for (unsigned int i = 0; i < runningRightAnimation->getFrameCount(); i++) {
-		(*runningLeftAnimation)[i]->setCollidable(&runHitBox);
-		(*runningRightAnimation)[i]->setCollidable(&runHitBox);
-	}
+	setFallbackHitBox(runningLeftAnimation, &runHitBox);
+	setFallbackHitBox(runningRightAnimation, &runHitBox);
 
 	runningLeftAnimation->mirror(true, false);
 	runningLeftAnimation->center();
@@ -267,12 +267,7 @@ void Character::_initStates() {
     // terrain while attacking. Invincibility from enemies is handled in
     // shouldCollideWith.
     static Square attackHitBox({ -10.0f, kLocomotionFootLocalY - 48.0f }, 20.0f, 48.0f);
-    for (unsigned int i = 0; i < attack01Animation->getFrameCount(); i++) {
-        Frame* frame = (*attack01Animation)[i];
-        if (frame) {
-            frame->setCollidable(&attackHitBox);
-        }
-    }
+    setFallbackHitBox(attack01Animation, &attackHitBox);
 
 	Animation* attack02Animation = getAnimation("Attack02", attack02Loaded);
 	if (!attack02Loaded) {
@@ -283,12 +278,7 @@ void Character::_initStates() {
 	attack02Animation->center();
 	attack02->setRenderable(attack02Animation);
     // Apply the same hit box to the secondary attack animation frames.
-    for (unsigned int i = 0; i < attack02Animation->getFrameCount(); i++) {
-        Frame* frame = (*attack02Animation)[i];
-        if (frame) {
-            frame->setCollidable(&attackHitBox);
-        }
-    }
+    setFallbackHitBox(attack02Animation, &attackHitBox);
 
 	/////////////////////////////////////////
 
@@ -304,10 +294,10 @@ void Character::_initStates() {
 	if (!deadLoaded) {
 		Animations::createFramesForAnimation(deadAnimation, deadSheet, deadDimensions, _spriteManager);
 		deadAnimation->setFrameRate(30);
+		deadAnimation->setOffset({ 8.0, 8.0 });
 	}
 
 	deadAnimation->setName(dead->getName());
-	deadAnimation->setOffset({ 8.0, 8.0 });
 	deadAnimation->center();
 
 	dead->setRenderable(deadAnimation);

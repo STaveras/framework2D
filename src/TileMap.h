@@ -6,6 +6,7 @@
 #include "Tile.h"
 #include "StrUtils.h"
 #include "FileSystem.h"
+#include "Scripting/JSONReader.h"
 
 #include <cstdlib>
 #include <algorithm>
@@ -292,7 +293,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 
 				if (!line.empty()) {
 					std::vector<int> indices;
-					std::vector<std::string> tokens = StrUtils::Split(line, ',', false);
+					std::vector<std::string> tokens = StrUtils::split(line, ',', false);
 
 					if (!tokens.empty()) {
 						for (std::string index : tokens) {
@@ -358,57 +359,11 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 			return result;
 		}
 
-		auto readFloat = [](auto element, float fallback = 0.0f) -> float {
-			if (element.is_null()) {
-				return fallback;
-			}
-			if (element.is_double()) {
-				return (float)element.get_double();
-			}
-			if (element.is_int64()) {
-				return (float)element.get_int64();
-			}
-			if (element.is_uint64()) {
-				return (float)element.get_uint64();
-			}
-			return fallback;
-		};
-
-		auto readInt = [&](auto element, int fallback = 0) -> int {
-			return (int)std::round(readFloat(element, (float)fallback));
-		};
-
-		auto readInt64 = [](auto element, int64_t fallback = 0) -> int64_t {
-			if (element.is_null()) {
-				return fallback;
-			}
-			if (element.is_int64()) {
-				return (int64_t)element.get_int64();
-			}
-			if (element.is_uint64()) {
-				return (int64_t)element.get_uint64();
-			}
-			if (element.is_double()) {
-				return (int64_t)std::llround((double)element.get_double());
-			}
-			return fallback;
-		};
-
-		auto readBool = [](auto element, bool fallback = true) -> bool {
-			if (element.is_null()) {
-				return fallback;
-			}
-			if (element.is_bool()) {
-				return (bool)element.get_bool();
-			}
-			if (element.is_int64()) {
-				return element.get_int64() != 0;
-			}
-			if (element.is_uint64()) {
-				return element.get_uint64() != 0;
-			}
-			return fallback;
-		};
+		using Scripting::JSON::readFloat;
+		using Scripting::JSON::readInt;
+		using Scripting::JSON::readInt64;
+		using Scripting::JSON::readBool;
+		using Scripting::JSON::readText;
 
 		auto readTintColor = [](auto element, uint32_t fallback = 0xFFFFFFFFu) -> uint32_t {
 			if (!element.is_string()) {
@@ -500,30 +455,6 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 				if (!typeValue.empty()) {
 					return typeValue;
 				}
-			}
-			return "";
-		};
-
-		auto propertyValueToString = [](auto element) -> std::string {
-			if (element.is_null()) {
-				return "";
-			}
-			if (element.is_string()) {
-				return std::string((std::string_view)element.get_string());
-			}
-			if (element.is_bool()) {
-				return (bool)element.get_bool() ? "true" : "false";
-			}
-			if (element.is_int64()) {
-				return std::to_string((int64_t)element.get_int64());
-			}
-			if (element.is_uint64()) {
-				return std::to_string((uint64_t)element.get_uint64());
-			}
-			if (element.is_double()) {
-				std::ostringstream stream;
-				stream << (double)element.get_double();
-				return stream.str();
 			}
 			return "";
 		};
@@ -917,7 +848,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 									TileMapPropertyDescriptor propertyDescriptor;
 									propertyDescriptor.name = std::string((std::string_view)property["name"].get_string());
 									propertyDescriptor.type = property["type"].is_string() ? std::string((std::string_view)property["type"].get_string()) : "";
-									propertyDescriptor.value = propertyValueToString(property["value"]);
+									propertyDescriptor.value = readText(property["value"]);
 									descriptor.properties.push_back(propertyDescriptor);
 								}
 							}
