@@ -235,15 +235,17 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 
 	m_pD3DSprite->SetTransform(&transform);
-	Sprite::UVScrollSegment segments[2];
-	const size_t segmentCount = image->getVerticalUVScrollSegments(segments, 2);
+	Sprite::UVSegment segments[4];
+	const size_t segmentCount = image->getUVSegments(segments, 4);
 	for (size_t segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
-		const Sprite::UVScrollSegment& segment = segments[segmentIndex];
-		RECT sourceSegment = image->getSrcRect();
+		const Sprite::UVSegment& segment = segments[segmentIndex];
+		RECT sourceSegment;
+		sourceSegment.left = static_cast<int>(segment.sourceLeft);
 		sourceSegment.top = static_cast<int>(segment.sourceTop);
+		sourceSegment.right = static_cast<int>(segment.sourceRight);
 		sourceSegment.bottom = static_cast<int>(segment.sourceBottom);
 		D3DXVECTOR3 center3D(
-			image->getCenter().x,
+			image->getCenter().x - segment.destinationLeft * (float)(image->getSrcRect().right - image->getSrcRect().left),
 			image->getCenter().y - segment.destinationTop * (float)(image->getSrcRect().bottom - image->getSrcRect().top),
 			0.0f);
 		m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(),

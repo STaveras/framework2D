@@ -15,15 +15,20 @@ typedef class Sprite : public Renderable
 	 const ITexture* _texture;
 	 RECT _sourceRect;
 	 bool _manuallyLoaded;
-	 int _verticalUVScrollRegionTop = 0;
-	 int _verticalUVScrollRegionHeight = 0;
-	 float _verticalUVScrollOffset = 0.0f;
+	 RECT _uvLoopRegion = { 0, 0, 0, 0 };
+	 vector2 _uvLoopPosition;
 
 public:
-	 struct UVScrollSegment {
+	 // A piece of the sprite to draw: the source pixels to sample and the part of the
+	 // sprite's box they fill, as fractions (0..1) of its width and height.
+	 struct UVSegment {
+		 float sourceLeft = 0.0f;
 		 float sourceTop = 0.0f;
+		 float sourceRight = 0.0f;
 		 float sourceBottom = 0.0f;
+		 float destinationLeft = 0.0f;
 		 float destinationTop = 0.0f;
+		 float destinationRight = 1.0f;
 		 float destinationBottom = 1.0f;
 	 };
 
@@ -42,11 +47,13 @@ public:
 
 	 void setTexture(ITexture* pTexture) { _texture = pTexture; }
 	 void setSrcRect(const RECT& srcRect) { _sourceRect = srcRect; }
-	 // Scroll this sprite's source rectangle vertically within a repeating atlas
-	 // region. The renderer can return two segments when the image crosses the
-	 // region's bottom edge.
-	 void setVerticalUVScroll(int regionTop, int regionHeight, float offset);
-	 size_t getVerticalUVScrollSegments(UVScrollSegment* segments, size_t capacity) const;
+	 // Samples the source rect from a repeating region of the sheet instead of its own spot.
+	 // position is where in the region the sprite's top-left samples, in source pixels
+	 // (wrapped). An axis on which the region has no size draws the source rect as is.
+	 void setUVLoop(const RECT& region, vector2 position);
+	 // The pieces to draw: one normally, up to four when the looped rect crosses the
+	 // region's edges.
+	 size_t getUVSegments(UVSegment* segments, size_t capacity) const;
 
 	 void center(void);
 

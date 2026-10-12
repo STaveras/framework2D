@@ -22,8 +22,10 @@ class Tile : public GameObject
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
    bool _layerVisible = true;
    std::string _layerName;
-	TileSet::UVScroll _uvScroll; // Copied from the tileset whenever the tile index is set
-	float _uvScrollOffset = 0.0f;
+	TileSet::UVLoop _uvLoop; // Copied from the tileset whenever the tile index is set
+	TileUVMotion _uvMotion; // From the tile's layer
+	vector2 _uvLoopPhase; // Where in its loop the tile's top-left sits before any motion
+	double _uvLoopSeconds = 0.0; // Level clock the art was last moved to
 
    // TODO: Move this to TileSet
    Factory<Image> _tileImages;
@@ -141,27 +143,41 @@ public:
       return _flipFlags;
    }
 
-	// True when the tileset gives this tile a uv_scroll_speed; the level advances it each frame.
-	bool hasUVScroll(void) const {
-		return _uvScroll.isActive();
+	// The layer's art motion. It moves the tile only along axes its tileset loops it on.
+	void setUVMotion(const TileUVMotion& motion) {
+		_uvMotion = motion;
+		applyUVLoop();
 	}
 
-	// Scrolls the tile's source rect through its tileset strip, wrapping at the strip's
-	// ends. Down makes the art flow down the screen.
-	void advanceVerticalUVScroll(float deltaSeconds)
+	// True when the layer moves this tile's art; the level advances it each frame.
+	bool hasUVMotion(void) const {
+		return movesUVLoopX() || movesUVLoopY();
+	}
+
+	// Continues the loop from the tiles to the left and above (same layer) when they move
+	// through the same strip, so a run of moving tiles reads as one surface. The run's
+	// first tile keeps the spot it was painted with. Call in map order: rows top to
+	// bottom, each row left to right.
+	void linkUVLoop(const Tile* left, const Tile* above)
 	{
-		if (!_uvScroll.isActive()) {
-			return;
+		_uvLoopPhase = paintedUVLoopPhase();
+		const float size = _tileSet ? _tileSet->getTileSize() : 0.0f;
+		if (movesUVLoopX() && left && left->movesUVLoopX() && left->_tileSet == _tileSet &&
+			left->_uvLoop.left == _uvLoop.left && left->_uvLoop.width == _uvLoop.width) {
+			_uvLoopPhase.x = left->_uvLoopPhase.x + size;
 		}
-
-		if (deltaSeconds > 0.0f) {
-			const float direction = (_uvScroll.direction == TileUVScrollDirection::Down) ? -1.0f : 1.0f;
-			_uvScrollOffset += direction * _uvScroll.speed * deltaSeconds;
-			_uvScrollOffset = std::fmod(_uvScrollOffset, static_cast<float>(_uvScroll.regionHeight));
+		if (movesUVLoopY() && above && above->movesUVLoopY() && above->_tileSet == _tileSet &&
+			above->_uvLoop.top == _uvLoop.top && above->_uvLoop.height == _uvLoop.height) {
+			_uvLoopPhase.y = above->_uvLoopPhase.y + size;
 		}
+		applyUVLoop();
+	}
 
-		GameObjectState* state = this->getState();
-		applyUVScrollToImage(state ? (Image*)state->getRenderable() : nullptr);
+	// Moves the art to where the layer's motion puts it at this time on the level clock.
+	void updateUVLoop(double seconds)
+	{
+		_uvLoopSeconds = seconds;
+		applyUVLoop();
 	}
 
 private:
@@ -198,19 +214,50 @@ private:
       image->setCenter(vector2(-(ax.x * t.x + ax.y * t.y), -(ay.x * t.x + ay.y * t.y)));
    }
 
-	void applyUVScrollToImage(Image* image) const
+	bool movesUVLoopX(void) const {
+		return _uvLoop.width > 0 && _uvMotion.movesX();
+	}
+
+	bool movesUVLoopY(void) const {
+		return _uvLoop.height > 0 && _uvMotion.movesY();
+	}
+
+	// Where in its loop the tile's painted art sits.
+	vector2 paintedUVLoopPhase(void) const
 	{
+		if (!_tileSet || _tileIndex < 0) {
+			return vector2(0.0f, 0.0f);
+		}
+		const int columns = (int)_tileSet->getTileCounts().x;
+		const float size = _tileSet->getTileSize();
+		return vector2(
+			(float)(_tileIndex % columns) * size - (float)_uvLoop.left,
+			(float)(_tileIndex / columns) * size - (float)_uvLoop.top);
+	}
+
+	// Only axes the layer moves loop; the rest draw the tile as painted.
+	void applyUVLoop(void) const
+	{
+		GameObjectState* state = this->getState();
+		Image* image = state ? (Image*)state->getRenderable() : nullptr;
 		if (!image) {
 			return;
 		}
 
-		// Phase the strip by the tile's height in the world rather than its row in the sheet,
-		// so touching tiles from one strip flow into each other as a single surface.
-		float offset = _uvScrollOffset;
-		if (_uvScroll.isActive()) {
-			offset += this->getPosition().y - (float)(image->getSrcRect().top - _uvScroll.regionTop);
+		RECT region = { 0, 0, 0, 0 };
+		vector2 position;
+		const vector2 moved = _uvMotion.displacementAt(_uvLoopSeconds, vector2((float)_uvLoop.width, (float)_uvLoop.height));
+		if (movesUVLoopX()) {
+			region.left = _uvLoop.left;
+			region.right = _uvLoop.left + _uvLoop.width;
+			position.x = _uvLoopPhase.x - moved.x;
 		}
-		image->setVerticalUVScroll(_uvScroll.regionTop, _uvScroll.regionHeight, offset);
+		if (movesUVLoopY()) {
+			region.top = _uvLoop.top;
+			region.bottom = _uvLoop.top + _uvLoop.height;
+			position.y = _uvLoopPhase.y - moved.y;
+		}
+		image->setUVLoop(region, position);
 	}
 
    SurfaceTraits2D buildSurfaceTraitsForLayer(void) const
@@ -283,7 +330,7 @@ public:
 
       GameObjectState* state = this->getState();
       if (state && _tileIndex < 0) {
-         _uvScroll = TileSet::UVScroll();
+         _uvLoop = TileSet::UVLoop();
          state->setCollidable(NULL);
          // A cleared tile (e.g. a collected pickup) must stop drawing too.
          if (Renderable* renderable = state->getRenderable()) {
@@ -318,11 +365,12 @@ public:
                tileImage->setVisibility(_layerVisible);
 
                TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);
-               _uvScroll = tileInfo._uvScroll;
+               _uvLoop = tileInfo._uvLoop;
+               _uvLoopPhase = paintedUVLoopPhase();
 
                applyFlipToImage(tileImage);
-               applyUVScrollToImage(tileImage);
                state->setRenderable(tileImage);
+               applyUVLoop();
 
                if (tileInfo._typeName != "") {
                   state->setName(tileInfo._typeName.c_str());

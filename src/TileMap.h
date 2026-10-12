@@ -141,6 +141,7 @@ class TileMap : public Tile
 			tile->setLayerCollisionMode(_layerConfig.collisionMode);
 			tile->setLayerVisible(_layerConfig.visible);
 			tile->setLayerName(_layerConfig.name);
+			tile->setUVMotion(_layerConfig.uvMotion);
 			if (_tileSet) {
 				tile->setTileSet(_tileSet);
 			}
@@ -251,6 +252,7 @@ public:
 					});
 					tile->setLayerCollisionMode(_layerConfig.collisionMode);
 					tile->setLayerName(_layerConfig.name);
+					tile->linkUVLoop(x > 0 ? getTile(x - 1, y) : nullptr, y > 0 ? getTile(x, y - 1) : nullptr);
 					tile->update(0);
 #if _DEBUG
 					if (_layerConfig.collisionMode != TileCollisionMode::None && !tile->getCollidable()) {
@@ -559,6 +561,34 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 				float parallaxY = 1.0f;
 				float opacity = 1.0f;
 				uint32_t tintColor = 0xFFFFFFFFu;
+				TileUVMotion uvMotion;
+			};
+
+			// A layer's or group's own uv_scroll_*/uv_sway_* properties override the motion
+			// inherited from the groups around it.
+			auto readUVMotion = [&](auto layer, TileUVMotion motion) -> TileUVMotion {
+				if (!layer["properties"].is_null() && layer["properties"].is_array()) {
+					for (auto property : layer["properties"]) {
+						const std::string name = readText(property["name"]);
+						const float value = readFloat(property["value"], 0.0f);
+						if (name == "uv_scroll_x") {
+							motion.scroll.x = value;
+						}
+						else if (name == "uv_scroll_y") {
+							motion.scroll.y = value;
+						}
+						else if (name == "uv_sway_x") {
+							motion.sway.x = value;
+						}
+						else if (name == "uv_sway_y") {
+							motion.sway.y = value;
+						}
+						else if (name == "uv_sway_period") {
+							motion.swayPeriod = value;
+						}
+					}
+				}
+				return motion;
 			};
 
 			int traversalIndex = 0;
@@ -589,6 +619,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 					childState.parallaxY = layerParallaxY;
 					childState.opacity = layerOpacity;
 					childState.tintColor = layerTintColor;
+					childState.uvMotion = readUVMotion(layer, parent.uvMotion);
 
 					auto children = layer["layers"];
 					if (children.is_array()) {
@@ -617,6 +648,7 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 						layerConfig.visible = layerDescriptor.visible;
 						layerConfig.tintColor = layerTintColor;
 						layerConfig.drawOrder = layerDescriptor.traversalIndex;
+						layerConfig.uvMotion = readUVMotion(layer, parent.uvMotion);
 
 						// User-selected default for missing property is non-colliding.
 						layerConfig.collisionMode = TileCollisionMode::None;

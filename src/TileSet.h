@@ -11,13 +11,6 @@
 #ifndef _TILESET_H_
 #define _TILESET_H_
 
-// Which way a uv-scrolling tile's art flows across the screen.
-enum class TileUVScrollDirection
-{
-   Up,
-   Down
-};
-
 class TileSet
 {
    Texture*  _tileSheet;
@@ -33,15 +26,14 @@ public:
       int decomposedConcavePolygons = 0;
    };
 
-   // A tile's source rect scrolling vertically through a repeating strip of the sheet.
-   // Region values are in source pixels; a regionHeight of 0 means the tile is static.
-   struct UVScroll {
-      TileUVScrollDirection direction = TileUVScrollDirection::Down;
-      float speed = 0.0f; // source pixels per second
-      int regionTop = 0;
-      int regionHeight = 0;
-
-      bool isActive(void) const { return speed > 0.0f && regionHeight > 0; }
+   // The repeating strip of the sheet a tile's art can loop through when its map layer moves
+   // it, in source pixels. A zero width (height) means the tile doesn't loop horizontally
+   // (vertically).
+   struct UVLoop {
+      int left = 0;
+      int top = 0;
+      int width = 0;
+      int height = 0;
    };
 
    struct TileInfo {
@@ -49,8 +41,8 @@ public:
       Collidable* _collisionInfo = NULL;
       // Custom properties from the tileset, with values stored as text.
       std::map<std::string, std::string> _properties;
-      // From the uv_scroll_speed/uv_scroll_direction properties; see resolveUVScrollRegions.
-      UVScroll _uvScroll;
+      // From the uv_loop_x/uv_loop_y properties; see resolveUVLoops.
+      UVLoop _uvLoop;
 
       bool hasProperty(const std::string& name) const {
          return _properties.find(name) != _properties.end();
@@ -80,9 +72,10 @@ protected:
    // Flipped copies of tile colliders, created on first use per (tile, flip flags).
    std::map<std::pair<int, unsigned int>, Collidable*> _flippedCollision;
 
-   // Gives every uv-scrolling tile the strip it loops through: the run of tiles above
-   // and below it in its sheet column that scroll the same way.
-   void resolveUVScrollRegions(void);
+   // Gives every tile named in a uv_loop_x (uv_loop_y) property the strip it loops through:
+   // the run of tiles beside it in its sheet row (column) that carry the same name. A tile
+   // whose neighbours don't share its name loops over itself.
+   void resolveUVLoops(void);
 
 public:
    explicit TileSet(Texture* tileSheet, unsigned int tileSize) :

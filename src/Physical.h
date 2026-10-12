@@ -65,6 +65,7 @@ protected:
 	float _restitution;
 
 	vector2 _velocity;
+
 	KinematicConfig2D _kinematicConfig;
 	KinematicState2D _kinematicState;
 

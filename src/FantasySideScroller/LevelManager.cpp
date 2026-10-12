@@ -472,9 +472,9 @@ TileMapLoadResult LevelManager::loadMapDataIntoObjectManager(const char* mapFile
 				continue;
 			}
 
-			// Tiles with uv_scroll_* properties in their tileset scroll their art.
-			if (tile->hasUVScroll()) {
-				_uvScrollingTiles.push_back(tile);
+			// Tiles whose layer moves their looping art (uv_scroll_*/uv_sway_*).
+			if (tile->hasUVMotion()) {
+				_uvMovingTiles.push_back(tile);
 			}
 
 			gameState.routeObjectToRenderList(tile, layerRenderList);
@@ -686,8 +686,9 @@ void LevelManager::attachCameraTo(GameObject* target, ObjectManager& objectManag
 
 void LevelManager::update(float deltaSeconds)
 {
-	for (Tile* tile : _uvScrollingTiles) {
-		tile->advanceVerticalUVScroll(deltaSeconds);
+	_uvMotionSeconds += deltaSeconds;
+	for (Tile* tile : _uvMovingTiles) {
+		tile->updateUVLoop(_uvMotionSeconds);
 	}
 
 	clampCameraToLevelBounds();
@@ -727,7 +728,8 @@ void LevelManager::shutdown(ObjectManager& objectManager, GameState& gameState)
 	// at runtime (collected keys are cleared to -1), so it can't decide this.
 	objectManager.removeObjects(_registeredTiles);
 	_registeredTiles.clear();
-	_uvScrollingTiles.clear();
+	_uvMovingTiles.clear();
+	_uvMotionSeconds = 0.0;
 
 	for (TileMap* tileMap : _tileMaps)
 	{

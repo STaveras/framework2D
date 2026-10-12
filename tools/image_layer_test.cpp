@@ -174,7 +174,7 @@ int main()
 		// A zoom change rebuilds the copies (the only runtime re-layout trigger). The
 		// rebuild recreates the copies (and their shared texture), so re-capture it.
 		levelManager.getCamera()->setZoom(2.0f);
-		levelManager.update();
+		levelManager.update(1.0f / 60.0f);
 		assert(!levelManager.getImageLayerSprites().empty());
 		const ITexture* rebuiltTexture = levelManager.getImageLayerSprites().front()->getTexture();
 		assert(rebuiltTexture != NULL);

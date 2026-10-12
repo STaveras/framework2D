@@ -43,62 +43,78 @@ Sprite::Sprite(const char* filePath, Color clearColor, const RECT& srcRect):
 	this->load(filePath,clearColor,srcRect);
 }
 
-void Sprite::setVerticalUVScroll(int regionTop, int regionHeight, float offset)
+namespace {
+struct UVSpan {
+	float sourceStart;
+	float sourceEnd;
+	float destinationStart;
+	float destinationEnd;
+};
+
+// Splits one axis of a source rect into the spans to sample from a repeating region: one
+// normally, two when the looped rect crosses the region's far edge.
+size_t splitUVLoopAxis(int sourceStart, int sourceEnd, int regionStart, int regionEnd, float position, UVSpan spans[2])
 {
-	_verticalUVScrollRegionTop = regionTop;
-	_verticalUVScrollRegionHeight = regionHeight;
-	_verticalUVScrollOffset = offset;
+	const int sourceSize = sourceEnd - sourceStart;
+	const int regionSize = regionEnd - regionStart;
+	if (regionSize <= 0 || sourceSize <= 0 || sourceSize > regionSize) {
+		spans[0] = { static_cast<float>(sourceStart), static_cast<float>(sourceEnd), 0.0f, 1.0f };
+		return 1;
+	}
+
+	float wrapped = std::fmod(position, static_cast<float>(regionSize));
+	if (wrapped < 0.0f) {
+		wrapped += static_cast<float>(regionSize);
+	}
+
+	// The sheets use nearest-neighbour sampling, so loop in whole source pixels. Round
+	// symmetrically so both directions move at the same rate.
+	const int start = regionStart + static_cast<int>(std::floor(wrapped + 0.5f)) % regionSize;
+	const int firstSize = std::min(sourceSize, regionEnd - start);
+	if (firstSize >= sourceSize) {
+		spans[0] = { static_cast<float>(start), static_cast<float>(start + sourceSize), 0.0f, 1.0f };
+		return 1;
+	}
+
+	const float split = static_cast<float>(firstSize) / static_cast<float>(sourceSize);
+	spans[0] = { static_cast<float>(start), static_cast<float>(regionEnd), 0.0f, split };
+	spans[1] = { static_cast<float>(regionStart), static_cast<float>(regionStart + sourceSize - firstSize), split, 1.0f };
+	return 2;
+}
 }
 
-size_t Sprite::getVerticalUVScrollSegments(UVScrollSegment* segments, size_t capacity) const
+void Sprite::setUVLoop(const RECT& region, vector2 position)
+{
+	_uvLoopRegion = region;
+	_uvLoopPosition = position;
+}
+
+size_t Sprite::getUVSegments(UVSegment* segments, size_t capacity) const
 {
 	if (!segments || capacity == 0) {
 		return 0;
 	}
 
-	const float sourceHeight = static_cast<float>(_sourceRect.bottom - _sourceRect.top);
-	const bool canScroll =
-		_verticalUVScrollRegionHeight > 0 &&
-		sourceHeight > 0.0f &&
-		sourceHeight <= static_cast<float>(_verticalUVScrollRegionHeight) &&
-		_sourceRect.top >= _verticalUVScrollRegionTop &&
-		_sourceRect.bottom <= _verticalUVScrollRegionTop + _verticalUVScrollRegionHeight;
-	if (!canScroll) {
-		segments[0] = { static_cast<float>(_sourceRect.top), static_cast<float>(_sourceRect.bottom), 0.0f, 1.0f };
-		return 1;
+	UVSpan xSpans[2];
+	UVSpan ySpans[2];
+	size_t xCount = splitUVLoopAxis(_sourceRect.left, _sourceRect.right, _uvLoopRegion.left, _uvLoopRegion.right, _uvLoopPosition.x, xSpans);
+	size_t yCount = splitUVLoopAxis(_sourceRect.top, _sourceRect.bottom, _uvLoopRegion.top, _uvLoopRegion.bottom, _uvLoopPosition.y, ySpans);
+	if (xCount * yCount > capacity) {
+		xCount = yCount = 1;
+		xSpans[0] = { static_cast<float>(_sourceRect.left), static_cast<float>(_sourceRect.right), 0.0f, 1.0f };
+		ySpans[0] = { static_cast<float>(_sourceRect.top), static_cast<float>(_sourceRect.bottom), 0.0f, 1.0f };
 	}
 
-	const float regionHeight = static_cast<float>(_verticalUVScrollRegionHeight);
-	float wrappedOffset = std::fmod(
-		static_cast<float>(_sourceRect.top - _verticalUVScrollRegionTop) + _verticalUVScrollOffset,
-		regionHeight);
-	if (wrappedOffset < 0.0f) {
-		wrappedOffset += regionHeight;
+	size_t count = 0;
+	for (size_t y = 0; y < yCount; ++y) {
+		for (size_t x = 0; x < xCount; ++x) {
+			segments[count++] = {
+				xSpans[x].sourceStart, ySpans[y].sourceStart, xSpans[x].sourceEnd, ySpans[y].sourceEnd,
+				xSpans[x].destinationStart, ySpans[y].destinationStart, xSpans[x].destinationEnd, ySpans[y].destinationEnd
+			};
+		}
 	}
-
-	// This sheet uses nearest-neighbour sampling, so scroll in whole source
-	// pixels. Round symmetrically so Up and Down move at the same rate.
-	const int scrollPixels = static_cast<int>(std::floor(wrappedOffset + 0.5f)) % _verticalUVScrollRegionHeight;
-	const float sourceTop = static_cast<float>(_verticalUVScrollRegionTop + scrollPixels);
-	const float regionBottom = static_cast<float>(_verticalUVScrollRegionTop + _verticalUVScrollRegionHeight);
-	const float firstHeight = std::min(sourceHeight, regionBottom - sourceTop);
-	if (firstHeight >= sourceHeight) {
-		segments[0] = { sourceTop, sourceTop + sourceHeight, 0.0f, 1.0f };
-		return 1;
-	}
-
-	if (capacity < 2) {
-		segments[0] = { static_cast<float>(_sourceRect.top), static_cast<float>(_sourceRect.bottom), 0.0f, 1.0f };
-		return 1;
-	}
-	segments[0] = { sourceTop, regionBottom, 0.0f, firstHeight / sourceHeight };
-	segments[1] = {
-		static_cast<float>(_verticalUVScrollRegionTop),
-		static_cast<float>(_verticalUVScrollRegionTop) + sourceHeight - firstHeight,
-		firstHeight / sourceHeight,
-		1.0f
-	};
-	return 2;
+	return count;
 }
 
 Sprite::~Sprite(void)

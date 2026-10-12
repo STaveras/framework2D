@@ -4496,42 +4496,27 @@
          "id":428,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":429,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":430,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
@@ -4812,55 +4797,64 @@
          "id":453,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":454,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":455,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
-         "id":456
+         "id":456,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":457
+         "id":457,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":458
+         "id":458,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":459
+         "id":459,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
          "id":460
@@ -5083,55 +5077,64 @@
          "id":478,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":479,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":480,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
-         "id":481
+         "id":481,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":482
+         "id":482,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":483
+         "id":483,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":484
+         "id":484,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
          "id":485
@@ -5516,55 +5519,64 @@
          "id":503,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":504,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
          "id":505,
          "properties":[
                 {
-                 "name":"uv_scroll_direction",
+                 "name":"uv_loop_y",
                  "type":"string",
-                 "value":"down"
-                }, 
-                {
-                 "name":"uv_scroll_speed",
-                 "type":"float",
-                 "value":75
+                 "value":"waterfall"
                 }]
         }, 
         {
-         "id":506
+         "id":506,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":507
+         "id":507,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":508
+         "id":508,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
-         "id":509
+         "id":509,
+         "properties":[
+                {
+                 "name":"uv_loop_x",
+                 "type":"string",
+                 "value":"pond"
+                }]
         }, 
         {
          "id":510

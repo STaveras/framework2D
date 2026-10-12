@@ -97,14 +97,6 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 						}
 					}
 
-					// uv_scroll_speed (source pixels per second) makes the tile's art scroll;
-					// uv_scroll_direction is "up" or "down" (the default).
-					tileInfo._uvScroll.speed = std::max(0.0f, tileInfo.getFloatProperty("uv_scroll_speed", 0.0f));
-					auto uvScrollDirection = tileInfo._properties.find("uv_scroll_direction");
-					if (uvScrollDirection != tileInfo._properties.end() && StrUtils::iEquals(uvScrollDirection->second, "up")) {
-						tileInfo._uvScroll.direction = TileUVScrollDirection::Up;
-					}
-
 					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
 						const std::string source = "tile=" + std::to_string((long long)id);
 						tileInfo._collisionInfo = Collidable::loadFromObjectGroup(tile["objectgroup"], collisionObjects,
@@ -116,7 +108,7 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 					}
 				}
 
-				tileSet->resolveUVScrollRegions();
+				tileSet->resolveUVLoops();
 			}
 
 			for (int64_t i = 0; i < tileCount; ++i) {
@@ -149,36 +141,56 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 	return tileSet;
 }
 
-void TileSet::resolveUVScrollRegions(void)
+void TileSet::resolveUVLoops(void)
 {
 	const int columns = (int)_tileCounts.x;
-	const int tileCount = columns * (int)_tileCounts.y;
-	if (columns <= 0) {
+	const int rows = (int)_tileCounts.y;
+	if (columns <= 0 || rows <= 0) {
 		return;
 	}
 
-	auto scrollsLike = [this](int tileIndex, const UVScroll& scroll) {
-		const TileInfo* info = findTileInfo(tileIndex);
-		return info && info->_uvScroll.speed == scroll.speed && info->_uvScroll.direction == scroll.direction;
+	auto loopName = [this, columns](int column, int row, const char* property) -> std::string {
+		const TileInfo* info = findTileInfo(row * columns + column);
+		if (!info) {
+			return std::string();
+		}
+		auto itr = info->_properties.find(property);
+		return (itr != info->_properties.end()) ? itr->second : std::string();
 	};
 
+	const int size = (int)_tileSize;
 	for (auto& entry : _tileInfo) {
-		UVScroll& scroll = entry.second._uvScroll;
-		if (scroll.speed <= 0.0f) {
-			continue;
+		const int column = entry.first % columns;
+		const int row = entry.first / columns;
+		UVLoop& loop = entry.second._uvLoop;
+
+		const std::string nameX = loopName(column, row, "uv_loop_x");
+		if (!nameX.empty()) {
+			int first = column;
+			while (first > 0 && loopName(first - 1, row, "uv_loop_x") == nameX) {
+				--first;
+			}
+			int last = column;
+			while (last + 1 < columns && loopName(last + 1, row, "uv_loop_x") == nameX) {
+				++last;
+			}
+			loop.left = first * size;
+			loop.width = (last - first + 1) * size;
 		}
 
-		int top = entry.first;
-		while (top - columns >= 0 && scrollsLike(top - columns, scroll)) {
-			top -= columns;
+		const std::string nameY = loopName(column, row, "uv_loop_y");
+		if (!nameY.empty()) {
+			int first = row;
+			while (first > 0 && loopName(column, first - 1, "uv_loop_y") == nameY) {
+				--first;
+			}
+			int last = row;
+			while (last + 1 < rows && loopName(column, last + 1, "uv_loop_y") == nameY) {
+				++last;
+			}
+			loop.top = first * size;
+			loop.height = (last - first + 1) * size;
 		}
-		int bottom = entry.first;
-		while (bottom + columns < tileCount && scrollsLike(bottom + columns, scroll)) {
-			bottom += columns;
-		}
-
-		scroll.regionTop = (top / columns) * (int)_tileSize;
-		scroll.regionHeight = ((bottom - top) / columns + 1) * (int)_tileSize;
 	}
 }
 

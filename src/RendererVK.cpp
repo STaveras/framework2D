@@ -527,26 +527,27 @@ void RendererVK::_drawImage(Sprite* sprite, Color tint, vector2 offset, bool scr
 		vInset = 0.5f / texHeight;
 	}
 
-	const float u0 = (srcRect.left / texWidth) + uInset;
-	const float u1 = (srcRect.right / texWidth) - uInset;
-
 	const vector2 position = sprite->getPosition() + offset;
 	const vector2 center = sprite->getCenter();
 	const vector2 scale = sprite->getScale();
 	const float rotationRadians = sprite->getRotation();
 
 	const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
-	Sprite::UVScrollSegment segments[2];
-	const size_t segmentCount = sprite->getVerticalUVScrollSegments(segments, 2);
+	Sprite::UVSegment segments[4];
+	const size_t segmentCount = sprite->getUVSegments(segments, 4);
 	for (size_t segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
-		const Sprite::UVScrollSegment& segment = segments[segmentIndex];
-		const float segmentHeight = segment.sourceBottom - segment.sourceTop;
-		const float segmentVInset = (isSubRect && segmentHeight > 1.0f) ? vInset : 0.0f;
+		const Sprite::UVSegment& segment = segments[segmentIndex];
+		const float segmentUInset = (segment.sourceRight - segment.sourceLeft > 1.0f) ? uInset : 0.0f;
+		const float segmentVInset = (segment.sourceBottom - segment.sourceTop > 1.0f) ? vInset : 0.0f;
+		const float u0 = (segment.sourceLeft / texWidth) + segmentUInset;
+		const float u1 = (segment.sourceRight / texWidth) - segmentUInset;
 		const float v0 = (segment.sourceTop / texHeight) + segmentVInset;
 		const float v1 = (segment.sourceBottom / texHeight) - segmentVInset;
+		const float leftX = segment.destinationLeft * srcWidth - center.x;
+		const float rightX = segment.destinationRight * srcWidth - center.x;
 		const float topY = segment.destinationTop * srcHeight - center.y;
 		const float bottomY = segment.destinationBottom * srcHeight - center.y;
-		const float xs[4] = { -center.x, srcWidth - center.x, srcWidth - center.x, -center.x };
+		const float xs[4] = { leftX, rightX, rightX, leftX };
 		const float ys[4] = { topY, topY, bottomY, bottomY };
 		const float us[4] = { u0, u1, u1, u0 }, vs[4] = { v0, v0, v1, v1 };
 		SpriteVertex quad[4];

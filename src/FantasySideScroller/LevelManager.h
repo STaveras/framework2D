@@ -47,7 +47,8 @@ class LevelManager
 
 	std::vector<TileMap*> _tileMaps;
 	std::vector<GameObject*> _registeredTiles;
-	std::vector<Tile*> _uvScrollingTiles;
+	std::vector<Tile*> _uvMovingTiles;
+	double _uvMotionSeconds = 0.0; // Level clock the moving tile art follows
 	std::vector<IRenderer::RenderList*> _mapLayerRenderLists;
 	bool _hasSpawnPoint = false;
 	vector2 _spawnPoint;
