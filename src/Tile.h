@@ -12,12 +12,6 @@
 #include <string>
 #include <vector>
 
-enum class TileUVScrollDirection
-{
-	Up,
-	Down
-};
-
 // Just to get something on the screen...
 class Tile : public GameObject
 {
@@ -28,11 +22,8 @@ class Tile : public GameObject
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
    bool _layerVisible = true;
    std::string _layerName;
-	TileUVScrollDirection _uvScrollDirection = TileUVScrollDirection::Down;
-	float _uvScrollSpeed = 0.0f;
+	TileSet::UVScroll _uvScroll; // Copied from the tileset whenever the tile index is set
 	float _uvScrollOffset = 0.0f;
-	int _uvScrollRegionTop = 0;
-	int _uvScrollRegionHeight = 0;
 
    // TODO: Move this to TileSet
    Factory<Image> _tileImages;
@@ -150,34 +141,24 @@ public:
       return _flipFlags;
    }
 
-	// Scroll this tile's source UVs through a vertical atlas region. Speed is
-	// measured in source pixels per second; Down moves the image toward later
-	// atlas rows and wraps at the region's bottom.
-	void setVerticalUVScroll(
-		TileUVScrollDirection direction,
-		float speedPixelsPerSecond,
-		int regionTop,
-		int regionHeight)
-	{
-		_uvScrollDirection = direction;
-		_uvScrollSpeed = std::max(0.0f, speedPixelsPerSecond);
-		_uvScrollRegionTop = regionTop;
-		_uvScrollRegionHeight = std::max(0, regionHeight);
-		_uvScrollOffset = 0.0f;
-
-		GameObjectState* state = this->getState();
-		applyUVScrollToImage(state ? (Image*)state->getRenderable() : nullptr);
+	// True when the tileset gives this tile a uv_scroll_speed; the level advances it each frame.
+	bool hasUVScroll(void) const {
+		return _uvScroll.isActive();
 	}
 
+	// Scrolls the tile's source rect through its tileset strip, wrapping at the strip's
+	// ends. Down makes the art flow down the screen.
 	void advanceVerticalUVScroll(float deltaSeconds)
 	{
-		if (_uvScrollSpeed <= 0.0f || _uvScrollRegionHeight <= 0 || deltaSeconds <= 0.0f) {
+		if (!_uvScroll.isActive()) {
 			return;
 		}
 
-		const float direction = (_uvScrollDirection == TileUVScrollDirection::Down) ? -1.0f : 1.0f;
-		_uvScrollOffset += direction * _uvScrollSpeed * deltaSeconds;
-		_uvScrollOffset = std::fmod(_uvScrollOffset, static_cast<float>(_uvScrollRegionHeight));
+		if (deltaSeconds > 0.0f) {
+			const float direction = (_uvScroll.direction == TileUVScrollDirection::Down) ? -1.0f : 1.0f;
+			_uvScrollOffset += direction * _uvScroll.speed * deltaSeconds;
+			_uvScrollOffset = std::fmod(_uvScrollOffset, static_cast<float>(_uvScroll.regionHeight));
+		}
 
 		GameObjectState* state = this->getState();
 		applyUVScrollToImage(state ? (Image*)state->getRenderable() : nullptr);
@@ -219,9 +200,17 @@ private:
 
 	void applyUVScrollToImage(Image* image) const
 	{
-		if (image) {
-			image->setVerticalUVScroll(_uvScrollRegionTop, _uvScrollRegionHeight, _uvScrollOffset);
+		if (!image) {
+			return;
 		}
+
+		// Phase the strip by the tile's height in the world rather than its row in the sheet,
+		// so touching tiles from one strip flow into each other as a single surface.
+		float offset = _uvScrollOffset;
+		if (_uvScroll.isActive()) {
+			offset += this->getPosition().y - (float)(image->getSrcRect().top - _uvScroll.regionTop);
+		}
+		image->setVerticalUVScroll(_uvScroll.regionTop, _uvScroll.regionHeight, offset);
 	}
 
    SurfaceTraits2D buildSurfaceTraitsForLayer(void) const
@@ -294,6 +283,7 @@ public:
 
       GameObjectState* state = this->getState();
       if (state && _tileIndex < 0) {
+         _uvScroll = TileSet::UVScroll();
          state->setCollidable(NULL);
          // A cleared tile (e.g. a collected pickup) must stop drawing too.
          if (Renderable* renderable = state->getRenderable()) {
@@ -327,11 +317,12 @@ public:
                tileImage->setTexture(_tileSet->getTileSheet());
                tileImage->setVisibility(_layerVisible);
 
+               TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);
+               _uvScroll = tileInfo._uvScroll;
+
                applyFlipToImage(tileImage);
                applyUVScrollToImage(tileImage);
                state->setRenderable(tileImage);
-
-               TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);
 
                if (tileInfo._typeName != "") {
                   state->setName(tileInfo._typeName.c_str());

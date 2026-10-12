@@ -33,10 +33,8 @@ class LevelManager
 
 	std::vector<TileMap*> _tileMaps;
 	std::vector<GameObject*> _registeredTiles;
-	std::vector<Tile*> _animatedWaterTiles;
+	std::vector<Tile*> _uvScrollingTiles;
 	std::vector<IRenderer::RenderList*> _mapLayerRenderLists;
-	TileUVScrollDirection _waterUVScrollDirection = TileUVScrollDirection::Down;
-	float _waterUVScrollSpeed = 4.0f;
 	bool _hasSpawnPoint = false;
 	vector2 _spawnPoint;
 	bool _hasLevelBounds = false;
@@ -64,8 +62,6 @@ public:
 		GameState& gameState);
 
 	void attachCameraTo(GameObject* target, ObjectManager& objectManager, bool followHorizontally = true, bool followVertically = true);
-	// Configure the selected water tiles' vertical atlas scroll in source pixels per second.
-	void setWaterUVScroll(TileUVScrollDirection direction, float speedPixelsPerSecond);
 	void update(float deltaSeconds);
 
 	void shutdown(ObjectManager& objectManager, GameState& gameState);

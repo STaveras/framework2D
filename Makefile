@@ -131,6 +131,12 @@ test-tile-flip: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/tile_
 	$(CXX) $^ -o $(OBJDIR)/tile_flip_test $(LDFLAGS)
 	./$(OBJDIR)/tile_flip_test
 
+.PHONY: test-tile-uv-scroll
+$(OBJDIR)/tools/tile_uv_scroll_test.o: CXXFLAGS += -UNDEBUG
+test-tile-uv-scroll: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/tile_uv_scroll_test.o
+	$(CXX) $^ -o $(OBJDIR)/tile_uv_scroll_test $(LDFLAGS)
+	./$(OBJDIR)/tile_uv_scroll_test
+
 .PHONY: test-level-props
 $(OBJDIR)/tools/level_props_test.o: CXXFLAGS += -UNDEBUG
 test-level-props: $(filter-out $(OBJDIR)/src/main.o,$(OBJS)) $(OBJDIR)/tools/level_props_test.o

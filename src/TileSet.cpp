@@ -8,6 +8,7 @@
 #include "Polygon.h"
 #include "PolygonDecomposition.h"
 #include "Square.h"
+#include "StrUtils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -142,6 +143,14 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 						}
 					}
 
+					// uv_scroll_speed (source pixels per second) makes the tile's art scroll;
+					// uv_scroll_direction is "up" or "down" (the default).
+					tileInfo._uvScroll.speed = std::max(0.0f, tileInfo.getFloatProperty("uv_scroll_speed", 0.0f));
+					auto uvScrollDirection = tileInfo._properties.find("uv_scroll_direction");
+					if (uvScrollDirection != tileInfo._properties.end() && StrUtils::IEquals(uvScrollDirection->second, "up")) {
+						tileInfo._uvScroll.direction = TileUVScrollDirection::Up;
+					}
+
 					if (!tile["objectgroup"].is_null() && tile["objectgroup"].is_object()) {
 						simdjson::dom::element objectgroup = tile["objectgroup"];
 						if (!objectgroup["objects"].is_null() && objectgroup["objects"].is_array()) {
@@ -257,6 +266,8 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 						tileSet->_tileInfo[(int)id] = tileInfo;
 					}
 				}
+
+				tileSet->resolveUVScrollRegions();
 			}
 
 			for (int64_t i = 0; i < tileCount; ++i) {
@@ -287,6 +298,39 @@ TileSet* TileSet::loadFromFile(const char* fileName)
 	}
 
 	return tileSet;
+}
+
+void TileSet::resolveUVScrollRegions(void)
+{
+	const int columns = (int)_tileCounts.x;
+	const int tileCount = columns * (int)_tileCounts.y;
+	if (columns <= 0) {
+		return;
+	}
+
+	auto scrollsLike = [this](int tileIndex, const UVScroll& scroll) {
+		const TileInfo* info = findTileInfo(tileIndex);
+		return info && info->_uvScroll.speed == scroll.speed && info->_uvScroll.direction == scroll.direction;
+	};
+
+	for (auto& entry : _tileInfo) {
+		UVScroll& scroll = entry.second._uvScroll;
+		if (scroll.speed <= 0.0f) {
+			continue;
+		}
+
+		int top = entry.first;
+		while (top - columns >= 0 && scrollsLike(top - columns, scroll)) {
+			top -= columns;
+		}
+		int bottom = entry.first;
+		while (bottom + columns < tileCount && scrollsLike(bottom + columns, scroll)) {
+			bottom += columns;
+		}
+
+		scroll.regionTop = (top / columns) * (int)_tileSize;
+		scroll.regionHeight = ((bottom - top) / columns + 1) * (int)_tileSize;
+	}
 }
 
 TileSet::CollisionLoadStats TileSet::getCollisionLoadStats(void)
