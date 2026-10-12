@@ -4181,18 +4181,6 @@
                 }, 
                 {
                  "height":80,
-                 "id":16,
-                 "name":"Glade checkpoint",
-                 "opacity":1,
-                 "rotation":0,
-                 "type":"checkpoint",
-                 "visible":true,
-                 "width":48,
-                 "x":954,
-                 "y":289
-                }, 
-                {
-                 "height":80,
                  "id":18,
                  "name":"Pond checkpoint",
                  "opacity":1,
@@ -4224,7 +4212,7 @@
                         {
                          "name":"next_map",
                          "type":"string",
-                         "value":"testMap_separate_layers.tmj"
+                         "value":"mosswood_hollow.tmj"
                         }],
                  "rotation":0,
                  "type":"destination",
@@ -4250,6 +4238,19 @@
                  "width":32,
                  "x":-32,
                  "y":-32
+                }, 
+                {
+                 "height":0,
+                 "id":23,
+                 "name":"Glade checkpoint",
+                 "opacity":1,
+                 "point":true,
+                 "rotation":0,
+                 "type":"checkpoint",
+                 "visible":true,
+                 "width":0,
+                 "x":978,
+                 "y":340
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -4532,7 +4533,7 @@
          "y":0
         }],
  "nextlayerid":116,
- "nextobjectid":23,
+ "nextobjectid":24,
  "orientation":"orthogonal",
  "parallaxoriginx":200,
  "parallaxoriginy":300,
