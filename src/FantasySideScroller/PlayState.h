@@ -30,7 +30,7 @@ class PlayState : public GameState
 	TraversalMechanics _traversalMechanics;
 	bool _traversalOperatorRegistered = false;
 	LevelProps _levelProps;
-	std::string _mapFileName = "mosswood_hollow.tmj";
+	std::string _mapFileName = "testMap_separate_layers.tmj";
 	bool _reloadWasDown = false;
 	// Set by a SectionEnd/SectionBegin exit: the next map's destination to spawn beside,
 	// and the character's outgoing height and facing.
