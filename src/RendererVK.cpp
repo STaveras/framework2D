@@ -528,34 +528,42 @@ void RendererVK::_drawImage(Sprite* sprite, Color tint, vector2 offset, bool scr
 	}
 
 	const float u0 = (srcRect.left / texWidth) + uInset;
-	const float v0 = (srcRect.top / texHeight) + vInset;
 	const float u1 = (srcRect.right / texWidth) - uInset;
-	const float v1 = (srcRect.bottom / texHeight) - vInset;
 
 	const vector2 position = sprite->getPosition() + offset;
 	const vector2 center = sprite->getCenter();
 	const vector2 scale = sprite->getScale();
 	const float rotationRadians = sprite->getRotation();
 
-	// Transform on the CPU so sprites sharing a texture share one draw call.
 	const float c = std::cos(rotationRadians), sn = std::sin(rotationRadians);
-	const float xs[4] = { -center.x, srcWidth - center.x, srcWidth - center.x, -center.x };
-	const float ys[4] = { -center.y, -center.y, srcHeight - center.y, srcHeight - center.y };
-	const float us[4] = { u0, u1, u1, u0 }, vs[4] = { v0, v0, v1, v1 };
-	SpriteVertex quad[4];
-	vector2 lo(INFINITY, INFINITY), hi(-INFINITY, -INFINITY);
-	for (int i = 0; i < 4; ++i) {
-		const float x = xs[i] * scale.x, y = ys[i] * scale.y;
-		quad[i] = { position.x + c * x - sn * y, position.y + sn * x + c * y,
-			us[i], vs[i], tint.r, tint.g, tint.b, tint.a };
-		lo.x = std::min(lo.x, quad[i].x); lo.y = std::min(lo.y, quad[i].y);
-		hi.x = std::max(hi.x, quad[i].x); hi.y = std::max(hi.y, quad[i].y);
-	}
-	if (!screenSpace && (hi.x < _viewMin.x || lo.x > _viewMax.x || hi.y < _viewMin.y || lo.y > _viewMax.y)) {
-		return;
-	}
+	Sprite::UVScrollSegment segments[2];
+	const size_t segmentCount = sprite->getVerticalUVScrollSegments(segments, 2);
+	for (size_t segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
+		const Sprite::UVScrollSegment& segment = segments[segmentIndex];
+		const float segmentHeight = segment.sourceBottom - segment.sourceTop;
+		const float segmentVInset = (isSubRect && segmentHeight > 1.0f) ? vInset : 0.0f;
+		const float v0 = (segment.sourceTop / texHeight) + segmentVInset;
+		const float v1 = (segment.sourceBottom / texHeight) - segmentVInset;
+		const float topY = segment.destinationTop * srcHeight - center.y;
+		const float bottomY = segment.destinationBottom * srcHeight - center.y;
+		const float xs[4] = { -center.x, srcWidth - center.x, srcWidth - center.x, -center.x };
+		const float ys[4] = { topY, topY, bottomY, bottomY };
+		const float us[4] = { u0, u1, u1, u0 }, vs[4] = { v0, v0, v1, v1 };
+		SpriteVertex quad[4];
+		vector2 lo(INFINITY, INFINITY), hi(-INFINITY, -INFINITY);
+		for (int i = 0; i < 4; ++i) {
+			const float x = xs[i] * scale.x, y = ys[i] * scale.y;
+			quad[i] = { position.x + c * x - sn * y, position.y + sn * x + c * y,
+				us[i], vs[i], tint.r, tint.g, tint.b, tint.a };
+			lo.x = std::min(lo.x, quad[i].x); lo.y = std::min(lo.y, quad[i].y);
+			hi.x = std::max(hi.x, quad[i].x); hi.y = std::max(hi.y, quad[i].y);
+		}
+		if (!screenSpace && (hi.x < _viewMin.x || lo.x > _viewMax.x || hi.y < _viewMin.y || lo.y > _viewMax.y)) {
+			continue;
+		}
 
-	_queueQuad(texture->getDescriptorSet(), quad);
+		_queueQuad(texture->getDescriptorSet(), quad);
+	}
 }
 
 void RendererVK::_drawFont(Font* font, Color tint, vector2 offset)

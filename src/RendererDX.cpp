@@ -227,8 +227,6 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	// not a fixed rect-local point. This keeps tile spacing stable when zoom changes.
 	D3DXMatrixTransformation2D(&transform, &transformPivot, 0.0f, &scale, &transformPivot, image->getRotation(), NULL);
 
-	D3DXVECTOR3 center3D = D3DXVECTOR3(image->getCenter().x, image->getCenter().y, 0.0f);
-
 	// No mipmaps, and nearest neighbor/point filtering 
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
@@ -237,10 +235,22 @@ void RendererDX::_drawImage(Sprite* image, Color tint, D3DXVECTOR2 offset, float
 	m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 
 	m_pD3DSprite->SetTransform(&transform);
-	m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(),
-		&image->getSrcRect(),
-		&center3D, &position,
-		tint._color);
+	Sprite::UVScrollSegment segments[2];
+	const size_t segmentCount = image->getVerticalUVScrollSegments(segments, 2);
+	for (size_t segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
+		const Sprite::UVScrollSegment& segment = segments[segmentIndex];
+		RECT sourceSegment = image->getSrcRect();
+		sourceSegment.top = static_cast<int>(segment.sourceTop);
+		sourceSegment.bottom = static_cast<int>(segment.sourceBottom);
+		D3DXVECTOR3 center3D(
+			image->getCenter().x,
+			image->getCenter().y - segment.destinationTop * (float)(image->getSrcRect().bottom - image->getSrcRect().top),
+			0.0f);
+		m_pD3DSprite->Draw(((TextureD3D*)image->getTexture())->getTexture(),
+			&sourceSegment,
+			&center3D, &position,
+			tint._color);
+	}
 }
 
 void RendererDX::_drawFont(Font* font, Color tint, D3DXVECTOR2 offset, float zValue, bool screenSpace,

@@ -47,6 +47,7 @@ class LevelManager
 
 	std::vector<TileMap*> _tileMaps;
 	std::vector<GameObject*> _registeredTiles;
+	std::vector<Tile*> _uvScrollingTiles;
 	std::vector<IRenderer::RenderList*> _mapLayerRenderLists;
 	bool _hasSpawnPoint = false;
 	vector2 _spawnPoint;
@@ -87,7 +88,7 @@ public:
 		GameState& gameState);
 
 	void attachCameraTo(GameObject* target, ObjectManager& objectManager, bool followHorizontally = true, bool followVertically = true);
-	void update(void);
+	void update(float deltaSeconds);
 
 	void shutdown(ObjectManager& objectManager, GameState& gameState);
 

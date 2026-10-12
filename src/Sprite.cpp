@@ -6,6 +6,8 @@
 #include "ITexture.h"
 #include "FileSystem.h"
 
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 
 Sprite::Sprite(void):
@@ -39,6 +41,64 @@ Sprite::Sprite(const char* filePath, Color clearColor, const RECT& srcRect):
 	_sourceRect(srcRect),
 	_manuallyLoaded(true) {
 	this->load(filePath,clearColor,srcRect);
+}
+
+void Sprite::setVerticalUVScroll(int regionTop, int regionHeight, float offset)
+{
+	_verticalUVScrollRegionTop = regionTop;
+	_verticalUVScrollRegionHeight = regionHeight;
+	_verticalUVScrollOffset = offset;
+}
+
+size_t Sprite::getVerticalUVScrollSegments(UVScrollSegment* segments, size_t capacity) const
+{
+	if (!segments || capacity == 0) {
+		return 0;
+	}
+
+	const float sourceHeight = static_cast<float>(_sourceRect.bottom - _sourceRect.top);
+	const bool canScroll =
+		_verticalUVScrollRegionHeight > 0 &&
+		sourceHeight > 0.0f &&
+		sourceHeight <= static_cast<float>(_verticalUVScrollRegionHeight) &&
+		_sourceRect.top >= _verticalUVScrollRegionTop &&
+		_sourceRect.bottom <= _verticalUVScrollRegionTop + _verticalUVScrollRegionHeight;
+	if (!canScroll) {
+		segments[0] = { static_cast<float>(_sourceRect.top), static_cast<float>(_sourceRect.bottom), 0.0f, 1.0f };
+		return 1;
+	}
+
+	const float regionHeight = static_cast<float>(_verticalUVScrollRegionHeight);
+	float wrappedOffset = std::fmod(
+		static_cast<float>(_sourceRect.top - _verticalUVScrollRegionTop) + _verticalUVScrollOffset,
+		regionHeight);
+	if (wrappedOffset < 0.0f) {
+		wrappedOffset += regionHeight;
+	}
+
+	// This sheet uses nearest-neighbour sampling, so scroll in whole source
+	// pixels. Round symmetrically so Up and Down move at the same rate.
+	const int scrollPixels = static_cast<int>(std::floor(wrappedOffset + 0.5f)) % _verticalUVScrollRegionHeight;
+	const float sourceTop = static_cast<float>(_verticalUVScrollRegionTop + scrollPixels);
+	const float regionBottom = static_cast<float>(_verticalUVScrollRegionTop + _verticalUVScrollRegionHeight);
+	const float firstHeight = std::min(sourceHeight, regionBottom - sourceTop);
+	if (firstHeight >= sourceHeight) {
+		segments[0] = { sourceTop, sourceTop + sourceHeight, 0.0f, 1.0f };
+		return 1;
+	}
+
+	if (capacity < 2) {
+		segments[0] = { static_cast<float>(_sourceRect.top), static_cast<float>(_sourceRect.bottom), 0.0f, 1.0f };
+		return 1;
+	}
+	segments[0] = { sourceTop, regionBottom, 0.0f, firstHeight / sourceHeight };
+	segments[1] = {
+		static_cast<float>(_verticalUVScrollRegionTop),
+		static_cast<float>(_verticalUVScrollRegionTop) + sourceHeight - firstHeight,
+		firstHeight / sourceHeight,
+		1.0f
+	};
+	return 2;
 }
 
 Sprite::~Sprite(void)

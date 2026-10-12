@@ -11,6 +11,13 @@
 #ifndef _TILESET_H_
 #define _TILESET_H_
 
+// Which way a uv-scrolling tile's art flows across the screen.
+enum class TileUVScrollDirection
+{
+   Up,
+   Down
+};
+
 class TileSet
 {
    Texture*  _tileSheet;
@@ -26,11 +33,24 @@ public:
       int decomposedConcavePolygons = 0;
    };
 
+   // A tile's source rect scrolling vertically through a repeating strip of the sheet.
+   // Region values are in source pixels; a regionHeight of 0 means the tile is static.
+   struct UVScroll {
+      TileUVScrollDirection direction = TileUVScrollDirection::Down;
+      float speed = 0.0f; // source pixels per second
+      int regionTop = 0;
+      int regionHeight = 0;
+
+      bool isActive(void) const { return speed > 0.0f && regionHeight > 0; }
+   };
+
    struct TileInfo {
       std::string _typeName;
       Collidable* _collisionInfo = NULL;
       // Custom properties from the tileset, with values stored as text.
       std::map<std::string, std::string> _properties;
+      // From the uv_scroll_speed/uv_scroll_direction properties; see resolveUVScrollRegions.
+      UVScroll _uvScroll;
 
       bool hasProperty(const std::string& name) const {
          return _properties.find(name) != _properties.end();
@@ -59,6 +79,10 @@ protected:
 
    // Flipped copies of tile colliders, created on first use per (tile, flip flags).
    std::map<std::pair<int, unsigned int>, Collidable*> _flippedCollision;
+
+   // Gives every uv-scrolling tile the strip it loops through: the run of tiles above
+   // and below it in its sheet column that scroll the same way.
+   void resolveUVScrollRegions(void);
 
 public:
    explicit TileSet(Texture* tileSheet, unsigned int tileSize) :

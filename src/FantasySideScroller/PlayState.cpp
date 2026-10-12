@@ -532,7 +532,7 @@ bool PlayState::onExecute(float time)
 	for (Boar* boar : _boars) {
 		if (boar) boar->updateCombat(time);
 	}
-	_levelManager.update();
+	_levelManager.update(time);
 	_updateHUD(time);
 
 	// Detect death: the character is in its "Dead" state (via boar combat or a

@@ -4493,13 +4493,46 @@
          "id":427
         }, 
         {
-         "id":428
+         "id":428,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":429
+         "id":429,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":430
+         "id":430,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
          "id":431
@@ -4776,13 +4809,46 @@
          "id":452
         }, 
         {
-         "id":453
+         "id":453,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":454
+         "id":454,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":455
+         "id":455,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
          "id":456
@@ -5014,13 +5080,46 @@
          "id":477
         }, 
         {
-         "id":478
+         "id":478,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":479
+         "id":479,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":480
+         "id":480,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
          "id":481
@@ -5414,13 +5513,46 @@
          "id":502
         }, 
         {
-         "id":503
+         "id":503,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":504
+         "id":504,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
-         "id":505
+         "id":505,
+         "properties":[
+                {
+                 "name":"uv_scroll_direction",
+                 "type":"string",
+                 "value":"down"
+                }, 
+                {
+                 "name":"uv_scroll_speed",
+                 "type":"float",
+                 "value":75
+                }]
         }, 
         {
          "id":506

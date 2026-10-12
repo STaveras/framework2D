@@ -8,6 +8,7 @@
 #include "CollidableGroup.h"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,8 @@ class Tile : public GameObject
    TileCollisionMode _layerCollisionMode = TileCollisionMode::Solid;
    bool _layerVisible = true;
    std::string _layerName;
+	TileSet::UVScroll _uvScroll; // Copied from the tileset whenever the tile index is set
+	float _uvScrollOffset = 0.0f;
 
    // TODO: Move this to TileSet
    Factory<Image> _tileImages;
@@ -138,6 +141,29 @@ public:
       return _flipFlags;
    }
 
+	// True when the tileset gives this tile a uv_scroll_speed; the level advances it each frame.
+	bool hasUVScroll(void) const {
+		return _uvScroll.isActive();
+	}
+
+	// Scrolls the tile's source rect through its tileset strip, wrapping at the strip's
+	// ends. Down makes the art flow down the screen.
+	void advanceVerticalUVScroll(float deltaSeconds)
+	{
+		if (!_uvScroll.isActive()) {
+			return;
+		}
+
+		if (deltaSeconds > 0.0f) {
+			const float direction = (_uvScroll.direction == TileUVScrollDirection::Down) ? -1.0f : 1.0f;
+			_uvScrollOffset += direction * _uvScroll.speed * deltaSeconds;
+			_uvScrollOffset = std::fmod(_uvScrollOffset, static_cast<float>(_uvScroll.regionHeight));
+		}
+
+		GameObjectState* state = this->getState();
+		applyUVScrollToImage(state ? (Image*)state->getRenderable() : nullptr);
+	}
+
 private:
    // Reproduces the flip flags with the renderer's sprite transform. The renderer draws
    // position + R(rotation) * S(scale) * (corner - center); the flips are an affine map
@@ -171,6 +197,21 @@ private:
       }
       image->setCenter(vector2(-(ax.x * t.x + ax.y * t.y), -(ay.x * t.x + ay.y * t.y)));
    }
+
+	void applyUVScrollToImage(Image* image) const
+	{
+		if (!image) {
+			return;
+		}
+
+		// Phase the strip by the tile's height in the world rather than its row in the sheet,
+		// so touching tiles from one strip flow into each other as a single surface.
+		float offset = _uvScrollOffset;
+		if (_uvScroll.isActive()) {
+			offset += this->getPosition().y - (float)(image->getSrcRect().top - _uvScroll.regionTop);
+		}
+		image->setVerticalUVScroll(_uvScroll.regionTop, _uvScroll.regionHeight, offset);
+	}
 
    SurfaceTraits2D buildSurfaceTraitsForLayer(void) const
    {
@@ -242,6 +283,7 @@ public:
 
       GameObjectState* state = this->getState();
       if (state && _tileIndex < 0) {
+         _uvScroll = TileSet::UVScroll();
          state->setCollidable(NULL);
          // A cleared tile (e.g. a collected pickup) must stop drawing too.
          if (Renderable* renderable = state->getRenderable()) {
@@ -275,10 +317,12 @@ public:
                tileImage->setTexture(_tileSet->getTileSheet());
                tileImage->setVisibility(_layerVisible);
 
-               applyFlipToImage(tileImage);
-               state->setRenderable(tileImage);
-
                TileSet::TileInfo tileInfo = _tileSet->getTileInfo(tileIndex);
+               _uvScroll = tileInfo._uvScroll;
+
+               applyFlipToImage(tileImage);
+               applyUVScrollToImage(tileImage);
+               state->setRenderable(tileImage);
 
                if (tileInfo._typeName != "") {
                   state->setName(tileInfo._typeName.c_str());

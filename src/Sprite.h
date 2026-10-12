@@ -6,6 +6,8 @@
 #include "Types.h"
 #include "Collidable.h"
 
+#include <cstddef>
+
 class ITexture;
 
 typedef class Sprite : public Renderable
@@ -13,8 +15,18 @@ typedef class Sprite : public Renderable
 	 const ITexture* _texture;
 	 RECT _sourceRect;
 	 bool _manuallyLoaded;
+	 int _verticalUVScrollRegionTop = 0;
+	 int _verticalUVScrollRegionHeight = 0;
+	 float _verticalUVScrollOffset = 0.0f;
 
 public:
+	 struct UVScrollSegment {
+		 float sourceTop = 0.0f;
+		 float sourceBottom = 0.0f;
+		 float destinationTop = 0.0f;
+		 float destinationBottom = 1.0f;
+	 };
+
 	 Sprite(void);
 	 Sprite(const Sprite& image);
 	 Sprite(ITexture* pImage, const RECT& srcRect = { -1,-1,-1,-1 });
@@ -29,7 +41,12 @@ public:
 	 float getHeight(void) const;
 
 	 void setTexture(ITexture* pTexture) { _texture = pTexture; }
-	 void setSrcRect(const RECT& srcRect) { _sourceRect = srcRect; _transformChanged(); }
+	 void setSrcRect(const RECT& srcRect) { _sourceRect = srcRect; }
+	 // Scroll this sprite's source rectangle vertically within a repeating atlas
+	 // region. The renderer can return two segments when the image crosses the
+	 // region's bottom edge.
+	 void setVerticalUVScroll(int regionTop, int regionHeight, float offset);
+	 size_t getVerticalUVScrollSegments(UVScrollSegment* segments, size_t capacity) const;
 
 	 void center(void);
 
