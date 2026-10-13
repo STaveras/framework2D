@@ -1,5 +1,4 @@
-{
- "columns":21,
+{ "columns":21,
  "image":"Tree-Assets.png",
  "imageheight":400,
  "imagewidth":336,
@@ -7,8 +6,58 @@
  "name":"treeAssets",
  "spacing":0,
  "tilecount":525,
- "tiledversion":"1.11.2",
+ "tiledversion":"1.12.2",
  "tileheight":16,
+ "tiles":[
+        {
+         "id":113,
+         "objectgroup":
+            {
+             "draworder":"index",
+             "id":2,
+             "name":"",
+             "objects":[
+                    {
+                     "height":16,
+                     "id":2,
+                     "name":"",
+                     "opacity":1,
+                     "rotation":0,
+                     "type":"square",
+                     "visible":true,
+                     "width":11,
+                     "x":2,
+                     "y":0
+                    }],
+             "opacity":1,
+             "type":"objectgroup",
+             "visible":true,
+             "x":0,
+             "y":0
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
+        }],
  "tilewidth":16,
  "type":"tileset",
  "version":"1.10"
