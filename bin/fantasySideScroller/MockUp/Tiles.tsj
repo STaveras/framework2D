@@ -1542,7 +1542,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":148
+                }],
+         "type":"chest"
         }, 
         {
          "id":147,
@@ -1556,7 +1568,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":149
+                }],
+         "type":"chest"
         }, 
         {
          "id":148,
@@ -1585,6 +1609,54 @@
              "x":0,
              "y":0
             }
+        }, 
+        {
+         "id":150,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":152
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":151,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":153
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":152,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":154
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":153,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":155
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":154,
+         "type":"prop"
+        }, 
+        {
+         "id":155,
+         "type":"prop"
         }, 
         {
          "id":156,
@@ -1682,7 +1754,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":174
+                }],
+         "type":"chest"
         }, 
         {
          "id":173,
@@ -1696,7 +1780,19 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"heal",
+                 "type":"float",
+                 "value":30
+                }, 
+                {
+                 "name":"open_tile",
+                 "type":"int",
+                 "value":175
+                }],
+         "type":"chest"
         }, 
         {
          "id":174,
@@ -1725,6 +1821,54 @@
              "x":0,
              "y":0
             }
+        }, 
+        {
+         "id":176,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":178
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":177,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":179
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":178,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":180
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":179,
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":181
+                }],
+         "type":"pot"
+        }, 
+        {
+         "id":180,
+         "type":"prop"
+        }, 
+        {
+         "id":181,
+         "type":"prop"
         }, 
         {
          "id":182,
