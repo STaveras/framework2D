@@ -3512,7 +3512,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":470
+                }],
+         "type":"box"
         }, 
         {
          "id":469,
@@ -3526,7 +3533,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":471
+                }],
+         "type":"box"
         }, 
         {
          "id":470,
@@ -3540,7 +3554,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":472
+                }],
+         "type":"box"
         }, 
         {
          "id":471,
@@ -3554,7 +3575,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":473
+                }],
+         "type":"box"
         }, 
         {
          "id":472,
@@ -3568,7 +3596,8 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "type":"prop"
         }, 
         {
          "id":473,
@@ -3582,7 +3611,8 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "type":"prop"
         }, 
         {
          "id":494,
@@ -3596,7 +3626,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":496
+                }],
+         "type":"box"
         }, 
         {
          "id":495,
@@ -3610,7 +3647,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":497
+                }],
+         "type":"box"
         }, 
         {
          "id":496,
@@ -3624,7 +3668,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":498
+                }],
+         "type":"box"
         }, 
         {
          "id":497,
@@ -3638,7 +3689,14 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"cracked_tile",
+                 "type":"int",
+                 "value":499
+                }],
+         "type":"box"
         }, 
         {
          "id":498,
@@ -3652,7 +3710,8 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "type":"prop"
         }, 
         {
          "id":499,
@@ -3666,7 +3725,8 @@
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "type":"prop"
         }, 
         {
          "id":520,

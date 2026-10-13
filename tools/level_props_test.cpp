@@ -317,6 +317,19 @@ void checkTileHazards(Character& hero)
     const std::unique_ptr<TileSet> mockUpTileSet(TileSet::loadFromFile("bin/fantasySideScroller/MockUp/Tiles.tsj"));
     TileSet* mockUpTiles = mockUpTileSet.get();
     assert(mockUpTiles);
+    // Pin the spike properties in this private copy of the tileset, so tuning them in Tiled
+    // doesn't break the test.
+    const auto setSpikeProperty = [mockUpTiles](int tile, const char* name, const char* value) {
+        auto* info = const_cast<TileSet::TileInfo*>(mockUpTiles->findTileInfo(tile));
+        assert(info && info->_typeName == "hazard");
+        info->_properties[name] = value;
+    };
+    for (int tile : { 199, 200, 224, 225, 226, 227 }) {
+        setSpikeProperty(tile, "damage", "10");
+        setSpikeProperty(tile, "interval", "1");
+        setSpikeProperty(tile, "push", "away");
+        setSpikeProperty(tile, "push_speed", "190");
+    }
 
     // Decoration layer, so the spikes are not solid. The pit (two spike tips over a row of
     // four spike tiles, all with the same properties) is one hazard; 224 alone is another.
@@ -364,6 +377,127 @@ void checkTileHazards(Character& hero)
     assert(near(hero.getHealth(), hero.getMaxHealth() - 10.0f));
     assert(hero.getVelocity().x < -100.0f);
     hero.resetForRespawn();
+
+    // Spikes that push a different way are separate hazards, even when touching.
+    for (int tile : { 199, 224, 225 }) {
+        setSpikeProperty(tile, "push", "right");
+    }
+    LevelProps split;
+    split.initialize({ &spikes });
+    assert(split.getHazards().size() == 3);
+    assert(split.getHazards()[0].tiles.size() == 3 && split.getHazards()[1].tiles.size() == 3);
+}
+
+const LevelProps::Breakable& breakableContaining(const LevelProps& props, Tile* part)
+{
+    for (const auto& breakable : props.getBreakables()) {
+        if (std::find(breakable.tiles.begin(), breakable.tiles.end(), part) != breakable.tiles.end()) {
+            return breakable;
+        }
+    }
+    assert(false && "tile must belong to a breakable");
+    return props.getBreakables().front();
+}
+
+// Starts a sword swing and advances it to its active strike frames.
+Animation* swing(Character& hero)
+{
+    auto* slash = static_cast<Animation*>(hero.getRenderable());
+    slash->play();
+    slash->update(0.1f);
+    slash->update(0.001f);
+    assert(slash->getCurrentFrameIndex() > 0);
+    return slash;
+}
+
+// Multi-tile props with several cracked stages (the MockUp 2x2 pot and barrel): every tile
+// of the prop cracks together, one stage per swing.
+void checkLargeBreakables(Character& hero)
+{
+    const std::unique_ptr<TileSet> mockUpTileSet(TileSet::loadFromFile("bin/fantasySideScroller/MockUp/Tiles.tsj"));
+    TileSet* mockUpTiles = mockUpTileSet.get();
+    assert(mockUpTiles);
+    constexpr int kColumns = 26;
+
+    // The pot, its cracked stage and its broken stage side by side (as in the mockup), a
+    // mirrored pot, and a barrel.
+    TileLayerConfig config;
+    config.name = "objects_2";
+    config.collisionMode = TileCollisionMode::None;
+    TileMap layer(24, 8, mockUpTiles, config);
+    for (int stage = 0; stage < 3; ++stage) {
+        for (int part = 0; part < 4; ++part) {
+            layer.setTile(2 + stage * 2 + part % 2, 2 + part / 2, mockUpTiles, 150 + stage * 2 + part % 2 + (part / 2) * kColumns);
+        }
+    }
+    for (int part = 0; part < 4; ++part) {
+        layer.setTile(11 - part % 2, 2 + part / 2, mockUpTiles, 150 + part % 2 + (part / 2) * kColumns, TileSet::kFlipHorizontal);
+        layer.setTile(18 + part % 2, 2 + part / 2, mockUpTiles, 468 + part % 2 + (part / 2) * kColumns);
+    }
+    layer.setPosition(vector2(0.0f, 0.0f));
+    layer.arrangeTiles();
+
+    LevelProps props;
+    props.initialize({ &layer });
+    // The broken stage cannot crack, so it is no prop at all.
+    assert(props.getBreakables().size() == 4);
+    const auto& pot = breakableContaining(props, layer.getTile(2, 2));
+    const auto& crackedPot = breakableContaining(props, layer.getTile(4, 2));
+    const auto& mirroredPot = breakableContaining(props, layer.getTile(10, 2));
+    const auto& barrel = breakableContaining(props, layer.getTile(18, 2));
+    assert(&pot != &crackedPot);
+    for (const auto* breakable : { &pot, &crackedPot, &mirroredPot, &barrel }) {
+        assert(breakable->tiles.size() == 4);
+    }
+    assert(&breakableContaining(props, layer.getTile(3, 3)) == &pot);
+    assert(&breakableContaining(props, layer.getTile(11, 3)) == &mirroredPot);
+    assert(&breakableContaining(props, layer.getTile(19, 3)) == &barrel);
+
+    // A strike that only reaches the pot's left column cracks the whole pot one stage,
+    // however many frames it stays active, and leaves the cracked pot beside it alone.
+    hero.resetForRespawn();
+    hero.setState("Attack01");
+    placeBodyRightEdge(hero, 4.0f, 64.0f);
+    Animation* slash = swing(hero);
+    slash->setScale(vector2(1.0f, 1.0f));
+    for (int frame = 0; frame < 3; ++frame) {
+        props.update(&hero, false, 0.016f);
+    }
+    assert(props.getLastEvent() == "prop_cracked");
+    assert(layer.getTileIndex(2, 2) == 152 && layer.getTileIndex(3, 2) == 153);
+    assert(layer.getTileIndex(2, 3) == 178 && layer.getTileIndex(3, 3) == 179);
+    assert(layer.getTileIndex(4, 2) == 152);
+
+    // The next swing breaks it; there is nothing left to crack after that.
+    slash->play();
+    props.update(&hero, false, 0.016f);
+    swing(hero);
+    props.update(&hero, false, 0.016f);
+    assert(layer.getTileIndex(2, 2) == 154 && layer.getTileIndex(3, 2) == 155);
+    assert(layer.getTileIndex(2, 3) == 180 && layer.getTileIndex(3, 3) == 181);
+    slash->play();
+    props.update(&hero, false, 0.016f);
+    swing(hero);
+    props.update(&hero, false, 0.016f);
+    assert(layer.getTileIndex(2, 2) == 154);
+
+    // Mirrored parts crack to their own mirrored stage.
+    slash->play();
+    props.update(&hero, false, 0.016f);
+    placeBodyRightEdge(hero, 4.0f + 8.0f * 16.0f, 64.0f);
+    swing(hero);
+    props.update(&hero, false, 0.016f);
+    assert(layer.getTileIndex(10, 2) == 153 && layer.getTileIndex(11, 2) == 152);
+    assert(layer.getTile(10, 2)->getFlipFlags() == TileSet::kFlipHorizontal);
+
+    // The barrel cracks the same way.
+    slash->play();
+    props.update(&hero, false, 0.016f);
+    placeBodyRightEdge(hero, 4.0f + 16.0f * 16.0f, 64.0f);
+    swing(hero);
+    props.update(&hero, false, 0.016f);
+    assert(layer.getTileIndex(18, 2) == 470 && layer.getTileIndex(19, 3) == 497);
+    hero.setState("Idle");
 }
 
 } // namespace
@@ -427,7 +561,7 @@ int main()
     LevelProps levelProps;
     levelProps.initialize({ &props, &pads });
     assert(levelProps.getChests().size() == 1);
-    assert(levelProps.getPots().size() == 4);
+    assert(levelProps.getBreakables().size() == 4);
     assert(levelProps.getChests()[0].tiles.size() == 4);
     assert(near(levelProps.getChests()[0].heal, 30.0f));
     assert(levelProps.getPlatforms().size() == 1);
@@ -522,6 +656,7 @@ int main()
     checkAdjacentPads(tiles, hero);
     checkDoor(tiles, hero);
     checkTileHazards(hero);
+    checkLargeBreakables(hero);
 
     // Pots stay decorative when touched. Only the forward, active sword stroke
     // cracks them, using the matching size and colour from the source atlas.

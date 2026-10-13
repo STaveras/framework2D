@@ -117,7 +117,8 @@ const char* Character::mapCollisionToCommand(const CollisionContact& contact) co
         return NULL;
     }
 
-    if (tile->getTileType() == "key") {
+	// NOTE: This was for debugging, and was formerly "key", but it can be useful to have a "death" tile type in the game.
+    if (tile->getTileType() == "death") {
         if (Collidable* collidable = tile->getCollidable()) {
             if (tile->getLayerCollisionMode() != TileCollisionMode::None && contact.phase == CollisionPhase::Enter) {
                 tile->setLayerCollisionMode(TileCollisionMode::None);
@@ -211,6 +212,7 @@ void Character::handleCollisionContact(const CollisionContact& contact)
 		++_kinematic2DState().telemetryPendingGroundContacts;
 	}
 
+	// TODO: This should (probably) be generalized, not just for the character, but for all "FantasySideScroller" actors
 	if (contact.overlapping &&
 		tile->getTileType() == "tile" &&
 		!tile->isNonCollidingLayer() &&

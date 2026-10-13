@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+class Animation;
 class Character;
 class Tile;
 class TileMap;
@@ -14,7 +15,11 @@ class TileMap;
 // Gameplay driven entirely by tile data painted in Tiled, so levels need no extra objects:
 //  - tiles of class "key" bob just above the cell they are painted in and are picked up
 //    when the character touches them;
-//  - tiles of class "pot" crack when struck, swapping to "cracked_tile";
+//  - tiles with a "cracked_tile" property (pots, barrels, ...) break when struck. Each
+//    swing swaps every tile of the prop to its cracked_tile once, so a chain of them gives
+//    several stages, e.g. intact -> cracked -> broken. Touching tiles are one prop when they
+//    sit the same way in the tileset image and have as many cracks left, so a 2x2 pot
+//    breaks as a whole while its stages painted side by side stay separate props;
 //  - tiles of class "chest" open when the character interacts while holding a key. Each
 //    chest tile swaps to the tile id in its "open_tile" property; a "heal" property on any
 //    of them restores that much health;
@@ -58,10 +63,10 @@ public:
 		float depth = 0.0f;
 		bool occupied = false;
 	};
-	struct Pot {
-		Tile* tile = nullptr;
-		int crackedTile = -1;
-		bool cracked = false;
+	struct Breakable {
+		std::vector<Tile*> tiles;
+		// The swing that last cracked it; a swing cracks each prop one stage.
+		int lastSwing = -1;
 	};
 
 	void initialize(const std::vector<TileMap*>& layers);
@@ -79,7 +84,7 @@ public:
 	// Painted hazards, for TraversalMechanics alongside the map's trigger objects.
 	const std::vector<LevelTriggerDescriptor>& getHazards(void) const { return _hazards; }
 	const std::vector<SinkingPlatform>& getPlatforms(void) const { return _platforms; }
-	const std::vector<Pot>& getPots(void) const { return _pots; }
+	const std::vector<Breakable>& getBreakables(void) const { return _breakables; }
 
 private:
 	struct Pickup {
@@ -95,7 +100,12 @@ private:
 	std::vector<Door> _doors;
 	std::vector<LevelTriggerDescriptor> _hazards;
 	std::vector<SinkingPlatform> _platforms;
-	std::vector<Pot> _pots;
+	std::vector<Breakable> _breakables;
+	// Counts the character's swings: a new one starts when the strike becomes active, its
+	// animation changes, or the animation restarts.
+	int _swing = 0;
+	const Animation* _strikeAnimation = nullptr;
+	int _strikeFrame = -1;
 	int _keysHeld = 0;
 	std::string _lastEvent;
 

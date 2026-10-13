@@ -45,8 +45,51 @@ bool sinks(const Tile* tile)
 	return info && info->getFloatProperty("sink_speed", 0.0f) > 0.0f;
 }
 
+// Whether neighbour lies at (dx, dy) from tile in the map as their part coordinates say it
+// should, once the coordinates are transformed just as Tiled transforms the art.
+bool partsLineUp(const Tile* tile, vector2 part, const Tile* neighbour, vector2 neighbourPart, int dx, int dy)
+{
+	const vector2 offset = TileSet::flipTilePoint(neighbourPart, 1.0f, neighbour->getFlipFlags()) -
+		TileSet::flipTilePoint(part, 1.0f, tile->getFlipFlags());
+	return offset.x == (float)dx && offset.y == (float)dy;
+}
+
+// How many more times a tile can crack, following its cracked_tile chain.
+int cracksLeft(const Tile* tile)
+{
+	const TileSet::TileInfo* info = infoOf(tile);
+	int count = 0;
+	// The bound stops a chain that loops back on itself.
+	while (info && info->hasProperty("cracked_tile") && count < 16) {
+		++count;
+		info = tile->getTileSet()->findTileInfo(info->getIntProperty("cracked_tile", -1));
+	}
+	return count;
+}
+
+bool breaks(const Tile* tile)
+{
+	return cracksLeft(tile) > 0;
+}
+
+// Touching breakable tiles are one prop when they sit the same way in the tileset image and
+// can crack as many more times. So a 2x2 pot painted from the atlas joins up, while an
+// intact pot painted beside its own cracked stage stays a separate prop.
+bool sameBreakable(const Tile* tile, const Tile* neighbour, int dx, int dy)
+{
+	if (tile->getTileSet() != neighbour->getTileSet() || tile->getFlipFlags() != neighbour->getFlipFlags() ||
+		cracksLeft(tile) != cracksLeft(neighbour)) {
+		return false;
+	}
+	const int columns = std::max(1, (int)tile->getTileSet()->getTileCounts().x);
+	const auto atlasCell = [columns](const Tile* part) {
+		return vector2((float)(part->getTileIndex() % columns), (float)(part->getTileIndex() / columns));
+	};
+	return partsLineUp(tile, atlasCell(tile), neighbour, atlasCell(neighbour), dx, dy);
+}
+
 // Authored part coordinates keep each multi-tile platform together without joining
-// neighbouring copies. Transform the coordinates just as Tiled transforms the art.
+// neighbouring copies.
 bool sameSinkingPlatform(const Tile* tile, const Tile* neighbour, int dx, int dy)
 {
 	const TileSet::TileInfo* info = infoOf(tile);
@@ -61,13 +104,10 @@ bool sameSinkingPlatform(const Tile* tile, const Tile* neighbour, int dx, int dy
 		return false;
 	}
 
-	const auto partPosition = [](const Tile* part, const TileSet::TileInfo* partInfo) {
-		return TileSet::flipTilePoint(vector2(
-			(float)partInfo->getIntProperty("platform_column", 0),
-			(float)partInfo->getIntProperty("platform_row", 0)), 1.0f, part->getFlipFlags());
+	const auto partPosition = [](const TileSet::TileInfo* partInfo) {
+		return vector2((float)partInfo->getIntProperty("platform_column", 0), (float)partInfo->getIntProperty("platform_row", 0));
 	};
-	const vector2 offset = partPosition(neighbour, neighbourInfo) - partPosition(tile, info);
-	return offset.x == (float)dx && offset.y == (float)dy;
+	return partsLineUp(tile, partPosition(info), neighbour, partPosition(neighbourInfo), dx, dy);
 }
 
 // World bounds of a tile's collider, or of its cell when it has none.
@@ -155,11 +195,10 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 				_keys.push_back(Pickup{ tile, tile->getPosition() });
 			}
 		}
-		// Each atlas cell is a complete pot, including the large variants.
-		for (const auto& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "pot"); })) {
-			for (Tile* tile : group) {
-				_pots.push_back(Pot{tile, infoOf(tile)->getIntProperty("cracked_tile", -1), false});
-			}
+		for (std::vector<Tile*>& group : connectedGroups(layer, breaks, sameBreakable)) {
+			Breakable breakable;
+			breakable.tiles = std::move(group);
+			_breakables.push_back(std::move(breakable));
 		}
 
 		for (std::vector<Tile*>& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "chest"); })) {
@@ -251,7 +290,9 @@ void LevelProps::clear(void)
 	_doors.clear();
 	_hazards.clear();
 	_platforms.clear();
-	_pots.clear();
+	_breakables.clear();
+	_strikeAnimation = nullptr;
+	_strikeFrame = -1;
 	_keysHeld = 0;
 	_lastEvent.clear();
 }
@@ -266,18 +307,41 @@ void LevelProps::update(Character* character, bool interactPressed, float dt)
 	const bool attacking = !std::strcmp(state, "Attack01") || !std::strcmp(state, "Attack02");
 	auto* attackAnimation = attacking ? static_cast<Animation*>(character->getRenderable()) : nullptr;
 	const bool strikeActive = attackAnimation && attackAnimation->getCurrentFrameIndex() > 0;
+	const Animation* strikeAnimation = strikeActive ? attackAnimation : nullptr;
+	const int strikeFrame = strikeActive ? (int)attackAnimation->getCurrentFrameIndex() : -1;
+	if (strikeActive && (strikeAnimation != _strikeAnimation || strikeFrame < _strikeFrame)) {
+		++_swing;
+	}
+	_strikeAnimation = strikeAnimation;
+	_strikeFrame = strikeFrame;
 	if (hasBody && strikeActive) {
 		vector2 strikeMin = bodyMin, strikeMax = bodyMax;
 		if (attackAnimation->getScale().x < 0.0f) { strikeMin.x -= 32.0f; }
 		else { strikeMax.x += 32.0f; }
-		for (Pot& pot : _pots) {
-			if (pot.cracked || pot.crackedTile < 0) { continue; }
-			vector2 potMin, potMax;
-			tileBounds(pot.tile, potMin, potMax);
-			if (overlaps(strikeMin, strikeMax, potMin, potMax)) {
-				pot.tile->setTileIndex(pot.crackedTile, pot.tile->getFlipFlags());
-				pot.cracked = true;
-				_lastEvent = "pot_cracked";
+		for (Breakable& breakable : _breakables) {
+			if (breakable.lastSwing == _swing) {
+				continue;
+			}
+			const bool struck = std::any_of(breakable.tiles.begin(), breakable.tiles.end(), [&](Tile* tile) {
+				vector2 tileMin, tileMax;
+				tileBounds(tile, tileMin, tileMax);
+				return overlaps(strikeMin, strikeMax, tileMin, tileMax);
+			});
+			if (!struck) {
+				continue;
+			}
+			bool cracked = false;
+			for (Tile* tile : breakable.tiles) {
+				const TileSet::TileInfo* info = infoOf(tile);
+				const int crackedTile = info ? info->getIntProperty("cracked_tile", -1) : -1;
+				if (crackedTile >= 0) {
+					tile->setTileIndex(crackedTile, tile->getFlipFlags());
+					cracked = true;
+				}
+			}
+			if (cracked) {
+				breakable.lastSwing = _swing;
+				_lastEvent = "prop_cracked";
 			}
 		}
 	}
