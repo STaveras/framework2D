@@ -19,7 +19,7 @@ constexpr float kDefaultRiseSpeedScale = 2.0f;
 constexpr float kDefaultSinkDepth = 24.0f;
 // How close the character's feet must be to a platform's top to count as standing on it.
 constexpr float kStandTolerance = 3.0f;
-// Reach around a chest within which the interact action opens it.
+// Reach around a chest or door within which the interact action opens it.
 constexpr float kChestReach = 6.0f;
 // Keys rise this many pixels above their painted cell and back, one cycle every two seconds.
 constexpr float kKeyBobHeight = 2.0f;
@@ -180,6 +180,42 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 			}
 			_platforms.push_back(std::move(platform));
 		}
+
+		const TileMapPropertyDescriptor* openLayerName = layer->getLayerConfig().findProperty("open_layer");
+		if (!openLayerName) {
+			continue;
+		}
+		Door door;
+		door.closedLayer = layer;
+		for (TileMap* other : layers) {
+			if (other && other != layer && other->getLayerConfig().name == openLayerName->value) {
+				door.openLayer = other;
+			}
+		}
+#if _DEBUG
+		if (!door.openLayer) {
+			const std::string message = "LevelProps: door layer '" + layer->getLayerConfig().name +
+				"' names missing open_layer '" + openLayerName->value + "'\n";
+			DEBUG_MSG(message.c_str());
+		}
+#endif
+		bool hasTiles = false;
+		for (unsigned int y = 0; y < layer->getMapHeight(); ++y) {
+			for (unsigned int x = 0; x < layer->getMapWidth(); ++x) {
+				Tile* tile = layer->getTile(x, y);
+				if (!tile || tile->getTileIndex() < 0) {
+					continue;
+				}
+				vector2 tileMin, tileMax;
+				tileBounds(tile, tileMin, tileMax);
+				door.min = hasTiles ? vector2(std::min(door.min.x, tileMin.x), std::min(door.min.y, tileMin.y)) : tileMin;
+				door.max = hasTiles ? vector2(std::max(door.max.x, tileMax.x), std::max(door.max.y, tileMax.y)) : tileMax;
+				hasTiles = true;
+			}
+		}
+		if (hasTiles) {
+			_doors.push_back(door);
+		}
 	}
 }
 
@@ -187,6 +223,7 @@ void LevelProps::clear(void)
 {
 	_keys.clear();
 	_chests.clear();
+	_doors.clear();
 	_platforms.clear();
 	_pots.clear();
 	_keysHeld = 0;
@@ -271,6 +308,31 @@ void LevelProps::update(Character* character, bool interactPressed, float dt)
 				_lastEvent = "chest_opened";
 #if _DEBUG
 				DEBUG_MSG("LevelProps: chest opened\n");
+#endif
+			}
+
+			for (Door& door : _doors) {
+				if (door.opened || !overlaps(bodyMin, bodyMax, door.min - reach, door.max + reach)) {
+					continue;
+				}
+				// As with chests, the key opens the door without being used up.
+				if (_keysHeld <= 0) {
+					_lastEvent = "door_locked";
+#if _DEBUG
+					DEBUG_MSG("LevelProps: door is locked (no key)\n");
+#endif
+					continue;
+				}
+
+				door.opened = true;
+				door.closedLayer->setLayerVisibility(false);
+				door.closedLayer->setLayerCollision(TileCollisionMode::None);
+				if (door.openLayer) {
+					door.openLayer->setLayerVisibility(true);
+				}
+				_lastEvent = "door_opened";
+#if _DEBUG
+				DEBUG_MSG("LevelProps: door opened\n");
 #endif
 			}
 		}

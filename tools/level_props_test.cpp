@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 namespace {
 
@@ -221,6 +222,86 @@ void checkAdjacentPads(TileSet* tiles, Character& hero)
     }
 }
 
+// A layer with an open_layer property is a locked door: with a key, interacting beside it
+// hides it and its colliders and reveals the named layer. Uses the MockUp door art.
+void checkDoor(TileSet* tiles, Character& hero)
+{
+    // Declared first so it outlives the layers that use it.
+    const std::unique_ptr<TileSet> mockUpTileSet(TileSet::loadFromFile("bin/fantasySideScroller/MockUp/Tiles.tsj"));
+    TileSet* mockUpTiles = mockUpTileSet.get();
+    assert(mockUpTiles);
+
+    TileLayerConfig closedConfig;
+    closedConfig.name = "door_closed";
+    closedConfig.collisionMode = TileCollisionMode::Solid;
+    closedConfig.properties = { {"open_layer", "string", "door_opened"} };
+    TileMap closed(16, 6, mockUpTiles, closedConfig);
+    TileLayerConfig openConfig;
+    openConfig.name = "door_opened";
+    openConfig.collisionMode = TileCollisionMode::None;
+    openConfig.visible = false;
+    TileMap open(16, 6, mockUpTiles, openConfig);
+    for (unsigned int row = 0; row < 4; ++row) {
+        closed.setTile(10, 2 + row, mockUpTiles, 250 + 26 * (int)row);
+        open.setTile(10, 2 + row, mockUpTiles, 251 + 26 * (int)row);
+        open.setTile(11, 2 + row, mockUpTiles, 252 + 26 * (int)row);
+    }
+    TileLayerConfig keyConfig;
+    keyConfig.name = "items";
+    keyConfig.collisionMode = TileCollisionMode::None;
+    TileMap items(16, 6, tiles, keyConfig);
+    items.setTile(2, 5, tiles, 515);
+    for (TileMap* layer : { &closed, &open, &items }) {
+        layer->setPosition(vector2(0.0f, 0.0f));
+        layer->arrangeTiles();
+    }
+
+    LevelProps props;
+    props.initialize({ &closed, &open, &items });
+    assert(props.getDoors().size() == 1);
+    const LevelProps::Door& door = props.getDoors()[0];
+    assert(door.closedLayer == &closed && door.openLayer == &open);
+    // The bounds are the door colliders: a 6px post 3px into each cell.
+    assert(near(door.min.x, 163.0f) && near(door.max.x, 169.0f));
+    assert(near(door.min.y, 32.0f) && near(door.max.y, 96.0f));
+
+    hero.resetForRespawn();
+    hero.setState("Idle");
+    Tile* doorTile = closed.getTile(10, 3);
+    assert(doorTile->getCollidable() && doorTile->shouldCollideWith(hero));
+    assert(doorTile->getState()->getRenderable()->isVisible());
+    assert(!open.getTile(10, 3)->getState()->getRenderable()->isVisible());
+
+    // Without a key the door stays shut.
+    const vector2 besideDoor(door.min.x - 4.0f, (door.min.y + door.max.y) * 0.5f);
+    centreBodyOn(hero, besideDoor);
+    props.update(&hero, true, 0.016f);
+    assert(props.getLastEvent() == "door_locked");
+    assert(!door.opened && doorTile->shouldCollideWith(hero));
+
+    centreBodyOn(hero, tileCentre(items.getTile(2, 5)));
+    props.update(&hero, false, 0.016f);
+    assert(props.getKeyCount() == 1);
+
+    // With the key, walking up to it does nothing until the player interacts.
+    centreBodyOn(hero, besideDoor);
+    props.update(&hero, false, 0.016f);
+    assert(!door.opened);
+    props.update(&hero, true, 0.016f);
+    assert(props.getLastEvent() == "door_opened");
+    assert(door.opened);
+    assert(!closed.getLayerConfig().visible && closed.getLayerConfig().collisionMode == TileCollisionMode::None);
+    assert(open.getLayerConfig().visible);
+    for (unsigned int row = 0; row < 4; ++row) {
+        Tile* closedTile = closed.getTile(10, 2 + row);
+        assert(!closedTile->shouldCollideWith(hero));
+        assert(!closedTile->getState()->getRenderable()->isVisible());
+        assert(open.getTile(10, 2 + row)->getState()->getRenderable()->isVisible());
+        assert(open.getTile(11, 2 + row)->getState()->getRenderable()->isVisible());
+    }
+    assert(props.getKeyCount() == 1);
+}
+
 } // namespace
 
 int main()
@@ -375,6 +456,7 @@ int main()
     assert(near(pad->getPosition().y, padRest.y));
 
     checkAdjacentPads(tiles, hero);
+    checkDoor(tiles, hero);
 
     // Pots stay decorative when touched. Only the forward, active sword stroke
     // cracks them, using the matching size and colour from the source atlas.

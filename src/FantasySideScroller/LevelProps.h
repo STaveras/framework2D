@@ -17,6 +17,9 @@ class TileMap;
 //  - tiles of class "chest" open when the character interacts while holding a key. Each
 //    chest tile swaps to the tile id in its "open_tile" property; a "heal" property on any
 //    of them restores that much health;
+//  - a tile layer with an "open_layer" property is a locked door. Interacting beside it
+//    while holding a key hides the layer, stops it colliding, and shows the tile layer
+//    that property names (painted hidden in Tiled, with the door's open art);
 //  - tiles with a "sink_speed" property (pixels/second) form floating platforms that sink
 //    while stood on and rise back when free ("rise_speed", "sink_depth" are optional).
 // Touching tiles on the same layer act as one chest or platform. Platform tiles can
@@ -30,6 +33,14 @@ public:
 		vector2 min = vector2(0.0f, 0.0f);
 		vector2 max = vector2(0.0f, 0.0f);
 		float heal = 0.0f;
+		bool opened = false;
+	};
+
+	struct Door {
+		TileMap* closedLayer = nullptr;
+		TileMap* openLayer = nullptr;
+		vector2 min = vector2(0.0f, 0.0f);
+		vector2 max = vector2(0.0f, 0.0f);
 		bool opened = false;
 	};
 
@@ -59,6 +70,7 @@ public:
 	int getKeyCount(void) const { return _keysHeld; }
 	const std::string& getLastEvent(void) const { return _lastEvent; }
 	const std::vector<Chest>& getChests(void) const { return _chests; }
+	const std::vector<Door>& getDoors(void) const { return _doors; }
 	const std::vector<SinkingPlatform>& getPlatforms(void) const { return _platforms; }
 	const std::vector<Pot>& getPots(void) const { return _pots; }
 
@@ -73,6 +85,7 @@ private:
 
 	std::vector<Pickup> _keys;
 	std::vector<Chest> _chests;
+	std::vector<Door> _doors;
 	std::vector<SinkingPlatform> _platforms;
 	std::vector<Pot> _pots;
 	int _keysHeld = 0;

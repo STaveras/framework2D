@@ -25,13 +25,6 @@
 
 class TileMap;
 
-struct TileMapPropertyDescriptor
-{
-	std::string name;
-	std::string type;
-	std::string value;
-};
-
 struct TileObjectDescriptor
 {
 	int layerId = -1;
@@ -218,6 +211,26 @@ public:
 
 	Factory<Tile>& getTiles(void) { return _tiles; }
 	const TileLayerConfig& getLayerConfig(void) const { return _layerConfig; }
+
+	// Shows or hides the whole layer at runtime, e.g. to swap a closed door for an open one.
+	void setLayerVisibility(bool visible) {
+		_layerConfig.visible = visible;
+		for (Tile* tile : _tileGrid) {
+			if (tile) {
+				tile->setLayerVisible(visible);
+			}
+		}
+	}
+
+	// Changes how every tile on the layer collides at runtime.
+	void setLayerCollision(TileCollisionMode mode) {
+		_layerConfig.collisionMode = mode;
+		for (Tile* tile : _tileGrid) {
+			if (tile) {
+				tile->setLayerCollisionMode(mode);
+			}
+		}
+	}
 
 	Tile* getTile(unsigned int x, unsigned int y) 
 	{
@@ -660,6 +673,12 @@ static TileMap* loadFromCSVFile(const char* filePath, TileSet* tileSet)
 								}
 
 								std::string propertyName = std::string((std::string_view)property["name"].get_string());
+								TileMapPropertyDescriptor propertyDescriptor;
+								propertyDescriptor.name = propertyName;
+								propertyDescriptor.type = property["type"].is_string() ? std::string((std::string_view)property["type"].get_string()) : "";
+								propertyDescriptor.value = readText(property["value"]);
+								layerConfig.properties.push_back(propertyDescriptor);
+
 								std::transform(propertyName.begin(), propertyName.end(), propertyName.begin(), [](unsigned char c) {
 									return (char)std::tolower(c);
 								});

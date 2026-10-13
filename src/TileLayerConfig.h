@@ -5,6 +5,14 @@
 #include <cmath>
 #include <cstdint>
 #include <string>
+#include <vector>
+
+struct TileMapPropertyDescriptor
+{
+	std::string name;
+	std::string type;
+	std::string value;
+};
 
 // TODO: Make these state keys that correspond to states that are built-in to tiles
 enum class TileCollisionMode
@@ -59,4 +67,16 @@ struct TileLayerConfig
 	uint32_t tintColor = 0xFFFFFFFFu;
 	float opacity = 1.0f;
 	TileUVMotion uvMotion;
+	// Every custom property on the layer, for gameplay that reads them (e.g. open_layer).
+	std::vector<TileMapPropertyDescriptor> properties;
+
+	const TileMapPropertyDescriptor* findProperty(const std::string& propertyName) const
+	{
+		for (const TileMapPropertyDescriptor& property : properties) {
+			if (property.name == propertyName) {
+				return &property;
+			}
+		}
+		return nullptr;
+	}
 };
