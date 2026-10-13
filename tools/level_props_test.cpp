@@ -302,6 +302,70 @@ void checkDoor(TileSet* tiles, Character& hero)
     assert(props.getKeyCount() == 1);
 }
 
+// Moves the hero so its body's right edge is at x and its feet at y.
+void placeBodyRightEdge(Character& hero, float x, float y)
+{
+    vector2 min, max;
+    bodyBounds(hero, min, max);
+    hero.setPosition(hero.getPosition() + vector2(x - max.x, y - max.y));
+}
+
+// Tiles of class "hazard" are hazards wherever they are painted, shaped by their tileset
+// collision polygons, with no map objects. Uses the MockUp spike tiles.
+void checkTileHazards(Character& hero)
+{
+    const std::unique_ptr<TileSet> mockUpTileSet(TileSet::loadFromFile("bin/fantasySideScroller/MockUp/Tiles.tsj"));
+    TileSet* mockUpTiles = mockUpTileSet.get();
+    assert(mockUpTiles);
+
+    // Decoration layer, so the spikes are not solid. The pit (two spike tips over a row of
+    // four spike tiles, all with the same properties) is one hazard; 224 alone is another.
+    TileLayerConfig config;
+    config.name = "objects";
+    config.collisionMode = TileCollisionMode::None;
+    TileMap spikes(16, 6, mockUpTiles, config);
+    spikes.setTile(3, 2, mockUpTiles, 199);
+    spikes.setTile(4, 2, mockUpTiles, 200);
+    for (int x = 0; x < 4; ++x) {
+        spikes.setTile(2 + x, 3, mockUpTiles, 224 + x);
+    }
+    spikes.setTile(12, 3, mockUpTiles, 224);
+    spikes.setPosition(vector2(0.0f, 0.0f));
+    spikes.arrangeTiles();
+
+    LevelProps props;
+    props.initialize({ &spikes });
+    assert(props.getHazards().size() == 2);
+    const LevelTriggerDescriptor& pit = props.getHazards()[0];
+    const LevelTriggerDescriptor& spike = props.getHazards()[1];
+    assert(pit.typeName == "hazard" && pit.tiles.size() == 6 && spike.tiles.size() == 1);
+    // The tile's own properties carry over.
+    bool foundDamage = false;
+    for (const TriggerPropertyDescriptor& property : spike.properties) {
+        foundDamage = foundDamage || (property.name == "damage" && property.value == "10");
+    }
+    assert(foundDamage);
+
+    TraversalMechanics mechanics;
+    mechanics.initialize(props.getHazards(), vector2(0.0f, 0.0f));
+
+    // The lone spike's triangle rises from the cell's bottom corners (192,64) and (208,64)
+    // to (200,48). A body whose corner is in the cell but left of the slope is untouched.
+    hero.resetForRespawn();
+    hero.setState("Idle");
+    placeBodyRightEdge(hero, 195.0f, 52.0f);
+    mechanics.update(&hero, 0.016f);
+    assert(near(hero.getHealth(), hero.getMaxHealth()));
+    assert(!hero.isKnockedBack());
+
+    // Reaching the slope hurts and throws the character back the way it came.
+    placeBodyRightEdge(hero, 202.0f, 52.0f);
+    mechanics.update(&hero, 0.016f);
+    assert(near(hero.getHealth(), hero.getMaxHealth() - 10.0f));
+    assert(hero.getVelocity().x < -100.0f);
+    hero.resetForRespawn();
+}
+
 } // namespace
 
 int main()
@@ -457,6 +521,7 @@ int main()
 
     checkAdjacentPads(tiles, hero);
     checkDoor(tiles, hero);
+    checkTileHazards(hero);
 
     // Pots stay decorative when touched. Only the forward, active sword stroke
     // cracks them, using the matching size and colour from the source atlas.

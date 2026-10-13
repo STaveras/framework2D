@@ -617,7 +617,7 @@
                 {
                  "name":"collision_mode",
                  "type":"string",
-                 "value":"solid"
+                 "value":"none"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -668,7 +668,7 @@
          "y":0
         }],
  "nextlayerid":20,
- "nextobjectid":18,
+ "nextobjectid":25,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.2",

@@ -5,6 +5,7 @@
 #include "../Kinematics2D.h"
 #include "../Square.h"
 #include "../StrUtils.h"
+#include "../Tile.h"
 
 #include <algorithm>
 #include <cmath>
@@ -45,6 +46,23 @@ bool TraversalMechanics::overlapsCharacter(const TraversalTrigger& trigger, cons
 	}
 
 	Square characterBounds(bodyMin, bodyMax);
+	if (!trigger.tiles.empty()) {
+		for (Tile* tile : trigger.tiles) {
+			if (Collidable* shape = tile->getCollidable()) {
+				if (characterBounds.collidesWith(shape)) {
+					return true;
+				}
+				continue;
+			}
+			const float size = tile->getTileSet() ? tile->getTileSet()->getTileSize() : 16.0f;
+			const vector2 cellMin = tile->getPosition();
+			if (bodyMin.x < cellMin.x + size && bodyMax.x > cellMin.x && bodyMin.y < cellMin.y + size && bodyMax.y > cellMin.y) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	Square triggerBounds(trigger.position, trigger.position + trigger.size);
 	return characterBounds.collidesWith(&triggerBounds);
 }
@@ -155,6 +173,7 @@ void TraversalMechanics::initialize(
 		trigger.name = descriptor.name;
 		trigger.position = descriptor.position;
 		trigger.size = descriptor.size;
+		trigger.tiles = descriptor.tiles;
 
 		if (descriptor.isPoint || trigger.size.x <= 0.0f || trigger.size.y <= 0.0f) {
 			trigger.position = descriptor.position - vector2(kDefaultTriggerExtent * 0.5f, kDefaultTriggerExtent * 0.5f);

@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+
+class Tile;
+
 struct Trigger
 {
 	enum TYPE
@@ -69,6 +72,9 @@ struct LevelTriggerDescriptor
 	std::vector<vector2> polygonPoints;
 	std::vector<vector2> polylinePoints;
 	std::vector<TriggerPropertyDescriptor> properties;
+	// Painted tiles that make up the trigger (non-owning), e.g. a row of hazard tiles. When
+	// set, their tileset collision shapes (or cells, if they have none) are its volume.
+	std::vector<Tile*> tiles;
 };
 
 enum class TraversalTriggerType
@@ -101,6 +107,8 @@ struct TraversalTrigger
 	// When set, the horizontal push points away from the hazard, toward whichever side the
 	// character touched it from (e.g. a hanging thorny vine).
 	bool pushAway = false;
+	// Tiles whose shapes are the trigger's volume; position and size then only bound them.
+	std::vector<Tile*> tiles;
 	// Destinations carry the relative path of the map to load once reached.
 	std::string nextMap;
 	// Set on a destination the character starts a run touching, so an entry spawn beside a

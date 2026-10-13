@@ -80,6 +80,16 @@ void tileBounds(Tile* tile, vector2& outMin, vector2& outMax)
 	}
 }
 
+// Grows min/max to take in the tile's bounds; empty stays true until the first tile.
+void includeTileBounds(Tile* tile, bool& empty, vector2& min, vector2& max)
+{
+	vector2 tileMin, tileMax;
+	tileBounds(tile, tileMin, tileMax);
+	min = empty ? tileMin : vector2(std::min(min.x, tileMin.x), std::min(min.y, tileMin.y));
+	max = empty ? tileMax : vector2(std::max(max.x, tileMax.x), std::max(max.y, tileMax.y));
+	empty = false;
+}
+
 bool overlaps(const vector2& aMin, const vector2& aMax, const vector2& bMin, const vector2& bMax)
 {
 	return aMin.x < bMax.x && aMax.x > bMin.x && aMin.y < bMax.y && aMax.y > bMin.y;
@@ -155,12 +165,10 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 		for (std::vector<Tile*>& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "chest"); })) {
 			Chest chest;
 			chest.tiles = std::move(group);
-			for (size_t i = 0; i < chest.tiles.size(); ++i) {
-				vector2 tileMin, tileMax;
-				tileBounds(chest.tiles[i], tileMin, tileMax);
-				chest.min = (i == 0) ? tileMin : vector2(std::min(chest.min.x, tileMin.x), std::min(chest.min.y, tileMin.y));
-				chest.max = (i == 0) ? tileMax : vector2(std::max(chest.max.x, tileMax.x), std::max(chest.max.y, tileMax.y));
-				chest.heal = std::max(chest.heal, infoOf(chest.tiles[i])->getFloatProperty("heal", 0.0f));
+			bool empty = true;
+			for (Tile* tile : chest.tiles) {
+				includeTileBounds(tile, empty, chest.min, chest.max);
+				chest.heal = std::max(chest.heal, infoOf(tile)->getFloatProperty("heal", 0.0f));
 			}
 			_chests.push_back(std::move(chest));
 		}
@@ -181,6 +189,28 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 			_platforms.push_back(std::move(platform));
 		}
 
+		const auto sameHazard = [](const Tile* tile, const Tile* neighbour, int, int) {
+			return infoOf(tile)->_properties == infoOf(neighbour)->_properties;
+		};
+		for (std::vector<Tile*>& group : connectedGroups(layer, [](const Tile* t) { return isClass(t, "hazard"); }, sameHazard)) {
+			LevelTriggerDescriptor hazard;
+			hazard.layerId = layer->getLayerConfig().id;
+			hazard.layerName = layer->getLayerConfig().name;
+			hazard.typeName = "hazard";
+			for (const auto& property : infoOf(group.front())->_properties) {
+				hazard.properties.push_back(TriggerPropertyDescriptor{ property.first, "", property.second });
+			}
+			bool empty = true;
+			vector2 min, max;
+			for (Tile* tile : group) {
+				includeTileBounds(tile, empty, min, max);
+			}
+			hazard.position = min;
+			hazard.size = max - min;
+			hazard.tiles = std::move(group);
+			_hazards.push_back(std::move(hazard));
+		}
+
 		const TileMapPropertyDescriptor* openLayerName = layer->getLayerConfig().findProperty("open_layer");
 		if (!openLayerName) {
 			continue;
@@ -199,21 +229,16 @@ void LevelProps::initialize(const std::vector<TileMap*>& layers)
 			DEBUG_MSG(message.c_str());
 		}
 #endif
-		bool hasTiles = false;
+		bool empty = true;
 		for (unsigned int y = 0; y < layer->getMapHeight(); ++y) {
 			for (unsigned int x = 0; x < layer->getMapWidth(); ++x) {
 				Tile* tile = layer->getTile(x, y);
-				if (!tile || tile->getTileIndex() < 0) {
-					continue;
+				if (tile && tile->getTileIndex() >= 0) {
+					includeTileBounds(tile, empty, door.min, door.max);
 				}
-				vector2 tileMin, tileMax;
-				tileBounds(tile, tileMin, tileMax);
-				door.min = hasTiles ? vector2(std::min(door.min.x, tileMin.x), std::min(door.min.y, tileMin.y)) : tileMin;
-				door.max = hasTiles ? vector2(std::max(door.max.x, tileMax.x), std::max(door.max.y, tileMax.y)) : tileMax;
-				hasTiles = true;
 			}
 		}
-		if (hasTiles) {
+		if (!empty) {
 			_doors.push_back(door);
 		}
 	}
@@ -224,6 +249,7 @@ void LevelProps::clear(void)
 	_keys.clear();
 	_chests.clear();
 	_doors.clear();
+	_hazards.clear();
 	_platforms.clear();
 	_pots.clear();
 	_keysHeld = 0;

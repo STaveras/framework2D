@@ -319,7 +319,10 @@ void PlayState::onEnter(State* prev)
 	Character::bindPlayerActions(_playerController);
 	_playableCharacter->possess(&_playerController);
 
-	_traversalMechanics.initialize(_levelManager.getTriggerDescriptors(),
+	// The map's trigger objects, plus the hazard tiles painted in it.
+	std::vector<LevelTriggerDescriptor> triggers = _levelManager.getTriggerDescriptors();
+	triggers.insert(triggers.end(), _levelProps.getHazards().begin(), _levelProps.getHazards().end());
+	_traversalMechanics.initialize(triggers,
 									spawnPoint,
 									kTraversalDefaultTimeLimitSeconds);
 	_traversalMechanics.setTrackedCharacter(_playableCharacter);

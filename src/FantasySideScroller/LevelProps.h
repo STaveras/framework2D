@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../Maths.h"
+#include "../Trigger.h"
 
 #include <string>
 #include <vector>
@@ -20,9 +21,13 @@ class TileMap;
 //  - a tile layer with an "open_layer" property is a locked door. Interacting beside it
 //    while holding a key hides the layer, stops it colliding, and shows the tile layer
 //    that property names (painted hidden in Tiled, with the door's open art);
+//  - tiles of class "hazard" hurt and push the character through TraversalMechanics, using
+//    the tile's properties (damage, interval, push, push_speed, push_lock) and its tileset
+//    collision shapes, whatever the layer's collision_mode;
 //  - tiles with a "sink_speed" property (pixels/second) form floating platforms that sink
 //    while stood on and rise back when free ("rise_speed", "sink_depth" are optional).
-// Touching tiles on the same layer act as one chest or platform. Platform tiles can
+// Touching tiles on the same layer act as one chest or platform, and touching hazard tiles
+// with the same properties as one hazard, sharing its damage interval. Platform tiles can
 // specify "platform_column" and "platform_row" part coordinates to keep adjacent
 // copies independent. Only one platform carries the character at a time.
 class LevelProps
@@ -71,6 +76,8 @@ public:
 	const std::string& getLastEvent(void) const { return _lastEvent; }
 	const std::vector<Chest>& getChests(void) const { return _chests; }
 	const std::vector<Door>& getDoors(void) const { return _doors; }
+	// Painted hazards, for TraversalMechanics alongside the map's trigger objects.
+	const std::vector<LevelTriggerDescriptor>& getHazards(void) const { return _hazards; }
 	const std::vector<SinkingPlatform>& getPlatforms(void) const { return _platforms; }
 	const std::vector<Pot>& getPots(void) const { return _pots; }
 
@@ -86,6 +93,7 @@ private:
 	std::vector<Pickup> _keys;
 	std::vector<Chest> _chests;
 	std::vector<Door> _doors;
+	std::vector<LevelTriggerDescriptor> _hazards;
 	std::vector<SinkingPlatform> _platforms;
 	std::vector<Pot> _pots;
 	int _keysHeld = 0;

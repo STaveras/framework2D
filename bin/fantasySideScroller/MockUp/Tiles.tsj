@@ -1819,7 +1819,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -1867,7 +1866,7 @@
                 {
                  "name":"push",
                  "type":"string",
-                 "value":"away"
+                 "value":"right"
                 }, 
                 {
                  "name":"push_speed",
@@ -1881,7 +1880,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2073,7 +2071,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2121,7 +2118,7 @@
                 {
                  "name":"push",
                  "type":"string",
-                 "value":"away"
+                 "value":"right"
                 }, 
                 {
                  "name":"push_speed",
@@ -2135,7 +2132,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2187,7 +2183,7 @@
                 {
                  "name":"push",
                  "type":"string",
-                 "value":"away"
+                 "value":"right"
                 }, 
                 {
                  "name":"push_speed",
@@ -2201,7 +2197,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2267,7 +2262,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2544,7 +2538,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2706,7 +2699,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -2953,7 +2945,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
@@ -3008,7 +2999,6 @@
          "objectgroup":
             {
              "draworder":"index",
-             "id":2,
              "name":"",
              "objects":[
                     {
