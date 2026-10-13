@@ -273,6 +273,16 @@
                  "name":"collision_mode",
                  "type":"string",
                  "value":"none"
+                }, 
+                {
+                 "name":"uv_sway_period",
+                 "type":"float",
+                 "value":3
+                }, 
+                {
+                 "name":"uv_sway_x",
+                 "type":"float",
+                 "value":4
                 }],
          "type":"tilelayer",
          "visible":true,
