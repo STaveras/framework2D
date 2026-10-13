@@ -55,11 +55,11 @@ void PlatformMouse::update(void)
    }
 
    // Cursor position in window/client pixels (origin top-left), matching how
-   // DIMouse reports client coordinates.
+   // DIMouse reports client coordinates. It is not clamped: GLFW keeps
+   // reporting the position past the window's edges, so the in-game cursor
+   // slides off-screen with the hidden OS cursor instead of pinning to an edge.
    double x = 0.0, y = 0.0;
    glfwGetCursorPos(_window, &x, &y);
-
-   vector2 position((float)x, (float)y);
 
    int width = 0, height = 0;
    glfwGetWindowSize(_window, &width, &height);
@@ -75,19 +75,5 @@ void PlatformMouse::update(void)
       _cursorHidden = cursorInsideClient;
    }
 
-   // Clamp to the client area, mirroring DIMouse::update().
-   if (width > 0)
-   {
-      const float maxX = (float)width;
-      if (position.x < 0.0f) position.x = 0.0f;
-      else if (position.x > maxX) position.x = maxX;
-   }
-   if (height > 0)
-   {
-      const float maxY = (float)height;
-      if (position.y < 0.0f) position.y = 0.0f;
-      else if (position.y > maxY) position.y = maxY;
-   }
-
-   this->setPosition(position);
+   this->setPosition(vector2((float)x, (float)y));
 }

@@ -2,7 +2,6 @@
 #pragma once
 
 #include "../GameState.h"
-#include "../Cursor.h"
 #include "../PlayerController.h"
 
 #include "LevelManager.h"
@@ -40,7 +39,6 @@ class PlayState : public GameState
 
 	Character* _playableCharacter = NULL;
 	std::vector<Boar*> _boars;
-	bool _paused = false;
 	// The overlays pushed on top of this state; reused across pauses and deaths.
 	std::unique_ptr<PauseState> _pauseState;
 	std::unique_ptr<GameOverState> _gameOverState;
@@ -51,7 +49,6 @@ class PlayState : public GameState
 	Image* _staminaBarFill = NULL;
 	Image* _keyIcon = NULL;
 	// Font* _helloWorldText = NULL;
-	std::unique_ptr<Cursor> _cursor;
 
 public:
 	PlayState(void);
