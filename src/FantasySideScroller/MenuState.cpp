@@ -91,9 +91,12 @@ void MenuState::onEnter(State* prev)
 
 	// A cursor only with a pointer (touch-only iOS has no mouse). Its list
 	// is created after the game's HUD list, so it draws on top of the menu.
-	if (Engine2D::getInput()->getMouse()) {
+	if (Mouse* mouse = Engine2D::getInput()->getMouse()) {
 		_cursor = std::make_unique<Cursor>();
 		if (_cursor->load(BasePath("cursors.png"))) {
+			// Start under the mouse rather than at the origin until the first
+			// onExecute moves it.
+			_cursor->follow(*mouse);
 			_overlayList->push_back(_cursor->getImage());
 		}
 		else {

@@ -1,7 +1,8 @@
 // PlatformMouse.h
 // Mouse input from a GLFW window. Each frame it reads the cursor position
-// (client pixels, origin top-left, clamped to the client area) and the button
-// state, and hides the OS cursor while it is over the window.
+// (client pixels, origin top-left, negative or past the client size once the
+// cursor leaves the window) and the button state, and hides the OS cursor
+// while it is over the window.
 
 #pragma once
 

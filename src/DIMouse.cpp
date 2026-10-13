@@ -113,35 +113,12 @@ void DIMouse::update(void) {
       if (SUCCEEDED(m_lpDevice->Poll())) {
          if (m_lpDevice->GetDeviceState(sizeof(DIMOUSESTATE2), &_mouseState) == DI_OK) {
             // DirectInput reports relative movement, but the OS cursor is
-            // absolute. While inside the client area, use the OS position so
-            // acceleration, entry from outside, and device reacquisition
-            // cannot leave the in-game position scaled or offset from it.
-            if (!cursorInsideClient || !_syncPositionToClientCursor()) {
-               vector2 position = this->getPosition() + vector2((float)_mouseState.lX, (float)_mouseState.lY);
-
-               if (_hWnd) {
-                  RECT clientRect{};
-                  if (GetClientRect(_hWnd, &clientRect)) {
-                     const float maxX = (float)(clientRect.right - clientRect.left);
-                     const float maxY = (float)(clientRect.bottom - clientRect.top);
-
-                     if (position.x < 0.0f) {
-                        position.x = 0.0f;
-                     }
-                     else if (position.x > maxX) {
-                        position.x = maxX;
-                     }
-
-                     if (position.y < 0.0f) {
-                        position.y = 0.0f;
-                     }
-                     else if (position.y > maxY) {
-                        position.y = maxY;
-                     }
-                  }
-               }
-
-               this->setPosition(position);
+            // absolute. Use the OS position (outside the client area too, so
+            // the in-game cursor slides off the edge with it) so acceleration,
+            // entry from outside, and device reacquisition cannot leave the
+            // in-game position scaled or offset from it.
+            if (!_syncPositionToClientCursor()) {
+               this->setPosition(this->getPosition() + vector2((float)_mouseState.lX, (float)_mouseState.lY));
             }
          }
       }

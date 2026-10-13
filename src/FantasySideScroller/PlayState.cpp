@@ -12,7 +12,6 @@
 #include "../IInput.h"
 #include "../Sprite.h"
 #include "../Animation.h"
-#include "../Cursor.h"
 #include "FantasySideScroller.h"
 #include "../InputMap.h"
 #include "PauseState.h"
@@ -128,19 +127,6 @@ void PlayState::_initHUD()
 		_keyIcon->setVisibility(false);
 		_hudRenderList->push_back(_keyIcon);
 	}
-
-	// No cursor without a pointer (touch-only iOS has no mouse).
-	IInput* input = Engine2D::getInput();
-	if (!_cursor && (!input || input->getMouse())) {
-		_cursor = std::make_unique<Cursor>();
-		if (_cursor->load(BasePath("cursors.png"))) {
-			_cursor->getImage()->setVisibility(true);
-			_hudRenderList->push_back(_cursor->getImage());
-		}
-		else {
-			_cursor.reset();
-		}
-	}
 }
 
 void PlayState::_updateHUD(float dt)
@@ -221,9 +207,6 @@ void PlayState::_shutdownHUD()
 		// if (_helloWorldText) {
 		// 	_hudRenderList->remove(_helloWorldText);
 		// }
-		if (_cursor && _cursor->getImage()) {
-			_hudRenderList->remove(_cursor->getImage());
-		}
 
 		if (IRenderer* renderer = Engine2D::getRenderer()) {
 			renderer->destroyRenderList(_hudRenderList);
@@ -237,7 +220,6 @@ void PlayState::_shutdownHUD()
 	SAFE_DELETE(_staminaBarFill);
 	SAFE_DELETE(_keyIcon);
 	// SAFE_DELETE(_helloWorldText);
-	_cursor.reset();
 }
 
 // Restore the playable character to a fresh spawn: reset the collision world,
@@ -388,7 +370,6 @@ bool PlayState::onExecute(float time)
 		// the stage through its normal lifecycle to reread map and tileset data.
 		Engine2D::getEventSystem()->processEvents();
 		onExit(nullptr);
-		_paused = false;
 		onEnter(nullptr);
 		// Object-added events start the new objects and register their renderables.
 		Engine2D::getEventSystem()->processEvents();
@@ -400,24 +381,11 @@ bool PlayState::onExecute(float time)
 	}
 	const InputMap& input = game.getInputMap();
 
-	// First frame after a pause: the pause overlay was popped and this state is
-	// top again, so make the HUD cursor visible once more.
-	if (_paused) {
-		_paused = false;
-		if (_cursor && _cursor->getImage()) {
-			_cursor->getImage()->setVisibility(true);
-		}
-	}
-
 	// First frame after the game-over prompt is popped: this state is top again.
-	// If the player chose to retry, respawn into a fresh start and re-show the
-	// HUD cursor (it was hidden when the game-over overlay was pushed).
+	// If the player chose to retry, respawn into a fresh start.
 	if (_gameOverState && _gameOverState->wasRetryRequested()) {
 		_gameOverState->consumeRetryRequest();
 		_respawnPlayer();
-		if (_cursor && _cursor->getImage()) {
-			_cursor->getImage()->setVisibility(true);
-		}
 	}
 
 	if (keyboard->pressed(Key::R)) {
@@ -425,14 +393,6 @@ bool PlayState::onExecute(float time)
 	}
 
 	if (input.pressed("PAUSE")) {
-		// Hide the HUD cursor before pushing the pause overlay: its screen-space
-		// list stays registered (push does not call onExit), and its position is
-		// frozen because onExecute stops running, so leaving it visible would
-		// draw a stale duplicate beside the pause overlay's own cursor.
-		if (_cursor && _cursor->getImage()) {
-			_cursor->getImage()->setVisibility(false);
-		}
-		_paused = true;
 		// Push PauseState on top to freeze game while keeping world visible.
 		// Create it once (onEnter/onExit are re-entrant and clean up after
 		// themselves), so repeated pause/resume cycles reuse the same object.
@@ -501,7 +461,6 @@ bool PlayState::onExecute(float time)
 			_sectionEntryFacingLeft = _playableCharacter && _playableCharacter->isFacingLeft();
 			Engine2D::getEventSystem()->processEvents();
 			onExit(nullptr);
-			_paused = false;
 			_mapFileName = nextMap;
 			onEnter(nullptr);
 			Engine2D::getEventSystem()->processEvents();
@@ -548,21 +507,12 @@ bool PlayState::onExecute(float time)
 		!strcmp(_playableCharacter->getState()->getName(), "Dead")) {
 		Animation* deadAnimation = static_cast<Animation*>(_playableCharacter->getRenderable());
 		if (!deadAnimation || !deadAnimation->isPlaying()) {
-			if (_cursor && _cursor->getImage()) {
-				_cursor->getImage()->setVisibility(false);
-			}
 			if (!_gameOverState) {
 				_gameOverState = std::make_unique<GameOverState>();
 			}
 			Engine2D::getGame()->push(_gameOverState.get());
 			return keepRunning;
 		}
-	}
-
-	// The HUD cursor tracks the mouse in screen space (not through the camera).
-	Mouse* mouse = Engine2D::getInput()->getMouse();
-	if (!_paused && _cursor && mouse) {
-		_cursor->follow(*mouse);
 	}
 
 	return keepRunning;
