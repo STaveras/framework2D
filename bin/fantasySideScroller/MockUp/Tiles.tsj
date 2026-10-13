@@ -1819,28 +1819,124 @@
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
-             "objects":[],
+             "objects":[
+                    {
+                     "height":0,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":8,
+                             "y":-16
+                            }, 
+                            {
+                             "x":8,
+                             "y":0
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":8,
+                     "y":16
+                    }],
              "opacity":1,
              "type":"objectgroup",
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
         }, 
         {
          "id":200,
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
-             "objects":[],
+             "objects":[
+                    {
+                     "height":0,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":0,
+                             "y":16
+                            }, 
+                            {
+                             "x":8,
+                             "y":16
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":0,
+                     "y":0
+                    }],
              "opacity":1,
              "type":"objectgroup",
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
         }, 
         {
          "id":201,
@@ -1977,56 +2073,281 @@
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
-             "objects":[],
+             "objects":[
+                    {
+                     "height":0,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":8,
+                             "y":-16
+                            }, 
+                            {
+                             "x":16,
+                             "y":0
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":0,
+                     "y":16
+                    }],
              "opacity":1,
              "type":"objectgroup",
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
         }, 
         {
          "id":225,
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
-             "objects":[],
+             "objects":[
+                    {
+                     "height":0,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":8,
+                             "y":-16
+                            }, 
+                            {
+                             "x":16,
+                             "y":-16
+                            }, 
+                            {
+                             "x":16,
+                             "y":0
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":0,
+                     "y":16
+                    }],
              "opacity":1,
              "type":"objectgroup",
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
         }, 
         {
          "id":226,
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
-             "objects":[],
+             "objects":[
+                    {
+                     "height":0,
+                     "id":1,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":16,
+                             "y":0
+                            }, 
+                            {
+                             "x":8,
+                             "y":-16
+                            }, 
+                            {
+                             "x":0,
+                             "y":-16
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":0,
+                     "y":16
+                    }],
              "opacity":1,
              "type":"objectgroup",
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
         }, 
         {
          "id":227,
          "objectgroup":
             {
              "draworder":"index",
+             "id":2,
              "name":"",
-             "objects":[],
+             "objects":[
+                    {
+                     "height":0,
+                     "id":4,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":4,
+                             "y":-8
+                            }, 
+                            {
+                             "x":8,
+                             "y":0
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":8,
+                     "y":16
+                    }, 
+                    {
+                     "height":0,
+                     "id":3,
+                     "name":"",
+                     "opacity":1,
+                     "polygon":[
+                            {
+                             "x":0,
+                             "y":0
+                            }, 
+                            {
+                             "x":4,
+                             "y":-8
+                            }, 
+                            {
+                             "x":8,
+                             "y":0
+                            }],
+                     "rotation":0,
+                     "type":"polygon",
+                     "visible":true,
+                     "width":0,
+                     "x":0,
+                     "y":16
+                    }],
              "opacity":1,
              "type":"objectgroup",
              "visible":true,
              "x":0,
              "y":0
-            }
+            },
+         "properties":[
+                {
+                 "name":"damage",
+                 "type":"float",
+                 "value":10
+                }, 
+                {
+                 "name":"interval",
+                 "type":"float",
+                 "value":1
+                }, 
+                {
+                 "name":"push",
+                 "type":"string",
+                 "value":"away"
+                }, 
+                {
+                 "name":"push_speed",
+                 "type":"float",
+                 "value":190
+                }],
+         "type":"hazard"
         }, 
         {
          "id":230,
