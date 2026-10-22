@@ -31,5 +31,6 @@ out-test/
 cmake-macos-build
 framework/
 framework2D/
+framework2D.profdata
 *.app/**
 *.tiled-session
