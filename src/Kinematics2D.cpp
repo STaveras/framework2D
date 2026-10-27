@@ -356,7 +356,7 @@ bool isGroundContact(
 		return false;
 	}
 
-	const float sampleFractions[] = { 0.10f, 0.25f, 0.50f, 0.75f, 0.90f };
+	const float sampleFractions[] = { 0.10f, 0.27f, 0.33f, 0.50f, 0.67f, 0.73f, 0.90f };
 	const float sampleOffsets[] = { -5.0f, -3.0f, -1.0f, 0.0f, 1.0f, 3.0f, 5.0f };
 	for (float fraction : sampleFractions) {
 		for (float offset : sampleOffsets) {
